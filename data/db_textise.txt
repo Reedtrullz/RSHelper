@@ -1,0 +1,1 @@
+AuthenticationRequiredError: Authentication is required to use this feature (Alt text generation). Please provide a valid API key.

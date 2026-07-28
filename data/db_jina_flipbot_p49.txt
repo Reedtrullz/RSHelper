@@ -1,0 +1,1469 @@
+Title: [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+URL Source: https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/49/
+
+Published Time: 2023-12-01T19:48:42+00:00
+
+Markdown Content:
+[Skip to content](https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/49/#ipsLayout__main)[Skip to consent message](https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/49/#elGuestTerms)
+
+[![Image 11: DreamBot](https://static.dreambot.org/set_resources_10/6d538d11ecfced46f459ee300b5e80ec_logo_2da83a.png)![Image 12: DreamBot](https://static.dreambot.org/set_resources_10/6d538d11ecfced46f459ee300b5e80ec_logo_7c987b.png) DreamBot](https://dreambot.org/forums/)
+*   Sign In
+
+1.   [Home](https://dreambot.org/forums/ "Home")
+2.   [Scripts](https://dreambot.org/forums/index.php?/forum/35-scripts/)
+3.   [SDN Scripts](https://dreambot.org/forums/index.php?/forum/36-sdn-scripts/)
+4.   [Money Making](https://dreambot.org/forums/index.php?/forum/51-money-making/)
+5.   [Free](https://dreambot.org/forums/index.php?/forum/224-free/)
+6.   [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+*   [All Activity](https://dreambot.org/forums/index.php?/discover/)
+
+[![Image 13: DreamBot](https://static.dreambot.org/set_resources_10/6d538d11ecfced46f459ee300b5e80ec_logo_174022.png)![Image 14: DreamBot](https://static.dreambot.org/set_resources_10/6d538d11ecfced46f459ee300b5e80ec_logo_1b58d8.png) DreamBot](https://dreambot.org/forums/)
+
+*   Browse
+    *   [Forums](https://dreambot.org/forums/index.php)
+    *   [Staff](https://dreambot.org/forums/index.php?/staff/)
+    *   [Online Users](https://dreambot.org/forums/index.php?/online/)
+    *   [Leaderboard](https://dreambot.org/forums/index.php?/leaderboard/)
+
+*   [Download](https://downloads.dreambot.org/launcher/Launcher.jar)
+*   [Scripts](https://sdn.dreambot.org/scripts)
+*   Support
+    *   [Gift Cards](https://dreambot.org/forums/index.php?/store/gift-cards/)
+
+*   [Guides](https://dreambot.org/guides/)
+*   More
+    *   [Javadocs](https://dreambot.org/javadocs/)
+    *   [Upgrade to VIP](https://dreambot.org/forums/index.php?/store/product/6-vip/?utm_source%3Ddreambot/&/store/product/6-vip/?utm_source=dreambot&utm_medium=menu%20button)
+
+*   More
+*   Browse
+*   [Download](https://downloads.dreambot.org/launcher/Launcher.jar)
+*   [Scripts](https://sdn.dreambot.org/scripts)
+*   Support
+*   [Guides](https://dreambot.org/guides/)
+*   [Javadocs](https://dreambot.org/javadocs/)
+*   [Upgrade to VIP](https://dreambot.org/forums/index.php?/store/product/6-vip/?utm_source%3Ddreambot/&/store/product/6-vip/?utm_source=dreambot&utm_medium=menu%20button)
+
+*   Existing user? Sign In
+
+Sign In
+
+    *   Email Address  
+    *   Password  
+    *   - [x] Remember me Not recommended on shared computers  
+    *   Sign In
+[Forgot your password?](https://dreambot.org/forums/index.php?/lostpassword/)
+
+*   [Sign Up](https://dreambot.org/forums/index.php?/register/)
+
+1.   [Home](https://dreambot.org/forums/ "Home")
+2.   [Scripts](https://dreambot.org/forums/index.php?/forum/35-scripts/)
+3.   [SDN Scripts](https://dreambot.org/forums/index.php?/forum/36-sdn-scripts/)
+4.   [Money Making](https://dreambot.org/forums/index.php?/forum/51-money-making/)
+5.   [Free](https://dreambot.org/forums/index.php?/forum/224-free/)
+6.   [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+*   [All Activity](https://dreambot.org/forums/index.php?/discover/)
+
+Search...
+
+# [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+*   [grand exchange api](https://dreambot.org/forums/index.php?/tags/grand-exchange-api/ "Find other content tagged with 'grand exchange api'")
+*   [flipper](https://dreambot.org/forums/index.php?/tags/flipper/ "Find other content tagged with 'flipper'")
+*   [grand exchange](https://dreambot.org/forums/index.php?/tags/grand-exchange/ "Find other content tagged with 'grand exchange'")
+
+*   Share
+
+ https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/
+    *   [Share on Bluesky](https://bsky.app/intent/compose?text=%5BFree%5D+humblePhlipper%3A+Grand+Exchange+flipping+with+automatic+item+selection+%28300%2B+gp%2Fhr%2C+0+xp%2Fhr%29%20-%20https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+    *   [Share on X](https://x.com/share?url=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+    *   [Share on Facebook](https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+    *   [{lang="reddit_text"](https://www.reddit.com/submit?url=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F&title=%5BFree%5D+humblePhlipper%3A+Grand+Exchange+flipping+with+automatic+item+selection+%28300%2B+gp%2Fhr%2C+0+xp%2Fhr%29)
+    *   [Share via email](mailto:?subject=%5BFree%5D%20humblePhlipper%3A%20Grand%20Exchange%20flipping%20with%20automatic%20item%20selection%20%28300%2B%20gp%2Fhr%2C%200%20xp%2Fhr%29&body=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+
+More sharing options...
+
+*   [Followers](https://dreambot.org/forums/index.php?/login/ "Sign in to follow this") 
+
+[![Image 15: apnasus](blob:http://localhost/799ba633fad7f9b22c9b1adae46839f0)](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+
+[apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+
+December 1, 2023 2 yr in [Free](https://dreambot.org/forums/index.php?/forum/224-free/)
+
+## Featured Replies
+
+Previous carousel slide Next carousel slide
+
+*   [](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments "First page")
+*   [Prev](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments)
+*   [1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments)
+*   [2](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/2/#comments)
+*   [3](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/3/#comments)
+*   [4](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/4/#comments)
+*   [5](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/5/#comments)
+*   [6](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/6/#comments)
+*   [Next](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/2/#comments)
+*   [Last page](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/49/#comments)
+*   Page 1 of 49     Go 
+
+[![Image 16: apnasus](blob:http://localhost/799ba633fad7f9b22c9b1adae46839f0)](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")![Image 17: Collaborator](https://static.dreambot.org/monthly_2021_06/7_Collaborator.svg)
+
+### [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+
+VIP
+
+![Image 18](https://static.dreambot.org/team_vip.png)![Image 19: Scripter](https://static.dreambot.org/team_scripter.png)
+
+*   [173 posts](https://dreambot.org/forums/index.php?/profile/295121-apnasus/content/ "Posts")
+*   [9 Badges](https://dreambot.org/forums/index.php?/profile/295121-apnasus/badges/ "Badges")
+*   [64 Reputation](https://dreambot.org/forums/index.php?/profile/295121-apnasus/reputation/ "Reputation")
+
+*   Location: Grand Exchange, 302/308
+
+[![Image 20: apnasus](blob:http://localhost/799ba633fad7f9b22c9b1adae46839f0)](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")![Image 21: Collaborator](https://static.dreambot.org/monthly_2021_06/7_Collaborator.svg)
+
+### [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")VIP
+
+December 1, 2023 2 yr
+
+Author stats
+
+December 1, 2023 2 yr
+
+My first script, flips ~~Logs and Death runes~~**ANY ITEMS YOU CHOSE** at the Grand Exchange~~ - both these items have high volumes with consistently profitable margins and are **f2p**with **no trade restrictions** for new accounts~~.
+
+![Image 22: v2-main.gif](https://i.postimg.cc/P529ybBF/v2-main.gif)
+
+![Image 23: image.png](https://i.postimg.cc/pVYNsjdk/image.png)
+
+![Image 24: image.png](https://i.postimg.cc/PrP8ZpQD/image.png)
+
+![Image 25: image.png](https://i.postimg.cc/L8KFvMKK/image.png)
+
+![Image 26: image.png](https://i.postimg.cc/cJ2dpC8p/image.png)
+
+![Image 27: image.png](https://i.postimg.cc/x17rC7TH/image.png)
+
+**Terminology**
+
+Reveal hidden contents
+
+**Bid**price AKA buy price AKA insta-sell price AKA low price is the price we buy at
+
+**Ask**price AKA sell price AKA insta-buy price AKA high price is the price we sell at
+
+**Default Mechanics**
+
+Reveal hidden contents
+
+Update bid/ask prices every ~~~0.7 ~1-4 1.0,~~ 10-20 seconds using the OSRS Wiki (not DreamBot) API and user selected pricing options.
+
+1.    Always sell any inventory of items we have bought at ask. 
+2.    If and only if no inventory exists and spread is profitable, buy items at bid. 
+3.    Stop script when all GE limits have been hit, timeout is triggered,or user stops manually. 
+4.    Save trade history, current config, and selection charcteristics locally ("/Dreambot/Scripts/humblePhlipper/History/") for analysis. 
+
+**Requirements**
+
+Reveal hidden contents
+
+* Have some GP in your inventory
+
+**Features**
+
+Reveal hidden contents
+
+Paint overlay with profit calculations after every logged sale, automatic 4hr GE limit tracking which carries over between sessions,
+
+![Image 28: v2-main.gif](https://i.postimg.cc/P529ybBF/v2-main.gif)
+
+GUI supporting custom config profiles with automatic item selection and custom bid prioritisation,
+
+![Image 29: v2-config.gif](https://i.postimg.cc/FRXwwkqc/v2-config.gif)
+
+Trades and end of session trade history CSVs output to console log,
+
+![Image 30: v2-console.png](https://i.postimg.cc/NFnLRrQy/v2-console.png)
+
+Custom config profiles, 4hr limits linked to accounts, and trading session histories saved locally,
+
+![Image 31: v2-history.png](https://i.postimg.cc/mDGn2dMk/v2-history.png)
+
+Toggle bidding off to exit gracefully by cancelling buy offers and selling off remaining inventory,
+
+![Image 32: v2-pause.gif](https://i.postimg.cc/0yY8jxsp/v2-pause.gif)
+
+On the hour summaries of all the ongoing sessions ('instances') on your PC/VM sent to your discord webhook (learn how to generate a discord webhook URL here [https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)),
+
+![Image 33: webhooks.png](https://i.postimg.cc/SxjJb31J/webhooks.png)
+
+As well as individual end of session summaries,
+
+![Image 34: discord2.png](https://i.postimg.cc/ZnZxf4c9/discord2.png)
+
+Post session inspection of (all) trade histories with summary stats,
+
+![Image 35: v2-1-post-session.gif](https://i.postimg.cc/cJfvMDy8/v2-1-post-session.gif)
+
+Post session summary stats and regression,
+
+![Image 36: regression.gif](https://i.postimg.cc/YqYFvS3F/regression.gif)
+
+`bidding == false` taking too long to sell off inventory? You can manually end a session without resorting to the stop button (which messes with profit calculations):
+
+1) Press pause, let the script finish its loop, and cancel all sell offers.
+
+2) Press resume and let the scipt collect, this way it logs partially fulfilled sell offers.
+
+3) Press pause, let the script finish its loop, and sell of all the inventory just collected.
+
+4) Press resume and let the script collect, this way it logs your manual sales.
+
+5) Make sure that if it isn't already, bidding is toggled off, the scipt will exit after logging all trades.
+
+![Image 37: v2-manual-exit.gif](https://i.postimg.cc/7h9v3PKz/v2-manual-exit.gif)
+
+**Config**
+
+Reveal hidden contents
+
+Config can be set by the GUI or QuickStart. Custom config profiles are saved by the GUI to "/Dreambot/Scripts/humblePhlipper/Config/" as JSONs. Config for each session is attached to the trade history for that session in "/Dreambot/Scripts/humblePhlipper/History/" to facilitate analysis.
+
+Default config,
+
+Reveal hidden contents
+
+```
+{
+  "timeout": 240.0,
+  "autoBond" : false,
+  "sysExit": false,
+  "discordWebhook": null,
+  "debug": false,
+  "maxBidValue": 1000000,
+  "maxBidVol": 20000,
+  "noSelfCompeting": false,
+  "cancelPartialBids" : true,
+  "neverSellAtLoss" : false,
+  "priorityProfit": 100,
+  "priorityVol": 100,
+  "pricing": "bestOfLatestFiveMinute",
+  "pricingOffset": 0,
+  "pricingOffsetAsPercentage" : false,
+  "selections": [1511, 560], // Logs, Death rune
+  "omissions" : [13190], // Old school bond
+  "auto": true,
+  "minVol": 10000,
+  "maxBidAskVolRatio": 3.0,
+  "minMargin": 2,
+  "maxBidPrice": 20000,
+  "minBidPrice": 0,
+  "tradeRestricted": false,
+  "members": false,
+}
+```
+
+Paramater types,
+
+Reveal hidden contents
+
+```
+{
+  "timeout": Float,
+  "autoBond" : Boolean,
+  "sysExit": Boolean,
+  "discordWebhook": String,
+  "debug": Boolean,
+  "maxBidValue": Integer,
+  "maxBidVol": Integer,
+  "noSelfCompeting": Boolean,
+  "cancelPartialBids" : Boolean,
+  "neverSellAtLoss" : Boolean,
+  "priorityProfit": Integer,
+  "priorityVol": Integer,
+  "priorityCapitalBinding": Integer,
+  "pricing": String,
+  "pricingOffset": Integer,
+  "pricingOffsetAsPercentage" : Boolean,
+  "selections": Set<Integer>, 
+  "omissions" : Set<Integer>,
+  "auto": Boolean,
+  "minVol": Integer,
+  "maxBidAskVolRatio": Float,
+  "minMargin": Integer,
+  "maxBidPrice": Integer,
+  "minBidPrice": Integer,
+  "tradeRestricted": Boolean,
+  "members": Boolean,
+}
+```
+
+Paramater supports if restricted,
+
+Reveal hidden contents
+
+```
+{
+  "priorityProfit": {0, 1, ..., 99, 100}
+  "priorityVol": {0, 1, ..., 99, 100}
+  "priorityCapitalBinding": {0, 1, ..., 99, 100}
+  "pricing": {"latest", "fiveMinute", "oneHour", "bestOfLatestFiveMinute", "worstOfLatestFiveMinute", "bestOfLatestOneHour"}
+}
+```
+
+Parameter descriptions,
+
+Reveal hidden contents
+
+```
+{
+  "timeout": time in minutes after which to stop making buy offers, sell off remaining inventory, and exit (exit forced if timeout exceeded by 15 minutes),
+  "autoBond" : whether to buy an old school bond and redeem it when there is less than 1 day of membership left,
+  "sysExit": whether to close client on exit,
+  "discordWebhook": discord webhook url, like https://discord.com/api/webhooks/XXX/XXX, to send notifications to,
+  "debug": whether to log debugging output to console log,
+  "maxBidValue": maximum value (quantity * price) of any buy offer,
+  "maxBidVol": maximum quantity of any buy offer,
+  "noSelfCompeting": whether to avoid bidding on items other bot instances (on the same machine) are already trading,
+  "cancelPartialBids": whether to cancel partially completed buy offers,
+  "neverSellAtLoss": whether to never sell items at a loss, 
+  "priorityProfit": relative weight assigned to ordinal rank of post-tax profit margin in ordering selections,
+  "priorityVol": relative weight assigned to ordinal rank of latest 1 hour volume in ordering selections,
+  "priorityCapitalBinding": relative weight assigned to ordinal rank of bid * target, where target is 4hr_GE_limit - used_limit,  in ordering selections,
+  "pricing": see below,
+  "pricingOffset": see below,
+  "pricingOffsetAsPercentage": whether pricing offset should be calculated as a percentage of profit marign,
+  "selections": set of item IDs to be used if `auto = false`,
+  "omissions": set of item IDs to be ignored if `auto = true`,
+  "auto": select items automatically, overrides `selections` if true,
+  "minVol": minimum 1 hour volume of candaidate automatic selections,
+  "maxBidAskVolRatio": maximum 1_hour_bid_volume / 1_hour_ask_volume of candaidate automatic selections,
+  "minMargin": minimum post-tax profit margin of candaidate automatic selections,
+  "maxBidPrice": maximum bid price of candaidate automatic selections,
+  "minBidPrice": minimum bid price of candaidate automatic selections,
+  "tradeRestricted": whether the account has 20 hour / 10 quest point / 100 skill level trading restrictions,
+  "members": whether the account is members
+}
+```
+
+`pricing` description,,
+
+Reveal hidden contents
+
+```
+{
+  "latest": Latest bid/ask prices from OSRS Wiki API,
+  "fiveMinute": Latest 5 minute average bid/ask prices from OSRS Wiki API,
+  "oneHour": Latest 1 hour average bid/ask prices from OSRS Wiki API,
+  "bestOfLatestFiveMinute": bid = min{latest_bid, fiveMinute_bid}, ask = max{latest_ask, fiveMinute_ask}
+  "worstOfLatestFiveMinute": bid = max{latest_bid, fiveMinute_bid}, ask = min{latest_ask, fiveMinute_ask}
+  "bestOfLatestOneHour": bid = min{latest_bid, oneHour_bid}, ask = max{latest_ask, oneHour_ask}
+}
+```
+
+`bestOf` targets bigger profit margins, `worstOf` targets greater volume - I recommend the former here.
+
+`pricingOffset` description,
+
+Reveal hidden contents
+
+```
+bid = baseline_bid - pricingOffset
+ask = baseline_ask + pricingOffset
+```
+
+Positive offsets target bigger profit margins, negative offsets target greater volume - I recommend the latter here.
+
+**Bandwith Usage**
+
+Reveal hidden contents
+
+This script routinely makes HTTP requests to fetch price data. Prediced excess bandwith usage assuming 300 KB upper bound for price requests,
+
+```
+{"pricing" = "latest"} : 54.30 - 108.30 MB / hour
+{"pricing" = "fiveMinute"} : 3.90 MB / hour
+{"pricing" = "oneHour"} : 0.30 MB / hour
+{"pricing" = "bestOfLatestFiveMinute"} : 57.90 - 111.90 MB / hour
+{"pricing" = "worstOfLatestFiveMinute"} : 57.90 - 111.90 MB / hour
+{"pricing" = "bestOfLatestOneHour"} : 54.30 - 108.30 MB / hour
+```
+
+Instances running on the same PC/VM will attempt to connect to each other and share price data, with only 1 instance making HTTP requests. (So 10 instances should use no more excess bandwidth than 1.)
+
+**QuickStart**
+
+Reveal hidden contents
+
+QuickStart accepts a single paramater, this can be a Config JSON or the name of a Config file in "/Dreambot/Scripts/humblePhlipper/Config/". Using no params will start with default config. Omitting the the -params option entirely will launch the GUI as usual.
+
+Python example using a Config file name,
+
+Reveal hidden contents
+
+```
+import subprocess
+import re
+import pandas as pd
+from io import StringIO
+
+SubprocessCommand = ["java", "-jar", "C:/Users/me/DreamBot/BotData/client.jar",
+                     "-script", "humblePhlipper",
+                     "-account", "my_account",
+                     "-covert",
+                     "-world", "308",
+                     "-params", "<Custom 1>"]
+
+# Open the subprocess with stdout as a pipe
+process = subprocess.Popen(SubprocessCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False)
+stdout, stderr = process.communicate()
+
+# After the trading session ends with `sysExit = true` read data
+regex = "<trades>(.*?)</trades>"
+df = pd.read_csv(StringIO(re.search(regex, stdout, re.DOTALL).group(1)))
+df['size'] = df['vol'] * df['price']
+print("Total profit = ", sum(df['size']))
+df.groupby('name')['size'].sum().plot(kind='bar') # Bar chart of profit by item
+```
+
+Python example using a Config JSON,
+
+Reveal hidden contents
+
+```
+import subprocess
+import re
+import pandas as pd
+from io import StringIO
+
+SubprocessCommand = ["java", "-jar", "C:/Users/me/DreamBot/BotData/client.jar",
+                     "-script", "humblePhlipper",
+                     "-account", "my_account",
+                     "-covert",
+                     "-world", "302",
+                     "-params", """{
+{
+  "timeout": 240.0,
+  "autoBond" : false,
+  "sysExit": false,
+  "discordWebhook": null,
+  "debug": false,
+  "maxBidValue": 1000000,
+  "maxBidVol": 20000,
+  "noSelfCompeting": false,
+  "cancelPartialBids" : true,
+  "neverSellAtLoss" : false,
+  "priorityProfit": 100,
+  "priorityVol": 100,
+  "priorityCapitalBinding": 0,
+  "pricing": "bestOfLatestFiveMinute",
+  "pricingOffset": 0,
+  "pricingOffsetAsPercentage" : false,
+  "selections": [1511, 560], // Logs, Death rune
+  "omissions" : [13190], // Old school bond
+  "auto": true,
+  "minVol": 10000,
+  "maxBidAskVolRatio": 3.0,
+  "minMargin": 2,
+  "maxBidPrice": 20000,
+  "minBidPrice": 0,
+  "tradeRestricted": false,
+  "members": false,
+}
+}"""]
+
+# Open the subprocess with stdout as a pipe
+process = subprocess.Popen(SubprocessCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False)
+stdout, stderr = process.communicate()
+
+# After the trading session ends and client closes read data
+regex = "<trades>(.*?)</trades>"
+df = pd.read_csv(StringIO(re.search(regex, stdout, re.DOTALL).group(1)))
+df['size'] = df['vol'] * df['price']
+print("Total profit = ", sum(df['size'])
+df.groupby('name')['size'].sum().plot(kind='bar') # Bar chart of profit by item
+```
+
+**Regression Analysis**
+
+Reveal hidden contents
+
+![Image 38: regression.gif](https://i.postimg.cc/YqYFvS3F/regression.gif)
+
+Base Model,
+
+Reveal hidden contents
+
+`Y = XB + U`
+Y is an n x 1 matrix of profit per hour for `n` sessions.
+
+X is an n x (k+1) matrix of k explanatory variables and an intercept (constant).
+
+B is the matrix of coefficients to be estimated.
+
+U is the matrix of errors.
+
+Estimates,
+
+Reveal hidden contents
+
+OLS coefficients,
+
+```
+β = (X'WX)^{-1}X'WY = (X'X)^{-1}X'Y
+W = diag(1, ..., 1)
+```
+
+WLS coefficients using runtimes as weights,
+
+```
+β = (X'WX)^{-1}X'WY
+W = diag(runtime_1, ..., runtime_n)
+```
+
+Variance-covariance matrix of coefficients assuming homoskedasticity,
+
+`Var(β) = (1/n) * (E'WE) * (X'WX)^{-1}`
+Variance-covariance matrix of coefficients assuming heteroskedasticity ([White, 1980](https://doi.org/10.2307/1912934)),
+
+`Var(β) = (X'WX)^{-1}(X'Wdiag(e1^2, ..., en^2)WX)(X'WX)^{-1}`
+Finite sample correction factor for variance-covariance matrix of coefficients,
+
+`n/(n-k-1)`
+
+Tests,
+
+Reveal hidden contents
+
+Coefficient t-statistics,
+
+`t = b/se ~ t(df = n - 1)`
+Two sides tests use tables truncated at df = 100.
+
+F-statistics,
+
+```
+F = ((SSRr - SSRu)/k) / ((SSRu)/(n-k-1)) ~ F(df1 = k, df2 = n - k - 1)
+SSRu = E'WE
+SSRr = (Y-l(l'w)^{-1}w'Y)'W(Y-l(l'w)^{-1}w'Y)
+W = diag(runtime_1, ..., runtime_n) (WLS) or diag(1, ..., 1) (OLS)
+w = (runtime_1, ..., runtime_n)' (WLS) or (1, ..., 1)' = l (OLS)
+l = (1, ..., 1)'
+```
+
+Tests use tables truncated at df1 = 24 and df2 = 80.
+
+Significance,
+
+```
+* p < 0.05
+** p < 0.01
+*** p < 0.001
+```
+
+Reproduction,
+
+> [](https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/49/#) Quote 
+> 
+> 
+> 
+> You can verify the script's coefficient estimates, standard errors, and statistics with the generated R code.
+> 
+> 
+> In R, OLS assuming homoskedasticity with finite sample corrections corresponds to,
+> 
+> 
+> ```
+> ols <- lm(Y ~ X[, 2:5])
+> summary(ols)
+> ```
+> 
+> Runtime WLS assuming homoskedasticity with finite sample corrections corresponds to,
+> 
+> 
+> ```
+> wls <- lm(Y ~ X[, 2:5], weights = X[, 2])
+> summary(wls)
+> ```
+> 
+> And OLS assuming heteroskedasticity ([White, 1980](https://doi.org/10.2307/1912934)) without finite sample corrections corresponds to,
+> 
+> 
+> ```
+> library(lmtest)
+> library(sandwich)
+> coeftest(ols, vcov = vcovHC(ols, type = 'HC0'))
+> ```
+> 
+> Design matrices are displayed as CSVs.
+
+**Discord**
+
+Reveal hidden contents
+
+Discord for general discussion, questions/support, and proggies which I will add below,
+
+[https://discord.gg/y5CcEynFkX](https://discord.gg/y5CcEynFkX)
+
+**Support FAQ**
+
+Reveal hidden contents
+
+I can't manually add an item?
+
+Reveal hidden contents
+
+There is probably no price data for that item for the pricing (latest, fiveMinute, oneHour, ...) that you've selected.
+
+![Image 39: twisted-bow.gif](https://i.postimg.cc/8zhj7Jm6/twisted-bow.gif)
+
+Here, I can add a Twisted bow using latest pricing, but since it has not been bought or sold in the last five minutes, I cannot add it with fiveMinute pricing.
+
+The script isn't buying certain items?
+
+Reveal hidden contents
+
+You are probably trying to buy members items on a f2p world.
+
+![Image 40: logs-rev-ether.gif](https://i.postimg.cc/Njpkzj5Z/logs-rev-ether.gif)
+
+Here, I can buy Logs but not Revenant ether on a f2p world.
+
+The generate / reset buttons in the GUI aren't working?
+
+Reveal hidden contents
+
+Your config parameter inputs are probably the wrong type or outside their support (refer to the config section above),
+
+![Image 41: config-errors.gif](https://i.postimg.cc/Bv3tHTS0/config-errors.gif)
+
+Here, I am getting NumberFormatExceptions because I am not inputting Java <int> types into the maxBidValue field. In the first case, I input a number larger than 2147483647, in the second case, I input a string of letters.
+
+The script 'lost' (or 'made') astronomical amounts of GP off one or two trades!
+
+Reveal hidden contents
+
+Check the trade history for that item in the Trades CSV.
+
+[@dendabad12](https://dreambot.org/forums/index.php?/profile/294024-dendabad12/) V2.1 (members)
+
+![Image 42: loss.png](https://i.postimg.cc/GpspVDP1/loss.png)
+
+![Image 43: cosmic-rune.png](https://i.postimg.cc/9QqfDTDN/cosmic-rune.png)
+
+This huge 'loss' was actually caused by a double counting bug. Be sure to have a stable internet connection and not interrupt the script when it is trying to collect trades.
+
+![Image 44: yew-logs.gif](https://i.postimg.cc/cHrV9zTG/yew-logs.gif)
+
+![Image 45: yew-csv.png](https://i.postimg.cc/gJQ1fKBX/yew-csv.png)
+
+This huge 'profit' was due to an implicit purchase price of zero as the item was already purchased/selling when I started the script.
+
+**Gallery of User Runs**
+
+Reveal hidden contents
+
+[@idhurtit](https://dreambot.org/forums/index.php?/profile/276430-idhurtit/) V2.0 (members)
+
+![Image 46: idhurtit.png](https://i.postimg.cc/hGTBzm9M/idhurtit.png)
+
+[@GoldenCurse](https://dreambot.org/forums/index.php?/profile/301130-goldencurse/) V2.1 (members)
+
+![Image 47: IMG-6329-1.jpg](https://i.postimg.cc/tTDhwnQT/IMG-6329-1.jpg)
+
+![Image 48: IMG-6287.jpg](https://i.postimg.cc/t40MQdXX/IMG-6287.jpg)
+
+[@gochimochi](https://dreambot.org/forums/index.php?/profile/337571-gochimochi/) V2.1 (f2p)
+
+![Image 49: f2p.png](https://i.postimg.cc/MThyMD3H/f2p.png)
+
+[@Kiwiszn](https://dreambot.org/forums/index.php?/profile/325525-kiwiszn/) V2.1 (members)
+
+![Image 50: kiwizn.png](https://i.postimg.cc/brsnRzDR/kiwizn.png)
+
+![Image 51: eg2.png](https://i.postimg.cc/FHyFdhcw/eg2.png)
+
+[@damon3525](https://dreambot.org/forums/index.php?/profile/159097-damon3525/) V2.1 (f2p)
+
+![Image 52: v2-1-f2p.png](https://i.postimg.cc/fTwTDTJ5/v2-1-f2p.png)
+
+[@damon3525](https://dreambot.org/forums/index.php?/profile/159097-damon3525/) V2.2 (members)
+
+![Image 53: user-sub.png](https://i.postimg.cc/mrHRvHvm/user-sub.png)
+
+[@oldboot](https://dreambot.org/forums/index.php?/profile/324733-oldboot/) V2.1 (members)
+
+![Image 54: spacer.png](https://i.postimg.cc/nhZybpQz/o-X6-T1czl-T5-CIGX4-S6s-O3-Wg.png)
+
+![Image 55: record.webp](https://i.postimg.cc/y8pr7gMm/record.webp)
+
+[@50HZ](https://dreambot.org/forums/index.php?/profile/108250-50hz/) V2.2 (members)
+
+![Image 56: spacer.png](https://i.postimg.cc/154S79wZ/image.png)
+
+[@khomey34](https://dreambot.org/forums/index.php?/profile/327857-khomey34/) V2.2 (f2p)
+
+![Image 57: khomey.png](https://i.postimg.cc/0jyVRh5p/khomey.png)
+
+[@RandomKriss](https://dreambot.org/forums/index.php?/profile/319129-randomkriss/) V2.2 (f2p/members)
+
+![Image 58: humblekriss.png](https://i.postimg.cc/L6RpGd5Y/humblekriss.png)
+
+![Image 59: ymir.png](https://i.postimg.cc/RV87WhhN/ymir.png)
+
+[@Markosa](https://dreambot.org/forums/index.php?/profile/340129-markosa/) V2.2 (members)
+
+![Image 60: tokeiito.png](https://i.postimg.cc/R0CK8Hbp/tokeiito.png)
+
+[@Sinky](https://dreambot.org/forums/index.php?/profile/340477-sinky/) V2.3 (members)
+
+![Image 61: stinky.png](https://i.postimg.cc/HsvTZ8N3/stinky.png)
+
+![Image 62: sinky.png](https://i.postimg.cc/Yqy5rnYW/sinky.png)
+
+[@99sByAnyMeans](https://dreambot.org/forums/index.php?/profile/340513-99sbyanymeans/) V2.3 (members)
+
+![Image 63: 99byanymeans.jpg](https://i.postimg.cc/XJnM7nhp/99byanymeans.jpg)
+
+[@khomey34](https://dreambot.org/forums/index.php?/profile/327857-khomey34/) V2.3 (f2p)
+
+![Image 64: khomey.png](https://i.postimg.cc/tTxTknbr/khomey.png)
+
+[@Daaamron](https://dreambot.org/forums/index.php?/profile/334290-daaamron/) V2.3 (members)
+
+![Image 65: daaaamron0.jpg](https://i.postimg.cc/1zD2KyTG/daaaamron0.jpg)
+
+![Image 66: daaaamron.jpg](https://i.postimg.cc/DZFDjtkt/daaaamron.jpg)
+
+[@RandomKriss](https://dreambot.org/forums/index.php?/profile/319129-randomkriss/) V2.3 (f2p)
+
+![Image 67: ymir.png](https://i.postimg.cc/3x5ZF2Hq/ymir.png)
+
+@? V2.3 (members)
+
+![Image 68: fashoo1.jpg](https://i.postimg.cc/yddh8PFD/fashoo1.jpg)
+
+![Image 69: fashoo2.jpg](https://i.postimg.cc/3RcX4vBn/fashoo2.jpg)
+
+[@oldboot](https://dreambot.org/forums/index.php?/profile/324733-oldboot/) V2.3 (members)
+
+![Image 70: hidden.webp](https://i.postimg.cc/D0BfxrWK/hidden.webp)
+
+![Image 71: Hh9fde-Zf-Tj-CAY41asq-UIog.webp](https://i.postimg.cc/7hCtRDhY/Hh9fde-Zf-Tj-CAY41asq-UIog.webp)
+
+@? [01] V2.3 (f2p)
+
+![Image 72: 01.jpg](https://i.postimg.cc/158mVRrx/01.jpg)
+
+[@RandomKriss](https://dreambot.org/forums/index.php?/profile/319129-randomkriss/) V2.3 (members)
+
+![Image 73: 02.png](https://i.postimg.cc/xdDpygrG/02.png)
+
+![Image 74: 04.png](https://i.postimg.cc/KzQ9b21Q/04.png)
+
+@? [03] V2.3 (members)
+
+![Image 75: 03.jpg](https://i.postimg.cc/RF8PszqY/03.jpg)
+
+[@Daaamron](https://dreambot.org/forums/index.php?/profile/334290-daaamron/) V2.3 (members)
+
+![Image 76: 05.jpg](https://i.postimg.cc/sgNZZfLb/05.jpg)
+
+[@Daaamron](https://dreambot.org/forums/index.php?/profile/334290-daaamron/) V2.3 (members)
+
+![Image 77: 06.jpg](https://i.postimg.cc/g0LLyFFj/06.jpg)
+
+[@SuperDad37611](https://dreambot.org/forums/index.php?/profile/305346-superdad37611/) [07] V2.3 (f2p)
+
+![Image 78: 07.png](https://i.postimg.cc/rw3Kwn0k/07.png)
+
+@? [08] V2.3 (members)
+
+![Image 79: 08.png](https://i.postimg.cc/kXwTz8V8/08.png)
+
+@? [09] V2.3 (f2p)
+
+![Image 80: 09.png](https://i.postimg.cc/MK8y5GdB/09.png)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/) [10] V2.4 (members)
+
+![Image 81: 10.jpg](https://i.postimg.cc/fy7SpxB9/10.jpg)
+
+[@SuperDad37611](https://dreambot.org/forums/index.php?/profile/305346-superdad37611/) V2.4 (?)
+
+![Image 82: 11.png](https://i.postimg.cc/qqGgjpvc/11.png)
+
+[@GoldenCurse](https://dreambot.org/forums/index.php?/profile/301130-goldencurse/) V2.4 (members)
+
+![Image 83: 12.jpg](https://i.postimg.cc/3wM74PK3/12.jpg)
+
+[@GoldenCurse](https://dreambot.org/forums/index.php?/profile/301130-goldencurse/) V2.4 (?)
+
+![Image 84: 13.jpg](https://i.postimg.cc/nVSy96kN/13.jpg)
+
+[@GoldenCurse](https://dreambot.org/forums/index.php?/profile/301130-goldencurse/) V2.4 (members)
+
+![Image 85: 14.jpg](https://i.postimg.cc/Vs3cHxCn/14.jpg)
+
+![Image 86: 15.jpg](https://i.postimg.cc/RVKzrg78/15.jpg)
+
+[@oldboot](https://dreambot.org/forums/index.php?/profile/324733-oldboot/) V2.4 (members)
+
+![Image 87: 15-5.webp](https://i.postimg.cc/kXwJBjHH/15-5.webp)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/) V2.4 (members)
+
+![Image 88: 16.jpg](https://i.postimg.cc/TPkzjFxy/16.jpg)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/) V2.4 (members)
+
+![Image 89: 17.png](https://i.postimg.cc/TYGtwQ8B/17.png)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/) V2.4 (members)
+
+![Image 90: 18.jpg](https://i.postimg.cc/kXcft8qG/18.jpg)
+
+@? [19] V2.4 (members)
+
+![Image 91: 19.png](https://i.postimg.cc/B6zG3ywW/19.png)
+
+@? [20] V2.4 (members)
+
+![Image 92: 19.png](https://i.postimg.cc/nhXBcQL6/19.png)
+
+[@oldboot](https://dreambot.org/forums/index.php?/profile/324733-oldboot/) V2.4 (members)
+
+![Image 93: 21.webp](https://i.postimg.cc/Gmb3qWWz/21.webp)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/) V2.4 (members)
+
+![Image 94: 22.jpg](https://i.postimg.cc/wjnf6z9Q/22.jpg)
+
+@? [23] V2.4 (members)
+
+![Image 95: 23.png](https://i.postimg.cc/rsWn0Ygt/23.png)
+
+@? [23] V2.4 (f2p)
+
+![Image 96: 24.png](https://i.postimg.cc/jjwzSnMD/24.png)
+
+[@khomey34](https://dreambot.org/forums/index.php?/profile/327857-khomey34/) V2.4 (members)
+
+![Image 97: 25.png](https://i.postimg.cc/TwxpvKFM/25.png)
+
+[@trevster120](https://dreambot.org/forums/index.php?/profile/191007-trevster120/)V2.4 (members)
+
+![Image 98: 26.jpg](https://i.postimg.cc/cJyJfKsg/26.jpg)
+
+[@Asapfergg](https://dreambot.org/forums/index.php?/profile/341619-asapfergg/) V2.4 (members)
+
+![Image 99: 27.png](https://i.postimg.cc/QtMZ7sWK/27.png)
+
+[@SuperDad37611](https://dreambot.org/forums/index.php?/profile/305346-superdad37611/) V2.4 (members)
+
+![Image 100: 28.png](https://i.postimg.cc/7YRdJTgg/28.png)
+
+**Gallery of My Runs**
+
+Reveal hidden contents
+
+V2.4 <New> On the Hour Discord Webhook Summary Notifications, More Items, Fewer Bugs
+
+Reveal hidden contents
+
+Profit:: N/A
+
+Profit/Hour: N/A
+
+Trades CSV: N/A
+
+![Image 101: webhooks.png](https://i.postimg.cc/SxjJb31J/webhooks.png)
+
+V2.3: <New> Discord Webhook Notifications
+
+Reveal hidden contents
+
+Profit:: 6,154,032
+
+Profit/Hour: 1,113,339
+
+Trades CSV: [https://pastebin.com/7ET1PLE2](https://pastebin.com/7ET1PLE2)
+
+![Image 102: discord-bot.png](https://i.postimg.cc/V6wSfbmn/discord-bot.png)
+
+V2.2: <New> Regression Analysis
+
+Reveal hidden contents
+
+Profit:: 1,063,992
+
+Profit/Hour: 721,657
+
+Trades CSV: [https://pastebin.com/6i02BGV9](https://pastebin.com/6i02BGV9)
+
+![Image 103: record1.png](https://i.postimg.cc/5t32GLFZ/record1.png)
+
+Profit:: 1,630,856
+
+Profit/Hour: 239,556
+
+Trades CSV: [https://pastebin.com/w3WQQcUy](https://pastebin.com/w3WQQcUy)
+
+![Image 104: v2-2.png](https://i.postimg.cc/Gp9YxQj6/v2-2.png)
+
+V2.1: <New> Pricing Customisation, Post Session Inspection
+
+Reveal hidden contents
+
+Profit: 3,948,559
+
+Profit/Hour: 228,681
+
+Trades CSV: [https://pastebin.com/52R3iABw](https://pastebin.com/52R3iABw)
+
+![Image 105: 4m.png](https://i.postimg.cc/9McBJrXY/4m.png)
+
+Profit: 1,312,080
+
+Profit/Hour: 230,684
+
+Trades CSV: [https://pastebin.com/gvjWfb8b](https://pastebin.com/gvjWfb8b)
+
+![Image 106: v2-1.png](https://i.postimg.cc/9XJrQ3X0/v2-1.png)
+
+Profit: 971,770
+
+Profit/Hour: 235,185
+
+Trades CSV: [https://pastebin.com/1HCnnCZE](https://pastebin.com/1HCnnCZE)
+
+![Image 107: test8-v2-1.png](https://i.postimg.cc/T1mSTtwf/test8-v2-1.png)
+
+V2.0: <New> Automatic Item Selection
+
+Reveal hidden contents
+
+Profit: 313,366
+
+Profit/Hour: 423,617
+
+Trades CSV: [https://pastebin.com/hZGeSdjf](https://pastebin.com/hZGeSdjf)
+
+[Video 3](https://www.youtube.com/watch?v=OdWit55-6JA)
+
+V1.2: <New> Live Profit Graphing
+
+Reveal hidden contents
+
+Profit: 18,743
+
+Profit/Hour: 4,976
+
+Trades CSV: [https://pastebin.com/ZWhf3Xy5](https://pastebin.com/ZWhf3Xy5)
+
+![Image 108: spacer.png](https://i.postimg.cc/yNwskrFt/test5-v1-2.png)
+
+[Video 4](https://www.youtube.com/watch?v=mCxF_WA6Iuo)
+
+Profit: 319,007
+
+Profit/Hour: 322,591
+
+Trades CSV: [https://pastebin.com/nkQ3Y4hb](https://pastebin.com/nkQ3Y4hb)
+
+![Image 109: spacer.png](https://i.postimg.cc/PxG256J4/test6-v1-2.png)
+
+V1.1: <New> Item selection
+
+Reveal hidden contents
+
+Profit: 57,406
+
+Profit/Hour: 82,270
+
+Trades CSV: [https://pastebin.com/UuhmakQ1](https://pastebin.com/UuhmakQ1)
+
+![Image 110: spacer.png](https://i.postimg.cc/Kz4PyZFB/test3-v1-1.png)
+
+Profit: 210,412
+
+Profit/Hour: 195,077
+
+Trades CSV: [https://pastebin.com/Qe2gpZDu](https://pastebin.com/Qe2gpZDu)
+
+![Image 111: spacer.png](https://i.postimg.cc/bv5Gk1cS/test4-v1-1.png)
+
+V1.0: Only Logs and Death rune
+
+Reveal hidden contents
+
+Profit: 2,194
+
+Profit/Hour: 2,301
+
+Trades CSV: [https://pastebin.com/SP534wy0](https://pastebin.com/SP534wy0)
+
+![Image 112: spacer.png](https://i.postimg.cc/y8wjYCJR/test1-v1-0.png)
+
+Upload your proggies here or on Discord (with your DB username if you want to be credited) and I will add them above.
+
+Please let me know if you encounter any bugs or would like any features added.
+
+**Edited July 6, 2024 2 yr by apnasus**
+
+updating config
+
+*   [YesWasTaken](https://dreambot.org/forums/index.php?/profile/273060-yeswastaken/ "Go to YesWasTaken's profile"), [planterror](https://dreambot.org/forums/index.php?/profile/344781-planterror/ "Go to planterror's profile"), [Vengeful](https://dreambot.org/forums/index.php?/profile/301130-vengeful/ "Go to Vengeful's profile") and [8 others juacovp08 xyz111 idhurtit bigdogger brainbudt Jraphix Disabled CLMarcus](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=490928)
+*   [![Image 113: Like](https://static.dreambot.org/reactions/react_like.png) 8](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=490928&reaction=1 "See who reacted \"Like\"")
+*   [![Image 114: Upvote](https://static.dreambot.org/reactions/react_up.png) 3](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=490928&reaction=6 "See who reacted \"Upvote\"")
+
+[![Image 115: Hashtag](https://static.dreambot.org/monthly_2025_12/holding.thumb.jpg.6f4ce3e70d2fe61c3b747161e1249bf1.jpg)](https://dreambot.org/forums/index.php?/profile/3623-hashtag/ "Go to Hashtag's profile")![Image 116: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [Hashtag](https://dreambot.org/forums/index.php?/profile/3623-hashtag/ "Go to Hashtag's profile")
+
+[Administrator](https://dreambot.org/forums/index.php?/staff/ "Hashtag is a moderator")
+
+[![Image 117](https://static.dreambot.org/monthly_2021_04/team_administrator.png.d806f3e410caa098d3de5128a4de2728.png)](https://dreambot.org/forums/index.php?/staff/)![Image 118: Scripter+](https://static.dreambot.org/monthly_2019_04/team_prem-scripter.png.cce81ae91f871e9e8a9fa62a7c5b3796.png)![Image 119: SDN Manager](https://static.dreambot.org/monthly_2019_04/team_sdn-manager.png.cded2d6cd84d074a479430113aa7ea0f.png)
+
+*   [20.2k posts](https://dreambot.org/forums/index.php?/profile/3623-hashtag/content/ "Posts")
+*   [11 Badges](https://dreambot.org/forums/index.php?/profile/3623-hashtag/badges/ "Badges")
+*   [9.4k Reputation](https://dreambot.org/forums/index.php?/profile/3623-hashtag/reputation/ "Reputation")
+
+[![Image 120: Hashtag](https://static.dreambot.org/monthly_2025_12/holding.thumb.jpg.6f4ce3e70d2fe61c3b747161e1249bf1.jpg)](https://dreambot.org/forums/index.php?/profile/3623-hashtag/ "Go to Hashtag's profile")![Image 121: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [Hashtag](https://dreambot.org/forums/index.php?/profile/3623-hashtag/ "Go to Hashtag's profile")[Administrator](https://dreambot.org/forums/index.php?/staff/ "Hashtag is a moderator")
+
+December 2, 2023 2 yr
+
+Author stats
+
+December 2, 2023 2 yr
+
+Released and promoted. Congratulations!
+
+*   [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile") and [manclay14](https://dreambot.org/forums/index.php?/profile/378259-manclay14/ "Go to manclay14's profile")
+*   [![Image 122: Like](https://static.dreambot.org/reactions/react_like.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=491168&reaction=1 "See who reacted \"Like\"")
+*   [![Image 123: Upvote](https://static.dreambot.org/reactions/react_up.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=491168&reaction=6 "See who reacted \"Upvote\"")
+
+[![Image 124: SDN Bot](https://static.dreambot.org/monthly_2021_06/apple-icon-180x180.thumb.png.7fc2123ba0daa594657d854898ec5798.png)](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")![Image 125: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [SDN Bot](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")
+
+Scholar
+
+![Image 126](https://static.dreambot.org/team_scholar.png)
+
+*   [60k posts](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/content/ "Posts")
+*   [5 Badges](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/badges/ "Badges")
+*   [340 Reputation](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/reputation/ "Reputation")
+
+[![Image 127: SDN Bot](https://static.dreambot.org/monthly_2021_06/apple-icon-180x180.thumb.png.7fc2123ba0daa594657d854898ec5798.png)](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")![Image 128: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [SDN Bot](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")Scholar
+
+December 2, 2023 2 yr
+
+Author stats
+
+December 2, 2023 2 yr
+
+**humblePhlipper** has been approved and is now live on the SDN!
+
+Thanks! 
+
+[![Image 129: xyz111](blob:http://localhost/27f0225fbf026c02a0697a2cd9b72dc6)](https://dreambot.org/forums/index.php?/profile/260830-xyz111/ "Go to xyz111's profile")![Image 130: Community Regular](https://static.dreambot.org/monthly_2021_06/8_Regular.svg)
+
+### [xyz111](https://dreambot.org/forums/index.php?/profile/260830-xyz111/ "Go to xyz111's profile")
+
+Lifetime Sponsor
+
+![Image 131](https://static.dreambot.org/team_lifetimesponsor.png)
+
+*   [206 posts](https://dreambot.org/forums/index.php?/profile/260830-xyz111/content/ "Posts")
+*   [8 Badges](https://dreambot.org/forums/index.php?/profile/260830-xyz111/badges/ "Badges")
+*   [90 Reputation](https://dreambot.org/forums/index.php?/profile/260830-xyz111/reputation/ "Reputation")
+
+[![Image 132: xyz111](blob:http://localhost/27f0225fbf026c02a0697a2cd9b72dc6)](https://dreambot.org/forums/index.php?/profile/260830-xyz111/ "Go to xyz111's profile")![Image 133: Community Regular](https://static.dreambot.org/monthly_2021_06/8_Regular.svg)
+
+### [xyz111](https://dreambot.org/forums/index.php?/profile/260830-xyz111/ "Go to xyz111's profile")Lifetime Sponsor
+
+December 2, 2023 2 yr
+
+Author stats
+
+December 2, 2023 2 yr
+
+EPIC!
+
+[![Image 134: brainbudt](blob:http://localhost/1bb3cbd8c95d81ed47c224738db30164)](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/ "Go to brainbudt's profile")![Image 135: Rookie](https://static.dreambot.org/monthly_2021_06/2_Rookie.svg)
+
+### [brainbudt](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/ "Go to brainbudt's profile")
+
+Members
+
+*   [13 posts](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/content/ "Posts")
+*   [7 Badges](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/badges/ "Badges")
+*   [4 Reputation](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/reputation/ "Reputation")
+
+[![Image 136: brainbudt](blob:http://localhost/1bb3cbd8c95d81ed47c224738db30164)](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/ "Go to brainbudt's profile")![Image 137: Rookie](https://static.dreambot.org/monthly_2021_06/2_Rookie.svg)
+
+### [brainbudt](https://dreambot.org/forums/index.php?/profile/160272-brainbudt/ "Go to brainbudt's profile")Members
+
+December 2, 2023 2 yr
+
+Author stats
+
+December 2, 2023 2 yr
+
+Unique script. Keep up the good work.
+
+*   [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+*   [![Image 138: Like](https://static.dreambot.org/reactions/react_like.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=491226&reaction=1 "See who reacted \"Like\"")
+
+[![Image 139: CatnipandMilk](https://static.dreambot.org/monthly_2023_12/pixel-pastels-littledr3ams-36_106729.thumb.png.0d426b75eb0d962708007e8bbdb4bb42.png)](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/ "Go to CatnipandMilk's profile")![Image 140: Explorer](https://static.dreambot.org/monthly_2021_06/5_Explorer.svg)
+
+### [CatnipandMilk](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/ "Go to CatnipandMilk's profile")
+
+Members
+
+*   [37 posts](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/content/ "Posts")
+*   [8 Badges](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/badges/ "Badges")
+*   [18 Reputation](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/reputation/ "Reputation")
+
+[![Image 141: CatnipandMilk](https://static.dreambot.org/monthly_2023_12/pixel-pastels-littledr3ams-36_106729.thumb.png.0d426b75eb0d962708007e8bbdb4bb42.png)](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/ "Go to CatnipandMilk's profile")![Image 142: Explorer](https://static.dreambot.org/monthly_2021_06/5_Explorer.svg)
+
+### [CatnipandMilk](https://dreambot.org/forums/index.php?/profile/292917-catnipandmilk/ "Go to CatnipandMilk's profile")Members
+
+December 4, 2023 2 yr
+
+Author stats
+
+December 4, 2023 2 yr
+
+very cool script. would be cool to select which items to flip.
+
+*   [420 Eyeq](https://dreambot.org/forums/index.php?/profile/321440-420-eyeq/ "Go to 420 Eyeq's profile") and [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+*   [![Image 143: Like](https://static.dreambot.org/reactions/react_like.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=491545&reaction=1 "See who reacted \"Like\"")
+*   [![Image 144: Upvote](https://static.dreambot.org/reactions/react_up.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=491545&reaction=6 "See who reacted \"Upvote\"")
+
+[![Image 145: Gnar](https://static.dreambot.org/profile/photo-thumb-59634.jpg)](https://dreambot.org/forums/index.php?/profile/59634-gnar/ "Go to Gnar's profile")![Image 146: Rising Star](https://static.dreambot.org/monthly_2021_06/9_RisingStar.svg)
+
+### [Gnar](https://dreambot.org/forums/index.php?/profile/59634-gnar/ "Go to Gnar's profile")
+
+Lifetime Sponsor
+
+![Image 147](https://static.dreambot.org/team_lifetimesponsor.png)
+
+*   [260 posts](https://dreambot.org/forums/index.php?/profile/59634-gnar/content/ "Posts")
+*   [8 Badges](https://dreambot.org/forums/index.php?/profile/59634-gnar/badges/ "Badges")
+*   [34 Reputation](https://dreambot.org/forums/index.php?/profile/59634-gnar/reputation/ "Reputation")
+
+[![Image 148: Gnar](https://static.dreambot.org/profile/photo-thumb-59634.jpg)](https://dreambot.org/forums/index.php?/profile/59634-gnar/ "Go to Gnar's profile")![Image 149: Rising Star](https://static.dreambot.org/monthly_2021_06/9_RisingStar.svg)
+
+### [Gnar](https://dreambot.org/forums/index.php?/profile/59634-gnar/ "Go to Gnar's profile")Lifetime Sponsor
+
+December 9, 2023 2 yr
+
+Author stats
+
+December 9, 2023 2 yr
+
+does the script use ge-tracker/runelite API or does it go off of current GE high low prices?
+
+*   [Molokai Boy](https://dreambot.org/forums/index.php?/profile/356674-molokai-boy/ "Go to Molokai Boy's profile") and [coolcat94](https://dreambot.org/forums/index.php?/profile/362799-coolcat94/ "Go to coolcat94's profile")
+*   [![Image 150: Upvote](https://static.dreambot.org/reactions/react_up.png) 2](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=493017&reaction=6 "See who reacted \"Upvote\"")
+
+[![Image 151: YUNGTHUGFATGP](https://static.dreambot.org/monthly_2024_04/1703893001858714.thumb.jpg.fd6d52bec7f0c199199132d91c5593b0.jpg)](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/ "Go to YUNGTHUGFATGP's profile")![Image 152: Rising Star](https://static.dreambot.org/monthly_2021_06/9_RisingStar.svg)
+
+### [YUNGTHUGFATGP](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/ "Go to YUNGTHUGFATGP's profile")
+
+Lifetime Sponsor
+
+![Image 153](https://static.dreambot.org/team_lifetimesponsor.png)
+
+*   [410 posts](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/content/ "Posts")
+*   [9 Badges](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/badges/ "Badges")
+*   [138 Reputation](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/reputation/ "Reputation")
+
+*   Location import
+
+[![Image 154: YUNGTHUGFATGP](https://static.dreambot.org/monthly_2024_04/1703893001858714.thumb.jpg.fd6d52bec7f0c199199132d91c5593b0.jpg)](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/ "Go to YUNGTHUGFATGP's profile")![Image 155: Rising Star](https://static.dreambot.org/monthly_2021_06/9_RisingStar.svg)
+
+### [YUNGTHUGFATGP](https://dreambot.org/forums/index.php?/profile/272693-yungthugfatgp/ "Go to YUNGTHUGFATGP's profile")Lifetime Sponsor
+
+December 9, 2023 2 yr
+
+Author stats
+
+December 9, 2023 2 yr
+
+Very cool ![Image 156: :)](https://static.dreambot.org/emoticons/default_smile.png)
+
+*   [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+*   [![Image 157: Like](https://static.dreambot.org/reactions/react_like.png) 1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/&do=showReactionsComment&comment=493089&reaction=1 "See who reacted \"Like\"")
+
+[![Image 158: SDN Bot](https://static.dreambot.org/monthly_2021_06/apple-icon-180x180.thumb.png.7fc2123ba0daa594657d854898ec5798.png)](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")![Image 159: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [SDN Bot](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")
+
+Scholar
+
+![Image 160](https://static.dreambot.org/team_scholar.png)
+
+*   [60k posts](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/content/ "Posts")
+*   [5 Badges](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/badges/ "Badges")
+*   [340 Reputation](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/reputation/ "Reputation")
+
+[![Image 161: SDN Bot](https://static.dreambot.org/monthly_2021_06/apple-icon-180x180.thumb.png.7fc2123ba0daa594657d854898ec5798.png)](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")![Image 162: Grand Master](https://static.dreambot.org/monthly_2021_06/14_GrandMaster.svg)
+
+### [SDN Bot](https://dreambot.org/forums/index.php?/profile/259928-sdn-bot/ "Go to SDN Bot's profile")Scholar
+
+December 10, 2023 2 yr
+
+Author stats
+
+December 10, 2023 2 yr
+
+**humblePhlipper** has been updated and is now live on the SDN!
+
+It's currently at **v1.1** and is available in the client!
+
+Changes:
+*   Added support for all items
+*   Added QuickStart
+*   Added GUI
+*   Added Paint
+*   Added pause/resume bidding toggle
+*   Improved trade history accuracy
+
+Time since request was made: 9 minutes, 48 seconds
+
+Thanks! 
+
+[![Image 163: apnasus](blob:http://localhost/799ba633fad7f9b22c9b1adae46839f0)](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")![Image 164: Collaborator](https://static.dreambot.org/monthly_2021_06/7_Collaborator.svg)
+
+### [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")
+
+VIP
+
+![Image 165](https://static.dreambot.org/team_vip.png)![Image 166: Scripter](https://static.dreambot.org/team_scripter.png)
+
+*   [173 posts](https://dreambot.org/forums/index.php?/profile/295121-apnasus/content/ "Posts")
+*   [9 Badges](https://dreambot.org/forums/index.php?/profile/295121-apnasus/badges/ "Badges")
+*   [64 Reputation](https://dreambot.org/forums/index.php?/profile/295121-apnasus/reputation/ "Reputation")
+
+*   Location: Grand Exchange, 302/308
+
+[![Image 167: apnasus](blob:http://localhost/799ba633fad7f9b22c9b1adae46839f0)](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")![Image 168: Collaborator](https://static.dreambot.org/monthly_2021_06/7_Collaborator.svg)
+
+### [apnasus](https://dreambot.org/forums/index.php?/profile/295121-apnasus/ "Go to apnasus's profile")VIP
+
+December 10, 2023 2 yr
+
+*   Author
+
+Author stats
+
+December 10, 2023 2 yr
+*   Author
+
+> [](https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/49/#)[](https://dreambot.org/forums/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=28662&content_commentid=493017) On 12/9/2023 at 5:43 AM, [Gnar](https://dreambot.org/forums/?app=core&module=members&controller=profile&id=59634) said: 
+> 
+> 
+> 
+> does the script use ge-tracker/runelite API or does it go off of current GE high low prices?
+
+Hey, it uses the OSRS Wiki API which was released about 2 years ago in partnership with Runelite, see [https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices](https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices?action=history)
+
+This is a lot more accurate than Dreambot's internal API which proxies the above but with a delay of up to 20 minutes - this delay means it tends to lose money when I try using it
+
+The script enters bids/asks at the latest low and high prices, respectively, which are updated every ~0.7 seconds or so. In the future I plan to develop more sophisticated pricing algorithms (with ARIMA, KF, ML etc.)
+
+*   [](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments "First page")
+*   [Prev](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments)
+*   [1](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/#comments)
+*   [2](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/2/#comments)
+*   [3](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/3/#comments)
+*   [4](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/4/#comments)
+*   [5](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/5/#comments)
+*   [6](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/6/#comments)
+*   [Next](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/2/#comments)
+*   [Last page](https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/page/49/#comments)
+*   Page 1 of 49     Go 
+
+## Create an account or sign in to comment
+
+[Register a new account](https://dreambot.org/forums/index.php?/register/)
+
+[Sign In Now](https://dreambot.org/forums/index.php?/login/&ref=aHR0cHM6Ly9kcmVhbWJvdC5vcmcvZm9ydW1zL2luZGV4LnBocD8vdG9waWMvMjg2NjItZnJlZS1odW1ibGVwaGxpcHBlci1ncmFuZC1leGNoYW5nZS1mbGlwcGluZy13aXRoLWF1dG9tYXRpYy1pdGVtLXNlbGVjdGlvbi0zMDAtZ3Boci0wLXhwaHIvI3JlcGx5Rm9ybQ==)
+
+Share
+
+ https://dreambot.org/forums/index.php?/topic/28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr/
+*   [Share on Bluesky](https://bsky.app/intent/compose?text=%5BFree%5D+humblePhlipper%3A+Grand+Exchange+flipping+with+automatic+item+selection+%28300%2B+gp%2Fhr%2C+0+xp%2Fhr%29%20-%20https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+*   [Share on X](https://x.com/share?url=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+*   [Share on Facebook](https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+*   [{lang="reddit_text"](https://www.reddit.com/submit?url=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F&title=%5BFree%5D+humblePhlipper%3A+Grand+Exchange+flipping+with+automatic+item+selection+%28300%2B+gp%2Fhr%2C+0+xp%2Fhr%29)
+*   [Share via email](mailto:?subject=%5BFree%5D%20humblePhlipper%3A%20Grand%20Exchange%20flipping%20with%20automatic%20item%20selection%20%28300%2B%20gp%2Fhr%2C%200%20xp%2Fhr%29&body=https%3A%2F%2Fdreambot.org%2Fforums%2Findex.php%3F%2Ftopic%2F28662-free-humblephlipper-grand-exchange-flipping-with-automatic-item-selection-300-gphr-0-xphr%2F)
+
+More sharing options...
+
+[Followers](https://dreambot.org/forums/index.php?/login/ "Sign in to follow this")
+
+[Go to topic listing](https://dreambot.org/forums/index.php?/forum/224-free/ "Go to Free")
+
+1.   [Home](https://dreambot.org/forums/ "Home")
+2.   [Scripts](https://dreambot.org/forums/index.php?/forum/35-scripts/)
+3.   [SDN Scripts](https://dreambot.org/forums/index.php?/forum/36-sdn-scripts/)
+4.   [Money Making](https://dreambot.org/forums/index.php?/forum/51-money-making/)
+5.   [Free](https://dreambot.org/forums/index.php?/forum/224-free/)
+6.   [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+*   [All Activity](https://dreambot.org/forums/index.php?/discover/)
+
+*   Light Mode
+*   Dark Mode
+*   System Preference
+
+* * *
+
+*   [Privacy Policy](https://dreambot.org/forums/index.php?/privacy/)
+*   [Cookies](https://dreambot.org/forums/index.php?/cookies/)
+
+Copyright © 2026 DreamBot, Inc. RuneScape® is a trademark of Jagex © 1999-2026 Jagex Ltd. DreamBot, Inc. is not in any way affiliated with Jagex Ltd.[Powered by Invision Community](https://www.invisioncommunity.com/ "Invision Community")
+
+#### Important Information
+
+We have placed [cookies](https://dreambot.org/forums/index.php?/cookies/) on your device to help make this website better. You can [adjust your cookie settings](https://dreambot.org/forums/index.php?/cookies/), otherwise we'll assume you're okay to continue.
+
+Reject Accept Optional Cookies
+
+*   [Sign In](https://dreambot.org/forums/index.php?/login/)
+*   [Sign Up](https://dreambot.org/forums/index.php?/register/)
+*   Search
+*   Menu
+
+## Account
+
+Close panel
+
+*   [Existing user? Sign In](https://dreambot.org/forums/index.php?/login/)
+*   [Sign Up](https://dreambot.org/forums/index.php?/register/)
+
+## Navigation
+
+Close panel
+
+*   
+Browse
+    *   [Forums](https://dreambot.org/forums/index.php)
+    *   [Staff](https://dreambot.org/forums/index.php?/staff/)
+    *   [Online Users](https://dreambot.org/forums/index.php?/online/)
+    *   [Leaderboard](https://dreambot.org/forums/index.php?/leaderboard/)
+
+*   [Download](https://downloads.dreambot.org/launcher/Launcher.jar)
+*   [Scripts](https://sdn.dreambot.org/scripts)
+*   
+Support
+    *   [Gift Cards](https://dreambot.org/forums/index.php?/store/gift-cards/)
+
+*   [Guides](https://dreambot.org/guides/)
+*   [Javadocs](https://dreambot.org/javadocs/)
+*   [Upgrade to VIP](https://dreambot.org/forums/index.php?/store/product/6-vip/?utm_source%3Ddreambot/&/store/product/6-vip/?utm_source=dreambot&utm_medium=menu%20button)
+
+1.   [Home](https://dreambot.org/forums/ "Home")
+2.   [Scripts](https://dreambot.org/forums/index.php?/forum/35-scripts/)
+3.   [SDN Scripts](https://dreambot.org/forums/index.php?/forum/36-sdn-scripts/)
+4.   [Money Making](https://dreambot.org/forums/index.php?/forum/51-money-making/)
+5.   [Free](https://dreambot.org/forums/index.php?/forum/224-free/)
+6.   [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+## Search
+
+Close panel
+
+ Search
+
+ Where:  
+
+ Search:  
+
+ Date Created:  
+
+ Use:  
+
+ Last Updated:  
+
+Search...
+Search
+
+Search
+
+Search by content type 
+
+Find results in 
+
+Date Created 
+
+Last Updated 
+
+Close
+
+#### Configure browser push notifications
+
+Close
+
+ Chrome Safari Edge Firefox
+
+##### Chrome (Android)
+
+1.   Tap the lock icon next to the address bar.
+2.   Tap **Permissions → Notifications**.
+3.   Adjust your preference.
+
+##### Chrome (Desktop)
+
+1.   Click the padlock icon in the address bar.
+2.   Select **Site settings**.
+3.   Find **Notifications** and adjust your preference.
+
+##### Safari (iOS 16.4+)
+
+1.   Ensure the site is installed via **Add to Home Screen**.
+2.   Open **Settings App → Notifications**.
+3.   Find your app name and adjust your preference.
+
+##### Safari (macOS)
+
+1.   Go to **Safari → Preferences**.
+2.   Click the **Websites** tab.
+3.   Select **Notifications** in the sidebar.
+4.   Find this website and adjust your preference.
+
+##### Edge (Android)
+
+1.   Tap the lock icon next to the address bar.
+2.   Tap **Permissions**.
+3.   Find **Notifications** and adjust your preference.
+
+##### Edge (Desktop)
+
+1.   Click the padlock icon in the address bar.
+2.   Click **Permissions for this site**.
+3.   Find **Notifications** and adjust your preference.
+
+##### Firefox (Android)
+
+1.   Go to **Settings → Site permissions**.
+2.   Tap **Notifications**.
+3.   Find this site in the list and adjust your preference.
+
+##### Firefox (Desktop)
+
+1.   Open Firefox Settings.
+2.   Search for **Notifications**.
+3.   Find this site in the list and adjust your preference.

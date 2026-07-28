@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Flip Out — Free OSRS Flipping Tool & GE Flip Finder</title>
+<meta name="description" content="Find the best OSRS items to flip — free. Realizable GE profit (tax-net, volume-capped, no fantasy margins), live dump alerts, recovery signals & a slot optimizer. Buy low, sell high — keep the spread.">
+<meta name="keywords" content="OSRS flipping tool, best items to flip OSRS, GE flip finder, what to flip OSRS, Grand Exchange flipping, RuneLite flipping plugin, OSRS dump alerts, OSRS money making, profitable flips">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23A78BFA'/><text x='50' y='68' text-anchor='middle' font-size='50' fill='%230B0A10' font-weight='bold'>GF</text></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:title" content="Grand Flip Out — Free OSRS Flipping Tool & GE Flip Finder">
+<meta property="og:description" content="Find the best OSRS items to flip — free. Realizable profit (tax-net, volume-capped, no fantasy margins), dump alerts & a slot optimizer. Buy low, sell high — keep the spread.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://grandflipout.com">
+<meta property="og:image" content="https://grandflipout.com/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Grand Flip Out — Free OSRS Flipping Tool & GE Flip Finder">
+<meta name="twitter:description" content="Find the best OSRS items to flip — free. Realizable profit, dump alerts & a slot optimizer. Flip the GE with a real edge.">
+<meta name="twitter:image" content="https://grandflipout.com/og-card.jpg">
+<meta name="theme-color" content="#0B0A10">
+<link rel="canonical" href="https://grandflipout.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/gfo.css?v=20260716b">
+<link rel="stylesheet" href="/css/gfo-components.css?v=20260716b">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   GRAND FLIP OUT — INDEX LANDING (pastel design system rebuild)
+   Page-local layout only. All color/space/type/motion via gfo.css
+   tokens + gfo-components.css classes. Vanilla static HTML, no React.
+   ═══════════════════════════════════════════════════════════════ */
+html { scroll-behavior:smooth; }
+body { line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:clip; }
+::selection { background:var(--gfo-accent); color:var(--gfo-bg); }
+::-webkit-scrollbar { width:8px; }
+::-webkit-scrollbar-track { background:var(--gfo-bg); }
+::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:4px; }
+
+/* ── Ambient hero glow ── */
+.hero-wrap { position:relative; overflow:hidden; }
+.hero-wrap::before {
+  content:''; position:absolute; top:-260px; left:50%; transform:translateX(-50%);
+  width:1100px; height:760px; pointer-events:none; z-index:0;
+  background:radial-gradient(60% 60% at 50% 0%, var(--gfo-accent-wash), transparent 70%),
+             radial-gradient(50% 50% at 85% 30%, var(--gfo-spike-wash), transparent 70%);
+}
+.hero {
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:1.05fr 0.95fr; gap:48px; align-items:center;
+  padding-block:64px 72px; /* block-axis only — a `padding` shorthand here kills the .wrap gutter */
+}
+@media (max-width:920px){ .hero{ grid-template-columns:1fr; gap:36px; padding-block:40px 48px; } }
+/* Keep the two-line headline composition on narrow phones: line 1 ("Buy low. Sell
+   high.") is at capacity at 390px/38px — scale fluidly below that instead of wrapping. */
+@media (max-width:640px){ .hero h1 { font-size:clamp(30px, 9.4vw, 38px); } }
+.hero-left { min-width:0; }
+/* The right column needs the same floor: without min-width:0 the grid track obeys
+   the dump-card's min-content (345px) and overflows the 346px mobile content box —
+   the hero clipped at the screen edge the day the .wrap gutter came back (2026-07-16). */
+.hero-right { min-width:0; }
+.hero .lede { margin-left:0; }
+.hero-cta { display:flex; gap:12px; flex-wrap:wrap; margin-top:28px; }
+
+/* ── Hero stat row (animated counters) ── */
+.hero-stats { display:flex; flex-wrap:wrap; gap:14px 28px; margin-top:32px; }
+.hero-stats .gfo-stat__value { font-size:24px; }
+
+/* ── Hero right column: the live proof panel ── */
+.proof { padding:0; overflow:hidden; }
+.proof__head {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:14px 18px; border-bottom:1px solid var(--border-default);
+  background:var(--surface-panel);
+}
+.proof__head h3 { font:var(--text-title); margin:0; display:flex; align-items:center; gap:9px; }
+.proof__body { padding:18px; display:flex; flex-direction:column; gap:18px; }
+
+
+/* dump feed */
+.dump-feed { display:flex; flex-direction:column; gap:10px; }
+/* CLS reservation (#116): the 2 skeletons reserved 116px but the loaded feed
+   (3 cards + footer link) renders ~263px desktop / ~282px mobile (measured live
+   2026-07-12) — the swap shifted everything below it. Reserve the real height. */
+#dumpFeed { min-height:260px; }
+.dump-feed__title { display:flex; align-items:center; justify-content:space-between; }
+.dump-feed__title span { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text-secondary); }
+.dump-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:var(--radius-md);
+  background:var(--surface-panel); border:1px solid var(--border-default);
+}
+.dump-card.is-new { animation:gfo-dump-glow var(--dur-pulse) var(--ease-in-out) 3; }
+.dump-card__main { min-width:0; flex:1; }
+.dump-card__name { font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dump-card__sub { font-size:12px; color:var(--text-tertiary); margin-top:2px; }
+.dump-card__drop { font-family:var(--font-mono); font-weight:700; font-size:15px; color:var(--gfo-down); text-align:right; flex-shrink:0; }
+.dump-empty { font-size:13px; color:var(--text-tertiary); padding:18px 4px; text-align:center; line-height:1.6; }
+
+/* RuneLite hub strip */
+.hubstrip { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:var(--text-tertiary); }
+.hubstrip a { display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border:1px solid var(--border-strong); border-radius:var(--radius-md); color:var(--gfo-accent); transition:var(--transition-hover); }
+.hubstrip a:hover { border-color:var(--gfo-accent); }
+
+/* ── honest flip-ticket (the realizable vs fantasy contrast) ── */
+.flipticket { padding:0; overflow:hidden; }
+.ft-pad { padding:16px 18px; }
+.ft-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.ft-live { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--gfo-up); }
+.ft-jti { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--text-tertiary); border:1px solid var(--border-strong); border-radius:var(--radius-pill); padding:3px 10px; }
+.ft-item { display:flex; align-items:center; gap:11px; margin-bottom:12px; }
+.ft-item img { width:32px; height:32px; object-fit:contain; }
+.ft-name { font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--text-primary); }
+.ft-trade { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-family:var(--font-mono); margin-bottom:14px; padding:12px 14px; background:var(--surface-panel); border-radius:var(--radius-md); border:1px solid var(--border-faint); }
+.ft-leg { display:flex; flex-direction:column; gap:3px; }
+.ft-leg .k { font-family:var(--font-display); font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-tertiary); font-weight:700; }
+.ft-leg .v { font-size:16px; font-weight:700; color:var(--text-primary); font-feature-settings:var(--num-features); }
+.ft-arrow { color:var(--gfo-accent); font-size:16px; font-weight:700; }
+.ft-net { margin-left:auto; text-align:right; }
+.ft-net .v { color:var(--profit); }
+.ft-contrast { display:flex; flex-direction:column; gap:8px; }
+.ft-row { display:flex; align-items:flex-start; gap:11px; padding:11px 13px; border-radius:var(--radius-md); }
+.ft-row .mark { font-size:14px; line-height:1.2; margin-top:1px; flex-shrink:0; }
+.ft-real { background:var(--gfo-up-wash); border:1px solid var(--gfo-up); }
+.ft-real .mark { color:var(--gfo-up); }
+.ft-real .big { font-family:var(--font-mono); font-size:22px; font-weight:700; color:var(--profit); line-height:1; display:block; font-feature-settings:var(--num-features); }
+.ft-row .sub { display:block; color:var(--text-tertiary); font-size:12px; margin-top:5px; line-height:1.45; }
+.ft-fant { background:var(--gfo-down-wash); border:1px solid var(--gfo-border); }
+.ft-fant .mark { color:var(--gfo-down); }
+.ft-fant .strike { font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--gfo-down); text-decoration:line-through; text-decoration-color:var(--gfo-down); }
+.ft-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:13px; font-size:13px; color:var(--text-tertiary); }
+.ft-foot label { display:inline-flex; align-items:center; gap:7px; }
+.ft-foot select { background:var(--surface-panel); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:var(--radius-sm); padding:5px 9px; font-family:var(--font-mono); font-size:13px; cursor:pointer; }
+.ft-foot a { color:var(--gfo-accent); font-weight:700; }
+.ft-foot a:hover { text-decoration:underline; }
+/* CLS reservation (#116): the loaded ticket measures ~481px desktop / ~527px
+   mobile (live 2026-07-12); the old 300px reservation left a ~180-227px swap
+   shift — the single largest CLS culprit on the page (0.10 of 0.13). */
+.ft-skel { min-height:480px; display:flex; align-items:center; justify-content:center; color:var(--text-tertiary); font-size:14px; }
+@media (max-width:640px){ .ft-skel { min-height:520px; } #dumpFeed { min-height:280px; } }
+
+/* ── features ── */
+.feat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+@media (max-width:1080px){ .feat-grid{ grid-template-columns:repeat(2,1fr); } }
+.feat .feat-icon { width:42px; height:42px; border-radius:var(--radius-md); display:grid; place-items:center; font-size:20px; background:var(--surface-elevated); border:1px solid var(--border-strong); }
+
+/* ── trust strip (live) ── */
+.trust-strip { display:none; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px 14px; margin:28px 0 0; }
+.trust-strip.is-live { display:flex; }
+.trust-chip { display:none; }
+.trust-chip.is-shown { display:inline-flex; }
+.trust-strip-foot { flex-basis:100%; text-align:center; font-size:12px; color:var(--text-tertiary); margin-top:4px; }
+.trust-strip-foot a { color:var(--text-secondary); text-decoration:underline; text-underline-offset:2px; }
+.trust-strip-foot a:hover { color:var(--gfo-accent); }
+
+/* ── live table ── */
+.live-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.live-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:16px 18px; border-bottom:1px solid var(--border-default); background:var(--surface-panel); }
+.live-head h3 { font:var(--text-title); margin:0; display:flex; align-items:center; gap:9px; }
+.live-ctrl { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.live-ctrl label { font-size:13px; color:var(--text-tertiary); display:flex; align-items:center; gap:7px; white-space:nowrap; }
+.live-ctrl select { background:var(--surface-card); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:var(--radius-sm); padding:6px 9px; font-family:var(--font-mono); font-size:13px; cursor:pointer; }
+.jti-pill { display:inline-block; font-family:var(--font-mono); font-weight:700; font-size:13px; padding:4px 10px; border-radius:var(--radius-sm); min-width:42px; text-align:center; }
+.jti-pill.excellent { background:var(--gfo-up-wash); color:var(--gfo-up); }
+.jti-pill.good { background:var(--gfo-spike-wash); color:var(--gfo-spike); }
+.jti-pill.fair { background:var(--gfo-accent-wash); color:var(--gfo-accent); }
+.table-foot { padding:16px 18px; text-align:center; border-top:1px solid var(--border-default); display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
+.table-foot a { font-size:14px; font-weight:700; color:var(--gfo-accent); }
+.table-foot a:hover { text-decoration:underline; }
+.spin { width:30px; height:30px; border:2px solid var(--gfo-accent); border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@media (max-width:640px){
+  .live-wrap thead { display:none; }
+  .live-wrap tbody tr { display:block; padding:8px 4px 12px; border-bottom:1px solid var(--border-default); }
+  .live-wrap tbody td { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 16px; border:none; }
+  .live-wrap tbody td::before { content:attr(data-label); color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }
+  .live-wrap tbody td.name { font-size:16px; padding:4px 16px 8px; }
+  .live-wrap tbody td.name::before { content:none; }
+}
+
+/* ── comparison ── */
+.cmp-wrap { overflow-x:auto; }
+.cmp { width:100%; border-collapse:collapse; font-size:14px; min-width:560px; }
+.cmp th { padding:14px 16px; text-align:left; font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-tertiary); background:var(--surface-panel); border-bottom:1px solid var(--border-default); }
+.cmp th.us { color:var(--gfo-accent); }
+.cmp td { padding:13px 16px; border-bottom:1px solid var(--border-faint); color:var(--text-secondary); }
+.cmp td:first-child { font-weight:700; color:var(--text-secondary); }
+.cmp td.us { background:var(--gfo-accent-wash); color:var(--text-primary); }
+.cmp .yes { color:var(--gfo-up); font-weight:700; }
+.cmp .no { color:var(--text-tertiary); }
+.cmp tr.hot td.us { background:var(--gfo-accent-wash); font-weight:700; }
+@media (max-width:640px){
+  .cmp { min-width:0; }
+  .cmp thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .cmp tbody { display:block; }
+  .cmp tr { display:block; margin-bottom:14px; border:1px solid var(--border-default); border-radius:var(--radius-lg); overflow:hidden; }
+  .cmp td { display:grid; grid-template-columns:max-content minmax(0,1fr); gap:12px; align-items:baseline; text-align:right; }
+  .cmp td::before { content:attr(data-label); text-align:left; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; }
+  .cmp td:first-child { display:block; text-align:left; color:var(--gfo-accent); text-transform:uppercase; background:var(--surface-panel); }
+  .cmp td:first-child::before { content:none; }
+  .cmp tr td:last-child { border-bottom:none; }
+}
+
+/* ── pricing ── */
+.pricing-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; max-width:680px; margin:0 auto; }
+@media (max-width:640px){ .pricing-row{ grid-template-columns:1fr; } }
+.price-card { padding:30px 26px; text-align:center; position:relative; }
+.price-card.featured { border-color:var(--gfo-accent); box-shadow:var(--glow-accent); }
+.price-card.featured::after { content:'MOST POPULAR'; position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:var(--gfo-accent); color:var(--gfo-bg); font-family:var(--font-display); font-size:10px; font-weight:800; padding:4px 14px; border-radius:var(--radius-pill); letter-spacing:0.1em; white-space:nowrap; }
+.price-tier { font-family:var(--font-display); font-size:12px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+.price-val { font-family:var(--font-mono); font-size:46px; font-weight:700; line-height:1; margin-bottom:6px; color:var(--text-primary); }
+.comparison-table td.no { color: var(--border-strong); }
+.comparison-table .check { font-size: 16px; color: var(--gfo-success); }
+.comparison-table .cross { font-size: 16px; color: var(--text-tertiary); opacity: 0.6; }
+
+/* ── mobile scroll hints ── */
+.table-scroll-hint { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.price-val .per { font-size:14px; color:var(--text-tertiary); font-weight:400; font-family:var(--font-sans); }
+.price-trial { font-size:13px; font-weight:700; color:var(--gfo-accent); margin:-2px 0 8px; }
+.price-desc { color:var(--text-secondary); font-size:14px; margin-bottom:20px; line-height:1.55; }
+.price-feat { text-align:left; list-style:none; padding:0; margin:0 0 22px; }
+.price-feat li { position:relative; padding:8px 0 8px 24px; font-size:14px; border-bottom:1px solid var(--border-faint); color:var(--text-secondary); }
+.price-feat li::before { content:'✓'; position:absolute; left:4px; top:8px; color:var(--gfo-up); font-weight:700; }
+.price-feat li.muted-item { color:var(--text-tertiary); opacity:0.85; }
+.price-feat li.muted-item::before { content:'—'; color:var(--text-tertiary); }
+.price-btn { display:block; width:100%; padding:13px; font-family:var(--font-display); font-size:14px; font-weight:700; border-radius:var(--radius-md); border:none; cursor:pointer; }
+.price-btn.primary { background:var(--gfo-accent); color:var(--gfo-bg); box-shadow:var(--glow-accent); }
+.price-btn.ghost { background:transparent; color:var(--text-secondary); border:1px solid var(--border-strong); }
+.price-btn.ghost:hover { border-color:var(--gfo-accent); color:var(--gfo-accent); }
+.pricing-note { text-align:center; font-size:13px; color:var(--text-tertiary); margin-top:14px; }
+.pricing-note a { color:var(--gfo-accent); }
+
+/* ── follow-up placeholder slot ── */
+.followup { border:1px dashed var(--border-strong); border-radius:var(--radius-lg); padding:24px; text-align:center; color:var(--text-tertiary); font-size:13px; line-height:1.6; }
+.followup b { color:var(--text-secondary); }
+
+/* ── OpportunityMap (interactive ECharts scatter) ── */
+.oppmap-wrap { padding:18px; }
+.oppmap-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.oppmap-head h3 { font:var(--text-title); margin:0; display:flex; align-items:center; gap:9px; }
+.oppmap-sub { margin:10px 0 14px; font-size:13px; color:var(--text-secondary); line-height:1.55; max-width:760px; }
+.oppmap-sub b { color:var(--text-primary); }
+.oppmap-chart { position:relative; width:100%; height:420px; }
+@media (max-width:640px){ .oppmap-chart { height:340px; } }
+.oppmap-skel { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-tertiary); font-size:14px; }
+.oppmap-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; color:var(--text-tertiary); font-size:14px; line-height:1.6; }
+.oppmap-empty a { color:var(--gfo-accent); font-weight:700; }
+.oppmap-legend { display:flex; flex-wrap:wrap; align-items:center; gap:10px 20px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border-faint); font-size:12px; color:var(--text-tertiary); }
+.oppmap-legend .ol-item { display:inline-flex; align-items:center; gap:8px; }
+.oppmap-legend .ol-axis { font-family:var(--font-mono); font-weight:700; color:var(--text-secondary); }
+.oppmap-legend .ol-size { display:inline-block; width:14px; height:14px; border-radius:50%; background:var(--gfo-accent-wash); border:1px solid var(--gfo-accent); }
+.oppmap-legend .ol-ramp { display:inline-block; width:60px; height:9px; border-radius:var(--radius-pill); background:linear-gradient(90deg, var(--gfo-down), var(--gfo-accent), var(--gfo-up)); }
+
+/* ── CTA ── */
+.cta { text-align:center; position:relative; overflow:hidden; }
+.cta::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:700px; height:420px; background:radial-gradient(circle, var(--gfo-accent-wash), transparent 70%); pointer-events:none; }
+.cta h2 { position:relative; }
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Grand Flip Out",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "url": "https://grandflipout.com",
+  "description": "OSRS Grand Exchange flipping intelligence — conformal-calibrated price intervals, dump detection, and 23-module signal stack. Free forever core.",
+  "screenshot": "https://grandflipout.com/og-card.jpg",
+  "featureList": [
+    "Conformal-calibrated price intervals (calibrated to ~90% coverage on liquid items)",
+    "Dump detection and recovery timing",
+    "JTI (Jump Trade Index) scoring",
+    "CUSUM regime change detection",
+    "137M+ market ticks of historical data",
+    "RuneLite plugin integration"
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free core tier — full intelligence stack, RuneLite plugin, dashboard."
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="/" class="logo"><b>G</b> GrandFlipOut</a>
+    <div class="nlinks" id="navLinks">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/intelligence">Intelligence</a>
+      <a href="/projections">Projections</a>
+      <a href="/pricing">Pricing</a>
+      <a href="https://discord.gg/5bGJbdHFSv" target="_blank" rel="noopener">Discord</a>
+      <a href="https://runelite.net/plugin-hub/show/grand-flip-out" target="_blank" rel="noopener">Plugins</a>
+      <div class="nav-actions">
+        <a href="/signup" class="btn btn-ghost">Sign in</a>
+        <a href="/dashboard" class="btn btn-primary" data-cta="view_demo">Open dashboard</a>
+      </div>
+    </div>
+    <button class="nav-burger" id="navBurger" aria-label="Menu" aria-expanded="false">&#9776;</button>
+  </div>
+</nav>
+<script src="/js/gfo-nav.js?v=2" defer></script>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero-wrap">
+<section class="wrap hero">
+  <div class="hero-left">
+    <span class="eyebrow">Grand Exchange intelligence</span>
+    <h1>Buy low. Sell high.<br>Keep <span class="grad">the spread.</span></h1>
+    <div class="spread-rail" aria-hidden="true">
+      <span class="spread-rail__label spread-rail__label--buy">BUY</span>
+      <span class="spread-rail__bar"></span>
+      <span class="spread-rail__label spread-rail__label--sell">SELL</span>
+    </div>
+    <p class="lede">Calibrated price forecasts, live dump detection, and tax-aware margins for OSRS flipping. We tell you what to flip and at what price — you execute in-game.</p>
+
+    <!-- ONE decisive CTA (#173 funnel P0): install is the primary action; the live
+         boards are the proof, one ghost click away. Same data-cta labels as before
+         so the funnel series stays comparable. -->
+    <div class="hero-cta">
+      <a href="https://runelite.net/plugin-hub/show/grand-flip-out" class="btn btn-primary btn-lg" target="_blank" rel="noopener" data-cta="install_plugin">Install the free plugin</a>
+      <a href="/dashboard" class="btn btn-ghost btn-lg" data-cta="view_demo">See live flips</a>
+    </div>
+
+    <!-- animated stat row — biggest HONEST number first: the 4h realizable bank
+         (capital-aware, tax-netted) is the hook; per-item margin is the detail. -->
+    <div class="hero-stats">
+      <div class="gfo-stat">
+        <span class="gfo-stat__value accent" id="statBank4h">—</span>
+        <span class="gfo-stat__label">Top pick banks <span class="gfo-stat__sub" id="statBank4hSub">realizable · 4h · after GE tax</span></span>
+      </div>
+      <div class="gfo-stat">
+        <span class="gfo-stat__value" id="statTopFlip">—</span>
+        <span class="gfo-stat__label">Top flip net margin <span class="gfo-stat__sub" id="statTopFlipSub">live · after GE tax</span></span>
+      </div>
+      <div class="gfo-stat">
+        <span class="gfo-stat__value" data-count="2" data-suffix="%">—</span>
+        <span class="gfo-stat__label">GE tax auto-netted</span>
+      </div>
+    </div>
+
+    <div class="hubstrip">
+      <a href="https://runelite.net/plugin-hub/show/grand-flip-out" target="_blank" rel="noopener" title="Available on RuneLite Plugin Hub">
+        <span class="live-dot live-dot--accent"></span> On the RuneLite Plugin Hub
+      </a>
+      <!-- Install count is LIVE from /api/plugin/hub-stats (the hand-updated static
+           number sat 40% stale within 3 weeks); the fallback text carries no number. -->
+      <span id="hubInstalls">free, always</span>
+      <script>
+        fetch('/api/plugin/hub-stats').then(r => r.json()).then(d => {
+          if (Number.isFinite(d.installs) && d.installs > 0) {
+            document.getElementById('hubInstalls').textContent =
+              d.installs.toLocaleString() + ' installs · free, always';
+          }
+        }).catch(() => {});
+      </script>
+    </div>
+
+    <!-- LIVE trust strip: numbers pulled live from the GFO API; each chip hidden until its real value loads. -->
+    <div class="trust-strip" id="trustStrip" aria-live="polite">
+      <span class="gfo-badge gfo-badge--up gfo-badge--soft"><span class="gfo-badge__dot"></span> Live now</span>
+      <span class="gfo-chip trust-chip" id="tcItems"><b data-val></b> items scanned</span>
+      <span class="gfo-chip trust-chip" id="tcPoints"><b data-val></b> price points persisted</span>
+      <span class="trust-strip-foot">Live from the GFO engine · <a href="/status">service status</a> · <a href="/accuracy">track record</a></span>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN — live proof panel -->
+  <div class="hero-right">
+    <div class="panel proof lift">
+      <div class="proof__head">
+        <h3><span class="live-dot"></span> Live proof</h3>
+        <span class="gfo-badge gfo-badge--brand gfo-badge--soft">Tax-aware</span>
+      </div>
+      <div class="proof__body">
+        <!-- The coverage/calibration gauge that lived here was CUT (owner 2026-07-05:
+             "that coverage dial shouldn't be there — we aren't using honesty as a selling
+             point"). The measured-coverage number still lives on /accuracy where it belongs.
+             The proof panel now leads with the money: live dumps. -->
+        <!-- (b) DumpFeed -->
+        <div class="dump-feed">
+          <div class="dump-feed__title">
+            <span>Live dumps</span>
+            <span class="gfo-badge gfo-badge--dump gfo-badge--soft" id="dumpBadge"><span class="gfo-badge__dot"></span> Scanning</span>
+          </div>
+          <div id="dumpFeed">
+            <div class="gfo-skeleton" style="height:54px;margin-bottom:8px"></div>
+            <div class="gfo-skeleton" style="height:54px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- honest flip-ticket: a real current flip, every number realizable -->
+    <div class="panel flipticket lift" id="flipTicket" style="margin-top:18px">
+      <div class="ft-skel">
+        <div class="gfo-telegrab" role="status" aria-live="polite">
+          <span class="gfo-telegrab__rune" aria-hidden="true"></span>
+          <span class="gfo-telegrab__reach" aria-hidden="true"></span>
+          <span class="gfo-telegrab__caption">telegrabbing a live flip<span class="gfo-telegrab__dots"></span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ═══ FEATURES — "Signals, not vibes." ═══ -->
+<section class="wrap section" id="features">
+  <div class="section-head">
+    <span class="kicker">Where the edge comes from</span>
+    <h2 class="sectitle" style="margin-top:14px">Intelligence no other OSRS tool ships</h2>
+    <p class="lede">Five server-side models hunting mispriced items around the clock — every chart is a live model output you can act on.</p>
+  </div>
+  <div class="feat-grid">
+    <div class="panel feat lift reveal">
+      <div class="feat-icon">⚠️</div>
+      <span class="gfo-badge gfo-badge--dump" style="margin-top:14px"><span class="gfo-badge__dot"></span> Live</span>
+      <h3>Dump scanner</h3>
+      <p>A three-classifier dump scorer flags real crashes in seconds and ranks them by recovery odds — so you see which dips are flips and which are traps.</p>
+    </div>
+    <div class="panel feat lift reveal">
+      <div class="feat-icon">📐</div>
+      <span class="gfo-badge gfo-badge--up" style="margin-top:14px"><span class="gfo-badge__dot"></span> Calibrated</span>
+      <h3>Calibrated buy/sell bands</h3>
+      <p>Conformal-calibrated buy/sell intervals targeting ~90% coverage — know the range a price should trade in before you commit gp. Thin items get flagged before they waste a GE slot.</p>
+    </div>
+    <div class="panel feat lift reveal">
+      <div class="feat-icon">🌊</div>
+      <span class="gfo-badge gfo-badge--spike" style="margin-top:14px"><span class="gfo-badge__dot"></span> Predicted</span>
+      <h3>Ripple forecasting</h3>
+      <p>When one item moves, related items follow. The ripple model surfaces the second-order flips a point price never reveals — before the market catches up.</p>
+    </div>
+    <div class="panel feat lift reveal">
+      <div class="feat-icon">📈</div>
+      <span class="gfo-badge gfo-badge--brand" style="margin-top:14px"><span class="gfo-badge__dot"></span> Rhythm</span>
+      <h3>Momentum &amp; seasonality</h3>
+      <p>CUSUM regime detection plus per-item seasonal rhythm tells a temporary dip from a structural shift — so you're not averaging down into a losing position.</p>
+    </div>
+    <div class="panel feat lift reveal">
+      <div class="feat-icon">⏳</div>
+      <span class="gfo-badge gfo-badge--dump" style="margin-top:14px"><span class="gfo-badge__dot"></span> Weibull hazard</span>
+      <h3>Next-Dump Forecast</h3>
+      <p>A Weibull timing model flags items likely to dump in the next few hours — stage your gp before the crash and buy the bottom, not the slide.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ADVISORY BAND (verbatim intent) ═══ -->
+<section class="wrap" style="padding-bottom:8px">
+  <div class="advisory">
+    <b>Advisory only</b> — GrandFlipOut is a third-party analytics companion. It tracks prices, flags opportunities and fires alerts — it never places or automates Grand Exchange trades. You always execute in-game. Not affiliated with Jagex.
+  </div>
+</section>
+
+<!-- ═══ LIVE TOP FLIPS ═══ -->
+<section class="wrap section" id="live-data">
+  <div class="section-head">
+    <span class="kicker">Realizable, not fantasy</span>
+    <h2 class="sectitle" style="margin-top:14px">Top flips right now</h2>
+    <p class="lede">Real-time prices, scored and ranked by the engine. Every gp figure is net of the 2% GE tax and capped to what you can actually buy and sell.</p>
+  </div>
+  <div class="panel live-wrap">
+    <div class="live-head">
+      <h3><span class="live-dot"></span> Live market feed</h3>
+      <div class="live-ctrl">
+        <label>Your bankroll
+          <select id="bankroll" aria-label="Your bankroll">
+            <option value="1000000">1M</option>
+            <option value="5000000">5M</option>
+            <option value="10000000" selected>10M</option>
+            <option value="50000000">50M</option>
+            <option value="100000000">100M</option>
+            <option value="1000000000">1B</option>
+            <option value="999999999999">Any</option>
+          </select>
+        </label>
+        <span class="gfo-badge gfo-badge--up gfo-badge--soft">Auto-updating</span>
+      </div>
+    </div>
+    <div class="table-scroll-hint">
+      <table class="gfo-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Buy</th>
+          <th>Sell</th>
+          <th title="Profit per item after 2% GE tax">Net/Item</th>
+          <th title="Jump Trade Index (0-100) — quality score combining margin, volume, freshness">JTI</th>
+          <th title="Realizable profit in one 4-hour window with your bankroll — net of tax, capped by what you can actually buy & sell (not margin × full limit)">4h Profit</th>
+        </tr>
+      </thead>
+      <tbody id="liveTableBody">
+        <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary)">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+            <div class="spin"></div><span>Loading live market data…</span>
+          </div>
+        </td></tr>
+      </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <a href="/regimes">See what's pumping &amp; dumping →</a>
+      <a href="/dashboard">Open dashboard →</a>
+    </div>
+  </div>
+
+  <!-- ═══ OPPORTUNITY MAP — interactive ECharts scatter of live flips ═══ -->
+  <!-- X = volume5m (liquidity, log), Y = netProfit (REALIZABLE gp, net of 2% tax —
+       the canon SSOT, never gross/fantasy). Bubble SIZE = JTI, COLOR = safety on a
+       pastel ramp (rose → lilac → mint). Click → /item/:id. Data draws ONCE. -->
+  <div class="panel oppmap-wrap reveal" style="margin-top:20px">
+    <div class="oppmap-head">
+      <h3><span class="live-dot"></span> Opportunity map</h3>
+      <span class="gfo-badge gfo-badge--brand gfo-badge--soft" id="oppmapBadge">Live · realizable</span>
+    </div>
+    <p class="oppmap-sub">Every flip the engine likes right now, placed by liquidity and <b>realizable profit</b> — net of the 2% GE tax, never fantasy margin. Bigger bubble = higher JTI; greener = safer. Click a bubble to open the item.</p>
+    <div class="oppmap-chart" id="oppMap">
+      <div class="oppmap-skel" id="oppMapSkel">
+        <div class="gfo-telegrab" role="status" aria-live="polite">
+          <span class="gfo-telegrab__rune" aria-hidden="true"></span>
+          <span class="gfo-telegrab__reach" aria-hidden="true"></span>
+          <span class="gfo-telegrab__caption">telegrabbing the opportunity map<span class="gfo-telegrab__dots"></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="oppmap-legend" id="oppMapLegend">
+      <span class="ol-item"><span class="ol-axis">→ liquidity</span> volume traded (5m)</span>
+      <span class="ol-item"><span class="ol-axis">↑ realizable profit</span> gp per item, net of tax</span>
+      <span class="ol-item"><span class="ol-size"></span> bubble size = JTI</span>
+      <span class="ol-item"><span class="ol-ramp"></span> rose = lower safety · mint = higher safety</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW WE COMPARE ═══ -->
+<section class="wrap section" id="compare">
+  <div class="section-head">
+    <span class="kicker">Feature-for-feature</span>
+    <h2 class="sectitle" style="margin-top:14px">How we compare</h2>
+    <p class="lede">Against the top OSRS flipping tools — including the things only a server-side intelligence engine can do.</p>
+  </div>
+  <div class="panel cmp-wrap">
+    <div class="table-scroll-hint">
+      <table class="cmp">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="us">GrandFlipOut</th>
+          <th>Flipping Copilot</th>
+          <th>Flipping Utilities</th>
+          <th>GE Tracker</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="hot">
+          <td>Published, falsifiable track record</td>
+          <td class="us yes" data-label="GrandFlipOut"><a href="/accuracy" style="color:var(--gfo-up);font-weight:700">Yes — no fabricated numbers</a></td>
+          <td class="no" data-label="Flipping Copilot">No</td>
+          <td class="no" data-label="Flipping Utilities">No</td>
+          <td class="no" data-label="GE Tracker">No</td>
+        </tr>
+        <tr>
+          <td>Calibrated confidence ranges</td>
+          <td class="us yes" data-label="GrandFlipOut">Yes — recovery intervals</td>
+          <td class="no" data-label="Flipping Copilot">No</td>
+          <td class="no" data-label="Flipping Utilities">No</td>
+          <td class="no" data-label="GE Tracker">No</td>
+        </tr>
+        <tr>
+          <td>Realizable (tax-net, volume-capped) profit</td>
+          <td class="us yes" data-label="GrandFlipOut">Yes — never margin × limit</td>
+          <td class="no" data-label="Flipping Copilot">Margin × limit</td>
+          <td class="no" data-label="Flipping Utilities">Margin × limit</td>
+          <td class="no" data-label="GE Tracker">Margin × limit</td>
+        </tr>
+        <tr>
+          <td>Price</td>
+          <td class="us" style="color:var(--gfo-up);font-weight:700" data-label="GrandFlipOut">Free · Pro $4.99/mo</td>
+          <td data-label="Flipping Copilot">~$7/mo</td>
+          <td data-label="Flipping Utilities">Free</td>
+          <td data-label="GE Tracker">£2/mo</td>
+        </tr>
+        <tr>
+          <td>Dump alerts (scored)</td>
+          <td class="us yes" data-label="GrandFlipOut">DumpScorer + recovery est.</td>
+          <td data-label="Flipping Copilot">Premium only</td>
+          <td data-label="Flipping Utilities">Discord (basic)</td>
+          <td data-label="GE Tracker">Premium only</td>
+        </tr>
+        <tr class="hot">
+          <td>Pre-market patch-impact alerts</td>
+          <td class="us yes" data-label="GrandFlipOut">Pro — NLP, before the market</td>
+          <td class="no" data-label="Flipping Copilot">No</td>
+          <td class="no" data-label="Flipping Utilities">No</td>
+          <td class="no" data-label="GE Tracker">No</td>
+        </tr>
+        <tr>
+          <td>RuneLite plugin</td>
+          <td class="us yes" data-label="GrandFlipOut">Yes — open source</td>
+          <td class="yes" data-label="Flipping Copilot">Yes</td>
+          <td class="yes" data-label="Flipping Utilities">Yes</td>
+          <td class="yes" data-label="GE Tracker">Yes</td>
+        </tr>
+      </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING TEASER ═══ -->
+<section class="wrap section" id="pricing">
+  <div class="section-head">
+    <span class="kicker">Simple pricing</span>
+    <h2 class="sectitle" style="margin-top:14px">The core is free, always</h2>
+    <p class="lede">Pro unlocks the sharp edge — pre-market patch-impact calls, Kelly-sized entries, and all-watchlist alerts.</p>
+  </div>
+  <div class="pricing-row">
+    <div class="panel price-card lift">
+      <div class="price-tier">Free forever</div>
+      <div class="price-val">$0</div>
+      <div class="price-desc">The core intelligence engine — free forever.</div>
+      <ul class="price-feat">
+        <li>All 23+ intelligence modules</li>
+        <li>Dump alerts + recovery intervals</li>
+        <li>Flip suggestions &amp; JTI scoring</li>
+        <li>RuneLite plugin (open source)</li>
+        <li>Web dashboard &amp; trade log</li>
+        <li class="muted-item">Capped watchlist alerts · no Kelly sizing, live signals or CSV export</li>
+      </ul>
+      <a href="https://runelite.net/plugin-hub/show/grand-flip-out" class="price-btn ghost" target="_blank" rel="noopener">Get the plugin</a>
+    </div>
+    <div class="panel price-card featured lift">
+      <div class="price-tier">Pro</div>
+      <div class="price-val">$4.99<span class="per">/mo</span></div>
+      <div class="price-trial">7-day free trial · cancel anytime</div>
+      <div class="price-desc">The sharp edge: patch calls before the market, Kelly-sized entries, dumps the second they break.</div>
+      <ul class="price-feat">
+        <li>Everything in Free, always</li>
+        <li>Kelly-sized signals on every watchlist item</li>
+        <li>Patch-note item-impact predictions (NLP, pre-market)</li>
+        <li>Wasserstein-Kelly position sizing</li>
+        <li>Full history export (CSV/JSON) + mobile push</li>
+      </ul>
+      <a href="/upgrade" class="price-btn primary" data-cta="start_pro">Start Pro — $4.99/mo →</a>
+    </div>
+  </div>
+  <p class="pricing-note"><a href="/pricing">Full feature comparison →</a></p>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="wrap section cta">
+  <h2 class="sectitle" style="font-size:40px">Stop guessing. <span class="grad">Flip with data.</span></h2>
+  <p class="lede" style="margin:16px auto 28px">Open the dashboard to see live calibrated signals right now — no account required. Install the RuneLite plugin for in-game intelligence.</p>
+  <div class="hero-cta" style="justify-content:center;position:relative">
+    <a href="/dashboard" class="btn btn-primary btn-lg" data-cta="view_demo">Open dashboard</a>
+    <a href="https://runelite.net/plugin-hub/show/grand-flip-out" class="btn btn-ghost btn-lg" target="_blank" rel="noopener" data-cta="install_plugin">Install plugin</a>
+    <a href="https://discord.gg/5bGJbdHFSv" class="btn btn-ghost btn-lg" target="_blank" rel="noopener">Join Discord</a>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="gfo-footer">
+  <div class="wrap">
+    <div class="gfo-footer__links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/intelligence">Intelligence</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/accuracy">Track record</a>
+      <a href="/status">Status</a>
+      <a href="https://discord.gg/5bGJbdHFSv" target="_blank" rel="noopener">Discord</a>
+      <a href="/support">Support</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/tos.html">Terms</a>
+      <a href="#" id="armorTrimBtn" style="color:var(--text-tertiary)">Free armor trimming</a>
+    </div>
+    <div class="gfo-footer__copy">
+      Prices from the Grand Exchange · advisory only · not affiliated with Jagex.<br>
+      Grand Flip Out © 2026 — OSRS is a trademark of Jagex Ltd. Data from the OSRS Wiki API. Information only — never automates trades.
+    </div>
+  </div>
+</footer>
+
+<!-- self-hosted ECharts (vendored; CSP 'self'-allowed — no external script host) -->
+<script src="/js/echarts.min.js"></script>
+<script src="/js/conformal.js?v=20260615"></script>
+<!-- Cmd+K command palette (design-system App.jsx → vanilla; armor-trim easter egg + item search) -->
+<script defer src="/js/cmd-palette.js?v=20260625"></script>
+
+<!-- ═══ NAV + REVEAL + COUNTERS ═══ -->
+<script>
+(function(){
+  'use strict';
+  // Mobile hamburger
+  var burger = document.getElementById('navBurger');
+  var nav = document.getElementById('nav');
+  var links = document.getElementById('navLinks');
+  if (burger && nav) {
+    burger.addEventListener('click', function(){
+      var open = nav.classList.toggle('nav--open');
+      burger.setAttribute('aria-expanded', String(open));
+      burger.innerHTML = open ? '&#10005;' : '&#9776;';
+    });
+    if (links) links.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ nav.classList.remove('nav--open'); burger.setAttribute('aria-expanded','false'); burger.innerHTML='&#9776;'; });
+    });
+  }
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal-on-scroll
+  var reveals = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) {
+    reveals.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold:0.12 });
+    reveals.forEach(function(el){ io.observe(el); });
+  }
+
+  // Animated counters (data-count, optional data-suffix/data-decimals). Runs ONCE.
+  function runCounter(el){
+    var target = parseFloat(el.getAttribute('data-count'));
+    if (isNaN(target)) return;
+    var suffix = el.getAttribute('data-suffix') || '';
+    var dec = parseInt(el.getAttribute('data-decimals') || '0', 10);
+    if (reduce) { el.textContent = target.toFixed(dec) + suffix; return; }
+    var dur = 1100, start = performance.now();
+    function frame(now){
+      var t = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = (target * eased).toFixed(dec) + suffix;
+      if (t < 1) requestAnimationFrame(frame);
+      else el.textContent = target.toFixed(dec) + suffix;
+    }
+    requestAnimationFrame(frame);
+  }
+  var counters = document.querySelectorAll('[data-count]');
+  if (!('IntersectionObserver' in window)) {
+    counters.forEach(runCounter);
+  } else {
+    var cio = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ runCounter(e.target); cio.unobserve(e.target); } });
+    }, { threshold:0.5 });
+    counters.forEach(function(el){ cio.observe(el); });
+  }
+})();
+</script>
+
+<!-- ═══ HERO VIZ — CalibrationGauge (a) + DumpFeed (b) ═══ -->
+<script>
+(function(){
+  'use strict';
+  var API_BASE = '';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  // ── (a) Top-flip money stat ──────────────────────────────────────────
+  // The hero tile leads with the MONEY: the top served flip's net margin (the
+  // /api/suggestions ranked list's own netProfit — per-unit, net of GE tax; no
+  // client-side re-derivation, no fantasy multiplication by buy limit). Honest
+  // empty state: an em dash until the live feed has a real number.
+  function fmtGp(n){
+    if (n == null || isNaN(n)) return '\u2014';
+    if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return Math.round(n/1e3).toLocaleString() + 'k';
+    return Math.round(n).toLocaleString();
+  }
+  function loadTopFlip(){
+    fetch(API_BASE + '/api/suggestions?budget=10000000', { headers:{ 'Accept':'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        var sugs = (d && (d.suggestions || d)) || [];
+        if (!Array.isArray(sugs) || !sugs.length) return;
+        var top = null;
+        for (var i = 0; i < sugs.length; i++) {
+          var s = sugs[i];
+          if (s && Number.isFinite(s.netProfit) && s.netProfit > 0 && (!top || s.netProfit > top.netProfit)) top = s;
+        }
+        if (!top) return;
+        var stat = document.getElementById('statTopFlip');
+        var sub = document.getElementById('statTopFlipSub');
+        if (stat) stat.textContent = '+' + fmtGp(top.netProfit) + ' gp';
+        if (sub) sub.textContent = (Number.isFinite(top.roi) ? top.roi.toFixed(1) + '% ROI \u00b7 ' : '') + 'live \u00b7 after GE tax';
+        // The HOOK stat: best 4h realizable bank on the board (capital-aware
+        // realizedGpHr\u00d74, fourHourProfit fallback \u2014 same chain as the explorer).
+        var bank = 0, bankItem = null;
+        for (var j = 0; j < sugs.length; j++) {
+          var g = sugs[j];
+          if (!g) continue;
+          var b4 = Number.isFinite(g.realizedGpHr) ? Math.round(g.realizedGpHr * 4) : (Number.isFinite(g.fourHourProfit) ? g.fourHourProfit : 0);
+          if (b4 > bank) { bank = b4; bankItem = g; }
+        }
+        var bankEl = document.getElementById('statBank4h');
+        var bankSub = document.getElementById('statBank4hSub');
+        if (bankEl && bank > 0) bankEl.textContent = '+' + fmtGp(bank) + ' gp';
+        if (bankSub && bankItem && bankItem.name) bankSub.textContent = bankItem.name + ' \u00b7 realizable \u00b7 4h \u00b7 10M bankroll \u00b7 after tax';
+      })
+      .catch(function(){});
+  }
+
+  function init(){ loadTopFlip(); setInterval(loadTopFlip, 60000); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+<!-- ── (b) DumpFeed — the SHARED LiveDumps component (structural rebuild 2a). ──
+     One implementation now serves this hero card (dashboard + intelligence
+     migrate next). Preact via the self-hosted standalone module — no build
+     step, CSP 'self'. Cards link to /item/:id and carry real item icons. -->
+<script type="module">
+  import { mountLiveDumps } from '/js/components/live-dumps.js?v=20260711a';
+  import { mountFlipTicket } from '/js/components/flip-ticket.js?v=20260706b';
+  mountLiveDumps(document.getElementById('dumpFeed'), {
+    badge: document.getElementById('dumpBadge'),
+    limit: 3,
+  });
+  // FlipTicket: page owns the data (loadLiveTable pushes the top suggestion);
+  // flush anything that arrived before this module executed.
+  const bk = window._gfoTicketBankroll;
+  const ticket = mountFlipTicket(document.getElementById('flipTicket'), {
+    bankroll: bk ? bk.current() : '10000000',
+    onBankrollChange: (v) => bk && bk.apply(v),
+  });
+  window._gfoFlipTicket = ticket;
+  if (ticket && window._gfoTicketPending !== undefined) {
+    ticket.setSuggestion(window._gfoTicketPending);
+    window._gfoTicketPending = undefined;
+  }
+</script>
+
+<!-- ═══ OPPORTUNITY MAP — ECharts scatter of live flips (self-hosted ECharts) ═══ -->
+<script type="module">
+// Realizable framing only: Y axis = netProfit (net of 2% GE tax, canon SSOT) —
+// never gross margin / fantasy. Advisory only: a bubble is a link to VIEW the
+// item (/item/:id), no order verbs. Data draws ONCE — the honesty animation law
+// is pinned in the chart factory's baseOption, not re-stated per page.
+import { chartTheme, houseTooltip, houseAxis, mountChart, fmtGp } from '/js/components/gfo-chart.js?v=20260711a';
+
+const API_BASE = '';
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+
+let mapChart = null;
+const currentBudget = () => { const el = document.getElementById('bankroll'); return (el && el.value) ? el.value : '10000000'; };
+
+function showEmpty(){
+  const el = document.getElementById('oppMap');
+  if (!el) return;
+  if (mapChart) { try { mapChart.dispose(); } catch(e){} mapChart = null; }
+  el.innerHTML = '<div class="oppmap-empty">Opportunities load when the live feed has them.<br>The engine is scanning ~4,400 items — check back in a moment or <a href="/dashboard">open the dashboard</a>.</div>';
+}
+
+// Pastel safety ramp: rose (low) → lilac (mid) → mint (high) — token-driven via the factory.
+function buildMap(rows){
+  const el = document.getElementById('oppMap');
+  if (!el || !window.echarts) return;
+  if (!rows || !rows.length) { showEmpty(); return; }
+  const t = chartTheme();
+
+  // Bubble size from JTI (0..100): keep small flips visible, big JTI prominent.
+  const sizeForJti = (j) => 10 + Math.min(34, Math.sqrt(Math.max(0, j)) * 3.6);
+
+  // data: [volume5m, netProfit, jti, safety, name, id, roi, reason]
+  const data = rows.map((s) => {
+    const id = s.itemId != null ? s.itemId : s.id;
+    const vol = Math.max(1, s.volume5m || 0); // log axis floor
+    return {
+      value: [vol, Math.max(0, s.netProfit || 0), s.jtiScore || s.jti || 0, s.safetyScore != null ? s.safetyScore : 50],
+      name: s.name || ('Item ' + id),
+      itemId: id,
+      roi: (s.roi != null ? s.roi : s.marginPercent) || 0,
+      reason: s.reason || '',
+      symbolSize: sizeForJti(s.jtiScore || s.jti || 0)
+    };
+  });
+
+  mapChart = mountChart(el, {
+    grid: { left: 58, right: 22, top: 18, bottom: 46 },
+    tooltip: houseTooltip(t, (p) => {
+      const d = p.data, v = d.value;
+      return '<div style="font-family:' + t.fontSans + ';font-weight:700;font-size:14px;color:' + t.text + ';margin-bottom:6px">' + esc(d.name) + '</div>' +
+        '<div style="line-height:1.7">' +
+        '<span style="color:' + t.up + '">▲ realizable net</span> &nbsp;<b>+' + fmtGp(v[1]) + ' gp</b> / item<br>' +
+        '<span style="color:' + t.textMuted + '">ROI</span> &nbsp;' + (Math.round(d.roi * 10) / 10) + '%<br>' +
+        '<span style="color:' + t.textMuted + '">volume (5m)</span> &nbsp;' + Math.round(v[0]).toLocaleString() + '<br>' +
+        '<span style="color:' + t.textMuted + '">JTI</span> &nbsp;' + Math.round(v[2]) + ' &nbsp; <span style="color:' + t.textMuted + '">safety</span> &nbsp;' + Math.round(v[3]) + '<br>' +
+        (d.reason ? '<span style="color:' + t.textDim + ';font-size:11px">' + esc(d.reason) + '</span><br>' : '') +
+        '<span style="color:' + t.accent + ';font-size:11px">click → open item</span>' +
+        '</div>';
+    }),
+    xAxis: houseAxis(t, {
+      type: 'log', name: 'liquidity → volume (5m)', nameGap: 28, minorTick: { show: false },
+      axisLabel: { color: t.textDim, fontFamily: t.fontMono, fontSize: 10, formatter: (v) => fmtGp(v) }
+    }),
+    yAxis: houseAxis(t, {
+      type: 'value', name: 'realizable net profit (gp / item)', nameGap: 44, axisLine: { show: false },
+      axisLabel: { color: t.textDim, fontFamily: t.fontMono, fontSize: 10, formatter: (v) => fmtGp(v) }
+    }),
+    // Color encodes safety on the pastel ramp (rose → lilac → mint).
+    visualMap: {
+      show: false, type: 'continuous', min: 0, max: 100, dimension: 3,
+      inRange: { color: [t.down, t.accent, t.up] }
+    },
+    series: [{
+      type: 'scatter',
+      data,
+      symbolSize: (val, params) => params.data.symbolSize,
+      itemStyle: { opacity: 0.88, borderColor: 'rgba(11,10,16,0.55)', borderWidth: 1 },
+      emphasis: { focus: 'self', scale: 1.18, itemStyle: { opacity: 1, shadowBlur: 16, shadowColor: t.accent } }
+    }]
+  }, mapChart);
+
+  mapChart.off('click');
+  mapChart.on('click', (p) => {
+    const id = p && p.data && p.data.itemId;
+    if (id != null) {
+      try { if (typeof gfoTrack === 'function') gfoTrack('oppmap_click', { item: String(id) }); } catch(e){}
+      window.location.href = '/item/' + encodeURIComponent(id);
+    }
+  });
+}
+
+function loadMap(){
+  const fetchPromise = fetch(API_BASE + '/api/suggestions?limit=40&budget=' + encodeURIComponent(currentBudget()), { headers: { 'Accept': 'application/json' } });
+  const minWait = new Promise((r) => setTimeout(r, 1500));
+  Promise.all([fetchPromise, minWait])
+    .then((r) => r[0].ok ? r[0].json() : null)
+    .then((d) => {
+      let rows = d && d.suggestions;
+      if (!Array.isArray(rows) || !rows.length) { showEmpty(); return; }
+      // Honest: only plot points that have a real realizable net profit > 0.
+      rows = rows.filter((s) => (s.netProfit || 0) > 0 && (s.volume5m || 0) > 0);
+      if (!rows.length) { showEmpty(); return; }
+      buildMap(rows);
+    })
+    .catch(() => showEmpty());
+}
+
+if (!window.echarts) { showEmpty(); }
+else {
+  loadMap();
+  // Refresh with the live feed; updates snap (factory law), no loop.
+  setInterval(loadMap, 60000);
+  // Re-fetch when bankroll changes so the map respects the same budget as the table.
+  const bk = document.getElementById('bankroll');
+  if (bk) bk.addEventListener('change', loadMap);
+}
+</script>
+
+<!-- ═══ LIVE TOP-FLIPS TABLE + HONEST FLIP-TICKET (preserved wiring) ═══ -->
+<script>
+(function() {
+  'use strict';
+  var API_BASE = '';
+  var WIKI_BASE = 'https://prices.runescape.wiki/api/v1/osrs';
+
+  function formatGP(n){ if (n == null || isNaN(n)) return '0'; return Math.round(n).toLocaleString('en-US'); }
+  function fmtGp(n){
+    if(n==null||isNaN(n))return '—';
+    if(n<=0)return '0 gp';
+    if(n>=1e9)return (n/1e9).toFixed(2)+'B gp';
+    if(n>=1e6)return (n/1e6).toFixed(2)+'M gp';
+    if(n>=1e3)return Math.round(n/1e3).toLocaleString()+'k gp';
+    return Math.round(n).toLocaleString()+' gp';
+  }
+  // ge-tax SSOT mirror: net 2%, capped 5M.
+  function calcTax(sell){ return Math.min(Math.round(sell * 0.02), 5000000); }
+  function jtiClass(score){ if (score >= 75) return 'excellent'; if (score >= 55) return 'good'; return 'fair'; }
+
+  function currentBankroll(){ var el = document.getElementById('bankroll'); return (el && el.value) ? el.value : '10000000'; }
+
+  var _hadGoodLoad = false;
+  async function loadLiveTable(){
+    try {
+      var fetchPromise = fetch(API_BASE + '/api/suggestions?limit=10&budget=' + encodeURIComponent(currentBankroll()));
+      var minWait = _hadGoodLoad ? Promise.resolve() : new Promise(function(r){ setTimeout(r, 1500); });
+      var r = await Promise.all([fetchPromise, minWait]);
+      var resp = r[0];
+      if (!resp.ok) throw new Error('API unavailable');
+      var data = await resp.json();
+      if (!data.suggestions || !data.suggestions.length) throw new Error('No items');
+      var items = data.suggestions.map(function(s){ return {
+        name: s.name, buyPrice: s.buyPrice, sellPrice: s.sellPrice,
+        margin: s.netProfit || (s.sellPrice - s.buyPrice - calcTax(s.sellPrice)),
+        tax: s.tax || calcTax(s.sellPrice),
+        jti: s.jtiScore || s.jti || 0,
+        // 4h Profit = capital-aware REALIZABLE (net × deployableQty = realizedGpHr×4).
+        // Fallback is fourHourProfit ONLY (limit/volume-capped realizable) — never
+        // potentialProfit, the labeled full-limit ceiling (fantasy as a headline).
+        fourHourProfit: (s.realizedGpHr != null ? Math.round(s.realizedGpHr * 4) : (s.fourHourProfit || 0)),
+        fill: s.fill || null
+      }; });
+      renderTable(items);
+      renderHeroTicket(data.suggestions[0]);
+      _hadGoodLoad = true;
+    } catch (e) {
+      if (_hadGoodLoad) return; // a blip after a good load must not blank the table
+      try {
+        var r = await Promise.all([
+          fetch(WIKI_BASE + '/latest'),
+          fetch(WIKI_BASE + '/mapping'),
+          fetch(WIKI_BASE + '/5m')
+        ]);
+        var latest = await r[0].json(), mapping = await r[1].json(), fiveMin = await r[2].json();
+        var mapLookup = {}; mapping.forEach(function(m){ mapLookup[m.id] = m; });
+        var items = Object.entries(latest.data).map(function(entry){
+          var id = entry[0], p = entry[1];
+          var m = mapLookup[parseInt(id)];
+          if (id === '13190' || id === 13190) return null; // M39: bonds never pitched as flips (mirror of server/serving-blacklist.js)
+          if (!m || !p.high || !p.low || p.low < 1000) return null;
+          var tax = calcTax(p.high), margin = p.high - p.low - tax;
+          if (margin <= 0) return null;
+          var f = (fiveMin.data && fiveMin.data[id]) || {};
+          var vol = (f.highPriceVolume || 0) + (f.lowPriceVolume || 0);
+          // Weaker side only — you cannot fill more than the thinner half of the book.
+          var weakFill4h = Math.min(f.highPriceVolume || 0, f.lowPriceVolume || 0) * 48;
+          var volScore = Math.min(vol / 5, 25);
+          var mPct = margin / p.low * 100, marginScore = Math.min(mPct * 5, 35);
+          var freshScore = p.lowTime ? Math.max(0, 20 - (Date.now()/1000 - p.lowTime) / 60) : 0;
+          var jti = Math.min(100, Math.round(volScore + marginScore + freshScore + 10));
+          return { name:m.name, buyPrice:p.low, sellPrice:p.high, margin:margin, tax:tax, jti:jti,
+            // Realizable fills use the WEAKER book side (server/realizable.js:108 —
+            // Math.min(buyQty, sellQty) * 48), never the sum. Summing both sides overstates
+            // by up to 2x on a balanced book and without bound on a one-sided one, which is
+            // exactly the fantasy-profit class the canon forbids. `vol` above stays the SUM
+            // because it feeds the liquidity SCORE, which is a different question.
+            fourHourProfit: margin * Math.min(m.limit || 1, weakFill4h || 1) };
+        }).filter(Boolean).sort(function(a,b){ return b.jti - a.jti; }).slice(0, 10);
+        renderTable(items);
+        renderHeroTicket(null); // Wiki-fallback lacks realizable fields — hide the proof ticket
+      } catch (e2) {
+        var tb = document.getElementById('liveTableBody');
+        if (tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary)">Market data temporarily unavailable. <a href="/dashboard" style="color:var(--gfo-accent)">Try the dashboard</a>.</td></tr>';
+        renderHeroTicket(null);
+      }
+    }
+  }
+
+  function fillBadge(fill){
+    if(!fill || !fill.risk) return '';
+    var m = { both_liquid:[css('--gfo-up'),'Fills both sides — liquid'], moderate:[css('--gfo-warning'),'Moderate liquidity'], thin:[css('--gfo-warning'),'Thin — may be slow to fill'], hard_to_sell:[css('--gfo-down'),'Hard to SELL — you could get stuck holding'], hard_to_buy:[css('--gfo-down'),'Hard to buy at this price'] };
+    var v = m[fill.risk] || [css('--gfo-text-dim'),'Unknown liquidity'];
+    return '<span title="'+v[1]+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+v[0]+';margin-right:8px;vertical-align:middle" aria-label="'+v[1]+'"></span>';
+  }
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function renderTable(items){
+    var tb = document.getElementById('liveTableBody');
+    if (!tb) return;
+    tb.innerHTML = items.map(function(item){ return '' +
+      '<tr>' +
+        '<td class="name" data-label="Item">' + fillBadge(item.fill) + item.name + '</td>' +
+        '<td class="mono" data-label="Buy">' + formatGP(item.buyPrice) + '</td>' +
+        '<td class="mono" data-label="Sell">' + formatGP(item.sellPrice) + '</td>' +
+        '<td class="mono profit" data-label="Net/Item">' + formatGP(item.margin) + '</td>' +
+        '<td data-label="JTI"><span class="jti-pill ' + jtiClass(item.jti) + '">' + item.jti + '</span></td>' +
+        '<td class="mono profit" data-label="4h Profit">' + formatGP(item.fourHourProfit) + ' GP</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // ── FlipTicket bridge (structural rebuild 2c) ─────────────────────────────
+  // The SHARED FlipTicket component (js/components/flip-ticket.js) renders the
+  // honest ticket (realizable vs struck-through fantasy); this page stays the
+  // DATA owner — loadLiveTable pushes the top suggestion through the controller.
+  // The pending buffer covers a push that lands before the module mounts.
+  window._gfoFlipTicket = null;
+  window._gfoTicketPending = undefined; // undefined = nothing pushed yet
+  function renderHeroTicket(s){
+    if (window._gfoFlipTicket) window._gfoFlipTicket.setSuggestion(s);
+    else window._gfoTicketPending = s;
+  }
+  window._gfoTicketBankroll = {
+    current: currentBankroll,
+    apply: function(v){
+      var main = document.getElementById('bankroll');
+      if (main) main.value = v;
+      try { localStorage.setItem('gfo_bankroll', v); } catch(e){}
+      loadLiveTable();
+    }
+  };
+
+  (function wireBankroll(){
+    var el = document.getElementById('bankroll');
+    if (!el) return;
+    try { var saved = localStorage.getItem('gfo_bankroll'); if (saved && [].slice.call(el.options).some(function(o){ return o.value === saved; })) el.value = saved; } catch(e){}
+    el.addEventListener('change', function(){
+      try { localStorage.setItem('gfo_bankroll', el.value); } catch(e){}
+      loadLiveTable();
+    });
+  })();
+
+  loadLiveTable();
+  setInterval(loadLiveTable, 60000);
+})();
+</script>
+
+<!-- Service worker -->
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js', { scope:'/' }).catch(function(){}); }
+</script>
+
+<!-- ═══ LIVE TRUST STRIP (#21) — real, endpoint-driven numbers only ═══ -->
+<script>
+(function(){
+  'use strict';
+  var API_BASE = '';
+  var strip = document.getElementById('trustStrip');
+  if (!strip) return;
+  function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+  function live(v){ return (typeof v === 'number' && isFinite(v) && v > 0) ? v : null; }
+  function setChip(id, val){
+    var v = live(val); if (v == null) return;
+    var el = document.getElementById(id); if (!el) return;
+    var b = el.querySelector('[data-val]'); if (b) b.textContent = fmt(v);
+    el.classList.add('is-shown'); strip.classList.add('is-live');
+  }
+  fetch(API_BASE + '/api/health', { headers:{ 'Accept':'application/json' } })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(h){ if (!h) return; setChip('tcItems', h.itemCount); setChip('tcPoints', h.lifetimePoints); })
+    .catch(function(){});
+})();
+</script>
+
+<!-- ═══ CONVERSION-FUNNEL ANALYTICS (top-of-funnel) — verbatim, self-hosted, no PII ═══ -->
+<script src="/js/gfo-funnel.js?v=2" data-landing></script>
+
+<script>window.__CF$cv$params={r:'a21640c10bbeb4eb',t:'MTc4NTA5ODc3Nw==',u:'019fa02db4ea7910b589a143312e4b0c',ut:'TkAMaa4Ky0kyHskjVJOFTQy8M8AYYbGaG07fTD0gddQ-1785098777-1.2.1.1-Sl7.YdGgPrNGO7JVnzNJEBrjQM8FohcbysfVgVUsjJzURULXt.tZb.YDNHnZFrdEnopUloJ.icVGc3WVHD1pu830c2n_zL8Emm5F8MVzDak',i:60};(function(){if(!document.body)return;var s=document.createElement('script');s.src='/cdn-cgi/challenge-platform/scripts/precursor/main.js';document.head.appendChild(s);})();</script></body>
+</html>

@@ -1,0 +1,1 @@
+# RSHelper v0.1 — no external dependencies beyond stdlib

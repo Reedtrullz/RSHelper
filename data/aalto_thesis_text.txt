@@ -1,0 +1,860 @@
+--- PAGE 1 ---
+Bachelor’s Programme in Economics
+Virtual Economies and Macroeconomic
+Dynamics: Analyzing the Money Market and
+Inflation in Old School RuneScape
+Arttu Pahta
+Bachelor’s Thesis
+2025
+--- PAGE 2 ---
+Author ArttuPahta
+Title VirtualEconomiesandMacroeconomicDynamics: AnalyzingtheMoney
+MarketandInflationinOldSchoolRuneScape
+Degree programme Economics
+Major Economics
+Teacher in charge Prof. AlinaOzhegova
+Advisor Prof. MalafryLaurence
+Date 20.8.2025 Number of pages 36 Language English
+Abstract
+ThisthesisexaminesthemacroeconomicdynamicsofOldSchoolRuneScape(OSRS).
+Thegamehasalarge-scalevirtualeconomy,whichisinspectedthroughestablished
+economictheories. ByconstructingaConsumerPriceIndex(CPI)fromlong-standing
+in-game items, the thesis quantifies inflation and deflation trends from 2015–2025.
+Results show inflationary cycles during periods of rapid gold generation, followed
+by deflation afterthe introduction ofmonetary controlssuchas the GrandExchange
+tax. The Quantity Theory of Money explains long-run price movements, while the
+AggregateSupply–AggregateDemandframeworkcapturesshort-termupdate-driven
+shocks. Analysis of bond price trends reveals strong links between OSRS’s virtual
+economy and real-world currency markets. Jagex, who is the game’s developer,
+effectivelyactssimilarlytoacentralbank,managingmoneysupplyandpricestability
+through gold sinks and monetary interventions. The findings suggest that, despite
+design-specificconstraints,traditionalmacroeconomicmodelsareapplicabletovirtual
+economies, offering valuable insights into both digital and real-world monetary
+systems.
+Keywords Macroeconomics,OldSchoolRunescape,Virtualeconomy,Inflation,
+ConsumerPriceIndex,CPI
+--- PAGE 3 ---
+Contents
+Abstract 2
+Contents 3
+SymbolsandAbbreviations 5
+1 Introduction 7
+1.1 OldSchoolRuneScapeandItsEconomicSystem . . . . . . . . . . 7
+2 TheoreticalFramework 9
+2.1 MacroeconomicConcepts . . . . . . . . . . . . . . . . . . . . . . 9
+2.1.1 InflationandPriceLevels . . . . . . . . . . . . . . . . . . 9
+2.1.2 QuantityTheoryofMoney . . . . . . . . . . . . . . . . . . 9
+2.1.3 AggregateSupplyandAggregateDemand(AS–AD) . . . . 10
+2.1.4 MonetaryPolicyandCentralBanks . . . . . . . . . . . . . 10
+2.1.5 ConsumerPriceIndex(CPI) . . . . . . . . . . . . . . . . . 11
+2.2 ApplicationtoVirtualEconomies . . . . . . . . . . . . . . . . . . 11
+3 TheEconomyofOldSchoolRuneScape 13
+3.1 GameOverview . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+3.2 MarketMechanics . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+3.3 InflationDynamicsinOSRS . . . . . . . . . . . . . . . . . . . . . 16
+4 ConstructingaCPIforOSRS 18
+4.1 Real-WorldCPIMethodology . . . . . . . . . . . . . . . . . . . . 18
+4.2 DesigningtheOSRS-CPI . . . . . . . . . . . . . . . . . . . . . . . 19
+4.3 ProposedOSRS-CPIbasket . . . . . . . . . . . . . . . . . . . . . . 20
+4.4 InterpretingtheOSRSCPI . . . . . . . . . . . . . . . . . . . . . . 21
+4.4.1 GeneralTrends. . . . . . . . . . . . . . . . . . . . . . . . . 22
+4.4.2 RecentDeflationaryPressure. . . . . . . . . . . . . . . . . 23
+4.4.3 Year-over-YearInflation. . . . . . . . . . . . . . . . . . . . 23
+3
+--- PAGE 4 ---
+4.4.4 ComparisonWithoutWeights . . . . . . . . . . . . . . . . 24
+4.4.5 Conclusion. . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+4.5 BondPriceTrendsandReal-WorldRelevance . . . . . . . . . . . . 25
+5 MacroeconomicModelAnalysis 28
+5.1 QuantityTheoryofMoneyandOSRS . . . . . . . . . . . . . . . . 28
+5.2 AS–ADandUpdateEffects . . . . . . . . . . . . . . . . . . . . . . 29
+5.3 JagexasCentralBank . . . . . . . . . . . . . . . . . . . . . . . . . 31
+6 DiscussionandConclusion 33
+4
+--- PAGE 5 ---
+Symbols and Abbreviations
+Symbols
+𝑀 Moneysupply
+𝑉 Velocityofmoney
+𝑃 Pricelevel
+𝑌 Output
+Abbreviations
+API ApplicationProgrammingInterface
+AS–AD AggregateSupply–AggregateDemand
+CPI ConsumerPriceIndex
+ECB EuropeanCentralBank
+GE GrandExchange
+GP GoldPiece(OSRScurrency)
+MMORPG MassivelyMultiplayerOnlineRole-PlayingGame
+OSRS OldSchoolRuneScape
+PvM PlayerversusMonster
+RWT Real-WorldTrading
+USD U.S. Dollar
+YTD Year-To-Date
+5
+--- PAGE 6 ---
+Glossary of Key Game-Specific Terms
+Botting The use of automation software (bots) to perform in-game tasks such as
+skillingorcombat.
+GoldFarming Thepracticeofsystematicallygeneratingin-gamecurrency(GP)to
+sellforreal-worldmoney. Thisisagainstthegamerules.
+GoldSink Anyin-gamemechanismdesignedtoremoveGPfromtheeconomy. Gold
+sinkshelpcontrolinflationbyreducingthetotalmoneysupply.
+GrandExchange(GE) Thein-gameauctionhouseinOSRSwhereplayerscanbuy
+andsellitems. Pricesaredeterminedbyplayer-to-playertradeandrespondto
+supplyanddemanddynamics.
+MoneyFaucet Anyin-gamemechanismwhichincreasestheGPsupplywithinthe
+economy.
+OldSchoolBond Atradeablein-gameitempurchasedwithreal-worldcurrencyfrom
+Jagex. Onlylegitimateconnectionbetweenin-gameandreal-worldcurrency.
+PlayerversusMonster(PvM) A game activity involving combat between players
+andcomputer-controlledmonsters. PvMactivitiesareamajorsourceofhigh-
+valuedropsandGP.
+Skilling The process of training non-combat skills in OSRS to gather resources or
+levelup. SkillingisoftenusedtogenerateGP.
+Real-WorldTrading(RWT) The exchange of in-game currency, or services for
+real-worldmoneythroughunofficialchannels.
+6
+--- PAGE 7 ---
+1 Introduction
+Inrecentyears,virtualworldshaveevolvednotonlyasentertainmentplatformsbut
+alsoas placesforcomplexeconomicactivity. Studyingtheseeconomies offersinsight
+intoreal-worldmechanismsincontrolled,observableenvironments,whererulesand
+playerbehaviorsimulate human responses. Among these isOld SchoolRuneScape
+(OSRS), a massively multiplayer online role-playing game (MMORPG) developed
+by Jagex Limited. OSRS stands out as a particularly rich case study for observing
+macroeconomicbehaviorinavirtualworld.
+Scholars such as Castronova [1], Lehdonvirta [2], and Heeks [3] have explored
+howvirtualeconomiesmirror,distort,orchallengetraditionaleconomictheory. Their
+workconcludes thatmacroeconomicmodelssuchasincluding theQuantityTheory
+of Money, supply-demand analysis, and monetary policy analogies can be helpful
+in virtual environments as well. Although, often they need some modifications.
+For example, articles on virtual worlds [4,5] demonstrate how inflation in virtual
+economiescanbeanalyzedthroughmoneysupplygrowth,while[3]discusseshow
+gamedeveloperslikeJagexactsimilarlytocentralbanksinmanagingvirtualcurrencies
+throughgameupdatesandmoneysinks.
+ThisthesisaimstoexplorehowtheOSRSmoneymarketfunctions,howinflation
+develops, could be measured and is managed within the game. Additionally it is
+studiedhowthese patterns reflect ordiverge fromreal-worldmacroeconomic models.
+Thisthesisisbasedonliteratureinvirtualeconomyresearch,analysisandclassical
+macroeconomic theory to analyze OSRS as a simplified but revealing economic
+system.
+1.1 Old School RuneScape and Its Economic System
+OSRSisafantasyMMORPGoperatedanddevelopedbyJagexfromthe2007legacy
+buildofRuneScape. Itwaslaunchedin2013asareactiontoafanpoll,andhassince
+beenoneofthelongest-runningonlinegameswithmillionsofplayersworldwideto
+thisday. Thegamecanbeplayedforfreewithlimitedaccesstothegameorbypaying
+--- PAGE 8 ---
+monthly subscription to access the whole game which currently costs $13.99. The
+in-game economy within OSRS contains a virtual currency known as gold pieces
+(GP) or coins, which players use to buy and sell goods and services. Unlike many
+gameeconomiescontrolledbythedeveloper,OSRShasaplayer-controlledmarket,in
+whichpricesare determined by player-to-playertrade and theGrand Exchange (GE),
+acentraltradinghubservingasanauctionhouse[6].
+GPenterstheeconomyprimarilythroughin-gameactivitiessuchasmonsterdrops,
+skilling, and player-versus-monster (PvM) content. To counterbalance this, Jagex has
+implemented gold sinks, like repair fees, item upgrades, and taxes [7]. A notable
+exampleistheGrandExchangetaxanditemsinksystemintroducedin2021[8],which
+functionssimilarlytoreal-worldmonetarycontrolsbyremovingGPfromcirculation.
+Still, inflationary pressures comes when money generation seems to be greater
+gold removal. The economy is further influenced by real-world trading (RWT) and
+automation (botting), which can distort price levels and labor markets—an issue
+extensively documented by [3] and [2]. In better detail, botting refers to the use of
+automationsoftwaretoperformin-gametasks,bypassingthetimeandeffortrequired
+fromhumanplayers.
+Thus, OSRS offers a unique hybrid economic system. While the economy is
+decentralized and governed by supply and demand, it is also subject to top-down
+interventions by developer Jagex, who act similarly to a central bank [3]. This
+combination offersa richfieldof study inwhich toexaminemacroeconomic theories
+inanartificial,yetdeeplyinteractive,economicenvironment.
+8
+--- PAGE 9 ---
+2 Theoretical Framework
+In this section the basic macroeconomic theory which is possibly relevant for this
+thesiswillbediscussed. Additionally,thepreviousliteraturerelatedtothesuitability
+ofthemodelsinvirtualeconomiesisdiscussed.
+2.1 Macroeconomic Concepts
+Thissubsectionintroduceskeymacroeconomictheoriesandmodelsthatareusedfor
+analyzing price levels, money supply, and inflation in the economy of Old School
+RuneScape(OSRS). SuitabilityofthesemodelswillbeevaluatedinSection5.
+2.1.1 Inflation and Price Levels
+Inflationistypicallydefinedasasustainedincreaseintheoverallpricelevelofgoods
+and services in an economy which leads to a reduction in the purchasing power of
+money. It is commonly measured using price indices, such as the Consumer Price
+Index(CPI), thattrackschangesinthe priceofa representativebasketofgoods over
+time[9,10].
+2.1.2 Quantity Theory of Money
+The Quantity Theory of Money provides a basic relationship between the money
+supplyandthepricelevel,whichiscommonlyexpressedbytheidentity:
+𝑀𝑉 = 𝑃𝑌
+where 𝑀 isthenominalmoneysupply,𝑉 isthevelocityofmoney, 𝑃 isthepricelevel,
+and𝑌 isrealoutput[11,12]. Thetheorysuggeststhat,if𝑉 and𝑌 arefixed,increases
+in 𝑀 lead directly to equal increases in 𝑃. This model has been central in classical
+and monetarist economic theory [13]. It was founded by Fisher [11] and then later
+Friedman[12]provedtheusabilityofthemodel.
+9
+--- PAGE 10 ---
+2.1.3 Aggregate Supply and Aggregate Demand (AS–AD)
+TheAS–ADmodeldescribeshowaggregatedemandandaggregatesupplyinteract
+to determine output and the overall price level in an economy [9,10]. Shifts in
+aggregate demand or supply result in changes to equilibrium prices and output,
+offeringaframeworktounderstandeconomicfluctuationscausedbyshocks. Invirtual
+economies,eventssuchasupdatesorrulechangescanbeviewedassupplyordemand
+shockswithinthismodel.
+Inmodernmacroeconomics,theAScurveisoften derivedfromaPhillipsCurve
+framework, linking inflation and output through wage-setting behavior [14]. When
+appliedtorealeconomies,thismeansthatlowunemploymentleadstohigherwage
+demands, which can feed into inflation as firms raise prices to maintain profits. In
+virtualeconomieslikeOSRS,analogsincludethesupplyofGPasincome,labor-supply
+shocksfrombotting,andthedemandforhigh-endcontentaseconomic“employment.”
+Whilesynthetic,similartensionsexist,whenplayerscaneasilygenerategold. Inother
+wordslaborischeap. Inthiscaseinflationfollowsunlesscounteredbysinks.
+2.1.4 Monetary Policy and Central Banks
+Modernmonetarypolicyreferstotheactionsofcentralbankstomanagethemoney
+supplyandinterestratestoachievemacroeconomicobjectivessuchaspricestability
+andeconomicgrowth[15]. Classicaltoolsincludeopenmarketoperations,interest
+rate setting, and reserve requirements. These instruments do not exist in OSRS. In
+virtualeconomies like OSRS,thereis noformalcentralbank,butthegamedeveloper
+actssimilarlythroughmechanismsthataffectmoneysupplyanddemand,suchasgold
+sinksandtaxes.
+OnekeytoolformonetarypolicyistheTaylorRule[16]. TheTaylorRule,proposed
+by economist John B. Taylor, provides a systematic and rule-based approach for
+centralbankstosetshort-termnominalinterestratesinresponsetodeviationsofactual
+inflationfromthetargetinflationrateandactualoutputfrompotentialoutput.
+Inreal-world economies,the TaylorRulehelps guidepolicy decisionsbylinking
+10
+--- PAGE 11 ---
+interestratesettingtomeasurableeconomicconditions. Mostofthecentralbanksdo
+not admitusing Taylor Rule fortheir monetary policy decisions buttheir results seem
+tobefollowingit.
+2.1.5 Consumer Price Index (CPI)
+CPI measures the average change in the prices of a basket of goods and services
+consumedbyhouseholdsovertime. TheCPIservesasaprimaryindicatorofinflation
+in most economies and is constructedby selecting a representative basket of goods,
+assigningweights,andapplyinganindexformula[17,18].
+2.2 Application to Virtual Economies
+Virtualeconomieshavebeenshowntoexhibitmacroeconomicbehaviorcomparableto
+real-worldsystems. EarlyfoundationalworkbyCastronovashowedthatvirtualworlds
+likeEverQuest andUltimaOnlinedevelopedfunctioningeconomieswherecurrencies
+andgoodshadrealmonetaryvalueandfollowedfamiliareconomiclaws[1,4].
+Lehdonvirta and Castronova argue that macroeconomic models, such as the
+Quantity Theory of Money and AS–AD framework, can meaningfully describe
+virtualeconomies,although adaptationsareoftennecessary. Thisisdue todesigner
+interventionandrule-basedconstraints[2]. Theyhighlightthat,whilevirtualcurrencies
+caninflateduetouncontrolledmoneycreationforexample,botting,developeractions
+serveasmonetarypolicytools,withgameupdates,taxes,andgoldsinksactinglike
+fiscal and monetary tools. This reflects what Bilir [7] describes as RuneScape’s
+faucet-drainmodel,wherecurrencyentersthroughgold-generatingactivities(faucets)
+andexitsviagoldsinks(drains)inanefforttostabilizethemoneysupplyandmitigate
+inflation.
+Heeksexploreshowvirtualeconomiesareintertwinedwithreal-worldeconomies
+throughpracticessuchasreal-worldtrading(RWT)andgoldfarming. Goldfarming
+referstoplayers(ofteninlow-incomecountries)whoaccumulatein-gamecurrency
+and sell it for real-world money, often in violation of the game’s terms of service.
+11
+--- PAGE 12 ---
+Theseactivitiesblurtheboundarybetweendigitalandphysicalmarketsandintroduce
+externalpressuresonpricelevelswithinthegameworld[3]. InthecaseofRuneScape,
+RWTandbottinghavehistoricallycontributedtoinflationandwealthconcentration,
+requiringinterventionsfromthegame’sdeveloper,Jagex[7]. Theseinterventionshave
+typicallyincludedbotdetection,bans,andtradinglimitstonewaccounts.
+CPI construction in virtual economies faces similar challenges as in real-world
+contexts. Theseissuesinclude: choosingrepresentativeitems,dealingwithproduct
+turnoverforexample,newitemsoritemnerfs,andaccountingforplayersubstitution
+behavior. TheIMF’sCPIguidelinesandtheBoskinCommission’sfindingsonindex
+biasesarerelevantfordesigningarobustvirtualCPIthataccuratelyreflectsin-game
+inflation[17,18].
+In conclusion, while virtual economies provide possible ground for applying
+macroeconomictheories,theyalsointroduceuniquecomplexitiesduetotheirunique
+designsandcentrallycontrollednature.
+12
+--- PAGE 13 ---
+3 The Economy of Old School RuneScape
+As Section 2introduces the theoreticalfoundations of macroeconomicswhich could
+possibly be applied to virtual systems, this section examines how those principles
+manifest in the specific context ofOld School RuneScape (OSRS). OSRS’s economic
+designis exploredbyfocusing onitsplayer-driven markets,monetarymechanisms,
+andinflationarydynamicsthroughthelensofmodelsintroduced.
+3.1 Game Overview
+OSRSisamassivelymultiplayeronlinerole-playinggame(MMORPG)developedand
+maintainedbyJagex. Itwaslaunchedin2013followingacommunitypoll,restoring
+the2007versionoftheoriginalRuneScapegametomeetplayerdemandforamore
+nostalgicand mechanicallysimplerexperience[6]. OSRShas grownintoone ofthe
+mostpopularMMORPGsworldwide,withtensofmillionsofregisteredaccountsand
+aconsistentlyactiveplayerbasestillin2025.
+The game world, known as Gielinor, offers players a wide array of activities,
+including combat, skilling, questing, and trading. OSRS is designed as a sandbox
+environmentwhereplayersarefreetochoosetheirplaystyleandeconomicrole. The
+in-game currencyis calledgoldpieces (GP), anditserves asthe primarymedium of
+exchangeforgoodsandservices.
+Players can earn GP through various ways, player-versus-monster (PvM) combat,
+gatheringresourcesthroughskilling,forexample: mining,fishing,woodcutting,or
+through trade. Unlike some online games where prices are set only by developers,
+OSRSfeaturesalargelyplayer-driveneconomywhereitempricesaredeterminedby
+supplyanddemanddynamicsintheplayercommunity.
+CentraltoOSRS’seconomyistheGrandExchange(GE),anin-gameauctionhouse
+thatallowsplayerstobuyandsellitemswithminimaltransactioncosts. Introducedin
+theoriginalRuneScapein2008andaddedovertoOSRSin2015,theGEfacilitates
+large-scaletradeandfunctionsasthecore marketplace forthe game’seconomy[19].
+GEallowsplayerstocreatelistingswhichthencanbeboughtbyanotherplayer. The
+13
+--- PAGE 14 ---
+Figure 1: The GE interface, showing sell and buy offers. Red indicates canceled
+trade by the lister, green successful trade, gray indicates outstandingtrade and yellow
+partiallycompletedtrade[6].
+buyeralways gets the lowest pricedlisting and the lowest pricedlisting also is always
+sold first. Prices on the GE fluctuate based on player behavior. As shown in Figure
+1,theGEprovidesplayerswithareal-timeinterfacetomanagebuyandselloffers.
+Thecolor-codedstatusesstreamlinetransaction trackingandreflectmarketliquidity,
+mimickingmodernfinancialsystems. Figure2showstheactualsellinterfaceofGEin
+whichthepricingoptionsandthecalculatedGEtaxcanbeseen.
+Goldpiecescanbegeneratedbyin-gameactivitiesatatheoreticallyunlimitedrate,
+butgoldisalsoremovedfromthegameviagoldsinksmechanismssuchasitemrepair
+costs,constructionmaterials,andtaxesnotablytheGrandExchangetaxintroducedin
+2021thatacttostabilizethemoneysupplyandlimitinflation[8].
+3.2 Market Mechanics
+Aspreviouslydiscussed,theeconomyofOSRSischaracterizedbyitsplayer-driven
+market,wheresupplyanddemandsetpriceswithminimaldirectpricecontrolsfrom
+the developer. The key trading hub is the GE, introduced to OSRS in 2015, which
+functions as a centralized auction house where players can buy and sell items [6].
+TheGEfacilitatesthetradeofresources,equipment,andconsumables,anditsprice
+systemisdynamic: itempricesadjustinresponsetoaggregatedplayertransactions.
+SpeculativebehavioriscommonwithintheOSRSeconomy. Playersfrequently
+14
+--- PAGE 15 ---
+Figure 2: GE sell interface showing the pricing options for seller and calculating the
+GEtax.[6]
+buy items not only for consumption but also as investments, hoping to profit from
+pricechangesdrivenbymarkettrendsoranticipatedgameupdates. Hoardingofrare
+or high-demand items can lead to temporary supply shortages and price spikes, a
+behavioranalogoustospeculativebubblesinreal-worldmarkets.
+Additionally,thereisoftenagapbetweentheslowbuyandsellpricesofitems.
+Thisoffersplayersawaytoprofitby"flipping"items. Theyslowbuyitemsasplayers
+areeagertoselltheiritemsinstantlyandthensellingthemslowlywithhigherprice.
+Therefore,profitingthemargin.
+Game updates and developer actions frequently act as economic shocks. For
+15
+--- PAGE 16 ---
+example,theintroductionofanewbossoritemcancauseimmediatechangesinsupply
+anddemandforrelatedgoods. Forexample,thenewlyintroducedbossmayrequirea
+specifictypeofweaponwhichthencausesashockin demand. Additionally,thenew
+bossmightdropalargequantityofsomeresourceandthereforecausingsupplyshock.
+Similarly,adjustmentstodroptables,nerfs,ornewgoldsinkscaninfluencetheflow
+ofitemsandcurrencyintheeconomy,leading topricevolatility. Theseupdatescould
+beviewedthroughtheAS–ADframeworkintroducedinSection2.1.3.
+GEintroducedaconveniencefeeonalltransactionstoserveasbothausercost
+and a gold sink, helping to control inflation. Initially, when the GE launched in
+February2015, thisfeewassetat1% for allcompletedbuyandsell offers. However,
+as inflationary pressures continued and gold flow within the game escalated, Jagex
+increasedthefeeto2%inMay2025[6].
+ThisadjustmenteffectivelydoubledtherateatwhichGPisremovedfromcirculation
+pertrade,increasingthefiscalimpactofeachtransaction. Byraisingtheconvenience
+fee,JagexenhancestheefficiencyoftheGEasamonetary-policytool,actingsimilarly
+to a contractionary tax, without altering core gameplay mechanics. This change
+reinforcesJagex’sroleasanundisclosed"centralbank,"dynamicallytuningpolicy
+instrumentstomaintainpricestabilitywithintheOSRSeconomy.[8].
+While the market is largely open and decentralized, Jagex retains significant
+indirectcontrolthroughitsabilitytomodifygamemechanics,whichinturninfluences
+economicvariableslikesupply,demand,andthemoneysupply.
+3.3 Inflation Dynamics in OSRS
+Inflation in OSRS refers to the sustained rise in the general price level of in-game
+goodsandservices,drivenbyanincreaseinthesupplyofgoldpieces(GP)relative
+to the availability of goods. As in real economies, inflation in OSRS reduces the
+purchasingpowerofcurrency,makinggoodsandservicesmoreexpensiveovertime.
+If the increasing money supply is not balanced by equivalent growth in goods
+or effective gold removal mechanisms, inflation results. In OSRS, item production
+16
+--- PAGE 17 ---
+(realoutput)isconstrainedbygamemechanics: raredropsremainrare,andresource
+gatheringislimitedbytimeandeffort. Thus,whenGPenterstheeconomyfasterthan
+goodsareproduced,thepricelevelofgoodsontheGrandExchangetendstorise.
+Jagexhas implementedgoldsinksto combatinflation. Theseinclude itemrepair
+costs, expensive skill training methods for example, skills like construction and
+herblore, and the previously mentioned Grand Exchange tax. The tax removes a
+portion of GP from circulation with every transaction, functioning similarly to a
+transaction tax or a contraction monetary policy tool. Additionally, many other
+in-gameactivitiescostGPandiftheplayerdiestheymustpaycertainamountofGP
+toretrievetheiritems. Furthermore,JagexhashostedcharitycampaigncalledWellof
+GoodwillinwhichJagexdonatedonedollartocharityperonemillionGPdonatedby
+players[6]. ThisGPwasthendeletedfromthegame.
+InflationinOSRSisfurtheraffectedbyexternalfactors. Real-worldtrading(RWT)
+andbottingcontributetoartificialincreasesingoldsupply. Thesepracticesfloodthe
+economywithGPgeneratedathighratesthroughautomatedgameplay,exacerbating
+inflationary pressures and leading to greater wealth concentration among certain
+players [3]. Botting typically increases the amount of lower tier items entering the
+marketwhichcausesthepricesoftheseitemstodrop. Fromaneconomicstandpoint,
+bottingcanalsobeseenasaplayer’sattempttominimizethedisutilityofrepetitive
+in-gamelaborforexampleskilling,notjustawaytogoldfarmforreal-worldcurrency.
+Therefore they automate the accumulation of resources while reserving effort for
+high-valuecontentlikePvPorraids.
+Gameupdatesactasbothdemandandsupplyshocks. Thereleaseofnewitemsor
+bossescan temporarilyinflatepricesof relatedgoodsdueto surgingdemand, while
+updates that nerf GP sources or introduce gold sinks can have deflationary effects.
+Overall,inflationinOSRSreflectsacomplexinterplaybetweenmoneysupplygrowth,
+constraineditemproduction,playerbehavior,anddeveloperinterventions.
+17
+--- PAGE 18 ---
+4 Constructing a CPI for OSRS
+4.1 Real-World CPI Methodology
+TheConsumerPriceIndex(CPI)isoneofthemostwidelyusedmeasuresofinflation
+inreal-worldeconomies. Ittrackstheaveragechangeovertimeinthepricespaidby
+consumersforafixedbasketofgoodsandservices[17]. TheCPIservesasakeytool
+for assessing price stability, guiding monetary policy, and indexing wages, pensions,
+andcontractstomaintainpurchasingpower.
+ConstructingaCPIinvolvesseveralessentialsteps. First,arepresentativebasket
+of goods and services is selected. This basket reflects the consumption patterns of
+atypicalhouseholdandisbasedonexpendituresurveys. Eachiteminthebasketis
+assigneda weight correspondingto itsshare intotalconsumerspending [17,18]. The
+choiceofitemsandweightsmustbeperiodicallyupdatedtoaccountforchangesin
+consumptionhabits,theintroductionofnewproducts,andtheobsolescenceofothers.
+Second, prices for the itemsin the basket are collectedregularlyfrom a varietyof
+sources. Statisticalagenciesensurethatpricesaregatheredinaconsistentandreliable
+mannertoreflectthetruecosttoconsumers[18].
+Third, price indices are calculated using index formulas. The most common is
+theLaspeyresindex,whichusesbase-periodquantitiestoweightprices. Alternative
+formulas,suchastheJevonsorgeometricmeanindex,maybeusedatloweraggregation
+levelstoaddressissueslikesubstitutionbias[17,18].
+Real-worldCPIconstructionfaceschallenges,including:
+• Substitutionbias:Consumersmayswitchtocheaperalternativeswhenrelative
+priceschange,whichthefixedbasketdoesnotcapture.
+• Qualitychange:Improvementsordeteriorationsinproductqualitycanaffect
+prices,complicatingcomparisonsovertime.
+• Newgoods:Theintroductionofnewproductsrequiresbasketupdatestoremain
+representative.
+18
+--- PAGE 19 ---
+Addressingthesechallengesofteninvolvesusinggreedypricingtechniques,regular
+basket revisions, and applying different index formulas that account for consumer
+substitutionbehavior[17,18].
+These principles provide a foundation for constructing an analogous CPI in the
+contextoftheOSRSvirtualeconomy,adaptingmethodstofitthespecificfeaturesof
+in-gamemarketsandplayerconsumptionpatterns.
+4.2 Designing the OSRS-CPI
+ConstructingaCPIforOSRSrequiresadaptingprinciplesfromreal-worldCPIdesign
+to the unique characteristics of a virtual economy and in especially for the case of
+OSRS. Severalfactorsmustbecarefullyconsideredtoensurethattheindexaccurately
+reflectsin-gamepricechangesandeconomicconditions.
+Selection of representative items Akeychallengeisdeterminingwhichitems
+formtheOSRSconsumptionbasket. Inreal-worldCPIs,thebasketreflectshousehold
+spending patterns; similarly, the OSRS-CPI should capture the goods and services
+mostcommonlyusedbytheaverageplayer. Thisincludesitemsessentialforskilling,
+combat, and progression. Consideration should also be given to frequently traded
+consumablesandequipment.
+Diversity of item categories To capture price movements across the game’s
+economy,thebasketshouldcovermajorcategories:
+• Consumables:Food,potions,andarrows
+• Equipment:Commonweaponsandarmor
+• Skillingresources:Rawmaterials
+• Utilityitems:Runes,teleporttablets
+19
+--- PAGE 20 ---
+Basket size Real-world CPIs typically balance detail and practicality; similarly,
+the OSRS-CPI should be large enough to capture broad market trends without
+becoming unwieldy. A basket ofapproximately20 carefully chosen itemswouldoffer
+a manageable scope while covering key areas of the economy. This size allows for
+trackingwithoutexcessivecomplexityindatacollection.
+Weighting WhereasrealCPIsuseexpenditureshares,OSRSlacksofficialplayer
+expenditure data. As a practical approach, equalorcategory-based weightscould be
+assignedinthecaseofOSRS. Thesecanthenbefurtherrefinedwithtradevolumeor
+pricedata.
+Challenges specific to OSRS DesigningtheOSRS-CPImustaddress:
+• Item turnover: New items enter the game, and some become obsolete (e.g.,
+afternerfsorupdates).
+• Speculation:Pricesmaybevolatileduetohoardingorupdateanticipation.
+• Qualitychange:Itembuffsornerfsaltertheeffectivevalueofgoods.
+• Data Availability: For best results the basket would contain items that have
+beeninthegamethroughoutthewholedatawindow.
+These factors mirror real-world CPI challenges like new goods bias and quality
+adjustment[17,18].
+4.3 Proposed OSRS-CPI basket
+Basedontheseconsiderations,thefollowingCPIbasketisproposed:
+• Consumables,weight=0.25:Shark,monkfish,prayerpotion(4),runearrow,
+rangingpotion(4)
+• Equipment, weight = 0.40: Abyssal whip, dragon scimitar, rune platebody,
+dragon dagger (p++), Armadyl Crossbow, Bandos chestplate, Elysian spirit
+shield
+20
+--- PAGE 21 ---
+• Skillingresources,weight=0.25:Yewlogs,coal,adamantore,ranarrweed,
+rawkarambwan
+• Utility,weight=0.10:Lawrune,teleporttohousetablet,Bloodrune
+Theseitemsarecommonlyusedbyawiderangeofplayersandrepresentkeysectorsof
+theOSRSeconomy. Additionally,alloftheseitemshavebeeninthegamethroughout
+thehistoryofGE. So,thereisdataonwhichthebasket canbebuilton. Dataforthe
+constructionofthebasketwillbesourcedthroughtheOSRSWiki’sAPI[20].
+Thefactthattheitemshavebeeninthegamesolongalsocomeswithissuesfor
+the basket. Better items have been released to the game and therefore surpassing
+these items. Additionally, many of these items are typically easy to bot, which has
+affectedpriceforexamplerunes. Futurerefinementsofthebasketcouldincludeadding
+weights,expandingthebasket,orincorporatingadditionalneweritems.
+4.4 Interpreting the OSRS CPI
+TheresultingCPIforthebasketconstructedinsection4.3isshowninfigure3. The
+CPI is based to the 1st of April 2015. This is due to the fact that the volumes and
+dataavailabilityforthefirstmonthsofGE,namelyFebruaryandMarchof2015are
+inconsistent. ThiscanbeseenastheclearspikebeforeApril.
+21
+--- PAGE 22 ---
+Figure 3: OSRSCPIovertime. Theindexisbasedto100on1stofApril2015.
+TheOSRSCPIprovidesaquantifiablemeasureofin-gameinflationacrossabroad
+timespan. TheCPIwasconstructedusingaweightedbasketofitemsacrossfourkey
+economiccategories: consumables,equipment,skillingresources,andutilityitems.
+Thebasketwascarefullyselectedtoincludeitemswithuninterruptedhistoricaldata
+sincethe introductionofthe GrandExchange, ensuringconsistencyacross time. The
+exactweightsarediscussedinSection4.3.
+4.4.1 General Trends.
+TheCPIindicatesperiodsofbothinflationanddeflation,reflectingcomplexshiftsin
+thegame’svirtualeconomy. Overall,theCPIseemscontrolledwithoutanysignsof
+majorinflation. Between 2015 and2021, the generaltrend wasupward, with theCPI
+growingcumulativelyandpeakingin2021. Duringthisperiod,thein-gamemoney
+supplygrewsignificantlyduetohighGP-yieldingactivitiesandgoldfarming. This
+22
+--- PAGE 23 ---
+growth aligns with macroeconomic predictions under the Quantity Theory of Money,
+where increases in money supply without proportional increases in output result in
+higher prices. After the GE tax launch in December2021 the CPI volatility seems to
+belesser.
+4.4.2 Recent Deflationary Pressure.
+From2022to2025,theeconomyexperienceddeflationarypressure. In2022alone,
+theCPI declinedbyover16%. Possibleexplanationsinclude thecumulative effectof
+Jagex’sgoldsinkpolicies,theintroductionoftheGrandExchangetaxattheendof
+2021,andincreaseditemsupplyfromcontentupdatesthatdiluteddemandforolder
+equipment. The overall CPI fell again in 2025 by nearly 6%, suggesting continued
+price contraction across the average player’s consumption basket. Additionally, the
+effectoftheGEtaxincreaseinMayof2025beginstoemergerightattheendofthe
+graph.
+4.4.3 Year-over-Year Inflation.
+AnnualinflationratesfurtherreflectthecyclicalnatureoftheOSRSeconomy:
+• 2021: Inflation of +19.1%—likely tied to increased player activity due to the
+pandemicandtotheincreasedgoldfarmingbyVenezuelanplayers[21].
+• 2022:Deflationof-16.1%mostlikelyduetotheintroductionofGEtax.
+• 2023:Returntomoderateinflationat+9.5%.
+• 2024:Milddeflationat-1.9%.
+• 2025Year-todate(YTD):Declinecontinuesat-5.8%.
+Theseshiftsmirrorreal-worldinflationpatternstiedtomonetarypolicy,supply-side
+constraints, and market psychology. The case of OSRS shows that virtual economies,
+thoughcentrally managed, arenotimmune tosystemic inflationaryanddeflationary
+trends.
+23
+--- PAGE 24 ---
+4.4.4 Comparison Without Weights
+ForcomparisontheCPIresultwithoutcategoryweightsisintroducedinFigure4. It
+canbe observedthattheweightshaveonlya minor impactonthe result. Thisis most
+likely due to the fact that there are many items in the basket whichcauses the weights
+toitemspecificweightstobesimilarintheend.
+Figure 4: CPIwithoutitemcategoryweightsandwiththeweights. Orangeindicating
+thenon-weightedCPIandBluetheoriginalweightedCPI.
+4.4.5 Conclusion.
+TheOSRSCPIbehavesinamannerbroadlyconsistentwithmacroeconomictheory.
+Becauseofthisacriticalevaluationofthebasketisnecessaryasthecommonconsensus
+among the players and game developer Jagex is that the price levels are rising. For
+furtherevaluation,neweritemsshouldbeaddedtothebasket. Sincetheaverageplayer
+24
+--- PAGE 25 ---
+isnowintheendgamephase,thebasketshouldalsoincludemorehigh-tieritemsthan
+itcurrentlydoes. Forthisreasononeitemthatlinksreal-worldandOSRS,OldSchool
+RuneScapeBond,isstudiedinsection4.5.
+Overall, it can be observed that player behavior, developer interventions, and
+structural game changes interact to produce observable macroeconomic outcomes.
+In the sense of traditional CPI the inflation has been controlled within the game.
+This supports the hypothesis that virtual economies can act as useful experimental
+platformsforexploringinflation,monetarydesign,andpolicyeffectiveness.
+4.5 Bond Price Trends and Real-World Relevance
+InadditiontogeneralpricelevelscapturedbytheOSRSCPI,thepriceofthebondinthe
+gameoffersauniquewindowintotheintersectionofvirtualandreal-worldeconomies.
+The bond is an item that can be purchased with real money and traded in-game for
+goldpieces(GP)[6],effectivelysettinganexchangeratebetweenfiatcurrencyand
+virtualcurrency. Thebondcanthenbeusedtogain14daysofmembership. Bondsare
+soldbyJagex andare the only legitimatewayto convertreal-worldmoney to in-game
+GP. While the bond system is the only legitimate way to convert real money into
+GP,gold farmingand third-party RWTmarketscreate aninformal reversechannel.
+Playersmaysellin-gamegoldforrealcurrencyoutsideofficialsystemsbutbydoing
+that they risk getting banned from the game. The original price of bond was $5.99
+whenintroducedtothegame,butthepricehasbeenincreasedtwice. Firstin2022to
+$7.99andthenin2024to$8.99. Thiswillalsohaveaneffectforthein-gameprice
+as the bonds are therefore more valuable. The bond price index shown in Figure 5
+showsaclearupwardtrajectoryovertime,indicatingsignificantinflationinthecostof
+bondsmeasuredinGP. This900%inflationcannotbeonlyexplainedbythe$4price
+increase ofbonds, especially considering thereal-life inflation. This suggests thatthe
+in-game value of realmoneyhas increased relative to GP, meaning players mustnow
+spendmorevirtualcurrencytoaccessthesamepremiumbenefits. Thisindicatesthat
+thevalueofGPhasinflated. Suchinflationisdrivenbybothsupply-sideconstraints,
+25
+--- PAGE 26 ---
+Figure 5: Bond price in GP over time (indexed to 100 on 1st April 2015). Color
+zonesvisualizethecurrentbondpriceinUSD. Thegraphshowshowtheexchange
+rate between real-world currency (USD) and in-game GP has evolved, reflecting
+inflationarytrends.
+limitedavailabilityofbondsandincreasingdemandfromplayerswhousebondsto
+financemembership. Additionally,therisingamountofGPcausesthebondpricesto
+increase.
+TheintroductionofGEtaxcanbeseenattheendof2021,whichclearlystabilizes
+theinflation forsometime buttheeffect isthen canceledby theincreased prices of
+bondinMayof2022. SimilareffectcanbeseenwhentheGEtaxisincreasedto2%
+inMayof2025.
+Theseobservationsreflectonthenominalexchangerate,notaccountingforthe
+inflationoftheUSD. Between2015and2025theUSDhasalsoinflatedonaverage
+3,09%peryearwhichcumulatesto35,63%[22]. TheinflationoftheUSDneedstobe
+26
+--- PAGE 27 ---
+consideredifevaluatingtherealexchangeratechangesbetweenOSRSGPandUSD.
+Thistrendisnotmerelycosmetic. Becausebondscanbeboughtwithrealcurrency
+andsoldforGP,theyestablishaquasi-exchangeratebetweenOSRSandrealeconomies.
+Consequently,inflationinbondpricesreflectsaformofcurrencydevaluationwithin
+the game. This is economically relevant because it ties the value of in-game effort
+(GP) to real-world labor or capital. The phenomenon closely parallels inflationary
+dynamics in real economies, where foreign exchange rates and central bank policy
+influencedomesticpurchasingpower.
+The relevance of bond inflation extends further when considering RWT. High
+in-game bond prices may incentivize illicit gold farming, as the return on GP in
+termsoffiatcurrencyrises. ThisfeedbackloopreinforcestheimportanceofJagex’s
+monetary controls and gold sinks as tools to stabilize the in-game economy and
+mitigateinflationaryrisk.
+Overall, the bond market acts as a bridge between OSRS’s virtual economy
+and real-world macroeconomics. Monitoring its inflation trend not only informs
+virtualpricestabilitybutalsohighlightsthepermeabilitybetweendigitalandphysical
+marketplaces.
+27
+--- PAGE 28 ---
+5 Macroeconomic Model Analysis
+Thissection evaluateshowthe macroeconomicsmodelsdiscussedin Section2.1 are
+applicabletoOldSchoolRuneScape(OSRS). Therewillbeevaluationinhowcapable
+are the models in explaining observed inflation dynamics and monetary actions by
+Jagex. AlthoughOSRSisasyntheticenvironment,earliersectionshavedemonstrated
+that itshows coherent economicbehavior. Specifically, price level fluctuations, gold
+supply changes, and developer interventions create conditions comparable to those
+encounteredinreal-worldmacroeconomicsystems.
+The modelsdiscussedin the sectionare theQuantity Theory ofMoney(QTM),
+the Aggregate Supply–Aggregate Demand (AS–AD) framework, and the central bank
+monetarypolicieswithJagexactingasthemonetaryauthority. Eachmodelisapplied
+to empirical patterns observed in OSRS from 2015 to 2025 with the constructed CPI
+from Section 4.4, including periods of high inflation, deflationary correction, and
+update-drivenpricevolatility.
+Thissectionanalyzesthesemodelstoassesstheirexplanatorypowerandidentify
+theoretical limitations within virtual contexts. It also discusses how these models
+shouldbeadaptedwhenappliedtovirtualeconomiessimilartoOSRS.
+5.1 Quantity Theory of Money and OSRS
+TheQuantityTheoryofMoney(QTM),introducedinSection2.1.2,providesauseful
+analyticaltoolforinterpretingtheinflationarydynamicswithintheOSRSeconomy.
+While it was originally developed to describe real-world monetary systems, QTM
+has also previously found applications in synthetic economies due to its structural
+simplicityandpredictiveimplications[1,2].
+InthecaseofOSRS,thecoreassumptionofQTM,anincreasingmoneysupply 𝑀
+withrelativelyfixedrealoutput𝑌 appearstohold. Aspreviouslydescribed,goldpieces
+(GP)aregeneratedthroughin-gameactivitiessuchasmonsterdropsandskillingwith
+noupperbound. However,itemproductionisconstrainedbyin-gamemechanicsand
+more high-levelitems becoming desirable,which limitsgrowthin𝑌. Thisimbalance
+28
+--- PAGE 29 ---
+canbealsoseenintheCPItrendsdiscussedinSection4.4,whereprolongedperiods
+ofinflationcorrespondtotimesofGPgenerationwithoutenoughrestrictions,aligning
+withQTMpredictions.
+Furthermore,theimplementationofmonetarycontrolsbyJagex,suchastheGrand
+Exchange(GE)taxandothergoldsinks,hasdemonstratedeffectivenessinfightingthe
+inflationwithinthegame. Thesharpdeflationobservedafter2021whentheGEtax
+wasintroducedshows thatreducing 𝑀 growthstabilizespricelevels, again consistent
+withtheQTMframework.
+Nevertheless,thetheoryhaslimitationswhenappliedtoavirtualsetting. Firstly,
+theassumptionofstablevelocity𝑉 maynotalwayshold. Gameupdates,speculative
+trading,andbottingcansignificantlyaltertransactionfrequencies,introducingvolatility
+unaccounted for by QTM. Secondly, behavioral dynamics such as hoarding, flipping,
+and update-driven speculation play a substantial role in short-run price fluctuations
+andwealthconcentration. Therefactorsarebettercapturedbymodelsincorporating
+expectationsormicrofoundations.
+Insummary,whiletheQTMcapturesbroadinflationarytrendsinOSRS,especially
+overlongertimehorizons,itspredictivepowerdiminishesincontextsinfluencedby
+behavioralshocks,designchanges,andliquidityevents. Itisthusbestunderstoodasa
+simpleapproximationandisbenefitsfromcomplementarymodels.
+5.2 AS–AD and Update Effects
+The Aggregate Supply–Aggregate Demand (AS–AD) model, introduced in Sec-
+tion2.1.3,providesaframeworkforanalyzinghowmacroeconomicshocksaffectboth
+outputandpricelevels. InthecontextofOSRS,thisframeworkisespeciallyrelevant
+formodelingtheimpactofgameupdatesanddeveloperinterventions,whichcanbe
+comparedtoreal-worldsupplyanddemandshocks[9,10]. TocompletetheAS–AD
+model, the supply side can be understood through an adapted Phillips Curve logic,
+whereshiftsinGPincomepotentialalterplayerbehaviorsimilartowagedynamicsin
+realeconomies.
+29
+--- PAGE 30 ---
+ThepatterninOSRSinflationdiscussedinSection4.4showcasetheeffectofmajor
+gameupdatesonpricedynamics. Onthe demandside, thereleaseofnewbossesor
+high-levelcontent frequently raises thedemand forspecific items, creatingrightward
+shiftsintheADcurve. Thesearenotsovisibleintheinflation. Sucheventsresultin
+short-termpricesurgesacrossrelatedmarketsegments,asobservedduringtherelease
+ofTheatreofBloodandTombsofAmascut[6]. Thesecanbeinterpretedasdemand
+shocksintheAS–ADframework.
+Ontheotherside,supplyshocksaretriggeredwhenupdatesintroducenewitem
+sources or increase drop rates. For example, when a boss is added with a high
+chanceofdroppingspecificgearorconsumables,thein-gamesupplyofthoseitems
+expands rapidly. This can leadto significant downwardpressure on prices—reflected
+asrightwardshiftsintheshort-runaggregatesupplycurve. Sucheffectswerevisible
+followingupdatesthatrebalanceddroptablesorintroducedduplicatecontentacross
+multiplebosses[6].
+TheobservedCPIdeflationtimesin2022–2025areinlinewithseveralkeysupply-
+sidechanges,includinghigheroutputofcommonlytradedresourcesandadjustments
+togoldfarmingviability. Thesesupplyshocksinteractedwithgoldsinkpoliciesto
+reduce aggregate price levels. The result is consistent with downward-sloping AD
+intersectingaright-shiftedshort-runaggregatesupplycurve.
+Importantly, the AS–AD model helps explaining the dual nature of OSRS eco-
+nomicshocks: priceandquantitychangesoccursimultaneously,mediatedbyplayer
+expectationsandupdateanticipation. Forinstance,speculativebehaviorbeforemajor
+patches like item hoarding or panic selling contributes to heightened volatility and
+price overshooting. These dynamics cannot be fully explained by QTM alone and
+highlightthestrengthoftheAS–ADapproachinmodelingtransitionalresponsesand
+short-rundisequilibria.
+Inconclusion,theAS–ADframeworkcapturesthemulti-dimensionaleffectsof
+developer updates on the OSRS economy. It complements the longer-term trends
+identifiedthroughQTMbymodelingtheimmediateandoftentemporarydisruptions
+causedbycontentchanges,behavioralresponses,andpolicyannouncements.
+30
+--- PAGE 31 ---
+5.3 Jagex as Central Bank
+AlthoughOldSchoolRuneScape(OSRS)doesnothave aformalmonetaryauthority,
+Jagex can be seen in the role of a central bank through its control over the money
+supplyandin-gameinflationmechanisms. Differingfromtraditionalinstitutionslike
+theEuropeanCentralBankortheFederalReserve,Jagexexercisesmonetarypower
+through game mechanics. These mainly include the design of gold sinks, and the
+GrandExchange(GE)tax[3,6,7].
+Jagex’s interventions can be categorized as implicit monetary policy tools. For
+example,theintroductionoftheGEtaxinDecember2021,anditssubsequentincrease
+to2%inMay2025,mirrorscontractionarymonetarypolicy. Thesemeasuresreducethe
+effective money supply 𝑀 bytaxingtransactions andremoving goldfrom circulation.
+Similarly, the implementation of high-cost activities for example construction skill
+training, item repair, and death costs, functions similarlyto fiscal drains, discouraging
+hoardingandeasingtheinflationarypressure.
+Even though Jagex does not have a stated inflation target, it shows behavior
+comparabletocentralbankinggoals. Itseemtodriveformaintainedpricestability,
+ensuring liquidity, and responding to external economic shocks. For instance, gold
+farmingspikesduringtheCOVID-19pandemicledtoacceleratedinflation,whichwas
+counteredthroughpolicychanges,suchassinkexpansionsandresourcerebalancing[6].
+TheseactionsimplythatJagexmightbeoperatingwithinanrule-basedframework
+likeaTaylorRule[16].
+Asaspeculationcontrolledincreaseinthegeneralpricelevelcanbeeconomically
+beneficialforJagex,asGPlosesvalue, playersmustpaymoreformembership bonds
+in-game,increasingthelikelihoodofreal-moneypurchases. Thismirrorstheroleof
+inflationinreal-worldeconomies,wheremoderateinflationcanstimulatespending
+andeconomicactivity. However,fromtheplayer’sperspective,risingpriceswithout
+a corresponding increase in income in other words GP earned per hour, effectively
+reducestheirrealwage. Iftheperceivedvalueofgameplaylowers,playersmaybecome
+discouraged, potentially resulting in lower engagement or even players quitting the
+31
+--- PAGE 32 ---
+game. Thus,Jagexmustbalancethebenefitsofinflation-drivenmonetizationagainst
+the riskofdegrading the userexperience. Ultimately, theirgoal isto keep toplayers
+happytogainrevenuethroughthemonthlysubscriptionsandsoldOSRSbonds.
+Notwithstanding,Jagexdiffersfromreal-worldcentralbanksinseveralkeyaspects.
+Itdoesnotuseinterestratesorcreditinstruments,anditsinterventions aretypically
+implemented through content updates rather than market operations. Moreover,
+decision-making is not very transparent, with no commitment mechanisms, policy
+forecasts,orinstitutionalaccountabilitywhichlimitsthepredictabilityandcredibility
+ofitseconomicgovernance[12].
+In conclusion, as a monetary authority in a synthetic economy, Jagex performs
+essential stabilization functions for the game to strive. Its role highlights how
+centralizedcontrolovervirtualcurrenciescanproducecoherenteconomicoutcomes,
+especially when done by persistent policy instruments like transaction taxes and
+item sinks. These findings highlight the relevance of central banking analogies in
+virtualenvironments andcouldofferasandbox forexploring institutionaldesignand
+rule-basedmacroeconomicmanagement.
+32
+--- PAGE 33 ---
+6 Discussion and Conclusion
+This thesis studied the macroeconomic behavior of the virtual economy in Old
+School RuneScape (OSRS) through the lens of theoretical models especially through
+constructingConsumerPriceIndex(CPI). Thefindingsdemonstratethatdespitebeing
+agame,OSRS’sexhibitsmanyofthecharacteristicsobservedinreal-worldeconomies:
+inflationarycycles,supplyanddemandshocks,andpolicy-likeinterventionsfroma
+centralauthority.
+TheQuantityTheoryofMoneygivesanapproximationforlong-runpricebehavior
+inOSRS. Itisparticularlyusefulduringperiodsofsustainedgoldsupplygrowth. It
+manages to capture the underlying relationship between money in-flow and aggregate
+pricelevelsbutcannotexplaintheshort-termdynamicswherespeculation,botting,
+and patch-related volatility also affect the inflation. In these cases, the Aggregate
+Supply–Aggregate Demand (AS–AD)model provides a betterand supportingframe-
+work. It takes into account game update shocks and captures shifts in both supply
+anddemandthatreflectchangesinplayerexpectations,itemavailability,andin-game
+productivity.
+Furthermore, Jagex can be seen in a role of a central bank. While OSRS lacks
+formalmonetaryinstitutions,Jagexexercisessignificantcontroloverthemoneysupply
+andinflation throughthe design ofgold sinks,transaction taxes,and rewardsystems.
+Theseinterventions,thoughnon-transparentandsometimesirregular,produceeffects
+similar to monetary and fiscal policy in real economies. The increase in the Grand
+Exchangetaxandtargeteditemsinksserveasclearexamplesofcontractionarypolicy,
+helpingtostabilizeinflationduringperiodsofexcessiveliquidity.
+Theapplicationofthesemodelsillustratesthattraditionalmacroeconomictheory
+remains useful in synthetic environments when adapted with context-specific con-
+straints. OSRS,withits well-documentedeconomyandactive developerintervention,
+offers a valuable case study in the economics of designed systems. Nonetheless,
+certainlimitationsmustbeacknowledged. Playerbehaviorisnotalwayseconomically
+rational,gameupdatesareoftenmotivatedbybalanceandentertainmentratherthan
+33
+--- PAGE 34 ---
+policyobjectives,andtheeconomyisinherentlyvulnerabletomanipulationbyexternal
+actorssuchasbotsorreal-worldtraders.
+Even with these limitations in mind, the broader implication is clear: OSRS
+can serve as a productive testing ground for macroeconomic theories and models.
+OSRSallowstheobservationofhigh-frequencyeconomicactivityundercontrolled,
+observableconditions. FurtherstudiescouldbeconductedonOSRS’svirtualeconomy
+on topicsasreal-life effectsofthe in-game inflationandincluding new itemsin the
+evaluationofinflation.
+In conclusion,this thesisshows thatthe economy ofOSRS mirrors many ofthe
+dynamicsseen in real-worldeconomy. Macroeconomicmodels suchas theQuantity
+TheoryofMoneyandtheAS–ADframework,alongwithcentralbankanalogies,arenot
+onlyapplicablebutusefulininterpretingin-gamephenomena. Thesefindingssuggest
+thatthelinebetweenvirtualandrealeconomiesisnotonlythin, butalsopenetrable.
+Future researchmay buildon this work by applying more detailedbehavioral models,
+usingagent-basedsimulations,orevaluatingtheinflationindifferentmanner.
+34
+--- PAGE 35 ---
+References
+[1] E.Castronova, SyntheticWorlds: The BusinessandCultureofOnlineGames.
+Chicago: UniversityofChicagoPress,2005.
+[2] V. Lehdonvirta and E. Castronova, Virtual Economies: Design and Analysis.
+Cambridge,MA: MITPress,2014.
+[3] R. Heeks, “Understanding “gold farming” and real-money trading
+as the intersection of real and virtual economies,” Journal of
+Virtual Worlds Research, vol. 2, no. 4, 2010. [Online]. Available:
+https://journals.tdl.org/jvwr/index.php/jvwr/article/view/868
+[4] E.Castronova,“Virtualworlds: Afirst-handaccountofmarketandsocietyon
+the cyberian frontier,” CESifo Working Paper Series, no. 618, 2001. [Online].
+Available: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=294828
+[5] ——,“Ontheresearchvalueoflargegames: Naturalexperimentsinnorrathand
+camelot,”GamesandCulture,vol.1,no.2,pp. 163–186,2006.
+[6] OSRS Wiki contributors, “Old school runescape wiki,” https://oldschool.runesc
+ape.wiki/,2025,accessed: 2025-06-05.
+[7] T. E. Bilir, “The economy of runescape: Virtual worlds as a model for
+real-world economic processes,” SSRN, Tech. Rep., December 2009, sSRN
+Working Paper, Affiliation not provided to SSRN. [Online]. Available:
+https://ssrn.com/abstract=1655084
+[8] J. Ltd.,“Grand exchangetax& item sink,” https://secure.runescape.com/m=new
+s/grand-exchange-tax--item-sink?oldschool=1,2021,accessed: 2025-06-05.
+[9] O.Blanchard,Macroeconomics,7thed. Boston: Pearson,2017.
+[10] N.G. Mankiw,Macroeconomics,9thed. NewYork: WorthPublishers,2016.
+[11] I.Fisher,ThePurchasingPowerofMoney. NewYork: Macmillan,1911.
+35
+--- PAGE 36 ---
+[12] M. Friedman, “The role of monetary policy,” American Economic Review,
+vol.58,no.1,pp. 1–17,1968.
+[13] M.Blaug,EconomicTheoryinRetrospect. CambridgeUniversityPress,1997.
+[14] N.G. Mankiw,“Macroeconomicsfifthedition,”2013.
+[15] F. S. Mishkin, The Economics of Money, Banking, and Financial Markets,
+12thed. Pearson,2019.
+[16] J. B. Taylor, “Discretion versus policy rules in practice,” Carnegie-Rochester
+ConferenceSeriesonPublicPolicy,vol.39,pp. 195–214,1993.
+[17] I.M. Fund,ConsumerPriceIndexManual: ConceptsandMethods. IMF,2020.
+[Online]. Available: https://www.imf.org/en/Publications/Manuals-Guides/Issu
+es/2020/09/28/Consumer-Price-Index-Manual-Concepts-and-Methods-49515
+[18] M.J. Boskin,E.R. Dulberger,R.J. Gordon,Z.Griliches,andD.W. Jorgenson,
+“Toward a more accurate measure of the cost of living,” Final Report of the
+AdvisoryCommissiontoStudytheConsumerPriceIndex(BoskinCommission),
+1996. [Online]. Available: https://www.ssa.gov/history/reports/boskinrpt.html
+[19] J.Ltd.,“Oldschoolrunescapenewsandupdates,”https://oldschool.runescape.
+com/news,2025,accessed: 2025-06-05.
+[20] WeirdGloop, “Weirdgloop api: Exchange history (all),” https://api.weirdgloop.o
+rg/exchange/history/rs/all,2025,accessed: 2025-06-12.
+[21] M. Ombler, “How runescape is helping venezuelans survive,” Polygon, May
+2020,accessed: 2025-06-26. [Online]. Available: https://www.polygon.com/fe
+atures/2020/5/27/21265613/runescape-is-helping-venezuelans-survive
+[22] In2013Dollars.com, “U.s. inflation calculator: 2015 to 2025 inflation rate (cpi),”
+https://www.in2013dollars.com/us/inflation/2015?amount=1,2025,accessed:
+2025-08-02. [Online]. Available: https://www.in2013dollars.com/us/inflation/2
+015?amount=1
+36

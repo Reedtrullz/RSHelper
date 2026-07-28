@@ -1,0 +1,8 @@
+Hello, and welcome to episode #1 of my flipping random items challenge. Today we are going to be letting a random number generator decide what items I will flip. I am going to do this by getting a random number from random.org. This number will correspond to an item in the grand exchange, which I will then flip.
+- Item must be under 1 mil
+- I will not flip more than the buying limits worth of the item
+- I will receive 2 skips for each episode
+Instead of the Item I rolled, I will instead pick a suggested Item from the comments section
+I will roll a new item, then I will pick between the original item and the new one.
+That's it guys, If you have any suggestions or ideas please leave them and I will try to put them in :)
+<section

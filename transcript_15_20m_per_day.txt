@@ -1,0 +1,47 @@
+============================================================
+OSRS How I Make 15-20M Per Day Flipping Items!
+by 26g OSRS — Published Dec 17, 2017
+Video ID: cIPwlvVv0Mg (NOW PRIVATE — no captions available)
+============================================================
+
+⚠️ NOTE: This video is currently private. The transcript below is reconstructed
+from the video description (Wayback Machine, 2020-11-19) and the GE Tracker
+article page. No auto-captions or spoken content could be extracted.
+
+------------------------------------------------------------
+VIDEO DESCRIPTION (from YouTube / GE Tracker)
+------------------------------------------------------------
+
+https://www.ge-tracker.com/?ref=26g
+
+LIST:
+  - Toxic blowpipe
+  - Serpentine helm
+  - Toxic staff of the dead
+  - Amulet of fury
+  - Berserker ring
+  - Archers' ring
+  - Bandos godsword (BGS)
+  - Dragonfire shield (DFS)
+  - Amulet of torture
+  - Necklace of anguish
+  - etc......
+
+------------------------------------------------------------
+INFERRED STRATEGY (based on item list and context)
+------------------------------------------------------------
+
+26g focused on flipping high-value, high-margin PvM gear — specifically
+Zulrah uniques (blowpipe, serp helm, toxic staff, fury), God Wars drops
+(BGS, DFS, berserker/archer rings), and Zenytes (torture, anguish).
+
+These items have wide buy-sell spreads due to:
+  - Lower trade volume than consumables (fewer units/day)
+  - High per-item value (millions of GP)
+  - PvM demand driven by bossing meta
+
+The 15-20M/day claim likely relied on:
+  - Multiple GE slots with partial-buy-limit orders
+  - Margin checking via 1-item quick-buy/quick-sell
+  - Time-of-day patterns (PvM peak hours = more buyers)
+  - Scale: ~8 GE slots × wide margins on 1-30M items × multiple cycles/day

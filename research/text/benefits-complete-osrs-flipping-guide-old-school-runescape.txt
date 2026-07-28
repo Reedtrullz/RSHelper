@@ -1,0 +1,485 @@
+-
+Guides
+-
+Flipping Guides
+-
+Benefits Complete OSRS Flipping Guide - Old School...
+Benefits Complete OSRS Flipping Guide - Old School Runescape
+*This guide is meant to mirror our video guides on YouTube (channel:
+Ge Tracker
+) and is subject to updates.*
+This guide is going to undergo heavy edits in the near future
+Ge Tracker guide series
+Forum featured videos
+If you're into PVM, be sure to check out our
+PVM Team thread
+to group up with others (low requirements)
+Table of Contents
+About Me
+What is merchanting
+i. Beginners get cannibalized
+The Grand Exchange
+i. First scenario
+ii. Second scenario
+iii. Third scenario
+iv. A volatile market
+Buy-Sell margins
+i. What are margins?
+ii. High volume
+iii. Average volume
+iv. Low volume
+The Different Types of Merchants
+i. Beginners
+ii. Average merchants
+iii. Masterminds
+Game updates & Valuations
+i. No item sinks
+ii. New items
+iii. Example: Dragon warhammer
+iv. Example: Dragon claws
+v. New uses for old items
+vi. Timing investments
+Flip finder tools
+i. Filters
+ii. Table overview
+iii. Selecting an item
+a. ROIs
+b. Trading volume
+iv. Table conclusion
+Charts
+i. Linear
+ii. Logarithmic
+iii. Long term moving average
+iv. Candlesticks
+v. Bubbles
+About me
+Hey all. I go by many names, BenefitsOfaG, BenefitsOfaCow, Benefits, or if you know me in-game, awildcow.
+I’ve been playing Runescape for as long as I can remember, which was around 2001-2002. Back then; no one truly knew what he or she was doing – except a small minority.
+I was immediately hooked by the chaos of it all, and even though I was just a little kid, I was fascinated by how the market worked. However, it wasn’t until around 2004-2005 where I started to take merchanting seriously. Ever since that time, I’ve been obsessed and am always looking for ways to improve my practice overtime.
+Fast forward a few years, and I stumbled across Ge Tracker, by far the best merchanting tool I’ve ever been introduced too. However, that’s not the point of this guide. I’m going to go over basically anything and everything that can be talked about in the merchanting world right here.
+If you want to take yourself seriously as a merchant, this would be the guide for it – as I share my experience and knowledge with you. Keep in mind though, this guide will mirror our YouTube videos (channel:
+Ge Tracker
+), and is subject to updates and edits.
+What is merchanting
+The literal definition is “the act of selling commodities”, but in Runescape it’s much more.
+Merchanting or flipping (as some might refer to it) is the act of purchasing any item in hopes of selling it back to the market for a higher price then what they’ve invested in it.
+Sounds easy enough right? Well… that’s the first problem with many new comers. They have this preconceived notion that you can just walk right into the market with zero preparations and suddenly make a profit on any given item.
+i. Beginners get cannibalized
+“I’ll buy an item lower than what the Grand exchange is showing, and then sell it back at or above the listed price.”
+Wrong!
+If you come into the market with that sort of mentality, you’ve already forked over your hard earned money to those putting in the work. Runescape is nothing like the real world financial market, but
+TREAT IT AS SUCH
+.
+There’s no successful stocks trader in the world whose made millions of dollars time in and time out by simply “winging” it. There’s a level of dedication to their practice and this comes with strategy and patience.
+Sure, you might flip a few items here and there by shooting from the hip, but in the long run you’re just going to lose money and hand it over to everyone else whose putting in the work. The five factors you need to keep in mind are:
+-
+practice
+-
+due diligence
+-
+patience
+-
+research
+-
+relentlessness
+III. The Grand Exchange
+As a merchant you need have to have the fundamentals on point, so you can continuously and meticulously approach the market in the most efficient manner. Lets start with how the grand exchange works.
+This should go without saying, but the grand exchange acts as a middle ground for buyers and sellers that come together to exchange items for gold and vice versa. You’re literally trading an item/gold with another player - not an NPC.
+i. First Scenario
+Lets say there are 2 buyers and 2 sellers in the game who want to buy and sell an Elysian spirit shield at the same time.
+700m – Seller A
+680m – Seller B
+670m – Buyer A
+650m – Buyer B
+Since the Grand Exchange can’t match any of the offers, nothing will happen.
+700m – Seller A
+680m – Seller B <- Matched
+670m – Buyer A
+650m – Buyer B
+720m – Buyer C <- Completed
+If a new buyer comes in and places their offer at 720m. They’ll receive the best possible offer, which would be seller B at 680m. In which the new buyer would have 40m returned to him/her.
+ii. Second scenario
+What happens when two buyers place an offer at the same price point? The Grand Exchange will place priority towards the oldest buy offer.
+700m – Seller A
+690m – Seller B
+670m – Buyer A
+670m – Buyer B
+In the above scenario, nothing will happen, since no offers have been matched.
+700m – Seller A
+690m – Seller B
+670m – Seller C <- Completed
+670m – Buyer A <- Completed
+670m – Buyer B
+Once a third seller comes into the scene and an offer is matched, Buyer A will receive their Elysian spirit shield over Buyer B. If the offers were placed at the exact same time for the same offer (highly unlikely), then it would choose one of the buyers at random.
+iii. Third Scenario
+700m – Seller A
+680m – Seller B
+650m – Buyer A
+620m – Buyer B
+What do you think would happen if a third seller came into the scene and wanted to instantly sell their Elysian? The GE is going to want to match that seller with the best possible offer.
+700m – Seller A
+680m – Seller B
+600m - Seller C <- Completed
+650m – Buyer A <- Matched
+620m – Buyer B
+This means that the GE will match seller Cs offer with the highest buy offer at the time – so long as the offers match. This is because the sell offer is the newest placed offer in the GE and will thus try to match them with the best possible offer. Meaning Seller C who placed their offer at 600m, will actually receive an additional 50m.
+iv. A volatile marketplace
+I once heard a user in our
+say “How hard can flipping be really? It’s just a linear market”. This far from the truth, just look at this graph:
+Broodoo shield
+Does this look like a graph that shows a linear behavior? Sure, you could say, that’s just one example, an extreme one at that. Okay, how about this one?
+Saradomin's light
+The point being, the market is dynamic and always changes based upon the demand and supply of the players that occupy it – whether or not they’re a merchant. Everyone plays a role even if they don’t realize it, and this is one fundamental aspect you need to grasp, because it plays closely with predicating price changes.
+One day you could be heavily investing in an item, and then all of a sudden, the item losses over 50% of its value you had invested in it. What went wrong?
+You need to ask yourself, has the item hit its historic low? If so, has a recent update/Q&A affected the item? Is the item hitting its historic high? Is the item stable or has the recent update made it more useful?
+These are all questions you should be asking yourself, which the veterans are already doing without a second thought. Need a visual? Refer to the flowchart below.
+The above diagram is only meant to be a basic concept of how to approach any item. This is by no means a definitive answer for all investments, but should rather be looked at as a guideline for all new comers to the scene. As you progress, you’ll want to improve upon your methods; time and time again.
+IV. Buy – Sell Margins
+You’ll often hear margin checks being thrown around quite a bit in the merchanting world. It’s a common practice, but is not by any means a sustainable practice at all levels of any price point – for several reasons. First, lets go over the basics of margins.
+i. The basics
+Simply put, the margin is the price difference between the highest sell offer and the lowest buy offer.
+700m – Seller A
+695m – Seller A
+690m – Buyer A
+685m – Buyer B
+(700m (Seller A) – 685m (Buyer B)) =
+15m gp margin
+In the above scenario the margin is 15m. You might hear some users talk about checking margins, but would you really check margins on an item that has a 15m difference in price? Absolutely not!
+The above image (sorry Merched for using you as an example) is a prime sample as to why you can’t check margins just on any item. At this point, there’s an incredibly thin chance this user will be able to flip for those margins and make their money back. These sorts of margins are short lived and more often then not, are one off cases.
+I can’t say specifically at which point you would want to stop checking margins in-game, but the two photos below should help provide a guideline. Item A (see image below) is traded so frequently that the community as a whole has a strong hold on its price point. Where as Item B (see image below) has little traded at any given point time, making it more susceptible to price change. This of course ignores the idea of hypes, panics, item usefulness and game updates.
+Item A
+Item B
+ii. High Volume
+High volume items include things such as runes, logs, food, potions, ore and bars. I would classify these as the safest to check margins. The margins are so thin, that even if you refer to our charts, you’ll want to check the margins in game regardless. Prices are always changing and with the margins being so thin, you’ll want to know where they stand when you’re looking to flip them.
+-
+Coal
+-
+Gold bar
+-
+Lobster
+-
+Astral rune
+*Examples are not given as what to flip, but rather real visuals for you to review
+iii. Average Volume
+This is where the gray area comes into to play. You have situations where you could check margins, but personally I stop at this point. Referring to the example above with zenyte rings, even though it’s a popular item, I can be completely turned upside for my hard earned gp in a split second. Check margins at this point at your own risk, but I would strongly advise reviewing the graphs to gain a clearer picture.
+-
+Abyssal Whip
+-
+Ranger boots
+-
+Dharok’s platebody
+iv. Low Volume
+The less an item is being traded, the less control the overall community holds over them - sacrificing the power/control to more experienced merchants. Unless you’re comfortable with losses or holding onto items for hours or days on end, then you’ll want to avoid this category. However, this is not exclusive for all low volume traded items.
+You may on occasion find items that are pretty cheap, have a low volume and provides essentially no one any form of control. The key to a merchant using low volume items to their success is how much of a demand and use that particular item has. If an item has no use whatsoever, then you’re more than likely going to lose money, or have to wait a long time before you can sell it back.
+-
+Hunter's potion
+-
+Slayer's respite
+-
+Dragon bitter
+If you’re looking around on Ge Tracker, these will almost always be shown with question marks, indicating that their trade volume is so low that their true value isn’t really known – and should be avoided.
+The exceptions to this of course are rare and new items to the game, such as the twisted bow. However, the key difference is that the twisted bow (
+) has a demand and use, and so overtime its value becomes stabilized and its price point becomes well known.
+Even so, items such as 3rd age sets are valuable because of their rarity. Their trade volume is low, but merchants can certainly make a profit from them.
+-
+3rd age axe
+-
+3rd age pickaxe
+-
+Elysian spirit shield
+-
+Dextrous prayer scroll
+-
+Arcane prayer scroll
+V. The different types of merchants
+If you’ve made it this far then obviously you want to advance yourself as a more skillful merchant and provide yourself an edge over others. This is key to being one of the most successful investors in game.
+-
+Think for yourself
+-
+Be critical
+-
+Don't accept mass movements as set and stone facts
+-
+Always analyze price trends
+-
+Consistently keep up to date with developer blogs, runescape Q&A streams and updates
+-
+Keep notes of anything you find valuable for short and long term market impacts
+-
+Understand what other players are thinking and why
+-
+Learn how to value new items
+-
+Remain aware of your emotions and don't let them impact your decision making
+These are just a few things you should be continuously working on as you develop your methods on flipping. There are of course, varying levels of skillful merchants who exercise these better than others. I’ll categorize them as: beginners, average and masterminds.
+These categories aren’t meant to target anyone specifically or place him or her into a specific group. Any player can share traits from beginners to masterminds and anything in between. This is meant to help you the reader, visualize how the market is setup and how you should view yourself to further advance your practices.
+i. Beginners: Profits or losses vary
+First you have players who are just getting their feet wet. These players have virtually no experience flipping and are most likely to quit. This plays a bit into psychology.
+A beginner is more susceptible to quit if they try flipping and it doesn’t live up to their expectations, or worse, they fail all together to make a profit. This negative experience will keep them from merching, as they couldn’t get off the ground running.
+Where as if a merchant was successful on their first day and exceeded their expectations, they’re more likely to stick to this form of money making - despite any potential losses in the future. In the future if they start losing money, they can relive their first day, remembering how at one point in time they were earning the type of money they had expected to make, and at the time of their loss, they believe they’ve done something wrong.
+A positive or negative first experience can almost always make or break a new player, but here are some of the more common traits these players hold:
+-
+Uncreative
+-
+Ask around which items are worth flipping
+-
+Mimic others in attempts to replicate their success
+-
+“This is fucking bullshit. I can’t make any money”
+-
+“Flipping makes no money”
+-
+“What the fuck is that item?” – Unaware of updates
+Furthermore, they might try and replicate a merchant they saw on YouTube by copying their flips almost precisely, having no creative sense of mind or simply want to have their profits handed to them on a silver platter.
+ii. Average Merchants: Profited 1m-500m
+The average merchant makes up the largest slice of the pie in the investing world. The skill set in this group widely varies and few ever make it to the mastermind category.
+-
+May or may not focus on Stream Q&A’s, updates, dev blogs
+-
+May or may not keep tabs on valuable information
+-
+Flip common items: barrows, pvm drops, etc
+-
+Allow their emotions to dictate their decisions
+-
+Are part of the mass movement – Unable to predict any price movements (short or long term)
+-
+Are not long term planners, and think short term
+I’ll classify this group as the herd, as they move as one and react to the emotions of each other more so than that of masterminds. This category is single handedly responsible for skyrockets in value and crashes. This doesn’t mean other players aren’t included in hypes and panics, but these are some of the first to take part of that mass movement.
+Unlike their mastermind counterparts, they may watch streams, read blogs and updates, but don’t give too much of a second thought about how they can plan for the future - and how those three sources can impact the economy.
+This category is generally also uncreative and will stick to the same few items, keeping their risks at a minimum – but, they’re more tolerant of losses. So, unlike the beginners category, this group is ready to bounce right back up after any losses they might face.
+iii. Masterminds: Profited 500m-2bil+
+The elite of all merchants out there in the game. Again though, you could be an average merchant and still share some of these qualities. These merchants however, are by far the most comfortable with risk.
+Losses are not foreign to them and accept them as part of the process. Excelling in every possible category is something they strive for and meticulously work on improving upon.
+-
+Long term planners
+-
+Read every blog, update and watch every Q&A stream
+-
+Keep tabs and notes on virtually anything they may find useful
+-
+Excessively patient
+-
+Comfortable with big risks
+-
+Excellent at diversifying their investments
+-
+Comfortable with flipping the most valued items in game
+-
+Not always, but can be market manipulators (give merchants a bad name)
+Masterminds are exceptionally patient and can hold onto investments for months on end without feeling phased. They’re most likely to flip new items released into the game, taking on the biggest risks, trying to churn incredible ROIs that only happen every now and then.
+They could hold onto notes and information for months, anticipating the day that the developers will enact the change they once stated in the past. Once they do resurrect the idea, they’ll be prepared with their massive hoards of items, selling them off to the mass public that waits for the moderators’ confirmation to start investing in those items as well.
+There’s only one party who benefits from this, and that’s the early investors. If you ride the wave just like everyone else, you’re quite literally handing your money over to this category that have literally been waiting for this moment. Even worse, you risk the possibility of making little to money, or even losing money all together.
+Case in point; make all attempts to escape the hive mindset. Think for yourself, remain patient, keep tabs on everything and diligently work on improving your methods – remaining content allows others to soar past you.
+VI. Game updates & Valuations
+If you refer back to “IV. The Grand Exchange”, you’ll learn that at any point in time, margins can change - ignore this at your own expense. Game updates, Developer Blogs and Q&As are some of the biggest influencers when it comes to radically changing the price movement of any item.
+Masterminds anticipate this as discussed in
+V. The Different Types of Merchants
+. They fully understand updates change the value of different items. It’s simple… think about it. If corporeal beast was never added to the game, what’s the best in slot shield? For melee, that’s the
+dragonfire shield
+.
+Lets remove bots away from this discussion entirely. If the
+dragonfire shield
+is the best in slot shield, then wouldn’t a good amount of players kill NPCs that drop the
+draconic visage
+? On top of this, wouldn’t there be a high demand for such shield? This dictates the value of such shield, but lets not ignore the fact that in Old School Runescape, there’s no item sink. Zero.
+i. No item sinks
+No item sink means that if the user base doesn’t grow, then eventually the price of such shield will decline overtime. Fewer users will be seeking the item overtime (decrease of demand), and if users continue camping the NPCs that drop them – the continued supply will only increase the rate of devaluation. This is playing particularly true with the
+Armadyl godsword
+.
+This particular godsword is used for pvp related activities, and it’s a niche way of playing the game. There aren’t massive amounts of players continuously joining pking community, and there aren’t any less users killing Kree’ara for his drops (which includes the
+AGS
+).
+This has resulted in the AGS losing its value in the long run and flipping such item poses a level of risk. Knowing full well that the item is going down in price – not up. The introduction of new items certainly doesn’t help the godswords value either.
+ii. New items
+Easily the most volatile time the marketplace can be, depending upon how much of an impact those items have on others. For example, once corporeal beast is released into the game; along with the
+elysian spirit shield
+. The
+dragonfire shield
+is no longer the strongest shield in-game, that title goes to the
+elysian
+.
+But of course, with most new best in slot items introduced, their value is going to be out of reach to the majority of players. Surely this would prevent the
+dragonfire shield
+from crashing? No. Wealthy/impatient players are going to sell off their
+dragonfire shield
+in exchange for the new item. This item dump is going to skew the buy/sell ratio negatively, decreasing its overall demand.
+What about the item itself? No one knows with 100% certainty where an item is going to be valued in the long run, but that doesn’t mean you can’t try and capitalize on it’s volatile start to the game.
+New items are notorious for being the most profitable flips in game, because the buyers and sellers are going to be placing offers all over the place. Refer back to IV. The Grand Exchange if you need a refresher.
+iii. Example:
+Dragon warhammer
+Prior to the release of the
+dragon warhammer
+, a good portion of the community believed it would be the new
+AGS
+. Both only use 50% of the special attack, and both have some form of damage buff. Let’s compare the two:
+-
+The
+Armadyl godsword
+has a special attack, The Judgment, which deals damage with a 37.5% (125% multiplied by the hidden 110% every godsword possesses, the calculation uses integer values after the multiplication of 1.1 the value gets rounded down and then multiplied by 1.25) higher maximum hit than a normal attack, using 50% of the special attack bar.
+-
+The
+Dragon warhammer
+special attack costs 50% special attack energy and deals 50% additional damage, which will lower the target's current defense level by 30% on a successful hit. Defense level reductions do stack over multiple successful hits; each reduction is calculated from the current temporary level (so follow-up drains reduce fewer levels).
+Naturally, one would think the
+dragon warhammer
+would be an alternative to the
+AGS
+, but soon after it was released – it turned out to be quite the opposite. Players tried pking with them on streams and making YouTube videos, but nearly everyone was disappointed - as it didn’t live up to their expectations. Within a matter of a week, the
+dragon warhammer
+had gone from ~70m to ~40m. It wasn’t looking good.
+However, players started to quickly realize that the
+DWH
+was most efficient for killing corporeal beast - an NPC that drops one of the most valuable items in game – the
+Elysian spirit shield
+. This new use made it the best weapon of choice, thus increasing its demand heavily – resulting in a heavy increase in value.
+As a merchant you need to think for yourself and not follow what everyone else is saying. If an item appears to drop in value quite rapidly upon release, does that item have any significant value in use anywhere the rest of the community isn’t looking? If so, this could be a prime opportunity for you to make an investment, hoping to make a good profit shortly thereafter.
+iv. Example:
+Dragon claws
+Dragon claws have been an iconic symbol of Runescape for years. Ever since Old School Runescape was released, it has been widely debated whether or not claws should be released into the game.
+Prior to EOC,
+dragon claws
+were deadly and could easily KO anyone. This memory sat with many players, and this hype over its introduction into Old School would keep its value rather high. However, the moderators of the game have stated when they did release
+claws
+, it wouldn’t be as powerful as when it was first introduced. On top of this, Old School doesn’t have
+ancient curses
+(pvp based prayers).
+The reduction in stats and lack of
+ancient curses
+means
+dragon claws
+weren’t going to live up the expectations as everyone had anticipated. This was easily predicted if you spent any time with them in tournament worlds. For a while, they’ve maintained their value on release anywhere from 300-500m, but have quickly dropped down to the 100-200m range.
+The point of these two examples is to provide real situational insight into how the community once thought about these new items and how they were viewed sometime after with them in game. You can either invest heavily, assuming the price is undervalued, or remain cautionary, believing the price to be overvalued.
+v. New uses for old items
+On top of predicting the value of new items, you should of course try and make predictions as to what sort of items are going to be useful for killing new bosses.
+A fresh and prime example of this would be raids – a much-anticipated update. Players could assume that with an update that were to resemble dungeoneering, that one would need to take in all three combat styles – which has played true.
+The true question then becomes, “which items are most valuable?” because with new items being high in demand, so will be the items that are most efficient in killing the bosses.
+In Old School Runescape, the community favors higher damage per second items over anything else. Lets look at the final boss as an example (the great olm). He in a way resembles what appears to be how you would kill zulrah. Only his hands would be available to melee attacks, leaving range and magic to be the next choice. If magic were favorable, then the
+arcane spirit shield
+would surely increase both in value and demand? Well, it sure has. Look at the
+arcane spirit shields
+graph from before and after the release of raids (chambers of xeric):
+vi. Timing investments
+If you’re going to try and make a prediction on an items future value, you’ll want to make sure you do before the mass movement has already occurred. For example, before November 2016 came around, there was a reddit post that was both highly up voted and praised by the Mods as something of a valuable update.
+When both the community strongly backs up an item update, as well as the JMods strongly supporting the idea, this is when you’ll want to start investing in such item. However, once the developer blog comes around, it’s already too late, as the item will have sky rocketed by the mass buying of players – which is where you want to come in and be their supplier.
+Also, never try investing in an item a few days before the update comes. 99.99% of the time, you will lose money. The majority of players will wait till the day of release to dump all their items, and you’ll be sitting there with lost profits – don’t do this.
+VII. Flip finder tools
+“What items are good to flip right now?”…. If I had a dollar for every time I saw someone ask this question, I’d be a billionaire. I hate to throw anyone under the bus, but this falls under the beginner category.
+A good merchant will take into consideration everything that has been talked about up until this point. Which means, you’d know researching and digging around would be your best bet. For this, I’m going to talk about our flip finder tool, which does an excellent job of tailoring to every level of merchant out there:
+Beginners – Average - Masterminds
+-
+High volume items
+-
+Suggest Items
+-
+GE Limits
+Average - Masterminds
+-
+Highest Margins
+-
+New Items
+i. Filters
+When viewing any of the tools you’ll be presented with a table highlighting a variety of items. If you’re premium you’ll have the option to play around with the filter settings (see image below) to zone in on the type of items you want to flip, as well as being able to refresh the table as many times as you’d like.
+You can keep these as default (advised if you’re new to our tool), but if you do decide to change any values, the tool won’t accept blank values as a valid input. Once you’ve decided, simply press save filters and you’ll be presented with a list of items (see gif below).
+ii. Table overview
+You’ll notice by looking at this image, you’ll see the data separated into different columns: current price, approximate offer price, approx. price, approx. profit, buying quantity (per hour), selling quantity (per hour), buy/sell ratio, GE limit, buying price and est. profit – See IV. The Grand Exchange to fully understand why these values are separate from one another.
+-
+Current Price: Average price item is being bought or sold for
+-
+Approx. Offer Price: Approximate price buyers are placing their offers
+-
+Approx. Sell Price: Approximate price sellers are placing their offers
+-
+Buying Quantity: Amount being placed in the GE for sale
+-
+Selling Quantity: Amount being sold in the GE
+-
+Buy/Sell Ratio: Exactly this, (x bought per hour/x sold per hour)
+-
+GE Limit: Amount that can be bought within the 4 hour cap – all unknown values have an infinity sign (does not mean infinity though)
+-
+Buying Price: Live trading price
+-
+Est. Profit: Live estimated profit
+You can filter any one of the columns to showing values highest to lowest and vice versa.
+iii. Selecting an item
+Naturally a new user would think, “Well.. shouldn’t I just show the highest profit? Why would I look at anything else?”. This mentality ignores everything said in this guide so far. Prices change all the time, and some items showing the highest profit should be avoided. Lets look at example:
+The first item is showing two values highlighted in pink with question marks. This means the item is traded so little, that the real value is questionable and to proceed with caution. The second item doesn’t, but if we look at the ROI% we can see the value is ridiculously high – which should be a red flag.
+a. ROIs
+Keep in mind though, ROIs are only one factor to look at and it’s highly dependent upon which item you’re looking at. For example, low valued cosmetics will have an ROI% anywhere between 0-99%. Where as high valued in demand items will have an ROI% anywhere between 0-30% (usually).
+If you’re comfortable flipping low valued cosmetics, keep in mind trying to hit a 50% ROI will require you to sit on that item for prolonged periods of time. Where as trying to flip a high valued item with a low ROI% will mean a quicker transaction (usually).
+One thing to look at would the actual trading volume, which will give you a better idea of how long or difficult is to flip.
+b. Trading volume
+The above two images would indicate to me (obviously), that there’s not many buying or selling this particular item – meaning a slower transaction. Taking in other factors, this may be an average length investment - where you might hold onto it for a couple of days.
+The above two images shows quite the opposite. This particular item is showing a much higher circulation of such item, and would mean acquiring this would be quicker. Both have their pros and cons.
+Low Volume
+-
+Pros: Gives you more control over the price – big margins
+-
+Cons: Harder to acquire and harder to sell back – risky flip
+High Volume
+-
+Pros: Easy to acquire and easy to sell back – safe flips
+-
+Cons: Overall community has control over price – thin margins
+iv. Table conclusion
+Once you’ve found an item to play favorable to your merchanting style, you could always add it to your list of favorites by clicking the star on the far right (can also be found on that specific items page).
+Keep in mind though, the table is meant to act like a quick glance shopping list – not definitive margins. You’ll always want to review the graphs themselves to gain a clearer picture of how the item is fairing in the market.
+VIII. Charts
+By default your charts will be set to logarithmic (highly requested by many), but you can of course change what is shown to you by clicking “Options”.
+If you’ve noticed in the first image, you’ll find some labels spread across the chart. These are all developer blogs and updates submitted to the OSRS page, so you can see how updates have affected the value of any item. This can be disabled if it’s too much of a clutter for you (see GIF above).
+Even more useful, you can click on any of the labels and it will take you to that specific blogs posting (see gif posted below).
+i. Linear Chart
+The linear chart was previously our default chart and is best used to spot any radical changes. It’s not efficient to use for everyday flips, but rather to understand how much hypes or panics are influencing an item.
+ii. Logarithmic Chart
+Our logarithmic chart is now the best overall chart to use, in order to determine long-term price movements as well as figuring out margins. If we look at the chart below, we can see on a daily timeframe the buy (blue line) and sell (red line) differences.
+The price point can change quite radically at any given point in time during the day. This is why you should only view the table as a shopping list, and view the charts as real data to base your flips.
+In order to base your margins, you’ll want to look at the varying differences between the red and blue lines – but you’ll also want to look at all timeframes. If the item is hitting its historic peak and there were no updates in game that would’ve made such item more valuable, then you’re possibly looking at a bubble.
+iii. Bubbles
+Bubbles are single handedly the most dangerous times to invest in any item. Essentially, this is when an item has reached a point in value that cannot be sustained and is likely to crash soon (see image below for an example).
+If you ever see an item that is hitting its historic high point, then this could be an indication of a bubble and should be avoided at all costs. Of course you’ll want to take into consideration other factors, such as whether or not an update has increased that items value.
+iv. Long term moving average
+If you’ve looked closely on any of the line charts, you should see this faint blue line hiding in the background. This is the long term moving average, which essentially shows in the long run, where that item is trending – whether that’s an upward or downward fashion.
+Upward trend
+Downward trend
+You can use these long-term averages to help you make predictions about where the item may be headed in the future. Of course, you don’t want to rely solely on this, as you’ll want to look at everything available to you. Another useful tool we have to help make predictions would be our candlestick chart.
+v. Candlestick Charts
+Candlestick charts can be a bit intimidating to the new viewer, but once you understand them, it’s pretty straight forward and easy to comprehend.
+However, please keep in mind that the candlesticks are still very much in beta and do not work with all types of items or all timeframes. If you find something along the lines like the following, then simply revert to the line charts.
+Unusable candlestick chart
+Now lets look at what each of the data points mean. First, you have your hollow bodies, which indicate a downward movement and your solid bodies, which indicate an upward movement.
+-
+High - highest offer
+-
+Market open – where offers are being placed
+-
+Body – where all the trades have been completed between buyers and sellers
+-
+Close – where offers are being completed
+-
+Low – lowest offer
+-
+High – highest offer
+-
+Close – where offers are being completed
+-
+Open – where offers are being placed
+-
+Low – lowest offer
+So with the two different type of candlesticks, we can tell whether an item is being bought for higher then what the market is offering, or lower then what sellers are trying to get back from their item.
+Keep in mind, a collection of solid bodies or hollow bodies could help indicate where that item is moving, but only collectively. An item can certainly experience a short dip but continue in an upward fashion. Also, the length of the wicks and bodies themselves help determine how quickly an item will move up or down in value.
+Collective solid bodies - showing an upward movement
+Collective hollow bodies - showing a downward movement
+The above two images can be labeled as bullish or bearish movements. This is often used in the real world market, but can also apply to individual items; "an item is acting bearish, or an item is acting bullish."
+-
+Bull market – An upward movement in value
+-
+Bear market – A downward movement in value
+It’s not necessarily important to know this, but if you wanted to remember these two scenarios. You can think of a bullish movement as, “a bull plowing its way to its destination (forcing its way up).” Where a bearish movement is, “a bear slashing prices away, bringing the value down.”
+IX. Conclusion
+Merchanting isn’t an easy practice by any means. It requires dedication, practice and patience to become truly good at it. Don’t get discouraged by any losses you face.
+Whatever form of flipping you plan on doing, don’t invest your whole bank into it, because if you do experience a heavy loss, you’ll still have value in your bank that won’t be affected.
+Don’t sit at the grand exchange all day waiting for items to flip. Do other activities in game while your items are being bought or sold. Let your money work for you and make money elsewhere as well.
+Sometimes I hear players say, “well zulrah makes more money per hour then if I were to sit at the GE.” That’s good, but that doesn’t mean you should just keep your money in your bank just wasting away. Put it to good use and allow it to continue growing your bank while you also enjoy the game.
+Goodluck merching guys and thank you for reading
+<section

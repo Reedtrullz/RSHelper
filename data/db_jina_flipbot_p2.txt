@@ -1,0 +1,369 @@
+Title: [Free] humblePhlipper: Grand Exchange flipping with automatic item selection (300+ gp/hr, 0 xp/hr)
+
+URL Source: https://dreambot.org/forums/topic/28662-humblephlips-ge-flipping-bot/page/2/
+
+Published Time: 2023-12-01T19:48:42+00:00
+
+Markdown Content:
+My first script, flips ~~Logs and Death runes~~**ANY ITEMS YOU CHOSE** at the Grand Exchange~~ - both these items have high volumes with consistently profitable margins and are **f2p**with **no trade restrictions** for new accounts~~.
+
+![Image 1: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 2: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 3: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 4: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 5: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 6: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+**Terminology**
+
+Spoiler
+
+**Bid**price AKA buy price AKA insta-sell price AKA low price is the price we buy at
+
+**Ask**price AKA sell price AKA insta-buy price AKA high price is the price we sell at
+
+**Default Mechanics**
+
+Spoiler
+
+Update bid/ask prices every ~~~0.7 ~1-4 1.0,~~ 10-20 seconds using the OSRS Wiki (not DreamBot) API and user selected pricing options.
+
+1.    Always sell any inventory of items we have bought at ask. 
+2.    If and only if no inventory exists and spread is profitable, buy items at bid. 
+3.    Stop script when all GE limits have been hit, timeout is triggered,or user stops manually. 
+4.    Save trade history, current config, and selection charcteristics locally ("/Dreambot/Scripts/humblePhlipper/History/") for analysis. 
+
+**Requirements**
+
+Spoiler
+
+* Have some GP in your inventory
+
+**Features**
+
+Spoiler
+
+Paint overlay with profit calculations after every logged sale, automatic 4hr GE limit tracking which carries over between sessions,
+
+![Image 7: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+GUI supporting custom config profiles with automatic item selection and custom bid prioritisation,
+
+![Image 8: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Trades and end of session trade history CSVs output to console log,
+
+![Image 9: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Custom config profiles, 4hr limits linked to accounts, and trading session histories saved locally,
+
+![Image 10: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Toggle bidding off to exit gracefully by cancelling buy offers and selling off remaining inventory,
+
+![Image 11: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+On the hour summaries of all the ongoing sessions ('instances') on your PC/VM sent to your discord webhook (learn how to generate a discord webhook URL here [https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)),
+
+![Image 12: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+As well as individual end of session summaries,
+
+![Image 13: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Post session inspection of (all) trade histories with summary stats,
+
+![Image 14: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Post session summary stats and regression,
+
+![Image 15: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+`bidding == false` taking too long to sell off inventory? You can manually end a session without resorting to the stop button (which messes with profit calculations):
+
+1) Press pause, let the script finish its loop, and cancel all sell offers.
+
+2) Press resume and let the scipt collect, this way it logs partially fulfilled sell offers.
+
+3) Press pause, let the script finish its loop, and sell of all the inventory just collected.
+
+4) Press resume and let the script collect, this way it logs your manual sales.
+
+5) Make sure that if it isn't already, bidding is toggled off, the scipt will exit after logging all trades.
+
+![Image 16: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+**Config**
+
+Spoiler
+
+Config can be set by the GUI or QuickStart. Custom config profiles are saved by the GUI to "/Dreambot/Scripts/humblePhlipper/Config/" as JSONs. Config for each session is attached to the trade history for that session in "/Dreambot/Scripts/humblePhlipper/History/" to facilitate analysis.
+
+Default config,
+
+Spoiler
+
+{ "timeout": 240.0, "autoBond" : false, "sysExit": false, "discordWebhook": null, "debug": false, "maxBidValue": 1000000, "maxBidVol": 20000, "noSelfCompeting": false, "cancelPartialBids" : true, "neverSellAtLoss" : false, "priorityProfit": 100, "priorityVol": 100, "pricing": "bestOfLatestFiveMinute", "pricingOffset": 0, "pricingOffsetAsPercentage" : false, "selections": [1511, 560], // Logs, Death rune "omissions" : [13190], // Old school bond "auto": true, "minVol": 10000, "maxBidAskVolRatio": 3.0, "minMargin": 2, "maxBidPrice": 20000, "minBidPrice": 0, "tradeRestricted": false, "members": false,}
+
+Paramater types,
+
+Spoiler
+
+{ "timeout": Float, "autoBond" : Boolean, "sysExit": Boolean, "discordWebhook": String, "debug": Boolean, "maxBidValue": Integer, "maxBidVol": Integer, "noSelfCompeting": Boolean, "cancelPartialBids" : Boolean, "neverSellAtLoss" : Boolean, "priorityProfit": Integer, "priorityVol": Integer, "priorityCapitalBinding": Integer, "pricing": String, "pricingOffset": Integer, "pricingOffsetAsPercentage" : Boolean, "selections": Set<Integer>, "omissions" : Set<Integer>, "auto": Boolean, "minVol": Integer, "maxBidAskVolRatio": Float, "minMargin": Integer, "maxBidPrice": Integer, "minBidPrice": Integer, "tradeRestricted": Boolean, "members": Boolean,}
+
+Paramater supports if restricted,
+
+Spoiler
+
+{ "priorityProfit": {0, 1, ..., 99, 100} "priorityVol": {0, 1, ..., 99, 100} "priorityCapitalBinding": {0, 1, ..., 99, 100} "pricing": {"latest", "fiveMinute", "oneHour", "bestOfLatestFiveMinute", "worstOfLatestFiveMinute", "bestOfLatestOneHour"}}
+
+Parameter descriptions,
+
+Spoiler
+
+{ "timeout": time in minutes after which to stop making buy offers, sell off remaining inventory, and exit (exit forced if timeout exceeded by 15 minutes), "autoBond" : whether to buy an old school bond and redeem it when there is less than 1 day of membership left, "sysExit": whether to close client on exit, "discordWebhook": discord webhook url, like https://discord.com/api/webhooks/XXX/XXX, to send notifications to, "debug": whether to log debugging output to console log, "maxBidValue": maximum value (quantity * price) of any buy offer, "maxBidVol": maximum quantity of any buy offer, "noSelfCompeting": whether to avoid bidding on items other bot instances (on the same machine) are already trading, "cancelPartialBids": whether to cancel partially completed buy offers, "neverSellAtLoss": whether to never sell items at a loss, "priorityProfit": relative weight assigned to ordinal rank of post-tax profit margin in ordering selections, "priorityVol": relative weight assigned to ordinal rank of latest 1 hour volume in ordering selections, "priorityCapitalBinding": relative weight assigned to ordinal rank of bid * target, where target is 4hr_GE_limit - used_limit, in ordering selections, "pricing": see below, "pricingOffset": see below, "pricingOffsetAsPercentage": whether pricing offset should be calculated as a percentage of profit marign, "selections": set of item IDs to be used if `auto = false`, "omissions": set of item IDs to be ignored if `auto = true`, "auto": select items automatically, overrides `selections` if true, "minVol": minimum 1 hour volume of candaidate automatic selections, "maxBidAskVolRatio": maximum 1_hour_bid_volume / 1_hour_ask_volume of candaidate automatic selections, "minMargin": minimum post-tax profit margin of candaidate automatic selections, "maxBidPrice": maximum bid price of candaidate automatic selections, "minBidPrice": minimum bid price of candaidate automatic selections, "tradeRestricted": whether the account has 20 hour / 10 quest point / 100 skill level trading restrictions, "members": whether the account is members }
+
+`pricing` description,,
+
+Spoiler
+
+{ "latest": Latest bid/ask prices from OSRS Wiki API, "fiveMinute": Latest 5 minute average bid/ask prices from OSRS Wiki API, "oneHour": Latest 1 hour average bid/ask prices from OSRS Wiki API, "bestOfLatestFiveMinute": bid = min{latest_bid, fiveMinute_bid}, ask = max{latest_ask, fiveMinute_ask} "worstOfLatestFiveMinute": bid = max{latest_bid, fiveMinute_bid}, ask = min{latest_ask, fiveMinute_ask} "bestOfLatestOneHour": bid = min{latest_bid, oneHour_bid}, ask = max{latest_ask, oneHour_ask}}
+`bestOf` targets bigger profit margins, `worstOf` targets greater volume - I recommend the former here.
+
+`pricingOffset` description,
+
+Spoiler
+
+bid = baseline_bid - pricingOffset ask = baseline_ask + pricingOffset
+Positive offsets target bigger profit margins, negative offsets target greater volume - I recommend the latter here.
+
+**Bandwith Usage**
+
+Spoiler
+
+This script routinely makes HTTP requests to fetch price data. Prediced excess bandwith usage assuming 300 KB upper bound for price requests,
+
+{"pricing" = "latest"} : 54.30 - 108.30 MB / hour {"pricing" = "fiveMinute"} : 3.90 MB / hour {"pricing" = "oneHour"} : 0.30 MB / hour {"pricing" = "bestOfLatestFiveMinute"} : 57.90 - 111.90 MB / hour {"pricing" = "worstOfLatestFiveMinute"} : 57.90 - 111.90 MB / hour {"pricing" = "bestOfLatestOneHour"} : 54.30 - 108.30 MB / hour
+Instances running on the same PC/VM will attempt to connect to each other and share price data, with only 1 instance making HTTP requests. (So 10 instances should use no more excess bandwidth than 1.)
+
+**QuickStart**
+
+Spoiler
+
+QuickStart accepts a single paramater, this can be a Config JSON or the name of a Config file in "/Dreambot/Scripts/humblePhlipper/Config/". Using no params will start with default config. Omitting the the -params option entirely will launch the GUI as usual.
+
+Python example using a Config file name,
+
+Spoiler
+
+import subprocess import re import pandas as pd from io import StringIOSubprocessCommand = ["java", "-jar", "C:/Users/me/DreamBot/BotData/client.jar", "-script", "humblePhlipper", "-account", "my_account", "-covert", "-world", "308", "-params", "<Custom 1>"]# Open the subprocess with stdout as a pipe process = subprocess.Popen(SubprocessCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False) stdout, stderr = process.communicate()# After the trading session ends with `sysExit = true` read data regex = "<trades>(.*?)</trades>" df = pd.read_csv(StringIO(re.search(regex, stdout, re.DOTALL).group(1))) df['size'] = df['vol'] * df['price']print("Total profit = ", sum(df['size'])) df.groupby('name')['size'].sum().plot(kind='bar') # Bar chart of profit by item
+
+Python example using a Config JSON,
+
+Spoiler
+
+import subprocess import re import pandas as pd from io import StringIOSubprocessCommand = ["java", "-jar", "C:/Users/me/DreamBot/BotData/client.jar", "-script", "humblePhlipper", "-account", "my_account", "-covert", "-world", "302", "-params", """{ { "timeout": 240.0, "autoBond" : false, "sysExit": false, "discordWebhook": null, "debug": false, "maxBidValue": 1000000, "maxBidVol": 20000, "noSelfCompeting": false, "cancelPartialBids" : true, "neverSellAtLoss" : false, "priorityProfit": 100, "priorityVol": 100, "priorityCapitalBinding": 0, "pricing": "bestOfLatestFiveMinute", "pricingOffset": 0, "pricingOffsetAsPercentage" : false, "selections": [1511, 560], // Logs, Death rune "omissions" : [13190], // Old school bond "auto": true, "minVol": 10000, "maxBidAskVolRatio": 3.0, "minMargin": 2, "maxBidPrice": 20000, "minBidPrice": 0, "tradeRestricted": false, "members": false, } }"""]# Open the subprocess with stdout as a pipe process = subprocess.Popen(SubprocessCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False) stdout, stderr = process.communicate()# After the trading session ends and client closes read data regex = "<trades>(.*?)</trades>" df = pd.read_csv(StringIO(re.search(regex, stdout, re.DOTALL).group(1))) df['size'] = df['vol'] * df['price']print("Total profit = ", sum(df['size']) df.groupby('name')['size'].sum().plot(kind='bar') # Bar chart of profit by item
+
+**Regression Analysis**
+
+Spoiler
+
+![Image 17: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Base Model,
+
+Spoiler
+
+Y = XB + U
+Y is an n x 1 matrix of profit per hour for `n` sessions.
+
+X is an n x (k+1) matrix of k explanatory variables and an intercept (constant).
+
+B is the matrix of coefficients to be estimated.
+
+U is the matrix of errors.
+
+Estimates,
+
+Spoiler
+
+OLS coefficients,
+
+β = (X'WX)^{-1}X'WY = (X'X)^{-1}X'Y W = diag(1, ..., 1)
+WLS coefficients using runtimes as weights,
+
+β = (X'WX)^{-1}X'WY W = diag(runtime_1, ..., runtime_n)
+Variance-covariance matrix of coefficients assuming homoskedasticity,
+
+Var(β) = (1/n) * (E'WE) * (X'WX)^{-1}
+Variance-covariance matrix of coefficients assuming heteroskedasticity ([White, 1980](https://doi.org/10.2307/1912934)),
+
+Var(β) = (X'WX)^{-1}(X'Wdiag(e1^2, ..., en^2)WX)(X'WX)^{-1}
+Finite sample correction factor for variance-covariance matrix of coefficients,
+
+n/(n-k-1)
+
+Tests,
+
+Spoiler
+
+Coefficient t-statistics,
+
+t = b/se ~ t(df = n - 1)
+Two sides tests use tables truncated at df = 100.
+
+F-statistics,
+
+F = ((SSRr - SSRu)/k) / ((SSRu)/(n-k-1)) ~ F(df1 = k, df2 = n - k - 1) SSRu = E'WE SSRr = (Y-l(l'w)^{-1}w'Y)'W(Y-l(l'w)^{-1}w'Y) W = diag(runtime_1, ..., runtime_n) (WLS) or diag(1, ..., 1) (OLS) w = (runtime_1, ..., runtime_n)' (WLS) or (1, ..., 1)' = l (OLS) l = (1, ..., 1)'
+Tests use tables truncated at df1 = 24 and df2 = 80.
+
+Significance,
+
+* p < 0.05 ** p < 0.01 *** p < 0.001
+
+Reproduction,
+
+> Quote
+> 
+> 
+> 
+> You can verify the script's coefficient estimates, standard errors, and statistics with the generated R code.
+> 
+> 
+> In R, OLS assuming homoskedasticity with finite sample corrections corresponds to,
+> 
+> ols <- lm(Y ~ X[, 2:5]) summary(ols)
+> Runtime WLS assuming homoskedasticity with finite sample corrections corresponds to,
+> 
+> wls <- lm(Y ~ X[, 2:5], weights = X[, 2]) summary(wls)
+> And OLS assuming heteroskedasticity ([White, 1980](https://doi.org/10.2307/1912934)) without finite sample corrections corresponds to,
+> 
+> library(lmtest) library(sandwich) coeftest(ols, vcov = vcovHC(ols, type = 'HC0'))
+> Design matrices are displayed as CSVs.
+
+**Discord**
+
+**Support FAQ**
+
+Spoiler
+
+I can't manually add an item?
+
+Spoiler
+
+There is probably no price data for that item for the pricing (latest, fiveMinute, oneHour, ...) that you've selected.
+
+![Image 18: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Here, I can add a Twisted bow using latest pricing, but since it has not been bought or sold in the last five minutes, I cannot add it with fiveMinute pricing.
+
+The script isn't buying certain items?
+
+Spoiler
+
+You are probably trying to buy members items on a f2p world.
+
+![Image 19: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Here, I can buy Logs but not Revenant ether on a f2p world.
+
+The generate / reset buttons in the GUI aren't working?
+
+Spoiler
+
+Your config parameter inputs are probably the wrong type or outside their support (refer to the config section above),
+
+![Image 20: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Here, I am getting NumberFormatExceptions because I am not inputting Java <int> types into the maxBidValue field. In the first case, I input a number larger than 2147483647, in the second case, I input a string of letters.
+
+The script 'lost' (or 'made') astronomical amounts of GP off one or two trades!
+
+Spoiler
+
+Check the trade history for that item in the Trades CSV.
+
+[@dendabad12](https://dreambot.org/forums/index.php?/profile/294024-dendabad12/) V2.1 (members)
+
+![Image 21: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 22: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+This huge 'loss' was actually caused by a double counting bug. Be sure to have a stable internet connection and not interrupt the script when it is trying to collect trades.
+
+![Image 23: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+![Image 24: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+This huge 'profit' was due to an implicit purchase price of zero as the item was already purchased/selling when I started the script.
+
+**Gallery of User Runs**
+
+**Gallery of My Runs**
+
+Spoiler
+
+V2.4 <New> On the Hour Discord Webhook Summary Notifications, More Items, Fewer Bugs
+
+Spoiler
+
+Profit:: N/A
+
+Profit/Hour: N/A
+
+Trades CSV: N/A
+
+![Image 25: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+V2.3: <New> Discord Webhook Notifications
+
+V2.2: <New> Regression Analysis
+
+V2.1: <New> Pricing Customisation, Post Session Inspection
+
+V2.0: <New> Automatic Item Selection
+
+Spoiler
+
+Profit: 313,366
+
+Profit/Hour: 423,617
+
+Trades CSV: [https://pastebin.com/hZGeSdjf](https://pastebin.com/hZGeSdjf)
+
+V1.2: <New> Live Profit Graphing
+
+Spoiler
+
+Profit: 18,743
+
+Profit/Hour: 4,976
+
+Trades CSV: [https://pastebin.com/ZWhf3Xy5](https://pastebin.com/ZWhf3Xy5)
+
+![Image 26: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+Profit: 319,007
+
+Profit/Hour: 322,591
+
+Trades CSV: [https://pastebin.com/nkQ3Y4hb](https://pastebin.com/nkQ3Y4hb)
+
+![Image 27: spacer.png](https://dreambot.org/forums/applications/core/interface/js/spacer.png)
+
+V1.1: <New> Item selection
+
+V1.0: Only Logs and Death rune
+
+Upload your proggies here or on Discord (with your DB username if you want to be credited) and I will add them above.
+
+Please let me know if you encounter any bugs or would like any features added.
+
+**Edited July 6, 2024 2 yr by apnasus**
+
+updating config
