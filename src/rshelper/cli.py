@@ -4,6 +4,7 @@ import argparse
 import csv
 import io
 import json
+import math
 import sys
 
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
@@ -90,6 +91,68 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
                 f"{item.profit:>7,} {item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
+def _html_output(rows: list[dict], columns: list[str], title: str) -> str:
+    """Render results as a self-contained sortable HTML table."""
+    from html import escape
+    from datetime import datetime
+
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    col_headers = "".join(f"<th>{escape(c)}</th>" for c in columns)
+    tbody = ""
+    for row in rows:
+        tbody += "<tr>" + "".join(
+            f"<td>{escape(str(row.get(c, '')))}</td>" for c in columns
+        ) + "</tr>"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{escape(title)} — RSHelper</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 2rem; }}
+  table {{ border-collapse: collapse; width: 100%; }}
+  th {{ background: #f0f0f0; cursor: pointer; padding: 8px 12px; text-align: right; position: sticky; top: 0; }}
+  th:first-child, td:first-child {{ text-align: left; }}
+  td {{ padding: 6px 12px; border-bottom: 1px solid #e0e0e0; text-align: right; }}
+  tr:hover {{ background: #fafafa; }}
+  .footer {{ color: #999; font-size: 0.85rem; margin-top: 1rem; }}
+</style>
+</head>
+<body>
+<h1>{escape(title)}</h1>
+<table id="results">
+<thead><tr>{col_headers}</tr></thead>
+<tbody>{tbody}</tbody>
+</table>
+<p class="footer">Generated {ts} by RSHelper. Click column headers to sort.</p>
+<script>
+(function() {{
+  var table = document.getElementById("results");
+  var headers = table.querySelectorAll("th");
+  headers.forEach(function(th, i) {{
+    th.addEventListener("click", function() {{
+      var tbody = table.querySelector("tbody");
+      var rows = Array.from(tbody.querySelectorAll("tr"));
+      var asc = th.classList.contains("asc");
+      headers.forEach(function(h) {{ h.classList.remove("asc", "desc"); }});
+      th.classList.add(asc ? "desc" : "asc");
+      rows.sort(function(a, b) {{
+        var va = a.cells[i].textContent.replace(/[,\\s]/g, "");
+        var vb = b.cells[i].textContent.replace(/[,\\s]/g, "");
+        var na = parseFloat(va), nb = parseFloat(vb);
+        if (!isNaN(na) && !isNaN(nb)) return asc ? nb - na : na - nb;
+        return asc ? vb.localeCompare(va) : va.localeCompare(vb);
+      }});
+      rows.forEach(function(r) {{ tbody.appendChild(r); }});
+    }});
+  }});
+}})();
+</script>
+</body>
+</html>"""
+
+
 
 def _filter_by_name(results, name_filter: str) -> list:
     """Filter results by substring match on item name."""
@@ -152,6 +215,13 @@ def alch_scan(args: argparse.Namespace) -> None:
             }
             for i, r in enumerate(results[:args.top])
         ], indent=2))
+    elif args.html:
+        print(_html_output([
+            {"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
+             "Alch": f"{r.alch_value:,}", "Profit": f"{r.profit:,}",
+             "GP/hr": f"{r.gp_per_hour:,}", "Limit": f"{r.buy_limit:,}"}
+            for i, r in enumerate(results[:args.top])
+        ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "Limit"], "Alchemy Scan"))
     else:
         print(_format_table(results, args.top))
 
@@ -189,14 +259,18 @@ def flip_scan(args: argparse.Namespace) -> None:
         print()
 
     if args.csv:
-        fields = ["rank", "name", "buy_price", "sell_price", "profit", "gp_per_hour", "volume", "buy_limit"]
-        fm = {}
-        for f in fields:
-            if f == "profit":
-                fm[f] = lambda r: r.profit
-            elif f != "rank":
-                fm[f] = lambda r, f=f: getattr(r, f, "")
-        print(_csv_output(results, args.top, fields, fm))
+        from dataclasses import asdict
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=[
+            "rank", "name", "buy_price", "sell_price", "profit", "gp_per_hour",
+            "volume", "buy_limit",
+        ], extrasaction='ignore')
+        writer.writeheader()
+        for i, item in enumerate(results[:args.top], 1):
+            row = asdict(item)
+            row["rank"] = i
+            writer.writerow(row)
+        print(out.getvalue())
     elif args.json:
         print(json.dumps([
             {
@@ -211,11 +285,24 @@ def flip_scan(args: argparse.Namespace) -> None:
             }
             for i, r in enumerate(results[:args.top])
         ], indent=2))
+    elif args.html:
+        capital = getattr(args, 'capital', 0)
+        cols = ["Rank", "Item", "Buy", "Sell", "Margin", "GP/hr", "Limit"]
+        rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
+                 "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
+                 "GP/hr": f"{r.gp_per_hour:,}", "Limit": f"{r.buy_limit:,}"}
+                for i, r in enumerate(results[:args.top])]
+        if capital:
+            cols.insert(-1, "Qty")
+            for i, row in enumerate(rows):
+                row["Qty"] = f"{trade_size(results[i], capital):,}"
+        print(_html_output(rows, cols, "Flip Scan"))
     else:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
 
-def _format_margin_table(results, top: int, lookup: dict, capital: int = 0) -> str:
+def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
+                         risk_metrics: dict | None = None) -> str:
     """Render margin-check results as an aligned text table."""
     rows = results[:top]
     if not rows:
@@ -224,7 +311,20 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0) -> s
     name_width = min(name_width, 24)
     name_width = max(name_width, 6)
     has_qty = capital > 0
-    if has_qty:
+    has_risk = risk_metrics is not None
+    if has_risk and has_qty:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Qty':>6} "
+            f"{'Worst':>8} {'Stab':>5} {'Hrs':>5}"
+        )
+    elif has_risk:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} "
+            f"{'Worst':>8} {'Stab':>5} {'Hrs':>5}"
+        )
+    elif has_qty:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
             f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Qty':>6} {'Hrs':>5}"
@@ -241,7 +341,25 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0) -> s
         name = item.name[:name_width] if item else str(a.item_id)
         buy = item.buy_price if item else 0
         sell = item.sell_price if item else 0
-        if has_qty:
+        risk = risk_metrics.get(a.item_id) if risk_metrics else None
+        if has_risk and has_qty:
+            qty = trade_size(item, capital) if item else 0
+            worst = risk["worst"] if risk else 0
+            stab = risk["stability"] if risk else 0
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
+                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.avg_margin:>8,.0f} {qty:>6,} {worst:>8,} {stab:>5.2f} {a.window_hours:>5.0f}"
+            )
+        elif has_risk:
+            worst = risk["worst"] if risk else 0
+            stab = risk["stability"] if risk else 0
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
+                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.avg_margin:>8,.0f} {worst:>8,} {stab:>5.2f} {a.window_hours:>5.0f}"
+            )
+        elif has_qty:
             qty = trade_size(item, capital) if item else 0
             lines.append(
                 f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
@@ -292,6 +410,7 @@ def margin_check(args: argparse.Namespace) -> None:
         candidate_ids,
         timestep="5m",
         on_progress=lambda cur, tot: print(f"  [{cur}/{tot}] fetching history...", end="\r"),
+        workers=getattr(args, "workers", 4),
     )
     print(f"\n  {len(ts_data)}/{len(candidate_ids)} items have timeseries data")
 
@@ -305,16 +424,28 @@ def margin_check(args: argparse.Namespace) -> None:
     print(f"  {len(results)} items analyzed\n")
 
     if args.csv:
-        fields = ["rank", "name", "item_id", "confidence", "reliability", "profitability_score",
-                   "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
-                   "avg_volume", "datapoints", "window_hours"]
-        fm = {}
-        for f in fields:
-            if f == "name":
-                fm[f] = lambda a: lookup[a.item_id].name if a.item_id in lookup else str(a.item_id)
-            elif f not in ("rank",):
-                fm[f] = lambda a, f=f: round(getattr(a, f, 0), 4) if isinstance(getattr(a, f, 0), float) else getattr(a, f, 0)
-        print(_csv_output(results, args.top, fields, fm))
+        from dataclasses import asdict
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=[
+            "rank", "name", "item_id", "confidence", "reliability", "profitability_score",
+            "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
+            "avg_volume", "spread_score", "volume_score", "volatility_score",
+            "datapoints", "window_hours",
+        ], extrasaction='ignore')
+        writer.writeheader()
+        for i, a in enumerate(results[:args.top], 1):
+            row = asdict(a)
+            row["rank"] = i
+            row["name"] = lookup[a.item_id].name if a.item_id in lookup else str(a.item_id)
+            for k in ("confidence", "reliability", "profitability_score",
+                      "margin_consistency", "avg_spread_pct"):
+                row[k] = round(row[k], 4)
+            row["avg_margin"] = round(row["avg_margin"], 0)
+            row["margin_volatility"] = round(row["margin_volatility"], 4)
+            row["avg_volume"] = round(row["avg_volume"], 0)
+            row["window_hours"] = round(row["window_hours"], 1)
+            writer.writerow(row)
+        print(out.getvalue())
     elif args.json:
         out = []
         for i, a in enumerate(results[:args.top], 1):
@@ -337,7 +468,30 @@ def margin_check(args: argparse.Namespace) -> None:
             })
         print(json.dumps(out, indent=2))
     else:
-        print(_format_margin_table(results, args.top, lookup, getattr(args, 'capital', 0)))
+        risk = {}
+        if getattr(args, 'risk', False) and ts_data:
+            for item_id, ts in ts_data.items():
+                margins = []
+                for dp in ts:
+                    h = dp.get("avgHighPrice")
+                    l = dp.get("avgLowPrice")
+                    if h and l:
+                        h, l = int(h), int(l)
+                        if direction == "traditional":
+                            m = h - l - max(1, int(h * 0.02))
+                        else:
+                            m = l - h - max(1, int(l * 0.02))
+                        margins.append(m)
+                if margins:
+                    mean = sum(margins) / len(margins)
+                    var = sum((m - mean)**2 for m in margins) / len(margins)
+                    risk[item_id] = {
+                        "worst": min(margins),
+                        "stability": math.sqrt(var) / max(1, abs(mean)) if mean != 0 else 0,
+                    }
+        print(_format_margin_table(results, args.top, lookup,
+                                   getattr(args, 'capital', 0),
+                                   risk if risk else None))
 
 
 def item_info(args: argparse.Namespace) -> None:
@@ -642,6 +796,8 @@ def main() -> None:
                        help="Output JSON instead of table")
     alch.add_argument("--csv", action="store_true",
                        help="Output CSV instead of table")
+    alch.add_argument("--html", action="store_true",
+                       help="Output self-contained sortable HTML")
 
     flip = sub.add_parser("flip-scan", help="Scan for profitable GE flip margins")
     flip.add_argument("--members-only", action="store_true",
@@ -663,6 +819,8 @@ def main() -> None:
                        help="Output JSON instead of table")
     flip.add_argument("--csv", action="store_true",
                        help="Output CSV instead of table")
+    flip.add_argument("--html", action="store_true",
+                       help="Output self-contained sortable HTML")
     flip.add_argument("--ge-slots", type=int, default=2,
                        help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
 
@@ -725,6 +883,10 @@ def main() -> None:
                        help="Output CSV instead of table")
     margin.add_argument("--ge-slots", type=int, default=2,
                          help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
+    margin.add_argument("--workers", type=int, default=4,
+                         help="Concurrent timeseries fetchers (default: 4)")
+    margin.add_argument("--risk", action="store_true",
+                         help="Show worst-case margin and stability metrics")
 
     args = parser.parse_args()
     if args.command == "item-info":

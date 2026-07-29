@@ -1,8 +1,11 @@
 """OSRS Wiki Realtime Prices API client."""
 
+import concurrent.futures
 import json
 import os
+import sys
 import tempfile
+import threading
 import time
 import urllib.request
 import urllib.error
@@ -12,6 +15,7 @@ from typing import Any
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 USER_AGENT = "RSHelper/0.1 (rshelper@users.noreply.github.com)"
 _LAST_REQUEST = 0.0
+_THROTTLE_LOCK = threading.Lock()
 CACHE_DIR = Path.home() / ".cache" / "rshelper"
 CACHE_MAX_AGE = {
     "mapping": 86400,  # 24h — item metadata rarely changes
@@ -25,12 +29,13 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 def _throttle() -> None:
-    """Rate-limit to 1 req/sec per Wiki API policy."""
+    """Rate-limit to 1 req/sec per Wiki API policy. Thread-safe."""
     global _LAST_REQUEST
-    elapsed = time.time() - _LAST_REQUEST
-    if elapsed < 1.0:
-        time.sleep(1.0 - elapsed)
-    _LAST_REQUEST = time.time()
+    with _THROTTLE_LOCK:
+        elapsed = time.time() - _LAST_REQUEST
+        if elapsed < 1.0:
+            time.sleep(1.0 - elapsed)
+        _LAST_REQUEST = time.time()
 
 
 # Backoff config for retryable errors
@@ -103,7 +108,7 @@ def _load_stale_cache(name: str) -> Any | None:
         return None
     try:
         data = json.loads(p.read_text())
-        print(f"  Note: using stale cache for '{name}' ({int(age)}s old)")
+        print(f"  Note: using stale cache, file=sys.stderr) for '{name}' ({int(age)}s old)")
         return data
     except (json.JSONDecodeError, OSError):
         return None
@@ -146,8 +151,9 @@ def fetch_mapping() -> list[dict] | None:
         return cached
     data = _get("mapping")
     if data is not None:
-        _save_cache("mapping", data)
-        return data
+        result = data.get("data", data) if isinstance(data, dict) else data
+        _save_cache("mapping", result)
+        return result
     return _load_stale_cache("mapping")
 
 
@@ -199,17 +205,33 @@ def fetch_timeseries_batch(
     item_ids: list[int],
     timestep: str = "5m",
     on_progress=None,
+    workers: int = 4,
 ) -> dict[int, list[dict]]:
-    """Fetch timeseries for multiple items, with rate limiting.
+    """Fetch timeseries for multiple items in parallel.
 
+    Uses ThreadPoolExecutor with a shared rate limiter.
     Returns {item_id: [datapoints...]}.
     on_progress: callable(current, total) for CLI progress display.
+    workers: max concurrent fetches (default 4).
     """
     results: dict[int, list[dict]] = {}
-    for i, item_id in enumerate(item_ids):
-        if on_progress:
-            on_progress(i + 1, len(item_ids))
+    completed = 0
+    total = len(item_ids)
+    lock = threading.Lock()
+
+    def fetch_one(item_id: int) -> tuple[int, list[dict] | None]:
         ts = fetch_timeseries(item_id, timestep)
-        if ts:
-            results[item_id] = ts
+        return (item_id, ts)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(fetch_one, iid): iid for iid in item_ids}
+        for future in concurrent.futures.as_completed(futures):
+            item_id, ts = future.result()
+            if ts:
+                with lock:
+                    results[item_id] = ts
+            with lock:
+                completed += 1
+                if on_progress:
+                    on_progress(completed, total)
     return results
