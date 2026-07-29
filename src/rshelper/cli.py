@@ -645,7 +645,7 @@ def item_info(args: argparse.Namespace) -> None:
 def watch_add(args: argparse.Namespace) -> None:
     """Add an item to the watchlist by name or ID."""
     from rshelper.api import fetch_mapping
-    print("Looking up item...")
+    print("Looking up item...", file=sys.stderr)
     mapping = fetch_mapping()
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)

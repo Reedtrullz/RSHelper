@@ -42,14 +42,12 @@ def load(scan_type: str, day: str | None = None) -> dict | None:
             return json.loads(path.read_text())
         return None
 
-    # Find most recent snapshot before today
-    today = date.today().isoformat()
+    # Find most recent snapshot
     prefix = f"{scan_type}-"
     candidates = []
     for p in SNAPSHOT_DIR.glob(f"{prefix}*.json"):
         day_str = p.stem[len(prefix):]
-        if day_str < today:
-            candidates.append((day_str, p))
+        candidates.append((day_str, p))
     if not candidates:
         return None
     candidates.sort(reverse=True)
@@ -67,7 +65,24 @@ def diff_scan_type(scan_type: str, day: str | None = None) -> dict | None:
         return None
 
     today_data = json.loads(today_path.read_text())
-    prev_data = load(scan_type, day)
+
+    # Get previous snapshot: explicit date, or most recent before today
+    if day:
+        prev_data = load(scan_type, day)
+    else:
+        today = date.today().isoformat()
+        prefix = f"{scan_type}-"
+        candidates = []
+        for p in SNAPSHOT_DIR.glob(f"{prefix}*.json"):
+            day_str = p.stem[len(prefix):]
+            if day_str < today:
+                candidates.append((day_str, p))
+        if candidates:
+            candidates.sort(reverse=True)
+            prev_data = json.loads(candidates[0][1].read_text())
+        else:
+            prev_data = None
+
     if prev_data is None:
         return None
 
@@ -81,17 +96,21 @@ def diff_scan_type(scan_type: str, day: str | None = None) -> dict | None:
     fell_off = []
     unchanged = 0
 
+    # Determine the value key: 'profit' for alch/flip, 'avg_margin' for margin scans
+    sample = today_data["items"][0] if today_data["items"] else {}
+    value_key = "profit" if "profit" in sample else "avg_margin"
+
     for item in today_data["items"]:
         iid = item["item_id"]
         prev = prev_by_id.get(iid)
         if prev is None:
             new_items.append(item)
-        elif "profit" in item and "profit" in prev:
-            delta = item["profit"] - prev["profit"]
+        elif value_key in item and value_key in prev:
+            delta = item[value_key] - prev[value_key]
             if delta > 0:
-                improved.append({**item, "delta": delta, "prev_profit": prev["profit"]})
+                improved.append({**item, "delta": delta, "prev_value": prev[value_key]})
             elif delta < 0:
-                fell_off.append({**item, "delta": delta, "prev_profit": prev["profit"]})
+                fell_off.append({**item, "delta": delta, "prev_value": prev[value_key]})
             else:
                 unchanged += 1
         else:
