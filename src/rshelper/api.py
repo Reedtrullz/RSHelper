@@ -12,7 +12,7 @@ from typing import Any
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 USER_AGENT = "RSHelper/0.1 (rshelper@users.noreply.github.com)"
 _LAST_REQUEST = 0.0
-CACHE_DIR = Path("/tmp/rshelper_cache")
+CACHE_DIR = Path.home() / ".cache" / "rshelper"
 CACHE_MAX_AGE = {
     "mapping": 86400,  # 24h — item metadata rarely changes
     "latest": 120,     # 2 min — prices update frequently
@@ -76,7 +76,7 @@ def _cache_path(name: str) -> Path:
 
 
 def _load_cache(name: str) -> Any | None:
-    """Load cached JSON. Returns data if fresh, or stale data if within STALE_MULTIPLIER."""
+    """Load cached JSON. Returns data only if fresh (< max_age)."""
     p = _cache_path(name)
     if not p.exists():
         return None
@@ -85,15 +85,28 @@ def _load_cache(name: str) -> Any | None:
     try:
         data = json.loads(p.read_text())
     except (json.JSONDecodeError, OSError):
-        # Corrupted cache — delete and return None so API is tried
         p.unlink(missing_ok=True)
         return None
     if age < max_age:
         return data
-    if age < max_age * STALE_MULTIPLIER:
+    return None
+
+
+def _load_stale_cache(name: str) -> Any | None:
+    """Return stale cache data (within STALE_MULTIPLIER * max_age) when API fails."""
+    p = _cache_path(name)
+    if not p.exists():
+        return None
+    max_age = CACHE_MAX_AGE.get(name, 300)
+    age = time.time() - p.stat().st_mtime
+    if age >= max_age * STALE_MULTIPLIER:
+        return None
+    try:
+        data = json.loads(p.read_text())
         print(f"  Note: using stale cache for '{name}' ({int(age)}s old)")
         return data
-    return None
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
 def _save_cache(name: str, data: Any) -> None:
@@ -105,7 +118,10 @@ def _save_cache(name: str, data: Any) -> None:
             json.dump(data, f)
         os.replace(tmp_path, target)  # atomic on POSIX
     except Exception:
-        os.unlink(tmp_path)
+        try:
+            os.unlink(tmp_path)
+        except FileNotFoundError:
+            pass
         raise
 
 
@@ -131,7 +147,8 @@ def fetch_mapping() -> list[dict] | None:
     data = _get("mapping")
     if data is not None:
         _save_cache("mapping", data)
-    return data
+        return data
+    return _load_stale_cache("mapping")
 
 
 def fetch_latest() -> dict[str, dict] | None:
@@ -144,7 +161,7 @@ def fetch_latest() -> dict[str, dict] | None:
         result = data.get("data", data)
         _save_cache("latest", result)
         return result
-    return None
+    return _load_stale_cache("latest")
 
 
 def fetch_5m() -> dict[str, dict] | None:
@@ -157,7 +174,7 @@ def fetch_5m() -> dict[str, dict] | None:
         result = data.get("data", data)
         _save_cache("5m", result)
         return result
-    return None
+    return _load_stale_cache("5m")
 
 
 def fetch_timeseries(item_id: int, timestep: str = "5m") -> list[dict] | None:
@@ -175,7 +192,7 @@ def fetch_timeseries(item_id: int, timestep: str = "5m") -> list[dict] | None:
     if data and "data" in data:
         _save_cache(cache_name, data["data"])
         return data["data"]
-    return None
+    return _load_stale_cache(cache_name)
 
 
 def fetch_timeseries_batch(

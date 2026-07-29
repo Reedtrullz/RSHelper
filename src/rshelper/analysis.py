@@ -106,10 +106,11 @@ def analyze_timeseries(
         0.20 * volatility_score
     )
 
-    # Profitability: sigmoid of avg_margin — near 0 for negative, 0.5 near 0, near 1 for positive
-    # Scale factor: 500gp margin gives ~0.99 profitability
+    # Profitability: shifted sigmoid — 0 at margin=0, rises toward 1 for positive margins
+    # Scale factor: 250gp margin gives ~0.76 profitability, 500gp gives ~0.96
     try:
-        profitability_score = 1.0 / (1.0 + math.exp(-avg_margin / 125.0))
+        raw_sigmoid = 1.0 / (1.0 + math.exp(-avg_margin / 125.0))
+        profitability_score = max(0.0, 2.0 * raw_sigmoid - 1.0)
     except OverflowError:
         profitability_score = 1.0 if avg_margin > 0 else 0.0
 

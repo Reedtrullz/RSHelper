@@ -7,7 +7,8 @@ import json
 import sys
 
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
-from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api
+from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
+from rshelper.config import load_config
 
 
 def _fetch_bootstrap():
@@ -53,23 +54,40 @@ def _format_table(results, top: int) -> str:
     return "\n".join(lines)
 
 
-def _format_flip_table(results, top: int) -> str:
+def _format_flip_table(results, top: int, capital: int = 0) -> str:
     """Render flip results as an aligned text table."""
     rows = results[:top]
     if not rows:
         return "No profitable flips found."
     name_width = max(len(r.name) for r in rows)
-    name_width = min(name_width, 40)
-    name_width = max(name_width, 10)
-    header = f"{'Rank':<5} {'Item':<{name_width}} {'Buy':>10} {'Sell':>9} {'Margin':>8} {'GP/hr':>10} {'Limit':>7}"
+    name_width = min(name_width, 36)
+    name_width = max(name_width, 8)
+    has_qty = capital > 0
+    if has_qty:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Margin':>7} {'GP/hr':>9} {'Qty':>6} {'Limit':>6}"
+        )
+    else:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Margin':>7} {'GP/hr':>9} {'Limit':>7}"
+        )
     sep = "-" * len(header)
     lines = [header, sep]
     for i, item in enumerate(rows, 1):
         name = item.name[:name_width]
-        lines.append(
-            f"{i:<5} {name:<{name_width}} {item.buy_price:>10,} {item.sell_price:>9,} "
-            f"{item.profit:>8,} {item.gp_per_hour:>10,} {item.buy_limit:>7,}"
-        )
+        if has_qty:
+            qty = trade_size(item, capital)
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
+                f"{item.profit:>7,} {item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
+            )
+        else:
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
+                f"{item.profit:>7,} {item.gp_per_hour:>9,} {item.buy_limit:>7,}"
+            )
     return "\n".join(lines)
 
 def _filter_by_name(results, name_filter: str) -> list:
@@ -193,21 +211,28 @@ def flip_scan(args: argparse.Namespace) -> None:
             for i, r in enumerate(results[:args.top])
         ], indent=2))
     else:
-        print(_format_flip_table(results, args.top))
+        print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
 
-def _format_margin_table(results, top: int, lookup: dict) -> str:
+def _format_margin_table(results, top: int, lookup: dict, capital: int = 0) -> str:
     """Render margin-check results as an aligned text table."""
     rows = results[:top]
     if not rows:
         return "No items with sufficient timeseries data."
-    name_width = max(len(lookup[a.item_id].name) for a in rows if a.item_id in lookup)
+    name_width = max((len(lookup[a.item_id].name) for a in rows if a.item_id in lookup), default=10)
     name_width = min(name_width, 24)
     name_width = max(name_width, 6)
-    header = (
-        f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-        f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Hrs':>5}"
-    )
+    has_qty = capital > 0
+    if has_qty:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Qty':>6} {'Hrs':>5}"
+        )
+    else:
+        header = (
+            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
+            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Hrs':>5}"
+        )
     sep = "-" * len(header)
     lines = [header, sep]
     for i, a in enumerate(rows, 1):
@@ -215,11 +240,19 @@ def _format_margin_table(results, top: int, lookup: dict) -> str:
         name = item.name[:name_width] if item else str(a.item_id)
         buy = item.buy_price if item else 0
         sell = item.sell_price if item else 0
-        lines.append(
-            f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
-            f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
-            f"{a.avg_margin:>8,.0f} {a.window_hours:>5.0f}"
-        )
+        if has_qty:
+            qty = trade_size(item, capital) if item else 0
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
+                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.avg_margin:>8,.0f} {qty:>6,} {a.window_hours:>5.0f}"
+            )
+        else:
+            lines.append(
+                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
+                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.avg_margin:>8,.0f} {a.window_hours:>5.0f}"
+            )
     return "\n".join(lines)
 
 
@@ -303,7 +336,7 @@ def margin_check(args: argparse.Namespace) -> None:
             })
         print(json.dumps(out, indent=2))
     else:
-        print(_format_margin_table(results, args.top, lookup))
+        print(_format_margin_table(results, args.top, lookup, getattr(args, 'capital', 0)))
 
 
 def item_info(args: argparse.Namespace) -> None:
@@ -368,8 +401,9 @@ def item_info(args: argparse.Namespace) -> None:
         alch_profit = alch_value - buy_price - nature_cost
         out["alch_profit"] = alch_profit
         # Flip
-        flip_margin = sell_price - buy_price
-        tax_flip = max(1, int(sell_price * 0.02))
+        # Margin: buy-high minus sell-low (consistent with spread display)
+        flip_margin = buy_price - sell_price
+        tax_flip = max(1, int(buy_price * 0.02))
         flip_profit = flip_margin - tax_flip
         out["flip_margin"] = flip_margin
         out["flip_tax"] = tax_flip
@@ -394,8 +428,9 @@ def item_info(args: argparse.Namespace) -> None:
         print(alch_line)
 
         # Flip
-        flip_margin = sell_price - buy_price
-        tax_flip = max(1, int(sell_price * 0.02))
+        # Margin: buy-high minus sell-low (consistent with spread display)
+        flip_margin = buy_price - sell_price
+        tax_flip = max(1, int(buy_price * 0.02))
         flip_profit = flip_margin - tax_flip
         flip_line = f"  Flip margin: {flip_margin:,} gp (tax: {tax_flip:,}, net: {flip_profit:,})"
         if flip_profit <= 0:
@@ -438,6 +473,8 @@ def item_info(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    cfg = load_config()
+
     parser = argparse.ArgumentParser(
         prog="rshelper",
         description="RSHelper — OSRS Grand Exchange profit scanner",
@@ -445,13 +482,13 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command")
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
-    alch.add_argument("--nature-rune-cost", type=int, default=0,
+    alch.add_argument("--nature-rune-cost", type=int, default=cfg.alch.nature_rune_cost,
                        help="GP cost of nature runes (default: auto-fetch from API)")
     alch.add_argument("--members-only", action="store_true",
                        help="Filter to members items only")
-    alch.add_argument("--min-volume", type=int, default=0,
+    alch.add_argument("--min-volume", type=int, default=cfg.alch.min_volume,
                        help="Minimum 5-minute trade volume")
-    alch.add_argument("--top", type=int, default=50,
+    alch.add_argument("--top", type=int, default=cfg.alch.top,
                        help="Number of results to show")
     alch.add_argument("--name", type=str, default="",
                        help="Filter by item name (substring match)")
@@ -463,13 +500,15 @@ def main() -> None:
     flip = sub.add_parser("flip-scan", help="Scan for profitable GE flip margins")
     flip.add_argument("--members-only", action="store_true",
                        help="Filter to members items only")
-    flip.add_argument("--min-volume", type=int, default=0,
+    flip.add_argument("--min-volume", type=int, default=cfg.flip.min_volume,
                        help="Minimum 5-minute trade volume")
-    flip.add_argument("--min-margin", type=int, default=0,
+    flip.add_argument("--min-margin", type=int, default=cfg.flip.min_margin,
                        help="Minimum flip margin per item")
-    flip.add_argument("--top", type=int, default=50,
+    flip.add_argument("--top", type=int, default=cfg.flip.top,
                        help="Number of results to show")
-    flip.add_argument("--flip-direction", type=str, default="arbitrage",
+    flip.add_argument("--capital", type=int, default=0,
+                       help="Available GP for trade sizing (shows buy qty)")
+    flip.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                        choices=["arbitrage", "traditional"],
                        help="Flip mode: arbitrage (low>high windows) or traditional (high-low-tax)")
     flip.add_argument("--name", type=str, default="",
@@ -489,15 +528,17 @@ def main() -> None:
     margin = sub.add_parser("margin-check", help="Analyze timeseries history for flip confidence scoring")
     margin.add_argument("--members-only", action="store_true",
                        help="Filter to members items only")
-    margin.add_argument("--min-volume", type=int, default=0,
+    margin.add_argument("--min-volume", type=int, default=cfg.margin.min_volume,
                        help="Minimum 5-minute trade volume")
-    margin.add_argument("--min-margin", type=int, default=0,
+    margin.add_argument("--min-margin", type=int, default=cfg.margin.min_margin,
                        help="Minimum flip margin per item")
-    margin.add_argument("--check", type=int, default=20,
-                       help="Number of top flip candidates to check (default: 20)")
-    margin.add_argument("--top", type=int, default=20,
+    margin.add_argument("--check", type=int, default=cfg.margin.check,
+                       help="Number of top flip candidates to check")
+    margin.add_argument("--top", type=int, default=cfg.margin.top,
                        help="Number of results to show")
-    margin.add_argument("--flip-direction", type=str, default="arbitrage",
+    margin.add_argument("--capital", type=int, default=0,
+                       help="Available GP for trade sizing")
+    margin.add_argument("--flip-direction", type=str, default=cfg.margin.direction,
                         choices=["arbitrage", "traditional"],
                         help="Flip mode: arbitrage (low>high windows) or traditional (high-low-tax)")
     margin.add_argument("--name", type=str, default="",

@@ -162,6 +162,20 @@ class FlipScanner:
         return results
 
 
+def trade_size(item: Item, capital: int) -> int:
+    """Suggested buy quantity given capital (gp).
+
+    Capped by: buy_limit, available capital, and hourly trade volume.
+    """
+    if item.buy_price <= 0 or capital <= 0:
+        return 0
+    by_limit = item.buy_limit
+    by_capital = capital // item.buy_price
+    by_volume = item.volume * 12  # 5-min volume -> hourly
+    return min(by_limit, by_capital, max(1, by_volume))  # at least 1 if volume is 0
+
+
+
 
 
 class MarginScanner:

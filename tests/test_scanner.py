@@ -180,6 +180,31 @@ def test_flip_scanner_invalid_direction():
         pass
     print("  PASSED test_flip_scanner_invalid_direction")
 
+
+def test_trade_size():
+    """trade_size respects buy_limit, capital, and volume constraints."""
+    from rshelper.scanner import trade_size
+    from rshelper.models import Item
+
+    item = Item(id=1, name="Test", members=False, buy_limit=10000,
+                alch_value=0, buy_price=100, sell_price=120, volume=500)
+
+    # volume = 500 * 12 = 6000/hr, buy_limit = 10000, capital//100 = 100000
+    # min(10000, 100000, 6000) = 6000
+    assert trade_size(item, 10_000_000) == 6000
+
+    # Limited by capital: capital//100 = 100
+    assert trade_size(item, 10_000) == 100
+
+    # Limited by volume: volume 0 → max(1, 0) = 1
+    no_vol = Item(id=2, name="NoVol", members=False, buy_limit=100,
+                  alch_value=0, buy_price=100, sell_price=120, volume=0)
+    assert trade_size(no_vol, 1_000_000) == 1
+
+    # Zero capital = zero qty
+    assert trade_size(item, 0) == 0
+    print("  PASSED test_trade_size")
+
 if __name__ == "__main__":
     test_alch_scanner_basic()
     test_scanner_does_not_mutate_input()
@@ -192,4 +217,5 @@ if __name__ == "__main__":
     test_flip_scanner_arbitrage()
     test_flip_scanner_traditional()
     test_flip_scanner_invalid_direction()
+    test_trade_size()
     print("\nAll tests passed.")
