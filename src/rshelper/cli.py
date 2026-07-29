@@ -6,20 +6,21 @@ import io
 import json
 import math
 import sys
+from datetime import date
 
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
 from rshelper.config import load_config
-from rshelper import watchlist
+from rshelper import snapshot, watchlist
 
 
 def _fetch_bootstrap():
     """Shared fetch-bootstrap: mapping, latest, 5m volume, and built items."""
     removed = cleanup_stale_cache()
     if removed:
-        print(f"  Cleaned {removed} stale cache files")
+        print(f"  Cleaned {removed} stale cache files", file=sys.stderr)
 
-    print("Fetching OSRS Wiki prices...")
+    print("Fetching OSRS Wiki prices...", file=sys.stderr)
     mapping = fetch_mapping()
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
@@ -30,9 +31,9 @@ def _fetch_bootstrap():
         sys.exit(1)
     volume_5m = fetch_5m() or {}
 
-    print("Building item list...")
+    print("Building item list...", file=sys.stderr)
     items = build_items_from_api(mapping, latest, volume_5m)
-    print(f"  {len(items)} items with price data")
+    print(f"  {len(items)} items with price data", file=sys.stderr)
     return mapping, latest, volume_5m, items
 
 
@@ -181,7 +182,7 @@ def alch_scan(args: argparse.Namespace) -> None:
 
     nature_cost = args.nature_rune_cost if args.nature_rune_cost > 0 else _fetch_nature_rune_cost(mapping, latest)
     if not args.nature_rune_cost:
-        print(f"  Nature rune: {nature_cost} gp")
+        print(f"  Nature rune: {nature_cost} gp", file=sys.stderr)
 
     scanner = AlchScanner(nature_rune_cost=nature_cost)
     results = scanner.scan(
@@ -189,7 +190,7 @@ def alch_scan(args: argparse.Namespace) -> None:
         members_only=args.members_only,
         min_volume=args.min_volume,
     )
-    print(f"  {len(results)} profitable alchs")
+    print(f"  {len(results)} profitable alchs", file=sys.stderr)
     if args.name:
         results = _filter_by_name(results, args.name)
         print(f"  {len(results)} after --name filter\n")
@@ -224,6 +225,9 @@ def alch_scan(args: argparse.Namespace) -> None:
         ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "Limit"], "Alchemy Scan"))
     else:
         print(_format_table(results, args.top))
+
+    if getattr(args, 'save_snapshot', False):
+        _save_alch_snapshot(results[:args.top])
 
 
 def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
@@ -299,6 +303,9 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(_html_output(rows, cols, "Flip Scan"))
     else:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
+
+    if getattr(args, 'save_snapshot', False):
+        _save_flip_snapshot(results[:args.top])
 
 
 def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
@@ -388,12 +395,12 @@ def margin_check(args: argparse.Namespace) -> None:
         min_volume=args.min_volume,
         min_margin=args.min_margin,
     )
-    print(f"  {len(flips)} profitable flips ({direction} mode)")
+    print(f"  {len(flips)} profitable flips ({direction} mode)", file=sys.stderr)
 
     # Apply --name filter before selecting candidates
     if args.name:
         flips = _filter_by_name(flips, args.name)
-        print(f"  {len(flips)} after --name filter")
+        print(f"  {len(flips)} after --name filter", file=sys.stderr)
 
     # Take top N candidates for timeseries analysis
     candidates = flips[:args.check]
@@ -404,7 +411,7 @@ def margin_check(args: argparse.Namespace) -> None:
     # Build lookup: item_id -> Item (includes names for display)
     lookup = {item.id: item for item in items}
 
-    print(f"\nFetching timeseries for top {len(candidates)} candidates...")
+    print(f"\nFetching timeseries for top {len(candidates)} candidates...", file=sys.stderr)
     candidate_ids = [c.id for c in candidates]
     ts_data = fetch_timeseries_batch(
         candidate_ids,
@@ -412,16 +419,16 @@ def margin_check(args: argparse.Namespace) -> None:
         on_progress=lambda cur, tot: print(f"  [{cur}/{tot}] fetching history...", end="\r"),
         workers=getattr(args, "workers", 4),
     )
-    print(f"\n  {len(ts_data)}/{len(candidate_ids)} items have timeseries data")
+    print(f"\n  {len(ts_data)}/{len(candidate_ids)} items have timeseries data", file=sys.stderr)
 
     if not ts_data:
-        print("No timeseries data available.")
+        print("No timeseries data available.", file=sys.stderr)
         return
 
     # Analyze
     margin_scanner = MarginScanner()
     results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction)
-    print(f"  {len(results)} items analyzed\n")
+    print(f"  {len(results)} items analyzed\n", file=sys.stderr)
 
     if args.csv:
         from dataclasses import asdict
@@ -492,6 +499,9 @@ def margin_check(args: argparse.Namespace) -> None:
         print(_format_margin_table(results, args.top, lookup,
                                    getattr(args, 'capital', 0),
                                    risk if risk else None))
+
+    if getattr(args, 'save_snapshot', False):
+        _save_margin_snapshot(results[:args.top], lookup)
 
 
 def item_info(args: argparse.Namespace) -> None:
@@ -759,6 +769,122 @@ def watch_check(args: argparse.Namespace) -> None:
     for a in alerts:
         print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
     sys.exit(1)
+def _save_alch_snapshot(results):
+    items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
+              "alch_value": r.alch_value, "profit": r.profit,
+              "gp_per_hour": r.gp_per_hour, "volume": r.volume,
+              "buy_limit": r.buy_limit}
+             for r in results]
+    path = snapshot.save("alch", items)
+    print(f"\nSnapshot saved: {path}", file=sys.stderr)
+
+
+def _save_flip_snapshot(results):
+    items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
+              "sell_price": r.sell_price, "profit": r.profit,
+              "gp_per_hour": r.gp_per_hour, "volume": r.volume,
+              "buy_limit": r.buy_limit}
+             for r in results]
+    path = snapshot.save("flip", items)
+    print(f"\nSnapshot saved: {path}", file=sys.stderr)
+
+
+def _save_margin_snapshot(results, lookup):
+    items = []
+    for a in results:
+        item = lookup.get(a.item_id)
+        items.append({
+            "item_id": a.item_id,
+            "name": item.name if item else str(a.item_id),
+            "buy_price": item.buy_price if item else 0,
+            "sell_price": item.sell_price if item else 0,
+            "confidence": round(a.confidence, 4),
+            "profitability_score": round(a.profitability_score, 4),
+            "avg_margin": round(a.avg_margin, 0),
+            "margin_volatility": round(a.margin_volatility, 4),
+        })
+    path = snapshot.save("margin", items)
+    print(f"\nSnapshot saved: {path}", file=sys.stderr)
+
+
+def diff_cmd(args: argparse.Namespace) -> None:
+    """Compare today's scan with a previous one."""
+    scan_type = args.scan_type or "flip"
+    day = args.date
+
+    today_str = date.today().isoformat()
+    today_path = snapshot.SNAPSHOT_DIR / f"{scan_type}-{today_str}.json"
+    if not today_path.exists():
+        print(f"No snapshot for today ({today_str}). Run a scan with --save-snapshot first.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    result = snapshot.diff_scan_type(scan_type, day)
+    if result is None:
+        prev = snapshot.load(scan_type, day)
+        if prev is None:
+            print(f"No previous {scan_type} snapshot found.", file=sys.stderr)
+        else:
+            print(f"Could not compute diff.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Diff: {scan_type} scan — {result['prev_date']} → {result['today_date']}")
+    print(f"  {result['today_count']} items today, {result['prev_count']} previously")
+    print()
+
+    if result["new"]:
+        print(f"  New ({len(result['new'])}):")
+        for item in result["new"][:10]:
+            name = item.get("name", item.get("item_id"))
+            profit = item.get("profit", item.get("avg_margin", 0))
+            print(f"    {name:<35} profit={profit:>10,}")
+        if len(result["new"]) > 10:
+            print(f"    ... and {len(result['new']) - 10} more")
+
+    if result["improved"]:
+        print(f"\n  Improved ({len(result['improved'])}):")
+        for item in result["improved"][:10]:
+            name = item.get("name", item.get("item_id"))
+            profit = item.get("profit", item.get("avg_margin", 0))
+            delta = item["delta"]
+            print(f"    {name:<35} {profit:>10,}  (+{delta:>+10,})")
+        if len(result["improved"]) > 10:
+            print(f"    ... and {len(result['improved']) - 10} more")
+
+    if result["fell_off"]:
+        print(f"\n  Fell off ({len(result['fell_off'])}):")
+        for item in result["fell_off"][:10]:
+            name = item.get("name", item.get("item_id"))
+            profit = item.get("profit", item.get("avg_margin", 0))
+            delta = item["delta"]
+            print(f"    {name:<35} {profit:>10,}  ({delta:>+10,})")
+        if len(result["fell_off"]) > 10:
+            print(f"    ... and {len(result['fell_off']) - 10} more")
+
+    if result["removed"]:
+        print(f"\n  No longer in top results ({len(result['removed'])}):")
+        for item in result["removed"][:10]:
+            name = item.get("name", item.get("item_id"))
+            print(f"    {name}")
+        if len(result["removed"]) > 10:
+            print(f"    ... and {len(result['removed']) - 10} more")
+
+    print(f"\n  {result['unchanged']} unchanged")
+
+
+def snapshot_list(args: argparse.Namespace) -> None:
+    """List saved snapshots."""
+    paths = snapshot.list_snapshots(args.scan_type)
+    if not paths:
+        print("No snapshots found.")
+        return
+    for p in paths[:20]:
+        try:
+            data = json.loads(p.read_text())
+            print(f"  {p.stem:<40} {data.get('date',''):<12} {data.get('count','?')} items")
+        except Exception:
+            print(f"  {p.stem}")
+
 
 def config_show(args: argparse.Namespace) -> None:
     """Print the current config as JSON."""
@@ -798,6 +924,8 @@ def main() -> None:
                        help="Output CSV instead of table")
     alch.add_argument("--html", action="store_true",
                        help="Output self-contained sortable HTML")
+    alch.add_argument("--save-snapshot", action="store_true",
+                       help="Save results for later diff/trend comparison")
 
     flip = sub.add_parser("flip-scan", help="Scan for profitable GE flip margins")
     flip.add_argument("--members-only", action="store_true",
@@ -821,6 +949,8 @@ def main() -> None:
                        help="Output CSV instead of table")
     flip.add_argument("--html", action="store_true",
                        help="Output self-contained sortable HTML")
+    flip.add_argument("--save-snapshot", action="store_true",
+                       help="Save results for later diff/trend comparison")
     flip.add_argument("--ge-slots", type=int, default=2,
                        help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
 
@@ -852,6 +982,20 @@ def main() -> None:
                            help="GE slots (unused in check, accepted for consistency)")
     watch_chk.add_argument("-v", "--verbose", action="store_true",
                            help="Show all watched items, not just alerts")
+
+    # Diff subcommand
+    diff_p = sub.add_parser("diff", help="Compare today's scan with a previous one")
+    diff_p.add_argument("scan_type", nargs="?", default="flip",
+                        choices=["alch", "flip", "margin"],
+                        help="Scan type to compare (default: flip)")
+    diff_p.add_argument("--date", type=str, default=None,
+                        help="Previous date to compare against (YYYY-MM-DD, default: most recent)")
+
+    # Snapshots subcommand
+    snap_p = sub.add_parser("snapshots", help="List saved scan snapshots")
+    snap_p.add_argument("scan_type", nargs="?", default=None,
+                        choices=["alch", "flip", "margin"],
+                        help="Filter by scan type (default: all)")
 
     # Config subcommand
     config_parser = sub.add_parser("config", help="View or show config file path")
@@ -887,6 +1031,8 @@ def main() -> None:
                          help="Concurrent timeseries fetchers (default: 4)")
     margin.add_argument("--risk", action="store_true",
                          help="Show worst-case margin and stability metrics")
+    margin.add_argument("--save-snapshot", action="store_true",
+                         help="Save results for later diff/trend comparison")
 
     args = parser.parse_args()
     if args.command == "item-info":
@@ -909,6 +1055,10 @@ def main() -> None:
         else:
             parser.print_help()
             sys.exit(1)
+    elif args.command == "diff":
+        diff_cmd(args)
+    elif args.command == "snapshots":
+        snapshot_list(args)
     elif args.command == "config":
         if args.config_action == "show":
             config_show(args)
