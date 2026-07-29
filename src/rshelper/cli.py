@@ -9,6 +9,7 @@ import sys
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
 from rshelper.config import load_config
+from rshelper import watchlist
 
 
 def _fetch_bootstrap():
@@ -173,7 +174,7 @@ def flip_scan(args: argparse.Namespace) -> None:
     mapping, latest, volume_5m, items = _fetch_bootstrap()
 
     direction = getattr(args, "flip_direction", "arbitrage")
-    scanner = FlipScanner(direction=direction)
+    scanner = FlipScanner(direction=direction, ge_slots=args.ge_slots)
     results = scanner.scan(
         items,
         members_only=args.members_only,
@@ -262,7 +263,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     direction = getattr(args, "flip_direction", "arbitrage")
     # First: find profitable flips
-    flip_scanner = FlipScanner(direction=direction)
+    flip_scanner = FlipScanner(direction=direction, ge_slots=args.ge_slots)
     flips = flip_scanner.scan(
         items,
         members_only=args.members_only,
@@ -300,7 +301,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     # Analyze
     margin_scanner = MarginScanner()
-    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only)
+    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction)
     print(f"  {len(results)} items analyzed\n")
 
     if args.csv:
@@ -345,7 +346,10 @@ def item_info(args: argparse.Namespace) -> None:
     if removed:
         print(f"  Cleaned {removed} stale cache files")
 
-    print("Fetching data...")
+    if args.json:
+        print("Fetching data...", file=sys.stderr)
+    else:
+        print("Fetching data...")
     mapping = fetch_mapping()
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
@@ -472,6 +476,148 @@ def item_info(args: argparse.Namespace) -> None:
             print("\n  No timeseries data available.")
 
 
+
+
+def watch_add(args: argparse.Namespace) -> None:
+    """Add an item to the watchlist by name or ID."""
+    from rshelper.api import fetch_mapping
+    print("Looking up item...")
+    mapping = fetch_mapping()
+    if not mapping:
+        print("Error: could not fetch item mapping.", file=sys.stderr)
+        sys.exit(1)
+
+    query = str(args.item).lower()
+    matched = None
+    for entry in mapping:
+        if str(entry.get("id")) == query:
+            matched = entry
+            break
+    if matched is None:
+        candidates = [e for e in mapping if query in (e.get("name") or "").lower()]
+        if len(candidates) == 1:
+            matched = candidates[0]
+        elif len(candidates) > 1:
+            print(f"Multiple matches for '{args.item}':", file=sys.stderr)
+            for e in candidates[:10]:
+                print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
+            sys.exit(1)
+        else:
+            print(f"No item found matching '{args.item}'", file=sys.stderr)
+            sys.exit(1)
+
+    item_id = matched["id"]
+    name = matched["name"]
+    watchlist.add(item_id, name,
+                  alert_margin_above=args.alert_above,
+                  alert_margin_below=args.alert_below)
+    print(f"Added '{name}' (id={item_id}) to watchlist.")
+
+
+def watch_remove(args: argparse.Namespace) -> None:
+    """Remove an item from the watchlist by ID."""
+    ok = watchlist.remove(args.item_id)
+    if ok:
+        print(f"Removed item {args.item_id} from watchlist.")
+    else:
+        print(f"Item {args.item_id} was not on the watchlist.", file=sys.stderr)
+        sys.exit(1)
+
+
+def watch_list(args: argparse.Namespace) -> None:
+    """List all watched items."""
+    items = watchlist.list_all()
+    if not items:
+        print("Watchlist is empty.")
+        return
+    data = watchlist.load()
+    print(f"{'ID':>6}  {'Name':<30}  {'Alert Above':>12}  {'Alert Below':>12}  Added")
+    print("-" * 85)
+    for item_id_str, entry in data["items"].items():
+        above = entry.get("alert_margin_above") or "-"
+        below = entry.get("alert_margin_below") or "-"
+        added = entry.get("added", "")[:10]
+        print(f"{item_id_str:>6}  {entry['name']:<30}  {str(above):>12}  {str(below):>12}  {added}")
+
+
+def watch_check(args: argparse.Namespace) -> None:
+    """Check all watched items against current prices."""
+    from rshelper.api import fetch_latest
+    from rshelper.scanner import FlipScanner
+    import json as _json
+
+    watched_ids = watchlist.get_watched_ids()
+    if not watched_ids:
+        print("Watchlist is empty.")
+        return
+
+    print("Fetching latest prices...")
+    latest = fetch_latest()
+    if not latest:
+        print("Error: could not fetch prices.", file=sys.stderr)
+        sys.exit(1)
+
+    wl = watchlist.load()
+    direction = getattr(args, "flip_direction", "arbitrage")
+    flip = FlipScanner(direction=direction, ge_slots=getattr(args, "ge_slots", 2))
+    alerts = []
+
+    for item_id_str, entry in wl["items"].items():
+        price = latest.get(item_id_str)
+        if not price or not isinstance(price, dict):
+            continue
+        buy = int(price.get("high", 0) or 0)
+        sell = int(price.get("low", 0) or 0)
+        if buy <= 0 or sell <= 0:
+            continue
+
+        if direction == "traditional":
+            margin = buy - sell
+            tax = max(1, int(buy * 0.02))
+        else:
+            margin = sell - buy
+            tax = max(1, int(sell * 0.02))
+        profit = margin - tax
+
+        above = entry.get("alert_margin_above")
+        below = entry.get("alert_margin_below")
+
+        triggered = False
+        if above is not None and profit > above:
+            alerts.append({"item_id": int(item_id_str), "name": entry["name"],
+                          "reason": "above", "threshold": above, "current": profit})
+            triggered = True
+        if below is not None and profit < below:
+            alerts.append({"item_id": int(item_id_str), "name": entry["name"],
+                          "reason": "below", "threshold": below, "current": profit})
+            triggered = True
+
+        if args.verbose or triggered:
+            flag = " *** ALERT ***" if triggered else ""
+            print(f"  {entry['name']:<30} margin={profit:>8,} gp  " +
+                  f"(above={above}, below={below}){flag}")
+
+    if not alerts:
+        print("No alerts triggered.")
+        return
+
+    print(f"\n{len(alerts)} alert(s) triggered:")
+    for a in alerts:
+        print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
+    sys.exit(1)
+
+def config_show(args: argparse.Namespace) -> None:
+    """Print the current config as JSON."""
+    cfg = load_config()
+    import dataclasses
+    print(json.dumps(dataclasses.asdict(cfg), indent=2))
+
+
+def config_path(args: argparse.Namespace) -> None:
+    """Print the config file path."""
+    from rshelper.config import CONFIG_PATH
+    print(CONFIG_PATH)
+
 def main() -> None:
     cfg = load_config()
 
@@ -517,6 +663,8 @@ def main() -> None:
                        help="Output JSON instead of table")
     flip.add_argument("--csv", action="store_true",
                        help="Output CSV instead of table")
+    flip.add_argument("--ge-slots", type=int, default=2,
+                       help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
 
     info = sub.add_parser("item-info", help="Look up a single item by name or ID")
     info.add_argument("item", help="Item name or ID")
@@ -524,6 +672,34 @@ def main() -> None:
                        help="Fetch and analyze timeseries history")
     info.add_argument("--json", action="store_true",
                        help="Output JSON instead of text")
+
+
+    # Watchlist subcommand
+    watch = sub.add_parser("watch", help="Manage item watchlist and check alerts")
+    watch_sub = watch.add_subparsers(dest="watch_action")
+    watch_add_p = watch_sub.add_parser("add", help="Add item to watchlist")
+    watch_add_p.add_argument("item", help="Item name or ID")
+    watch_add_p.add_argument("--alert-above", type=int, default=None,
+                             help="Alert when margin exceeds this (gp)")
+    watch_add_p.add_argument("--alert-below", type=int, default=None,
+                             help="Alert when margin falls below this (gp)")
+    watch_rm = watch_sub.add_parser("remove", help="Remove item from watchlist")
+    watch_rm.add_argument("item_id", type=int, help="Item ID to remove")
+    watch_sub.add_parser("list", help="List all watched items")
+    watch_chk = watch_sub.add_parser("check", help="Check watchlist for triggered alerts")
+    watch_chk.add_argument("--flip-direction", type=str, default="arbitrage",
+                           choices=["arbitrage", "traditional"],
+                           help="Flip mode for margin calculation")
+    watch_chk.add_argument("--ge-slots", type=int, default=2,
+                           help="GE slots (unused in check, accepted for consistency)")
+    watch_chk.add_argument("-v", "--verbose", action="store_true",
+                           help="Show all watched items, not just alerts")
+
+    # Config subcommand
+    config_parser = sub.add_parser("config", help="View or show config file path")
+    config_sub = config_parser.add_subparsers(dest="config_action")
+    config_sub.add_parser("show", help="Print current config as JSON")
+    config_sub.add_parser("path", help="Print config file path")
 
     margin = sub.add_parser("margin-check", help="Analyze timeseries history for flip confidence scoring")
     margin.add_argument("--members-only", action="store_true",
@@ -547,6 +723,8 @@ def main() -> None:
                        help="Output JSON instead of table")
     margin.add_argument("--csv", action="store_true",
                        help="Output CSV instead of table")
+    margin.add_argument("--ge-slots", type=int, default=2,
+                         help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
 
     args = parser.parse_args()
     if args.command == "item-info":
@@ -557,6 +735,26 @@ def main() -> None:
         alch_scan(args)
     elif args.command == "flip-scan":
         flip_scan(args)
+    elif args.command == "watch":
+        if args.watch_action == "add":
+            watch_add(args)
+        elif args.watch_action == "remove":
+            watch_remove(args)
+        elif args.watch_action == "list":
+            watch_list(args)
+        elif args.watch_action == "check":
+            watch_check(args)
+        else:
+            parser.print_help()
+            sys.exit(1)
+    elif args.command == "config":
+        if args.config_action == "show":
+            config_show(args)
+        elif args.config_action == "path":
+            config_path(args)
+        else:
+            parser.print_help()
+            sys.exit(1)
     else:
         parser.print_help()
         sys.exit(1)

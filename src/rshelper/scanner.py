@@ -106,10 +106,13 @@ class FlipScanner:
       "traditional" — standard GE flipping (buy at bid/low, sell at offer/high, minus tax)
     """
     direction: str = "arbitrage"
+    ge_slots: int = 2  # number of GE slots to model (default: buy+sell = 2 slots)
 
     def __post_init__(self):
         if self.direction not in ("arbitrage", "traditional"):
             raise ValueError(f"direction must be 'arbitrage' or 'traditional', got '{self.direction}'")
+        if self.ge_slots < 1:
+            raise ValueError(f"ge_slots must be >= 1, got {self.ge_slots}")
 
     def scan(
         self,
@@ -145,12 +148,12 @@ class FlipScanner:
             profit = margin - tax
             if profit <= 0:
                 continue
-            # ponytail: /2 for buy+sell round-trip; revisit if GE slots need modeling
+            # ponytail: default ge_slots=2 for buy+sell; use --ge-slots N to adjust
             trades_per_hour = min(
                 item.buy_limit / 4,
                 item.volume * 12,
             )
-            gp_per_hour = int(profit * trades_per_hour / 2)
+            gp_per_hour = int(profit * trades_per_hour // self.ge_slots)
             result = Item(
                 id=item.id, name=item.name, members=item.members,
                 buy_limit=item.buy_limit, alch_value=item.alch_value,
@@ -187,6 +190,7 @@ class MarginScanner:
         timeseries_data: dict[int, list[dict]],
         *,
         members_only: bool = False,
+        direction: str = "arbitrage",
     ) -> list[MarginAnalysis]:
         """Analyze timeseries data for each item and return confidence-ranked results."""
         results: list[MarginAnalysis] = []
@@ -198,6 +202,7 @@ class MarginScanner:
                 continue
             analysis = analyze_timeseries(
                 item_id, ts_data,
+                direction=direction,
                 current_buy=item.buy_price,
                 current_sell=item.sell_price,
             )

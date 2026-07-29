@@ -19,6 +19,9 @@ class MarginAnalysis:
     profitability_score: float # 0.0-1.0 how profitable the margin is
     datapoints: int            # how many windows analyzed
     window_hours: float        # time span covered
+    spread_score: float = 0.0      # normalized spread sub-score
+    volume_score: float = 0.0      # normalized volume sub-score
+    volatility_score: float = 0.0  # normalized volatility sub-score
 
 
 def analyze_timeseries(
@@ -26,9 +29,13 @@ def analyze_timeseries(
     datapoints: list[dict],
     current_buy: int,
     current_sell: int,
+    direction: str = "arbitrage",
     tax_rate: float = 0.02,
 ) -> MarginAnalysis | None:
     """Analyze timeseries data to score margin reliability.
+    direction: "arbitrage" uses sell-low minus buy-high; "traditional"
+              uses buy-high minus sell-low minus tax (standard flip direction).
+
 
     datapoints: list of dicts from timeseries API, each with:
         avgHighPrice, avgLowPrice, highPriceVolume, lowPriceVolume, timestamp
@@ -51,7 +58,10 @@ def analyze_timeseries(
         if h <= 0 or l <= 0:
             continue
 
-        margin_raw = l - h  # following codebase convention: sell_price=low, buy_price=high
+        if direction == "arbitrage":
+            margin_raw = l - h  # sell_price=low, buy_price=high
+        else:
+            margin_raw = h - l  # traditional: buy-high minus sell-low
         tax = max(1, int(l * tax_rate))  # GE tax applies to all sales
         margin_after_tax = margin_raw - tax
 
@@ -131,4 +141,7 @@ def analyze_timeseries(
         profitability_score=profitability_score,
         datapoints=len(margins),
         window_hours=window_hours,
+        spread_score=spread_score,
+        volume_score=vol_score,
+        volatility_score=volatility_score,
     )
