@@ -15,3 +15,4 @@ class Item:
     volume: int = 0  # 5-minute volume from /5m endpoint
     profit: int = 0  # profit per alch cast
     gp_per_hour: int = 0  # estimated GP/hr after buy limit constraint
+    rs_score: float = 0.0  # 0-100 composite flip quality score

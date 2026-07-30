@@ -196,10 +196,10 @@ def test_trade_size():
     # Limited by capital: capital//100 = 100
     assert trade_size(item, 10_000) == 100
 
-    # Limited by volume: volume 0 → max(1, 0) = 1
+    # Limited by volume: volume 0 → returns 0 (illiquid item)
     no_vol = Item(id=2, name="NoVol", members=False, buy_limit=100,
                   alch_value=0, buy_price=100, sell_price=120, volume=0)
-    assert trade_size(no_vol, 1_000_000) == 1
+    assert trade_size(no_vol, 1_000_000) == 0
 
     # Zero capital = zero qty
     assert trade_size(item, 0) == 0

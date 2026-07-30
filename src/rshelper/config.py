@@ -6,6 +6,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from rshelper.profile import resolve_config_path
+
 CONFIG_DIR = Path.home() / ".config" / "rshelper"
 CONFIG_PATH = CONFIG_DIR / "config.toml"
 
@@ -77,9 +79,12 @@ def _ensure_config_exists() -> Path:
     return CONFIG_PATH
 
 
-def load_config() -> Config:
+def load_config(profile: str | None = None) -> Config:
     """Load config from ~/.config/rshelper/config.toml, creating default if missing."""
-    path = _ensure_config_exists()
+    path = resolve_config_path("config.toml", profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(DEFAULT_CONFIG_TOML)
     raw = tomllib.loads(path.read_text())
 
     alch_raw = raw.get("alch", {})

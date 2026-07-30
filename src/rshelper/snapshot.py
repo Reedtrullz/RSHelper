@@ -5,18 +5,23 @@ import os
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-SNAPSHOT_DIR = Path.home() / ".config" / "rshelper" / "snapshots"
+from rshelper.profile import CONFIG_DIR
+
+SNAPSHOT_DIR = CONFIG_DIR / "snapshots"
 
 
-def _ensure_dir() -> None:
-    SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+def _snapshot_dir(profile: str | None = None) -> Path:
+    if profile is None or profile == "default":
+        return SNAPSHOT_DIR
+    return CONFIG_DIR / "profiles" / profile / "snapshots"
 
 
-def save(scan_type: str, results: list[dict]) -> Path:
+def save(scan_type: str, results: list[dict], profile: str | None = None) -> Path:
     """Save a snapshot for today. Returns the file path."""
-    _ensure_dir()
+    snap_dir = _snapshot_dir(profile)
+    snap_dir.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
-    path = SNAPSHOT_DIR / f"{scan_type}-{today}.json"
+    path = snap_dir / f"{scan_type}-{today}.json"
 
     payload = {
         "scan_type": scan_type,
@@ -33,11 +38,12 @@ def save(scan_type: str, results: list[dict]) -> Path:
     return path
 
 
-def load(scan_type: str, day: str | None = None) -> dict | None:
+def load(scan_type: str, day: str | None = None, profile: str | None = None) -> dict | None:
     """Load a snapshot. If day is None, loads the most recent before today."""
-    _ensure_dir()
+    snap_dir = _snapshot_dir(profile)
+    snap_dir.mkdir(parents=True, exist_ok=True)
     if day:
-        path = SNAPSHOT_DIR / f"{scan_type}-{day}.json"
+        path = snap_dir / f"{scan_type}-{day}.json"
         if path.exists():
             return json.loads(path.read_text())
         return None
@@ -45,7 +51,7 @@ def load(scan_type: str, day: str | None = None) -> dict | None:
     # Find most recent snapshot
     prefix = f"{scan_type}-"
     candidates = []
-    for p in SNAPSHOT_DIR.glob(f"{prefix}*.json"):
+    for p in snap_dir.glob(f"{prefix}*.json"):
         day_str = p.stem[len(prefix):]
         candidates.append((day_str, p))
     if not candidates:
@@ -54,13 +60,14 @@ def load(scan_type: str, day: str | None = None) -> dict | None:
     return json.loads(candidates[0][1].read_text())
 
 
-def diff_scan_type(scan_type: str, day: str | None = None) -> dict | None:
+def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None = None) -> dict | None:
     """Compare today's snapshot with a previous one.
 
     Returns None if either snapshot is missing.
     """
+    snap_dir = _snapshot_dir(profile)
     today_str = date.today().isoformat()
-    today_path = SNAPSHOT_DIR / f"{scan_type}-{today_str}.json"
+    today_path = snap_dir / f"{scan_type}-{today_str}.json"
     if not today_path.exists():
         return None
 
@@ -68,12 +75,12 @@ def diff_scan_type(scan_type: str, day: str | None = None) -> dict | None:
 
     # Get previous snapshot: explicit date, or most recent before today
     if day:
-        prev_data = load(scan_type, day)
+        prev_data = load(scan_type, day, profile)
     else:
         today = date.today().isoformat()
         prefix = f"{scan_type}-"
         candidates = []
-        for p in SNAPSHOT_DIR.glob(f"{prefix}*.json"):
+        for p in snap_dir.glob(f"{prefix}*.json"):
             day_str = p.stem[len(prefix):]
             if day_str < today:
                 candidates.append((day_str, p))
@@ -135,9 +142,10 @@ def diff_scan_type(scan_type: str, day: str | None = None) -> dict | None:
     }
 
 
-def list_snapshots(scan_type: str | None = None) -> list[Path]:
+def list_snapshots(scan_type: str | None = None, profile: str | None = None) -> list[Path]:
     """List all snapshot files, newest first."""
-    _ensure_dir()
+    snap_dir = _snapshot_dir(profile)
+    snap_dir.mkdir(parents=True, exist_ok=True)
     pattern = f"{scan_type}-*.json" if scan_type else "*.json"
-    paths = sorted(SNAPSHOT_DIR.glob(pattern), reverse=True)
+    paths = sorted(snap_dir.glob(pattern), reverse=True)
     return paths

@@ -12,24 +12,25 @@ from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_ca
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
 from rshelper.config import load_config
 from rshelper import snapshot, watchlist
+from rshelper.profile import resolve_config_path
 
 
-def _fetch_bootstrap():
+def _fetch_bootstrap(profile: str | None = None):
     """Shared fetch-bootstrap: mapping, latest, 5m volume, and built items."""
-    removed = cleanup_stale_cache()
+    removed = cleanup_stale_cache(profile)
     if removed:
         print(f"  Cleaned {removed} stale cache files", file=sys.stderr)
 
     print("Fetching OSRS Wiki prices...", file=sys.stderr)
-    mapping = fetch_mapping()
+    mapping = fetch_mapping(profile)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
-    latest = fetch_latest()
+    latest = fetch_latest(profile)
     if not latest:
         print("Error: could not fetch latest prices.", file=sys.stderr)
         sys.exit(1)
-    volume_5m = fetch_5m() or {}
+    volume_5m = fetch_5m(profile) or {}
 
     print("Building item list...", file=sys.stderr)
     items = build_items_from_api(mapping, latest, volume_5m)
@@ -45,14 +46,14 @@ def _format_table(results, top: int) -> str:
     name_width = max(len(r.name) for r in rows)
     name_width = min(name_width, 40)
     name_width = max(name_width, 10)
-    header = f"{'Rank':<5} {'Item':<{name_width}} {'Buy':>10} {'Alch':>10} {'Profit':>8} {'GP/hr':>10} {'Limit':>7}"
+    header = f"{'Rank':<5} {'Item':<{name_width}} {'Buy':>10} {'Alch':>10} {'Profit':>8} {'GP/hr':>10} {'RS':>4} {'Limit':>7}"
     sep = "-" * len(header)
     lines = [header, sep]
     for i, item in enumerate(rows, 1):
         name = item.name[:name_width]
         lines.append(
             f"{i:<5} {name:<{name_width}} {item.buy_price:>10,} {item.alch_value:>10,} "
-            f"{item.profit:>8,} {item.gp_per_hour:>10,} {item.buy_limit:>7,}"
+            f"{item.profit:>8,} {item.gp_per_hour:>10,} {item.rs_score:>4.0f} {item.buy_limit:>7,}"
         )
     return "\n".join(lines)
 
@@ -69,12 +70,12 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
     if has_qty:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Margin':>7} {'GP/hr':>9} {'Qty':>6} {'Limit':>6}"
+            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Limit':>7}"
         )
     else:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Margin':>7} {'GP/hr':>9} {'Limit':>7}"
+            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Limit':>7}"
         )
     sep = "-" * len(header)
     lines = [header, sep]
@@ -84,12 +85,12 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
             qty = trade_size(item, capital)
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
+                f"{item.profit:>7,} {item.rs_score:>4.0f} {item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
             )
         else:
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {item.gp_per_hour:>9,} {item.buy_limit:>7,}"
+                f"{item.profit:>7,} {item.rs_score:>4.0f} {item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
 def _html_output(rows: list[dict], columns: list[str], title: str) -> str:
@@ -178,7 +179,7 @@ def _csv_output(results, top: int, fields: list[str], field_map: dict) -> str:
 
 def alch_scan(args: argparse.Namespace) -> None:
     """Fetch data, scan for profitable alchs, print results."""
-    mapping, latest, volume_5m, items = _fetch_bootstrap()
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
 
     nature_cost = args.nature_rune_cost if args.nature_rune_cost > 0 else _fetch_nature_rune_cost(mapping, latest)
     if not args.nature_rune_cost:
@@ -220,14 +221,14 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(_html_output([
             {"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
              "Alch": f"{r.alch_value:,}", "Profit": f"{r.profit:,}",
-             "GP/hr": f"{r.gp_per_hour:,}", "Limit": f"{r.buy_limit:,}"}
+             "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
             for i, r in enumerate(results[:args.top])
-        ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "Limit"], "Alchemy Scan"))
+        ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "RS", "Limit"], "Alchemy Scan"))
     else:
         print(_format_table(results, args.top))
 
     if getattr(args, 'save_snapshot', False):
-        _save_alch_snapshot(results[:args.top])
+        _save_alch_snapshot(results[:args.top], args.profile)
 
 
 def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
@@ -245,7 +246,7 @@ def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
 
 def flip_scan(args: argparse.Namespace) -> None:
     """Fetch data, scan for profitable flips, print results."""
-    mapping, latest, volume_5m, items = _fetch_bootstrap()
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
 
     direction = getattr(args, "flip_direction", "arbitrage")
     scanner = FlipScanner(direction=direction, ge_slots=args.ge_slots)
@@ -291,10 +292,10 @@ def flip_scan(args: argparse.Namespace) -> None:
         ], indent=2))
     elif args.html:
         capital = getattr(args, 'capital', 0)
-        cols = ["Rank", "Item", "Buy", "Sell", "Margin", "GP/hr", "Limit"]
+        cols = ["Rank", "Item", "Buy", "Sell", "Margin", "RS", "GP/hr", "Limit"]
         rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
                  "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
-                 "GP/hr": f"{r.gp_per_hour:,}", "Limit": f"{r.buy_limit:,}"}
+                 "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
                 for i, r in enumerate(results[:args.top])]
         if capital:
             cols.insert(-1, "Qty")
@@ -305,7 +306,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
     if getattr(args, 'save_snapshot', False):
-        _save_flip_snapshot(results[:args.top])
+        _save_flip_snapshot(results[:args.top], args.profile)
 
 
 def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
@@ -317,29 +318,17 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
     name_width = max((len(lookup[a.item_id].name) for a in rows if a.item_id in lookup), default=10)
     name_width = min(name_width, 24)
     name_width = max(name_width, 6)
-    has_qty = capital > 0
     has_risk = risk_metrics is not None
-    if has_risk and has_qty:
+    if has_risk:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Qty':>6} "
+            f"{'CurProfit':>9} {'Conf':>5} {'ExpGP/hr':>10} {'AvgMar':>8} "
             f"{'Worst':>8} {'Stab':>5} {'Hrs':>5}"
-        )
-    elif has_risk:
-        header = (
-            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} "
-            f"{'Worst':>8} {'Stab':>5} {'Hrs':>5}"
-        )
-    elif has_qty:
-        header = (
-            f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Qty':>6} {'Hrs':>5}"
         )
     else:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Conf':>5} {'Rel':>5} {'Prof':>5} {'AvgMar':>8} {'Hrs':>5}"
+            f"{'CurProfit':>9} {'Conf':>5} {'ExpGP/hr':>10} {'AvgMar':>8} {'Hrs':>5}"
         )
     sep = "-" * len(header)
     lines = [header, sep]
@@ -349,42 +338,25 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
         buy = item.buy_price if item else 0
         sell = item.sell_price if item else 0
         risk = risk_metrics.get(a.item_id) if risk_metrics else None
-        if has_risk and has_qty:
-            qty = trade_size(item, capital) if item else 0
+        if has_risk:
             worst = risk["worst"] if risk else 0
             stab = risk["stability"] if risk else 0
             lines.append(
                 f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
-                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
-                f"{a.avg_margin:>8,.0f} {qty:>6,} {worst:>8,} {stab:>5.2f} {a.window_hours:>5.0f}"
-            )
-        elif has_risk:
-            worst = risk["worst"] if risk else 0
-            stab = risk["stability"] if risk else 0
-            lines.append(
-                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
-                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.current_profit:>9,} {a.confidence:>5.2f} {a.expected_gp_per_hour:>10,} "
                 f"{a.avg_margin:>8,.0f} {worst:>8,} {stab:>5.2f} {a.window_hours:>5.0f}"
-            )
-        elif has_qty:
-            qty = trade_size(item, capital) if item else 0
-            lines.append(
-                f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
-                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
-                f"{a.avg_margin:>8,.0f} {qty:>6,} {a.window_hours:>5.0f}"
             )
         else:
             lines.append(
                 f"{i:<4} {name:<{name_width}} {buy:>9,} {sell:>9,} "
-                f"{a.confidence:>5.2f} {a.reliability:>5.2f} {a.profitability_score:>5.2f} "
+                f"{a.current_profit:>9,} {a.confidence:>5.2f} {a.expected_gp_per_hour:>10,} "
                 f"{a.avg_margin:>8,.0f} {a.window_hours:>5.0f}"
             )
     return "\n".join(lines)
 
-
 def margin_check(args: argparse.Namespace) -> None:
     """Fetch data, scan flips, then analyze timeseries history for confidence scoring."""
-    mapping, latest, volume_5m, items = _fetch_bootstrap()
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
 
     direction = getattr(args, "flip_direction", "arbitrage")
     # First: find profitable flips
@@ -418,6 +390,7 @@ def margin_check(args: argparse.Namespace) -> None:
         timestep="5m",
         on_progress=lambda cur, tot: print(f"  [{cur}/{tot}] fetching history...", end="\r"),
         workers=getattr(args, "workers", 4),
+        profile=args.profile if hasattr(args, "profile") else None,
     )
     print(f"\n  {len(ts_data)}/{len(candidate_ids)} items have timeseries data", file=sys.stderr)
 
@@ -434,10 +407,10 @@ def margin_check(args: argparse.Namespace) -> None:
         from dataclasses import asdict
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
-            "rank", "name", "item_id", "confidence", "reliability", "profitability_score",
+            "rank", "name", "item_id", "current_profit", "expected_gp_per_hour", "confidence", "reliability", "profitability_score",
             "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
             "avg_volume", "spread_score", "volume_score", "volatility_score",
-            "datapoints", "window_hours",
+            "datapoints", "window_hours", "margin_trend",
         ], extrasaction='ignore')
         writer.writeheader()
         for i, a in enumerate(results[:args.top], 1):
@@ -461,6 +434,8 @@ def margin_check(args: argparse.Namespace) -> None:
                 "rank": i,
                 "name": item.name if item else str(a.item_id),
                 "item_id": a.item_id,
+                "current_profit": a.current_profit,
+                "expected_gp_per_hour": a.expected_gp_per_hour,
                 "confidence": round(a.confidence, 3),
                 "reliability": round(a.reliability, 3),
                 "profitability_score": round(a.profitability_score, 3),
@@ -472,6 +447,7 @@ def margin_check(args: argparse.Namespace) -> None:
                 "avg_volume": round(a.avg_volume, 0),
                 "datapoints": a.datapoints,
                 "window_hours": round(a.window_hours, 1),
+                "margin_trend": round(a.margin_trend, 3),
             })
         print(json.dumps(out, indent=2))
     else:
@@ -485,9 +461,9 @@ def margin_check(args: argparse.Namespace) -> None:
                     if h and l:
                         h, l = int(h), int(l)
                         if direction == "traditional":
-                            m = h - l - max(1, int(h * 0.02))
+                            m = h - l - min(5000000, max(1, int(h * 0.02)))
                         else:
-                            m = l - h - max(1, int(l * 0.02))
+                            m = l - h - min(5000000, max(1, int(l * 0.02)))
                         margins.append(m)
                 if margins:
                     mean = sum(margins) / len(margins)
@@ -501,12 +477,12 @@ def margin_check(args: argparse.Namespace) -> None:
                                    risk if risk else None))
 
     if getattr(args, 'save_snapshot', False):
-        _save_margin_snapshot(results[:args.top], lookup)
+        _save_margin_snapshot(results[:args.top], lookup, args.profile)
 
 
 def item_info(args: argparse.Namespace) -> None:
     """Look up a single item by name or ID."""
-    removed = cleanup_stale_cache()
+    removed = cleanup_stale_cache(args.profile if hasattr(args, "profile") else None)
     if removed:
         print(f"  Cleaned {removed} stale cache files")
 
@@ -514,11 +490,11 @@ def item_info(args: argparse.Namespace) -> None:
         print("Fetching data...", file=sys.stderr)
     else:
         print("Fetching data...")
-    mapping = fetch_mapping()
+    mapping = fetch_mapping(args.profile if hasattr(args, "profile") else None)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
-    latest = fetch_latest()
+    latest = fetch_latest(args.profile if hasattr(args, "profile") else None)
     if not latest:
         print("Error: could not fetch latest prices.", file=sys.stderr)
         sys.exit(1)
@@ -571,7 +547,7 @@ def item_info(args: argparse.Namespace) -> None:
         # Flip
         # Margin: buy-high minus sell-low (consistent with spread display)
         flip_margin = buy_price - sell_price
-        tax_flip = max(1, int(buy_price * 0.02))
+        tax_flip = min(5000000, max(1, int(buy_price * 0.02)))
         flip_profit = flip_margin - tax_flip
         out["flip_margin"] = flip_margin
         out["flip_tax"] = tax_flip
@@ -598,7 +574,7 @@ def item_info(args: argparse.Namespace) -> None:
         # Flip
         # Margin: buy-high minus sell-low (consistent with spread display)
         flip_margin = buy_price - sell_price
-        tax_flip = max(1, int(buy_price * 0.02))
+        tax_flip = min(5000000, max(1, int(buy_price * 0.02)))
         flip_profit = flip_margin - tax_flip
         flip_line = f"  Flip margin: {flip_margin:,} gp (tax: {tax_flip:,}, net: {flip_profit:,})"
         if flip_profit <= 0:
@@ -607,7 +583,7 @@ def item_info(args: argparse.Namespace) -> None:
 
     # Timeseries if requested
     if args.timeseries:
-        ts = fetch_timeseries(item_id, "5m")
+        ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
         if ts:
             from rshelper.analysis import analyze_timeseries
             analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
@@ -646,7 +622,7 @@ def watch_add(args: argparse.Namespace) -> None:
     """Add an item to the watchlist by name or ID."""
     from rshelper.api import fetch_mapping
     print("Looking up item...", file=sys.stderr)
-    mapping = fetch_mapping()
+    mapping = fetch_mapping(args.profile if hasattr(args, "profile") else None)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
@@ -674,13 +650,14 @@ def watch_add(args: argparse.Namespace) -> None:
     name = matched["name"]
     watchlist.add(item_id, name,
                   alert_margin_above=args.alert_above,
-                  alert_margin_below=args.alert_below)
+                  alert_margin_below=args.alert_below,
+                  profile=args.profile)
     print(f"Added '{name}' (id={item_id}) to watchlist.")
 
 
 def watch_remove(args: argparse.Namespace) -> None:
     """Remove an item from the watchlist by ID."""
-    ok = watchlist.remove(args.item_id)
+    ok = watchlist.remove(args.item_id, profile=args.profile if hasattr(args, "profile") else None)
     if ok:
         print(f"Removed item {args.item_id} from watchlist.")
     else:
@@ -690,11 +667,11 @@ def watch_remove(args: argparse.Namespace) -> None:
 
 def watch_list(args: argparse.Namespace) -> None:
     """List all watched items."""
-    items = watchlist.list_all()
+    items = watchlist.list_all(profile=args.profile if hasattr(args, "profile") else None)
     if not items:
         print("Watchlist is empty.")
         return
-    data = watchlist.load()
+    data = watchlist.load(profile=args.profile if hasattr(args, "profile") else None)
     print(f"{'ID':>6}  {'Name':<30}  {'Alert Above':>12}  {'Alert Below':>12}  Added")
     print("-" * 85)
     for item_id_str, entry in data["items"].items():
@@ -710,18 +687,18 @@ def watch_check(args: argparse.Namespace) -> None:
     from rshelper.scanner import FlipScanner
     import json as _json
 
-    watched_ids = watchlist.get_watched_ids()
+    watched_ids = watchlist.get_watched_ids(profile=args.profile if hasattr(args, "profile") else None)
     if not watched_ids:
         print("Watchlist is empty.")
         return
 
     print("Fetching latest prices...")
-    latest = fetch_latest()
+    latest = fetch_latest(args.profile if hasattr(args, "profile") else None)
     if not latest:
         print("Error: could not fetch prices.", file=sys.stderr)
         sys.exit(1)
 
-    wl = watchlist.load()
+    wl = watchlist.load(profile=args.profile)
     direction = getattr(args, "flip_direction", "arbitrage")
     flip = FlipScanner(direction=direction, ge_slots=getattr(args, "ge_slots", 2))
     alerts = []
@@ -737,10 +714,10 @@ def watch_check(args: argparse.Namespace) -> None:
 
         if direction == "traditional":
             margin = buy - sell
-            tax = max(1, int(buy * 0.02))
+            tax = min(5000000, max(1, int(buy * 0.02)))
         else:
             margin = sell - buy
-            tax = max(1, int(sell * 0.02))
+            tax = min(5000000, max(1, int(sell * 0.02)))
         profit = margin - tax
 
         above = entry.get("alert_margin_above")
@@ -769,27 +746,27 @@ def watch_check(args: argparse.Namespace) -> None:
     for a in alerts:
         print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
     sys.exit(1)
-def _save_alch_snapshot(results):
+def _save_alch_snapshot(results, profile: str | None = None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "alch_value": r.alch_value, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("alch", items)
+    path = snapshot.save("alch", items, profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_flip_snapshot(results):
+def _save_flip_snapshot(results, profile: str | None = None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "sell_price": r.sell_price, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("flip", items)
+    path = snapshot.save("flip", items, profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_margin_snapshot(results, lookup):
+def _save_margin_snapshot(results, lookup, profile: str | None = None):
     items = []
     for a in results:
         item = lookup.get(a.item_id)
@@ -803,7 +780,7 @@ def _save_margin_snapshot(results, lookup):
             "avg_margin": round(a.avg_margin, 0),
             "margin_volatility": round(a.margin_volatility, 4),
         })
-    path = snapshot.save("margin", items)
+    path = snapshot.save("margin", items, profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
@@ -813,15 +790,15 @@ def diff_cmd(args: argparse.Namespace) -> None:
     day = args.date
 
     today_str = date.today().isoformat()
-    today_path = snapshot.SNAPSHOT_DIR / f"{scan_type}-{today_str}.json"
+    today_path = snapshot._snapshot_dir(args.profile if hasattr(args, 'profile') else None) / f"{scan_type}-{today_str}.json"
     if not today_path.exists():
         print(f"No snapshot for today ({today_str}). Run a scan with --save-snapshot first.",
               file=sys.stderr)
         sys.exit(1)
 
-    result = snapshot.diff_scan_type(scan_type, day)
+    result = snapshot.diff_scan_type(scan_type, day, args.profile if hasattr(args, 'profile') else None)
     if result is None:
-        prev = snapshot.load(scan_type, day)
+        prev = snapshot.load(scan_type, day, args.profile if hasattr(args, 'profile') else None)
         if prev is None:
             print(f"No previous {scan_type} snapshot found.", file=sys.stderr)
         else:
@@ -874,7 +851,7 @@ def diff_cmd(args: argparse.Namespace) -> None:
 
 def snapshot_list(args: argparse.Namespace) -> None:
     """List saved snapshots."""
-    paths = snapshot.list_snapshots(args.scan_type)
+    paths = snapshot.list_snapshots(args.scan_type, args.profile if hasattr(args, 'profile') else None)
     if not paths:
         print("No snapshots found.")
         return
@@ -895,8 +872,84 @@ def config_show(args: argparse.Namespace) -> None:
 
 def config_path(args: argparse.Namespace) -> None:
     """Print the config file path."""
-    from rshelper.config import CONFIG_PATH
-    print(CONFIG_PATH)
+    p = resolve_config_path("config.toml", getattr(args, 'profile', None))
+    print(p)
+
+def signals_cmd(args: argparse.Namespace) -> None:
+    """Fetch data, detect market signals, print results grouped by type."""
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+
+    # Run flip scan to get items with current prices and RS scores
+    direction = getattr(args, "flip_direction", "arbitrage")
+    scanner = FlipScanner(direction=direction, ge_slots=2)
+    flips = scanner.scan(
+        items,
+        members_only=args.members_only,
+        min_volume=0,
+        min_margin=0,
+    )
+
+    print(f"  {len(flips)} items scanned for signals", file=sys.stderr)
+
+    from rshelper.signals import detect_signals, Signal
+    signals = detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60)
+
+    if not signals:
+        print("\nNo active signals detected.")
+        return
+
+    if args.json:
+        out = []
+        for s in signals:
+            out.append({
+                "type": s.type,
+                "item_id": s.item_id,
+                "name": s.name,
+                "severity": s.severity,
+                "current_price": s.current_price,
+                "deviation": s.deviation,
+                "message": s.message,
+            })
+        print(json.dumps(out, indent=2))
+        return
+
+    # Group by type
+    groups: dict[str, list[Signal]] = {}
+    for s in signals:
+        groups.setdefault(s.type, []).append(s)
+
+    type_labels = {
+        "CRASH": "CRASH — Severe price drops",
+        "DUMP": "DUMP — Price dips below average",
+        "SURGE": "SURGE — Unusual volume spikes",
+        "FLIP": "FLIP — Wide spreads with liquidity",
+    }
+
+    print(f"\n  Signals ({len(signals)} active, cooldown: {args.cooldown} min)\n")
+    for sig_type in ("CRASH", "DUMP", "SURGE", "FLIP"):
+        group = groups.get(sig_type, [])
+        if not group:
+            continue
+        label = type_labels.get(sig_type, sig_type)
+        print(f"  {label}")
+        print(f"  " + "-" * 70)
+        if sig_type in ("CRASH", "DUMP"):
+            print(f"  {'Sev':<7} {'Item':<28} {'Price':>10} {'Deviation':>10}  Suggested")
+        elif sig_type == "SURGE":
+            print(f"  {'Sev':<7} {'Item':<28} {'Price':>10} {'Vol Ratio':>10}")
+        else:  # FLIP
+            print(f"  {'Sev':<7} {'Item':<28} {'Price':>10} {'Spread':>8}  RS Score")
+        for s in group:
+            item = next((i for i in flips if i.id == s.item_id), None)
+            rs = f"{item.rs_score:.0f}" if item else "—"
+            if sig_type in ("CRASH", "DUMP"):
+                suggestion = f"Buy at {s.current_price:,}"
+                print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>+8.1f}%  {suggestion}")
+            elif sig_type == "SURGE":
+                print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>8.1f}x")
+            else:
+                print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>7.1f}%  RS={rs}")
+        print()
 
 def main() -> None:
     cfg = load_config()
@@ -905,6 +958,7 @@ def main() -> None:
         prog="rshelper",
         description="RSHelper — OSRS Grand Exchange profit scanner",
     )
+    parser.add_argument("--profile", type=str, default=None, help="Profile to use for this command")
     sub = parser.add_subparsers(dest="command")
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
@@ -962,6 +1016,50 @@ def main() -> None:
                        help="Output JSON instead of text")
 
 
+    # Monitor subcommand
+    mon = sub.add_parser("monitor", help="Background monitor with desktop notifications")
+    mon.add_argument("--interval", type=int, default=120,
+                      help="Polling interval in seconds (default: 120)")
+    mon.add_argument("--no-notify", action="store_true",
+                      help="Suppress desktop notifications")
+    mon.add_argument("--stop", action="store_true",
+                      help="Stop a running monitor")
+    mon.add_argument("--status", action="store_true", help="Show monitor status")
+
+    # Trade subcommand
+    trade_p = sub.add_parser("trade", help="Trade journal and P&L tracking")
+    trade_sub = trade_p.add_subparsers(dest="trade_action")
+    trade_log = trade_sub.add_parser("log", help="Log a completed trade")
+    trade_log.add_argument("item", help="Item name")
+    trade_log.add_argument("qty", type=int, help="Quantity traded")
+    trade_log.add_argument("buy_price", type=int, help="Buy price per unit (gp)")
+    trade_log.add_argument("sell_price", type=int, help="Sell price per unit (gp)")
+    trade_log.add_argument("--note", type=str, default="", help="Optional note")
+    trade_list = trade_sub.add_parser("list", help="List logged trades")
+    trade_list.add_argument("--item", type=str, default="", help="Filter by item name")
+    trade_list.add_argument("--since", type=str, default="", help="Filter from date (YYYY-MM-DD)")
+    trade_list.add_argument("--top", type=int, default=0, help="Show top N most recent")
+    trade_list.add_argument("--json", action="store_true")
+    trade_list.add_argument("--csv", action="store_true")
+    trade_pnl = trade_sub.add_parser("pnl", help="Show P&L summary")
+    trade_pnl.add_argument("--since", type=str, default="", help="Filter from date")
+    trade_pnl.add_argument("--json", action="store_true")
+    trade_del = trade_sub.add_parser("delete", help="Delete a trade by ID")
+    trade_del.add_argument("id", type=int, help="Trade ID to delete")
+
+
+    # Signals subcommand
+    sig = sub.add_parser("signals", help="Detect market signals: dumps, crashes, surges, flips")
+    sig.add_argument("--members-only", action="store_true",
+                      help="Filter to members items only")
+    sig.add_argument("--flip-direction", type=str, default="arbitrage",
+                      choices=["arbitrage", "traditional"],
+                      help="Flip mode for margin-based signals")
+    sig.add_argument("--cooldown", type=int, default=15,
+                      help="Signal cooldown in minutes (default: 15)")
+    sig.add_argument("--json", action="store_true",
+                      help="Output JSON instead of table")
+
     # Watchlist subcommand
     watch = sub.add_parser("watch", help="Manage item watchlist and check alerts")
     watch_sub = watch.add_subparsers(dest="watch_action")
@@ -992,6 +1090,18 @@ def main() -> None:
                         help="Previous date to compare against (YYYY-MM-DD, default: most recent)")
 
     # Snapshots subcommand
+    # Profile subcommand
+    profile_p = sub.add_parser("profile", help="Manage multi-account profiles")
+    profile_sub = profile_p.add_subparsers(dest="profile_action")
+    profile_create = profile_sub.add_parser("create", help="Create a new profile")
+    profile_create.add_argument("name", help="Profile name (alphanumeric, dashes, underscores, max 32 chars)")
+    profile_switch = profile_sub.add_parser("switch", help="Switch active profile")
+    profile_switch.add_argument("name", help="Profile name")
+    profile_sub.add_parser("list", help="List all profiles")
+    profile_del = profile_sub.add_parser("delete", help="Delete a profile")
+    profile_del.add_argument("name", help="Profile name")
+    profile_del.add_argument("--force", action="store_true", help="Delete even if profile has data")
+
     snap_p = sub.add_parser("snapshots", help="List saved scan snapshots")
     snap_p.add_argument("scan_type", nargs="?", default=None,
                         choices=["alch", "flip", "margin"],
@@ -1037,6 +1147,28 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "item-info":
         item_info(args)
+    elif args.command == "monitor":
+        if args.stop:
+            from rshelper.monitor import stop_monitor
+            ok = stop_monitor(args.profile if hasattr(args, "profile") else None)
+            print("Monitor stopped." if ok else "No monitor running.")
+        elif args.status:
+            from rshelper.monitor import monitor_status
+            status = monitor_status()
+            if status is None:
+                print("No monitor running.")
+            else:
+                print(f"  Monitor: RUNNING")
+                print(f"  PID: {status["pid"]}")
+                print(f"  Running since: ~{max(1, status["uptime_sec"] // 60)} min ago")
+                print(f"  Last check: {status["last_check_iso"] or 'N/A'}")
+        else:
+            from rshelper.monitor import run_monitor
+            run_monitor(interval_sec=args.interval, no_notify=args.no_notify, profile=args.profile)
+
+    elif args.command == "signals":
+        signals_cmd(args)
+
     elif args.command == "margin-check":
         margin_check(args)
     elif args.command == "alch-scan":
@@ -1055,6 +1187,113 @@ def main() -> None:
         else:
             parser.print_help()
             sys.exit(1)
+    elif args.command == "trade":
+        if args.trade_action == "log":
+            from rshelper.journal import log_trade
+            from rshelper.api import fetch_mapping
+            mapping = fetch_mapping()
+            item_id = 0
+            if mapping:
+                q = args.item.lower()
+                for entry in mapping:
+                    if (entry.get("name") or "").lower() == q:
+                        item_id = entry["id"]
+                        break
+            trade = log_trade(item_id, args.item, args.qty, args.buy_price, args.sell_price, args.note)
+            print(f"Logged trade #{trade.id}: bought {trade.qty}x {trade.name} "
+                  f"at {trade.buy_price:,} gp, sold at {trade.sell_price:,} gp "
+                  f"— profit: {trade.profit:+,} gp (tax: {trade.tax_paid:,})")
+        elif args.trade_action == "list":
+            from rshelper.journal import list_trades
+            trades = list_trades(item_name=args.item, since=args.since, top=args.top)
+            if args.json:
+                from dataclasses import asdict
+                print(json.dumps([asdict(t) for t in trades], indent=2))
+            elif args.csv:
+                import csv, io
+                out = io.StringIO()
+                writer = csv.DictWriter(out, fieldnames=["id","item_id","name","qty","buy_price","sell_price","tax_paid","profit","timestamp","note"])
+                writer.writeheader()
+                for t in trades:
+                    writer.writerow({"id":t.id,"item_id":t.item_id,"name":t.name,"qty":t.qty,"buy_price":t.buy_price,"sell_price":t.sell_price,"tax_paid":t.tax_paid,"profit":t.profit,"timestamp":t.timestamp,"note":t.note})
+                print(out.getvalue())
+            else:
+                if not trades:
+                    print("No trades logged.")
+                else:
+                    nw = max(len(t.name) for t in trades)
+                    nw = min(nw, 30)
+                    print(f"{'ID':<5} {'Date':<12} {'Item':<{nw}} {'Qty':>6} {'Buy':>10} {'Sell':>10} {'Profit':>10}")
+                    print("-" * (55 + nw))
+                    for t in trades:
+                        print(f"{t.id:<5} {t.timestamp[:10]:<12} {t.name[:nw]:<{nw}} {t.qty:>6,} {t.buy_price:>10,} {t.sell_price:>10,} {t.profit:>+10,}")
+        elif args.trade_action == "pnl":
+            from rshelper.journal import compute_pnl
+            pnl = compute_pnl(since=args.since, profile=args.profile)
+            if args.json:
+                d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
+                     "trade_count": pnl.trade_count, "winning_trades": pnl.winning_trades,
+                     "losing_trades": pnl.losing_trades, "win_rate": round(pnl.win_rate, 1),
+                     "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded}
+                if pnl.best_trade:
+                    d["best_trade"] = pnl.best_trade.profit
+                if pnl.worst_trade:
+                    d["worst_trade"] = pnl.worst_trade.profit
+                print(json.dumps(d, indent=2))
+            else:
+                print(f"\n  P&L Summary{' (since ' + args.since + ')' if args.since else ' (all time)'}")
+                print(f"  " + "=" * 45)
+                print(f"  Total profit:     {pnl.total_profit:>+15,} gp")
+                print(f"  Total tax paid:    {pnl.total_tax_paid:>15,} gp")
+                print(f"  Trades:            {pnl.trade_count:>15}")
+                print(f"  Win rate:          {pnl.win_rate:>14.1f}%")
+                if pnl.best_trade:
+                    print(f"  Best trade:        {pnl.best_trade.name:<20} ({pnl.best_trade.profit:>+12,} gp)")
+                if pnl.worst_trade:
+                    print(f"  Worst trade:       {pnl.worst_trade.name:<20} ({pnl.worst_trade.profit:>+12,} gp)")
+                print(f"  Items traded:      {pnl.items_traded:>15}")
+                print(f"  Active gp/hr:      {pnl.active_gp_per_hour:>15,}")
+                print()
+        elif args.trade_action == "delete":
+            from rshelper.journal import delete_trade
+            ok = delete_trade(args.id)
+            print(f"Trade {args.id} deleted." if ok else f"Trade {args.id} not found.")
+    elif args.command == "profile":
+        from rshelper.profile import (get_active_profile, set_active_profile,
+                                       create_profile, delete_profile, list_profiles,
+                                       validate_profile_name)
+        if args.profile_action == "create":
+            if not validate_profile_name(args.name):
+                print(f"Invalid profile name: {args.name}", file=sys.stderr)
+                sys.exit(1)
+            ok = create_profile(args.name)
+            print(f"Profile '{args.name}' created." if ok else f"Profile '{args.name}' already exists.")
+        elif args.profile_action == "switch":
+            if args.name == "default":
+                set_active_profile("default")
+                print("Switched to default profile.")
+            elif not validate_profile_name(args.name):
+                print(f"Invalid profile name: {args.name}", file=sys.stderr)
+                sys.exit(1)
+            else:
+                set_active_profile(args.name)
+                print(f"Switched to profile '{args.name}'.")
+        elif args.profile_action == "list":
+            profiles = list_profiles()
+            active = get_active_profile()
+            for p in profiles:
+                marker = " *" if p == active else ""
+                print(f"  {p}{marker}")
+        elif args.profile_action == "delete":
+            ok = delete_profile(args.name, force=args.force)
+            if ok:
+                print(f"Profile '{args.name}' deleted.")
+            elif not args.force:
+                print(f"Profile '{args.name}' has data. Use --force to delete.", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(f"Profile '{args.name}' not found.", file=sys.stderr)
+                sys.exit(1)
     elif args.command == "diff":
         diff_cmd(args)
     elif args.command == "snapshots":

@@ -12,6 +12,8 @@ import urllib.error
 from pathlib import Path
 from typing import Any
 
+from rshelper.profile import resolve_cache_path
+
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 USER_AGENT = "RSHelper/0.1 (rshelper@users.noreply.github.com)"
 _LAST_REQUEST = 0.0
@@ -76,13 +78,13 @@ def _get(path: str, retries: int = MAX_RETRIES) -> Any:
     return None
 
 
-def _cache_path(name: str) -> Path:
-    return CACHE_DIR / f"{name}.json"
+def _cache_path(name: str, profile: str | None = None) -> Path:
+    return resolve_cache_path(name + ".json", profile)
 
 
-def _load_cache(name: str) -> Any | None:
+def _load_cache(name: str, profile: str | None = None) -> Any | None:
     """Load cached JSON. Returns data only if fresh (< max_age)."""
-    p = _cache_path(name)
+    p = _cache_path(name, profile)
     if not p.exists():
         return None
     max_age = CACHE_MAX_AGE.get(name, 300)
@@ -97,9 +99,9 @@ def _load_cache(name: str) -> Any | None:
     return None
 
 
-def _load_stale_cache(name: str) -> Any | None:
+def _load_stale_cache(name: str, profile: str | None = None) -> Any | None:
     """Return stale cache data (within STALE_MULTIPLIER * max_age) when API fails."""
-    p = _cache_path(name)
+    p = _cache_path(name, profile)
     if not p.exists():
         return None
     max_age = CACHE_MAX_AGE.get(name, 300)
@@ -108,16 +110,18 @@ def _load_stale_cache(name: str) -> Any | None:
         return None
     try:
         data = json.loads(p.read_text())
-        print(f"  Note: using stale cache, file=sys.stderr) for '{name}' ({int(age)}s old)")
+        print(f"  Note: using stale cache for '{name}' ({int(age)}s old)", file=sys.stderr)
         return data
     except (json.JSONDecodeError, OSError):
         return None
 
 
-def _save_cache(name: str, data: Any) -> None:
+def _save_cache(name: str, data: Any, profile: str | None = None) -> None:
     """Write cache atomically (temp file + rename) to avoid corruption on crash."""
-    target = _cache_path(name)
-    fd, tmp_path = tempfile.mkstemp(dir=CACHE_DIR, suffix=".tmp")
+    target = _cache_path(name, profile)
+    cache_dir = target.parent
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=cache_dir, suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(data, f)
@@ -130,60 +134,61 @@ def _save_cache(name: str, data: Any) -> None:
         raise
 
 
-def cleanup_stale_cache() -> int:
+def cleanup_stale_cache(profile: str | None = None) -> int:
     """Remove cache files older than 24h. Returns count removed."""
+    cache_dir = resolve_cache_path("", profile).parent if profile and profile != "default" else CACHE_DIR
     removed = 0
-    for p in CACHE_DIR.glob("*.json"):
+    for p in cache_dir.glob("*.json"):
         try:
             age = time.time() - p.stat().st_mtime
         except FileNotFoundError:
-            continue  # race: file deleted between glob and stat
+            continue
         if age > 86400:
             p.unlink()
             removed += 1
     return removed
 
 
-def fetch_mapping() -> list[dict] | None:
+def fetch_mapping(profile: str | None = None) -> list[dict] | None:
     """Fetch item ID -> metadata (name, buy limit, alch value, members)."""
-    cached = _load_cache("mapping")
+    cached = _load_cache("mapping", profile)
     if cached is not None:
         return cached
     data = _get("mapping")
     if data is not None:
         result = data.get("data", data) if isinstance(data, dict) else data
-        _save_cache("mapping", result)
+        _save_cache("mapping", result, profile)
         return result
-    return _load_stale_cache("mapping")
+    return _load_stale_cache("mapping", profile)
 
 
-def fetch_latest() -> dict[str, dict] | None:
+def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
     """Fetch latest high/low prices keyed by item ID."""
-    cached = _load_cache("latest")
+    cached = _load_cache("latest", profile)
     if cached is not None:
         return cached
     data = _get("latest")
     if data is not None:
         result = data.get("data", data)
-        _save_cache("latest", result)
+        _save_cache("latest", result, profile)
         return result
-    return _load_stale_cache("latest")
+    return _load_stale_cache("latest", profile)
 
 
-def fetch_5m() -> dict[str, dict] | None:
+def fetch_5m(profile: str | None = None) -> dict[str, dict] | None:
     """Fetch 5-minute OHLC averages keyed by item ID."""
-    cached = _load_cache("5m")
+    cached = _load_cache("5m", profile)
     if cached is not None:
         return cached
     data = _get("5m")
     if data is not None:
         result = data.get("data", data)
-        _save_cache("5m", result)
+        _save_cache("5m", result, profile)
         return result
-    return _load_stale_cache("5m")
+    return _load_stale_cache("5m", profile)
 
 
-def fetch_timeseries(item_id: int, timestep: str = "5m") -> list[dict] | None:
+def fetch_timeseries(item_id: int, timestep: str = "5m", profile: str | None = None) -> list[dict] | None:
     """Fetch historical OHLC data for a single item.
 
     timestep: '5m', '1h', '6h', '24h'
@@ -191,14 +196,14 @@ def fetch_timeseries(item_id: int, timestep: str = "5m") -> list[dict] | None:
         timestamp, avgHighPrice, avgLowPrice, highPriceVolume, lowPriceVolume
     """
     cache_name = f"ts_{item_id}_{timestep}"
-    cached = _load_cache(cache_name)
+    cached = _load_cache(cache_name, profile)
     if cached is not None:
         return cached
     data = _get(f"timeseries?id={item_id}&timestep={timestep}")
     if data and "data" in data:
-        _save_cache(cache_name, data["data"])
+        _save_cache(cache_name, data["data"], profile)
         return data["data"]
-    return _load_stale_cache(cache_name)
+    return _load_stale_cache(cache_name, profile)
 
 
 def fetch_timeseries_batch(
@@ -206,6 +211,7 @@ def fetch_timeseries_batch(
     timestep: str = "5m",
     on_progress=None,
     workers: int = 4,
+    profile: str | None = None,
 ) -> dict[int, list[dict]]:
     """Fetch timeseries for multiple items in parallel.
 
@@ -220,7 +226,7 @@ def fetch_timeseries_batch(
     lock = threading.Lock()
 
     def fetch_one(item_id: int) -> tuple[int, list[dict] | None]:
-        ts = fetch_timeseries(item_id, timestep)
+        ts = fetch_timeseries(item_id, timestep, profile)
         return (item_id, ts)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
