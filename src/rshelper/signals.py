@@ -8,8 +8,9 @@ from pathlib import Path
 
 from rshelper.models import Item
 
-COOLDOWN_DIR = Path.home() / ".config" / "rshelper"
-COOLDOWN_PATH = COOLDOWN_DIR / "signal_cooldowns.json"
+from rshelper.profile import resolve_config_path
+COOLDOWN_DIR = resolve_config_path("")
+COOLDOWN_PATH = resolve_config_path("signal_cooldowns.json")
 
 # Thresholds
 DUMP_THRESHOLD = 0.10   # 10% below 5m average = DUMP

@@ -70,7 +70,7 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
     if has_qty:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Limit':>7}"
+            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Qty':>6} {'Limit':>6}"
         )
     else:
         header = (

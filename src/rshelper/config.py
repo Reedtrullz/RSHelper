@@ -1,6 +1,5 @@
 """Configuration loading from ~/.config/rshelper/config.toml."""
 
-from __future__ import annotations
 
 import tomllib
 from dataclasses import dataclass, field
