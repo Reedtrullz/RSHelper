@@ -582,6 +582,16 @@ def item_info(args: argparse.Namespace) -> None:
         print(flip_line)
 
 
+    # Wiki URL
+    wiki_name = name.replace(" ", "_")
+    wiki_url = f"https://oldschool.runescape.wiki/w/Exchange:{wiki_name}"
+    if getattr(args, "wiki", False):
+        print(f"\n  Wiki: {wiki_url}")
+    if getattr(args, "wiki_open", False):
+        import webbrowser
+        webbrowser.open(wiki_url)
+        print(f"  Opening {wiki_url}")
+
     # Tax curve: show profit at different sell prices
     if getattr(args, "tax_curve", False) and buy_price > 0:
         if not args.json:
@@ -601,7 +611,7 @@ def item_info(args: argparse.Namespace) -> None:
                 out["tax_curve"] = [{"sell_price": int(buy_price * m), "tax": min(tax_cap, max(1, int(int(buy_price * m) * 0.02))), "profit": int(buy_price * m) - buy_price - min(tax_cap, max(1, int(int(buy_price * m) * 0.02)))} for m in steps]
 
     # Timeseries if requested
-    if args.timeseries:
+    if args.timeseries or getattr(args, "predict", False):
         ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
         if ts:
             from rshelper.analysis import analyze_timeseries
@@ -628,6 +638,29 @@ def item_info(args: argparse.Namespace) -> None:
                     print(f"  Avg margin: {analysis.avg_margin:,.0f} gp")
                     print(f"  Margin consistency: {analysis.margin_consistency:.0%}")
                     print(f"  Margin volatility: {analysis.margin_volatility:.4f}")
+                    if getattr(args, "predict", False):
+                        try:
+                            from statistics import linear_regression
+                            ts_pts = [(dp["timestamp"], dp["avgHighPrice"]) for dp in ts if dp.get("timestamp") and dp.get("avgHighPrice")]
+                            if len(ts_pts) >= 6:
+                                xs = [t - ts_pts[0][0] for t, _ in ts_pts]
+                                ys = [float(p) for _, p in ts_pts]
+                                slope, intercept = linear_regression(xs, ys)
+                                mean = sum(ys) / len(ys)
+                                pct_per_hr = (slope * 3600 / mean * 100) if mean > 0 else 0
+                                ss_res = sum((y - (slope * x + intercept))**2 for x, y in zip(xs, ys))
+                                ss_tot = sum((y - mean)**2 for y in ys)
+                                r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+                                direction = "up" if pct_per_hr > 0.05 else "down" if pct_per_hr < -0.05 else "flat"
+                                arrow = "↗" if direction == "up" else "↘" if direction == "down" else "→"
+                                conf = min(100, max(0, r2 * 100))
+                                print(f"\n  Prediction: {arrow} likely {direction} ({pct_per_hr:+.2f}%/hr, R²={r2:.3f})")
+                            else:
+                                print("\n  Prediction: insufficient data (need ≥6 datapoints)")
+                        except ImportError:
+                            print("\n  Prediction: requires Python 3.14+ (statistics.linear_regression)")
+                        except Exception:
+                            print("\n  Prediction: could not compute")
             else:
                 if not args.json:
                     print("\n  Not enough timeseries data for analysis.")
@@ -1035,6 +1068,12 @@ def main() -> None:
     info.add_argument("--json", action="store_true", help="Output JSON instead of text")
     info.add_argument("--tax-curve", action="store_true",
                        help="Show profit curve at different sell prices")
+    info.add_argument("--wiki", action="store_true",
+                       help="Print OSRS Wiki Exchange URL for this item")
+    info.add_argument("--wiki-open", action="store_true",
+                       help="Open OSRS Wiki Exchange page in browser")
+    info.add_argument("--predict", action="store_true",
+                       help="Predict short-term price direction from timeseries")
 
 
     # Monitor subcommand
