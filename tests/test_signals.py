@@ -9,12 +9,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from rshelper.models import Item
 from rshelper.signals import (
     detect_signals, compute_rs_score_flip, compute_rs_score_alch,
-    DUMP_THRESHOLD, CRASH_THRESHOLD, SURGE_MULTIPLIER, COOLDOWN_PATH,
+    DUMP_THRESHOLD, CRASH_THRESHOLD, SURGE_MULTIPLIER,
 )
 
-# Clean up persistent cooldown state from previous test runs
-if COOLDOWN_PATH.exists():
-    COOLDOWN_PATH.unlink()
 
 
 # --- RS Score tests ---
@@ -56,6 +53,21 @@ def test_rs_score_alch_percentile():
     assert items[0].rs_score > items[1].rs_score > items[2].rs_score
     print("  PASSED test_rs_score_alch_percentile")
 
+
+
+def _reset_cooldowns():
+    """Clear all cooldowns and use in-memory state for test isolation."""
+    import rshelper.signals as _s
+    _orig_load = _s._load_cooldowns
+    _orig_save = _s._save_cooldowns
+    _state = {}
+    _s._load_cooldowns = lambda: dict(_state)
+    _s._save_cooldowns = lambda data: _state.update(data)
+    return (_orig_load, _orig_save)
+
+def _restore_cooldowns(orig):
+    import rshelper.signals as _s
+    _s._load_cooldowns, _s._save_cooldowns = orig
 
 # --- Signal detection tests ---
 
@@ -116,31 +128,38 @@ def test_flip_detection():
 
 def test_cooldown_suppression():
     """Same signal type for same item suppressed within cooldown."""
-    items = [_make_item(item_id=99, sell=70)]
-    vol_5m = {"99": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
+    orig = _reset_cooldowns()
+    try:
+        items = [_make_item(item_id=99, sell=70)]
+        vol_5m = {"99": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
 
-    s1 = detect_signals(items, vol_5m, cooldown_sec=999)
-    crash1 = [s for s in s1 if s.type == "CRASH"]
-    assert len(crash1) == 1
+        s1 = detect_signals(items, vol_5m, cooldown_sec=999)  # long cooldown
+        crash1 = [s for s in s1 if s.type == "CRASH"]
+        assert len(crash1) == 1, f"Expected 1 CRASH, got {len(crash1)}: {[s.type for s in s1]}"
 
-    s2 = detect_signals(items, vol_5m, cooldown_sec=999)
-    crash2 = [s for s in s2 if s.type == "CRASH"]
-    assert len(crash2) == 0, "Signal should be suppressed by cooldown"
+        s2 = detect_signals(items, vol_5m, cooldown_sec=999)
+        crash2 = [s for s in s2 if s.type == "CRASH"]
+        assert len(crash2) == 0, "Signal should be suppressed by cooldown"
+    finally:
+        _restore_cooldowns(orig)
     print("  PASSED test_cooldown_suppression")
-
 
 def test_cooldown_expiry():
     """Signal fires again after cooldown expires."""
-    items = [_make_item(item_id=98, sell=70)]
-    vol_5m = {"98": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
+    orig = _reset_cooldowns()
+    try:
+        items = [_make_item(item_id=98, sell=70)]
+        vol_5m = {"98": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
 
-    s1 = detect_signals(items, vol_5m, cooldown_sec=0)
-    crash1 = [s for s in s1 if s.type == "CRASH"]
-    assert len(crash1) == 1
+        s1 = detect_signals(items, vol_5m, cooldown_sec=0)
+        crash1 = [s for s in s1 if s.type == "CRASH"]
+        assert len(crash1) == 1
 
-    s2 = detect_signals(items, vol_5m, cooldown_sec=0)
-    crash2 = [s for s in s2 if s.type == "CRASH"]
-    assert len(crash2) == 1, "Signal should fire again after 0 cooldown"
+        s2 = detect_signals(items, vol_5m, cooldown_sec=0)
+        crash2 = [s for s in s2 if s.type == "CRASH"]
+        assert len(crash2) == 1, "Signal should fire again after 0 cooldown"
+    finally:
+        _restore_cooldowns(orig)
     print("  PASSED test_cooldown_expiry")
 
 

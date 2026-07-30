@@ -1,7 +1,15 @@
 """Tests for multi-account profiles."""
-import sys, os
+import sys, os, tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
+import rshelper.profile as pmod
+# Isolate tests: use temp directory
+_tmpdir = tempfile.TemporaryDirectory()
+_test_dir = Path(_tmpdir.name)
+pmod.CONFIG_DIR = _test_dir / "config"
+pmod.CACHE_DIR = _test_dir / "cache"
+pmod.ACTIVE_PROFILE_PATH = _test_dir / "active_profile"
 
 from rshelper.profile import (
     get_active_profile, set_active_profile, create_profile, delete_profile,
@@ -75,6 +83,9 @@ def test_profile_cache_isolation():
 
 def test_profile_trade_isolation():
     _clean()
+    import rshelper.journal as jmod
+    # Override journal path to use our temp dir
+    jmod.TRADES_PATH = CONFIG_DIR / "trades.json"
     from rshelper.journal import log_trade, list_trades, delete_trade
     t = log_trade(1, "TestItem", 1, 100, 200, profile="default")
     assert len(list_trades(profile="default")) == 1

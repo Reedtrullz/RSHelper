@@ -16,13 +16,13 @@ def test_notify_command_format():
 def test_pid_file_roundtrip():
     import rshelper.monitor as mon
     pid = os.getpid()
-    mon.PID_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PID_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = mon.PID_PATH.with_suffix(".tmp")
     tmp.write_text(str(pid))
-    os.replace(tmp, mon.PID_PATH)
+    os.replace(tmp, PID_PATH)
     assert mon.PID_PATH.exists()
     assert int(mon.PID_PATH.read_text().strip()) == pid
-    mon.PID_PATH.unlink()
+    PID_PATH.unlink()
     print("  PASSED test_pid_file_roundtrip")
 
 
@@ -66,13 +66,15 @@ def test_monitor_cli_args():
 
 
 def test_stale_pid_cleanup():
-    """stop_monitor returns False for a nonexistent PID."""
+    """stop_monitor returns False for a nonexistent PID and cleans up file."""
     if PID_PATH.exists():
         PID_PATH.unlink()
     PID_PATH.parent.mkdir(parents=True, exist_ok=True)
     PID_PATH.write_text("99999")  # PID that almost certainly doesn't exist
     result = stop_monitor()
-    assert not PID_PATH.exists() or result is False
+    # After cleanup, PID file should be gone AND result should be False
+    assert not PID_PATH.exists(), "PID file should be cleaned up"
+    assert result is False, "stop_monitor should return False for stale PID"
     print("  PASSED test_stale_pid_cleanup")
 
 

@@ -136,7 +136,7 @@ def _save_cache(name: str, data: Any, profile: str | None = None) -> None:
 
 def cleanup_stale_cache(profile: str | None = None) -> int:
     """Remove cache files older than 24h. Returns count removed."""
-    cache_dir = resolve_cache_path("", profile).parent if profile and profile != "default" else CACHE_DIR
+    cache_dir = resolve_cache_path("", profile)
     removed = 0
     for p in cache_dir.glob("*.json"):
         try:

@@ -7,6 +7,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from rshelper.profile import resolve_config_path
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = MONITOR_DIR / "monitor.pid"
@@ -33,10 +34,12 @@ def _monitor_dir(profile: str | None = None) -> Path:
 
 def notify(title: str, message: str) -> None:
     """Fire macOS notification via osascript. No-op on failure."""
+    safe_msg = message.replace('"', '\\"')
+    safe_title = title.replace('"', '\\"')
     try:
         subprocess.run(
             ["osascript", "-e",
-             f'display notification "{message}" with title "{title}"'],
+             f'display notification "{safe_msg}" with title "{safe_title}"'],
             capture_output=True, timeout=5)
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         pass

@@ -1288,11 +1288,13 @@ def main() -> None:
             ok = delete_profile(args.name, force=args.force)
             if ok:
                 print(f"Profile '{args.name}' deleted.")
-            elif not args.force:
-                print(f"Profile '{args.name}' has data. Use --force to delete.", file=sys.stderr)
-                sys.exit(1)
             else:
-                print(f"Profile '{args.name}' not found.", file=sys.stderr)
+                # Check if it exists to give better error
+                profiles = list_profiles()
+                if args.name in profiles:
+                    print(f"Profile '{args.name}' has data. Use --force to delete.", file=sys.stderr)
+                else:
+                    print(f"Profile '{args.name}' not found.", file=sys.stderr)
                 sys.exit(1)
     elif args.command == "diff":
         diff_cmd(args)

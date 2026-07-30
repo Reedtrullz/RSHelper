@@ -3,12 +3,19 @@ import sys, os, json, tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+import rshelper.journal as jmod
+# Isolate tests: use temp directory instead of production trades.json
+_tmpdir = tempfile.TemporaryDirectory()
+_test_dir = Path(_tmpdir.name)
+jmod.TRADES_PATH = _test_dir / "trades.json"
+
 from rshelper.journal import (log_trade, delete_trade, list_trades, compute_pnl,
                                Trade, PnLSummary, TRADES_PATH)
 
 def _clean():
     if TRADES_PATH.exists():
         TRADES_PATH.unlink()
+    TRADES_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 def test_log_trade():
     _clean()
@@ -26,10 +33,17 @@ def test_log_trade():
 
 def test_log_trade_auto_increment():
     _clean()
-    t1 = log_trade(1, "A", 1, 100, 200)
-    t2 = log_trade(2, "B", 1, 100, 200)
+    # IDs are auto-generated, not passed in
+    t1 = log_trade(10, "A", 1, 100, 200)
+    t2 = log_trade(20, "B", 1, 100, 200)
+    t3 = log_trade(30, "C", 1, 100, 200)
     assert t1.id == 1
     assert t2.id == 2
+    assert t3.id == 3
+    # Delete t2, next ID should still be 4 (monotonic, no reuse)
+    delete_trade(2)
+    t4 = log_trade(40, "D", 1, 100, 200)
+    assert t4.id == 4
     print("  PASSED test_log_trade_auto_increment")
 
 def test_log_trade_zero_profit():

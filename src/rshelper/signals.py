@@ -54,18 +54,21 @@ def _cooldown_key(item_id: int, signal_type: str) -> str:
     return f"{item_id}:{signal_type}"
 
 
-def _is_cooling(item_id: int, signal_type: str, cooldown_sec: int) -> bool:
-    cooldowns = _load_cooldowns()
+def _is_cooling(item_id: int, signal_type: str, cooldown_sec: int,
+                  cooldowns: dict | None = None) -> bool:
+    if cooldowns is None:
+        cooldowns = _load_cooldowns()
     key = _cooldown_key(item_id, signal_type)
     last = cooldowns.get(key, 0)
     return (time.time() - last) < cooldown_sec
 
 
-def _set_cooldown(item_id: int, signal_type: str) -> None:
-    cooldowns = _load_cooldowns()
+def _set_cooldown(item_id: int, signal_type: str,
+                  cooldowns: dict | None = None) -> None:
+    if cooldowns is None:
+        cooldowns = _load_cooldowns()
     key = _cooldown_key(item_id, signal_type)
     cooldowns[key] = time.time()
-    _save_cooldowns(cooldowns)
 
 
 def detect_signals(
@@ -79,6 +82,7 @@ def detect_signals(
     Returns only new signals (not currently on cooldown).
     """
     signals: list[Signal] = []
+    cooldowns = _load_cooldowns()  # load once for entire scan
 
     for item in items:
         # Skip items without price data
@@ -97,37 +101,37 @@ def detect_signals(
         if avg_low > 0 and five_min_vol >= 100:
             drop = (item.sell_price - avg_low) / avg_low
             if drop <= -CRASH_THRESHOLD:
-                if not _is_cooling(item.id, "CRASH", cooldown_sec):
+                if not _is_cooling(item.id, "CRASH", cooldown_sec, cooldowns):
                     signals.append(Signal(
                         type="CRASH", item_id=item.id, name=item.name,
                         severity="HIGH", current_price=item.sell_price,
                         deviation=round(drop * 100, 1),
                         message=f"{item.name}: {drop*100:+.1f}% vs 5m avg (sell price)",
                     ))
-                    _set_cooldown(item.id, "CRASH")
+                    _set_cooldown(item.id, "CRASH", cooldowns)
             elif drop <= -DUMP_THRESHOLD:
-                if not _is_cooling(item.id, "DUMP", cooldown_sec):
+                if not _is_cooling(item.id, "DUMP", cooldown_sec, cooldowns):
                     signals.append(Signal(
                         type="DUMP", item_id=item.id, name=item.name,
                         severity="MEDIUM", current_price=item.sell_price,
                         deviation=round(drop * 100, 1),
                         message=f"{item.name}: {drop*100:+.1f}% vs 5m avg (sell price)",
                     ))
-                    _set_cooldown(item.id, "DUMP")
+                    _set_cooldown(item.id, "DUMP", cooldowns)
 
         # SURGE: 5m volume > 3x normal. Use items average volume as baseline.
         # Normal is proxied by the item's volume field (which IS the 5m volume from /5m).
         # SURGE triggers when current 5m vol > 3x the stored average.
         item_vol = item.volume if item.volume > 0 else 1
         if five_min_vol > item_vol * SURGE_MULTIPLIER:
-            if not _is_cooling(item.id, "SURGE", cooldown_sec):
+            if not _is_cooling(item.id, "SURGE", cooldown_sec, cooldowns):
                 signals.append(Signal(
                     type="SURGE", item_id=item.id, name=item.name,
                     severity="MEDIUM", current_price=item.buy_price,
                     deviation=round(five_min_vol / max(1, item_vol), 1),
                     message=f"{item.name}: {five_min_vol} volume (normal: ~{item_vol})",
                 ))
-                _set_cooldown(item.id, "SURGE")
+                _set_cooldown(item.id, "SURGE", cooldowns)
 
         # FLIP: spread > 5% of buy price, with sufficient volume
         if item.buy_price > 0:
@@ -140,14 +144,16 @@ def detect_signals(
                     sev = "MEDIUM"
                 else:
                     sev = "LOW"
-                if not _is_cooling(item.id, "FLIP", cooldown_sec):
+                if not _is_cooling(item.id, "FLIP", cooldown_sec, cooldowns):
                     signals.append(Signal(
                         type="FLIP", item_id=item.id, name=item.name,
                         severity=sev, current_price=item.buy_price,
                         deviation=round(spread_pct * 100, 1),
                         message=f"{item.name}: {spread_pct*100:.1f}% spread, RS={item.rs_score:.0f}",
                     ))
-                    _set_cooldown(item.id, "FLIP")
+                    _set_cooldown(item.id, "FLIP", cooldowns)
+
+    _save_cooldowns(cooldowns)  # save once after entire scan
 
     # Sort: HIGH severity first, then by type
     severity_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
