@@ -104,6 +104,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
     <option value="volume">Volume</option>
     <option value="buy_price">Buy Price</option>
     <option value="sell_price">Sell Price</option>
+    <option value="rs_score">RS Score</option>
   </select>
   <button id="btnDir" onclick="toggleDirection()" class="active">Desc</button>
   <span class="count" id="filterCount"></span>
@@ -194,7 +195,7 @@ function renderTable(items){
   const panel=document.getElementById('tablePanel');
   if(!items.length){panel.innerHTML='<div class="loading">No items match</div>';return}
   let h='<table><thead><tr>';
-  h+='<th class="rank">#</th><th>Item</th><th>Buy</th><th>Sell</th><th>Margin</th><th>Profit</th><th>GP/hr</th><th>Vol</th><th>Limit</th>';
+  h+='<th class="rank">#</th><th>Item</th><th>Buy</th><th>Sell</th><th>Margin</th><th>Profit</th><th>RS</th><th>GP/hr</th><th>Vol</th><th>Limit</th>';
   h+='</tr></thead><tbody>';
   items.forEach((item,i)=>{
     const mp=marginPct(item);
@@ -207,6 +208,7 @@ function renderTable(items){
     h+='<td>'+format(item.sell_price||0)+'</td>';
     h+='<td class="margin '+cls+'">'+mp.toFixed(1)+'%</td>';
     h+='<td>'+format(item.profit||0)+'</td>';
+    h+='<td>'+(item.rs_score||0).toFixed(0)+'</td>';
     h+='<td>'+format(item.gp_per_hour||0)+'</td>';
     h+='<td>'+format(item.volume||0)+'</td>';
     h+='<td>'+format(item.buy_limit||0)+'</td>';
@@ -233,6 +235,7 @@ function selectItem(id){
     metric('Margin %','<span class="val '+cls+'">'+mp.toFixed(1)+'%</span>','')+
     metric('Profit',format(item.profit||0)+' gp',(item.profit||0)>0?'green':'')+
     metric('GP / Hour',format(item.gp_per_hour||0)+' gp','gold')+
+    metric('RS Score',(item.rs_score||0).toFixed(0),'gold')+
     metric('Volume (5m)',format(item.volume),'')+
     metric('Buy Limit',format(item.buy_limit),'')+
     metric('Members','<span class="val '+(item.members?'gold':'dim')+'">'+(item.members?'Yes':'No')+'</span>','')+

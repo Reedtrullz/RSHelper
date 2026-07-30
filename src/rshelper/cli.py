@@ -194,9 +194,9 @@ def alch_scan(args: argparse.Namespace) -> None:
     print(f"  {len(results)} profitable alchs", file=sys.stderr)
     if args.name:
         results = _filter_by_name(results, args.name)
-        print(f"  {len(results)} after --name filter\n")
+        print(f"  {len(results)} after --name filter", file=sys.stderr)
     else:
-        print()
+        print(file=sys.stderr)
 
     if args.csv:
         fields = ["rank", "name", "buy_price", "alch_value", "profit", "gp_per_hour", "sell_price", "volume", "buy_limit"]
@@ -256,12 +256,12 @@ def flip_scan(args: argparse.Namespace) -> None:
         min_volume=args.min_volume,
         min_margin=args.min_margin,
     )
-    print(f"  {len(results)} profitable flips ({direction} mode)")
+    print(f"  {len(results)} profitable flips ({direction} mode)", file=sys.stderr)
     if args.name:
         results = _filter_by_name(results, args.name)
-        print(f"  {len(results)} after --name filter\n")
+        print(f"  {len(results)} after --name filter", file=sys.stderr)
     else:
-        print()
+        print(file=sys.stderr)
 
     if args.csv:
         from dataclasses import asdict
@@ -377,7 +377,7 @@ def margin_check(args: argparse.Namespace) -> None:
     # Take top N candidates for timeseries analysis
     candidates = flips[:args.check]
     if not candidates:
-        print("\nNo flip candidates to check.")
+        print("\nNo flip candidates to check.", file=sys.stderr)
         return
 
     # Build lookup: item_id -> Item (includes names for display)
@@ -484,7 +484,7 @@ def item_info(args: argparse.Namespace) -> None:
     """Look up a single item by name or ID."""
     removed = cleanup_stale_cache(args.profile if hasattr(args, "profile") else None)
     if removed:
-        print(f"  Cleaned {removed} stale cache files")
+        print(f"  Cleaned {removed} stale cache files", file=sys.stderr)
 
     if args.json:
         print("Fetching data...", file=sys.stderr)

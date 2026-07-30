@@ -22,14 +22,14 @@ top = 50
 [flip]
 direction = "arbitrage"     # "arbitrage" or "traditional"
 members_only = false
-min_volume = 0
+min_volume = 10
 min_margin = 0
 top = 50
 
 [margin]
 direction = "arbitrage"
 members_only = false
-min_volume = 0
+min_volume = 10
 min_margin = 0
 check = 20
 top = 20
@@ -48,7 +48,7 @@ class AlchConfig:
 class FlipConfig:
     direction: str = "arbitrage"
     members_only: bool = False
-    min_volume: int = 0
+    min_volume: int = 10
     min_margin: int = 0
     top: int = 50
 
@@ -57,7 +57,7 @@ class FlipConfig:
 class MarginConfig:
     direction: str = "arbitrage"
     members_only: bool = False
-    min_volume: int = 0
+    min_volume: int = 10
     min_margin: int = 0
     check: int = 20
     top: int = 20
