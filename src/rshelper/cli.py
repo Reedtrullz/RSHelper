@@ -489,7 +489,7 @@ def item_info(args: argparse.Namespace) -> None:
     if args.json:
         print("Fetching data...", file=sys.stderr)
     else:
-        print("Fetching data...")
+        print("Fetching data...", file=sys.stderr)
     mapping = fetch_mapping(args.profile if hasattr(args, "profile") else None)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
@@ -580,6 +580,25 @@ def item_info(args: argparse.Namespace) -> None:
         if flip_profit <= 0:
             flip_line += " (not profitable)"
         print(flip_line)
+
+
+    # Tax curve: show profit at different sell prices
+    if getattr(args, "tax_curve", False) and buy_price > 0:
+        if not args.json:
+            print(f"\n  Tax curve (buy at {buy_price:,} gp):")
+            print(f"  {"Sell Price":>12}  {"Tax":>10}  {"Profit":>10}  {"ROI":>6}")
+            print(f"  " + "-" * 45)
+            tax_cap = 5_000_000
+            steps = [1.00, 1.01, 1.02, 1.03, 1.05, 1.07, 1.10, 1.15, 1.20, 1.30, 1.50]
+            for mult in steps:
+                sp = int(buy_price * mult)
+                tax = min(tax_cap, max(1, int(sp * 0.02)))
+                profit = sp - buy_price - tax
+                roi = profit / buy_price * 100 if buy_price > 0 else 0
+                cap_mark = " *" if tax == tax_cap else ""
+                print(f"  {sp:>12,}  {tax:>10,}  {profit:>+10,}  {roi:>5.1f}%{cap_mark}")
+            if args.json:
+                out["tax_curve"] = [{"sell_price": int(buy_price * m), "tax": min(tax_cap, max(1, int(int(buy_price * m) * 0.02))), "profit": int(buy_price * m) - buy_price - min(tax_cap, max(1, int(int(buy_price * m) * 0.02)))} for m in steps]
 
     # Timeseries if requested
     if args.timeseries:
@@ -959,6 +978,7 @@ def main() -> None:
         description="RSHelper — OSRS Grand Exchange profit scanner",
     )
     parser.add_argument("--profile", type=str, default=None, help="Profile to use for this command")
+    parser.add_argument("--quiet", action="store_true", help="Suppress status output (cron-friendly)")
     sub = parser.add_subparsers(dest="command")
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
@@ -1012,8 +1032,9 @@ def main() -> None:
     info.add_argument("item", help="Item name or ID")
     info.add_argument("--timeseries", action="store_true",
                        help="Fetch and analyze timeseries history")
-    info.add_argument("--json", action="store_true",
-                       help="Output JSON instead of text")
+    info.add_argument("--json", action="store_true", help="Output JSON instead of text")
+    info.add_argument("--tax-curve", action="store_true",
+                       help="Show profit curve at different sell prices")
 
 
     # Monitor subcommand
@@ -1144,7 +1165,10 @@ def main() -> None:
     margin.add_argument("--save-snapshot", action="store_true",
                          help="Save results for later diff/trend comparison")
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+    if args.quiet:
+        import os
+        sys.stderr = open(os.devnull, "w")
     if args.command == "item-info":
         item_info(args)
     elif args.command == "monitor":
