@@ -153,6 +153,25 @@
             mode: '0644'
           tags: [deploy]
 
+        - name: Check for tracked state directory
+          ansible.builtin.stat:
+            path: "{{ playbook_dir }}/../data/state"
+          register: tracked_state
+          delegate_to: localhost
+          become: false
+          tags: [deploy]
+
+        - name: Seed RSHelper state volume from tracked state
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../data/state/"
+            dest: "{{ app_dir }}/data/.config/rshelper/"
+            owner: '1000'
+            group: '1000'
+            mode: preserve
+            directory_mode: '0755'
+          when: tracked_state.stat.exists | bool
+          tags: [deploy]
+
         - name: Start RSHelper with Docker Compose
           community.docker.docker_compose_v2:
             project_src: "{{ app_dir }}"

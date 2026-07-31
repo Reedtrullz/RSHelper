@@ -42,6 +42,23 @@ gh run list --commit "$(git rev-parse origin/main)" --limit 5 --json databaseId,
 
 The live SHA — not this file — is the source of truth for what is deployed.
 
+## Syncing local trading state (trades, watchlist, snapshots)
+
+The VPS state volume (`/opt/apps/rshelper/data`, mounted as the container
+HOME) is empty until you seed it. The deploy playbook now copies the
+repo-tracked `data/state/` directory into the volume before the container
+starts, so the live Paper Trading history matches your local journal:
+
+```bash
+scripts/sync-state.sh          # copies ~/.config/rshelper state -> data/state
+git add data/state
+git commit -m "state: sync trading history"
+git push                       # CI deploys; playbook seeds the volume
+```
+
+The sync is additive and intentionally excludes `config.toml` and
+`active_profile`; see `data/state/README.md`.
+
 ## OSRS Wiki access from the VPS
 
 The OSRS Wiki API (Cloudflare-fronted) returns HTTP 403 for the VPS datacenter
