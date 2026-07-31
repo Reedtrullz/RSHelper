@@ -1,0 +1,53 @@
+name: Probe GE data sources from VPS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Curl candidate GE sources from the VPS host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Configure SSH key
+        shell: bash
+        env:
+          VPS_SSH_HOST_KEY: ${{ vars.VPS_SSH_HOST_KEY || secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_racknerd
+          chmod 600 ~/.ssh/id_rsa_racknerd
+          printf '%s\n' "${VPS_SSH_HOST_KEY}" > ~/.ssh/known_hosts
+
+      - name: Probe endpoints from VPS host
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 '
+            UA="RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)"
+            probe() {
+              code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 12 -A "$UA" -L "$1")
+              echo "$code $1"
+            }
+            probe "https://prices.runescape.wiki/api/v1/osrs/mapping"
+            probe "https://prices.runescape.wiki/api/v2/osrs/latest"
+            probe "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=4151"
+            probe "https://secure.runescape.com/m=itemdb_oldschool/api/graph/4151.json"
+            probe "https://services.runescape.com/m=itemdb_oldschool/api/catalogue/items.json?category=1&alpha=a&page=1"
+            probe "https://www.ge-tracker.com/api/items"
+            probe "https://api.weirdgloop.org/exchange/history/osrs/latest?id=4151"
+            probe "https://raw.githubusercontent.com/osrsbox/osrsbox-db/master/docs/items-json/4151.json"
+            probe "https://raw.githubusercontent.com/osrsbox/osrsbox-db/master/docs/items-complete.json"
+            probe "https://07.gg/"
+            probe "https://grandexchange.com/"
+            probe "https://api.runelite.net/"
+            probe "https://oldschool.runescape.wiki/api.php?action=query&meta=siteinfo&format=json"
+            probe "https://osrsgetracker.com/"
+            probe "https://www.osrsbox.com/osrsbox-db/items-json/4151.json"
+          '
