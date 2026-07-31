@@ -53,7 +53,8 @@ PYTHONPATH=src .venv/bin/python -m rshelper flip-scan --top 20 --json | jq
 3. `trade pnl` reports realized profit, cost basis, ROI, tax, win rate,
    best/worst, and GP/hr. `trade pnl --by-item` shows the per-item breakdown
    so you can see which items to keep flipping.
-4. `dashboard` shows the flip table plus a Trades view with P&L.
+4. `dashboard` shows the flip table plus a Trades view with P&L and a
+   Progression view (cumulative P&L, win rate, tuning eras).
 
 GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
 29 May 2025 and is applied everywhere.
