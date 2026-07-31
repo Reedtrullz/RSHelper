@@ -84,6 +84,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:8px;color:var(--text-dim)}
+.chart-title{font-size:13px;font-weight:700;color:var(--gold);margin:20px 0 8px}
+.table-panel canvas{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
 </style>
 </head>
 <body>
@@ -108,6 +110,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
   </select>
   <button id="btnDir" onclick="toggleDirection()" class="active">Desc</button>
   <button id="btnTrades" onclick="toggleTrades()">Trades</button>
+  <button id="btnProgress" onclick="toggleProgress()">Progression</button>
+  <button id="btnPaper" onclick="togglePaper()" class="active">Paper</button>
   <span class="count" id="filterCount"></span>
 </div>
 <div class="main">
@@ -198,6 +202,145 @@ function toggleTrades(){
   document.getElementById('btnTrades').classList.toggle('active',showTrades);
   if(showTrades) renderTrades();
   else applyFilters();
+}
+
+let showProgress=false,paperOnly=true;
+function toggleProgress(){
+  showProgress=!showProgress;
+  document.getElementById('btnProgress').classList.toggle('active',showProgress);
+  if(showProgress) renderProgress();
+  else{selectedId=null;applyFilters()}
+}
+function togglePaper(){
+  paperOnly=!paperOnly;
+  document.getElementById('btnPaper').classList.toggle('active',paperOnly);
+  if(showProgress) renderProgress();
+}
+async function renderProgress(){
+  const panel=document.getElementById('tablePanel');
+  const detail=document.getElementById('detailPanel');
+  panel.innerHTML='<div class="loading"><span class="spinner"></span>Loading progression...</div>';
+  try{
+    const r=await fetch('/api/history?paper='+(paperOnly?1:0));
+    if(!r.ok)throw new Error('history API failed');
+    const h=await r.json();
+    const s=h.summary||{};
+    detail.innerHTML='<div class="item-name" style="margin-bottom:12px">Progression</div>'+
+      '<div class="metric-grid">'+
+      metric('Total P&L',format(s.total_profit||0)+' gp',(s.total_profit||0)>0?'green':'red')+
+      metric('Win Rate',(s.win_rate||0).toFixed(1)+'%','gold')+
+      metric('ROI',(s.roi_pct||0).toFixed(2)+'%',(s.roi_pct||0)>0?'green':'')+
+      metric('Trades',format(s.trade_count||0),'')+
+      metric('Items',format(s.items_traded||0),'')+
+      metric('Active Days',format(s.active_days||0),'')+
+      '</div>';
+    const buckets=h.buckets||[],eras=h.eras||[],items=h.items||[];
+    let html='';
+    if(buckets.length<2){
+      html+='<div class="loading">Not enough days yet — log paper trades across a few days and tune config.toml between them.</div>';
+    }else{
+      html+='<h3 class="chart-title">Cumulative P&L with tuning changes</h3><canvas id="cumChart" height="220"></canvas>';
+      html+='<h3 class="chart-title">Daily trades and win rate</h3><canvas id="dailyChart" height="220"></canvas>';
+    }
+    if(eras.length){
+      html+='<h3 class="chart-title">Tuning eras</h3><table><thead><tr><th>Start</th><th>End</th><th>Changed</th><th>Trades</th><th>Profit</th><th>Win%</th><th>ROI%</th><th>/day</th></tr></thead><tbody>';
+      let prev=null;
+      eras.forEach(e=>{
+        const c=e.config||{};
+        const changed=prev?Object.keys(c).filter(k=>JSON.stringify(c[k])!==JSON.stringify(prev[k])).join(', ')||'(none)':'(initial)';
+        prev=c;
+        html+='<tr><td>'+escHtml(e.start)+'</td><td>'+escHtml(e.end)+'</td><td class="name">'+escHtml(changed)+'</td>'+
+          '<td>'+format(e.trade_count||0)+'</td><td class="margin '+(e.profit>0?'pos':e.profit<0?'neg':'neutral')+'">'+format(e.profit||0)+'</td>'+
+          '<td>'+(e.win_rate==null?'-':e.win_rate.toFixed(1))+'</td><td>'+(e.roi_pct==null?'-':e.roi_pct.toFixed(2))+'</td><td>'+(e.trades_per_day||0)+'</td></tr>';
+      });
+      html+='</tbody></table>';
+    }
+    if(items.length){
+      html+='<h3 class="chart-title">Per-item P&L</h3><table><thead><tr><th>Item</th><th>Trades</th><th>Qty</th><th>Cost</th><th>Profit</th><th>ROI%</th><th>Win%</th></tr></thead><tbody>';
+      items.forEach(i=>{
+        html+='<tr><td class="name">'+escHtml(i.name)+'</td><td>'+format(i.trade_count)+'</td><td>'+format(i.qty)+'</td>'+
+          '<td>'+format(i.cost_basis)+'</td><td class="margin '+(i.profit>0?'pos':i.profit<0?'neg':'neutral')+'">'+format(i.profit)+'</td>'+
+          '<td>'+i.roi_pct.toFixed(2)+'</td><td>'+i.win_rate.toFixed(1)+'</td></tr>';
+      });
+      html+='</tbody></table>';
+    }
+    panel.innerHTML=html;
+    if(buckets.length>=2){
+      drawCumulative(document.getElementById('cumChart'),buckets);
+      drawDaily(document.getElementById('dailyChart'),buckets);
+    }
+  }catch(e){
+    panel.innerHTML='<div class="loading">Error loading progression: '+escHtml(e.message)+'</div>';
+  }
+}
+function drawCumulative(cv,buckets){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=220;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={l:64,r:12,t:14,b:24};
+  const vals=buckets.map(b=>b.cumulative_profit||0);
+  const lo=Math.min(0,...vals),hi=Math.max(0,...vals),span=Math.max(hi-lo,1);
+  const x=i=>pad.l+(w-pad.l-pad.r)*i/(buckets.length-1);
+  const y=v=>pad.t+(h-pad.t-pad.b)*(hi-v)/span;
+  ctx.strokeStyle='#1e293b';ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';
+  for(let g=0;g<=4;g++){
+    const v=lo+span*g/4,gy=y(v);
+    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(w-pad.r,gy);ctx.stroke();
+    ctx.fillText(Math.round(v).toLocaleString(),4,gy+3);
+  }
+  let prevChanged=null;
+  buckets.forEach((b,i)=>{
+    if(b.config_changed){
+      const cx=x(i);
+      ctx.strokeStyle='#c9a84c';ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(cx,pad.t);ctx.lineTo(cx,h-pad.b);ctx.stroke();
+      ctx.setLineDash([]);
+      if(prevChanged!=null){
+        ctx.fillStyle='rgba(201,168,76,.06)';
+        ctx.fillRect(x(prevChanged),pad.t,x(i)-x(prevChanged),h-pad.t-pad.b);
+      }
+      prevChanged=i;
+    }
+  });
+  ctx.strokeStyle='#22c55e';ctx.lineWidth=2;ctx.beginPath();
+  buckets.forEach((b,i)=>{
+    const px=x(i),py=y(b.cumulative_profit||0);
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+  });
+  ctx.stroke();ctx.lineWidth=1;
+  ctx.fillStyle='#e2e8f0';
+  buckets.forEach((b,i)=>{
+    ctx.fillText(b.date.slice(5),x(i)-12,h-8);
+  });
+}
+function drawDaily(cv,buckets){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=220;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={l:64,r:12,t:14,b:24};
+  const maxTrades=Math.max(1,...buckets.map(b=>b.trade_count||0));
+  const x=i=>pad.l+(w-pad.l-pad.r)*(i+0.5)/buckets.length;
+  const bw=(w-pad.l-pad.r)/buckets.length*0.6;
+  const by=v=>pad.t+(h-pad.t-pad.b)*(maxTrades-v)/maxTrades;
+  const y2=v=>pad.t+(h-pad.t-pad.b)*(100-(v==null?0:v))/100;
+  ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';
+  for(let g=0;g<=4;g++){
+    const gy=by(maxTrades*g/4);
+    ctx.strokeStyle='#1e293b';ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(w-pad.r,gy);ctx.stroke();
+    ctx.fillText(Math.round(maxTrades*g/4),4,gy+3);
+  }
+  buckets.forEach((b,i)=>{
+    ctx.fillStyle=b.config_changed?'#c9a84c':'#1a2332';
+    ctx.fillRect(x(i)-bw/2,by(b.trade_count||0),bw,h-pad.b-by(b.trade_count||0));
+    ctx.fillStyle='#94a3b8';ctx.fillText(b.date.slice(5),x(i)-12,h-8);
+  });
+  ctx.strokeStyle='#60a5fa';ctx.lineWidth=2;ctx.beginPath();
+  buckets.forEach((b,i)=>{
+    const px=x(i),py=y2(b.win_rate);
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+  });
+  ctx.stroke();ctx.lineWidth=1;
+  ctx.fillStyle='#60a5fa';ctx.fillText('win %',w-46,pad.t+4);
 }
 
 async function renderTrades(){

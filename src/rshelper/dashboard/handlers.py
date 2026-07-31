@@ -54,6 +54,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_trades()
             elif path == "/api/pnl":
                 self._serve_pnl()
+            elif path == "/api/history":
+                self._serve_history()
             else:
                 self.send_error(404)
 
@@ -132,6 +134,17 @@ def make_handler(scanner, scan_items: Callable[[], list],
             if pnl.worst_trade:
                 d["worst_trade"] = pnl.worst_trade.profit
             self._serve_json(d)
+
+        def _serve_history(self):
+            from urllib.parse import parse_qs
+            from rshelper.history import build_history
+            qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+            paper_only = qs.get("paper", ["1"])[0] != "0"
+            try:
+                self._serve_json(build_history(paper_only=paper_only))
+            except Exception as e:
+                print(f"[dashboard] history error: {e}", file=sys.stderr)
+                self.send_error(500, "History failed")
 
         def _handle_log_trade(self):
             try:

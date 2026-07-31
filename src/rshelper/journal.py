@@ -111,8 +111,8 @@ def delete_trade(trade_id: int, profile: str | None = None) -> bool:
 
 
 def list_trades(item_name: str = "", since: str = "", top: int = 0,
-                profile: str | None = None) -> list[Trade]:
-    """List trades, optionally filtered by item name substring or date."""
+                profile: str | None = None, note: str = "") -> list[Trade]:
+    """List trades, optionally filtered by item name, date, or note."""
     trades = _load(profile)
     result = [Trade(**t) for t in trades]
     if item_name:
@@ -120,15 +120,18 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
         result = [t for t in result if q in t.name.lower()]
     if since:
         result = [t for t in result if t.timestamp >= since]
+    if note:
+        result = [t for t in result if t.note == note]
     result.sort(key=lambda t: t.timestamp, reverse=True)
     if top > 0:
         result = result[:top]
     return result
 
 
-def compute_pnl(since: str = "", profile: str | None = None) -> PnLSummary:
+def compute_pnl(since: str = "", profile: str | None = None, note: str = "") -> PnLSummary:
     """Compute profit and loss summary, optionally since a date."""
-    trades_list = list_trades(since=since, profile=profile) if since else list_trades(profile=profile)
+    trades_list = (list_trades(since=since, profile=profile, note=note) if since
+                   else list_trades(profile=profile, note=note))
     if not trades_list:
         return PnLSummary()
 
@@ -179,9 +182,10 @@ class ItemPnL:
 
 
 def compute_pnl_by_item(since: str = "",
-                        profile: str | None = None) -> list[ItemPnL]:
+                        profile: str | None = None, note: str = "") -> list[ItemPnL]:
     """Per-item P&L breakdown, sorted by profit descending."""
-    trades_list = list_trades(since=since, profile=profile) if since else list_trades(profile=profile)
+    trades_list = (list_trades(since=since, profile=profile, note=note) if since
+                   else list_trades(profile=profile, note=note))
     rows: dict[int, ItemPnL] = {}
     wins: dict[int, int] = {}
     for t in trades_list:

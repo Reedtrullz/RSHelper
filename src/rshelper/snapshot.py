@@ -18,6 +18,7 @@ def _snapshot_dir(profile: str | None = None) -> Path:
 
 def save(scan_type: str, results: list[dict], profile: str | None = None) -> Path:
     """Save a snapshot for today. Returns the file path."""
+    from rshelper.tuning import params
     snap_dir = _snapshot_dir(profile)
     snap_dir.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
@@ -28,6 +29,7 @@ def save(scan_type: str, results: list[dict], profile: str | None = None) -> Pat
         "date": today,
         "saved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "count": len(results),
+        "config": params(profile),
         "items": results,
     }
 

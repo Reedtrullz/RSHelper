@@ -197,6 +197,20 @@ def test_pnl_by_item_breakdown():
     assert rows[0].item_id == 2  # Coal is the top item
     print("  PASSED test_pnl_by_item_breakdown")
 
+
+def test_pnl_note_filter():
+    _clean()
+    log_trade(1, "A", 1, 100, 200, "paper")
+    log_trade(2, "B", 1, 100, 200, "")
+    assert list_trades(note="paper")[0].name == "A"
+    assert len(list_trades(note="paper")) == 1
+    assert compute_pnl(note="paper").trade_count == 1
+    rows = compute_pnl_by_item(note="paper")
+    assert len(rows) == 1 and rows[0].name == "A"
+    assert compute_pnl().trade_count == 2
+    print("  PASSED test_pnl_note_filter")
+
+
 def test_cli_trade_log_parse():
     import subprocess
     _clean()
@@ -226,5 +240,6 @@ if __name__ == "__main__":
     test_pnl_gp_per_hour()
     test_pnl_cost_basis_and_roi()
     test_pnl_by_item_breakdown()
+    test_pnl_note_filter()
     test_cli_trade_log_parse()
     print("\nAll journal tests passed.")

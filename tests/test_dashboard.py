@@ -107,6 +107,70 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertIn("total_cost_basis", body)
         self.assertGreater(body["total_cost_basis"], 0)
 
+    def test_api_history_route(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.profile as pmod
+        import rshelper.snapshot as smod
+        import rshelper.journal as jmod
+        old = (jmod.TRADES_PATH, smod.SNAPSHOT_DIR, pmod.CONFIG_DIR,
+               pmod.ACTIVE_PROFILE_PATH)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            jmod.TRADES_PATH = tmp / "trades.json"
+            smod.SNAPSHOT_DIR = tmp / "snapshots"
+            pmod.CONFIG_DIR = tmp
+            pmod.ACTIVE_PROFILE_PATH = tmp / "active_profile"
+            try:
+                self.handler.path = "/api/history?paper=1"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                (jmod.TRADES_PATH, smod.SNAPSHOT_DIR, pmod.CONFIG_DIR,
+                 pmod.ACTIVE_PROFILE_PATH) = old
+        self.assertEqual(self.handler.response_code, 200)
+        for key in ("summary", "buckets", "eras", "items"):
+            self.assertIn(key, body)
+
+    def test_api_history_paper_default_on(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.profile as pmod
+        import rshelper.snapshot as smod
+        import rshelper.journal as jmod
+        old = (jmod.TRADES_PATH, smod.SNAPSHOT_DIR, pmod.CONFIG_DIR,
+               pmod.ACTIVE_PROFILE_PATH)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            jmod.TRADES_PATH = tmp / "trades.json"
+            smod.SNAPSHOT_DIR = tmp / "snapshots"
+            pmod.CONFIG_DIR = tmp
+            pmod.ACTIVE_PROFILE_PATH = tmp / "active_profile"
+            try:
+                jmod.log_trade(1, "Paper item", 1, 100, 200, "paper")
+                jmod.log_trade(2, "Manual item", 1, 100, 200, "")
+                self.handler.path = "/api/history"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+                self.assertEqual(body["summary"]["trade_count"], 1)
+                self.out = io.BytesIO()
+                self.handler.wfile = self.out
+                self.handler.response_code = None
+                self.handler.response_headers = []
+                self.handler.path = "/api/history?paper=0"
+                self.handler.do_GET()
+                body_all = json.loads(self._get_body())
+                self.assertEqual(body_all["summary"]["trade_count"], 2)
+            finally:
+                (jmod.TRADES_PATH, smod.SNAPSHOT_DIR, pmod.CONFIG_DIR,
+                 pmod.ACTIVE_PROFILE_PATH) = old
+
+    def test_progression_markup_present(self):
+        self.assertIn("Progression", INDEX_HTML)
+        self.assertIn("/api/history", INDEX_HTML)
+
     def test_api_scan_returns_json(self):
         self.handler.path = "/api/scan"
         self.handler.do_GET()

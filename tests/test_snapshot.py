@@ -39,6 +39,13 @@ class TestSnapshot(unittest.TestCase):
         self.assertEqual(data["count"], 3)
         self.assertEqual(data["date"], date.today().isoformat())
 
+    def test_save_embeds_config_fingerprint(self):
+        path = snapshot.save("flip", self._fake_results())
+        data = json.loads(path.read_text())
+        self.assertIn("config", data)
+        self.assertIn("flip", data["config"])
+        self.assertIn("min_volume", data["config"]["flip"])
+
     def test_load_most_recent(self):
         results = self._fake_results()
         snapshot.save("flip", results)

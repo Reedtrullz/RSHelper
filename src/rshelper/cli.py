@@ -11,7 +11,7 @@ from datetime import date
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
 from rshelper.config import load_config
-from rshelper import snapshot, watchlist
+from rshelper import snapshot, watchlist, tuning
 from rshelper.profile import resolve_config_path
 from rshelper import __version__
 
@@ -883,6 +883,7 @@ def _save_alch_snapshot(results, profile: str | None = None):
               "buy_limit": r.buy_limit}
              for r in results]
     path = snapshot.save("alch", items, profile)
+    tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
@@ -893,6 +894,7 @@ def _save_flip_snapshot(results, profile: str | None = None):
               "buy_limit": r.buy_limit}
              for r in results]
     path = snapshot.save("flip", items, profile)
+    tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
@@ -911,6 +913,7 @@ def _save_margin_snapshot(results, lookup, profile: str | None = None):
             "margin_volatility": round(a.margin_volatility, 4),
         })
     path = snapshot.save("margin", items, profile)
+    tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 

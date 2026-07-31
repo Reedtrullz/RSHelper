@@ -21,6 +21,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     # Initial fetch — seed the TTL cache
     _mapping, _latest, _vol_5m, items = _fetch_bootstrap()
 
+    from rshelper.tuning import record_if_changed
+    record_if_changed()
+
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     # Add configurable --refresh N flag when needed.
     cache = {"items": items, "last_fetch": time.time()}
