@@ -45,7 +45,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
             elif path == "/api/scan":
                 self._serve_scan()
             elif path == "/api/health":
-                self._serve_json({"status": "ok"})
+                self._serve_health()
             elif path == "/api/monitor":
                 self._serve_monitor()
             elif path == "/api/signals":
@@ -88,6 +88,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except Exception as e:
                 print(f"[dashboard] scan error: {e}", file=sys.stderr)
                 self.send_error(500, "Scan failed")
+
+        def _serve_health(self):
+            import os
+            from rshelper import __version__
+            version = os.environ.get("VERSION") or __version__
+            self._serve_json({"status": "healthy", "version": version})
 
         def _serve_signals(self):
             if signal_detector is None:

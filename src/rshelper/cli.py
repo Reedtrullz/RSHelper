@@ -674,7 +674,7 @@ def item_info(args: argparse.Namespace) -> None:
     if getattr(args, "tax_curve", False) and buy_price > 0:
         if not args.json:
             print(f"\n  Tax curve (buy at {buy_price:,} gp):")
-            print(f"  {"Sell Price":>12}  {"Tax":>10}  {"Profit":>10}  {"ROI":>6}")
+            print(f"  {'Sell Price':>12}  {'Tax':>10}  {'Profit':>10}  {'ROI':>6}")
             print(f"  " + "-" * 45)
             tax_cap = 5_000_000
             steps = [1.00, 1.01, 1.02, 1.03, 1.05, 1.07, 1.10, 1.15, 1.20, 1.30, 1.50]
@@ -1327,9 +1327,9 @@ def main() -> None:
                 print("No monitor running.")
             else:
                 print(f"  Monitor: RUNNING")
-                print(f"  PID: {status["pid"]}")
-                print(f"  Running since: ~{max(1, status["uptime_sec"] // 60)} min ago")
-                print(f"  Last check: {status["last_check_iso"] or 'N/A'}")
+                print(f"  PID: {status['pid']}")
+                print(f"  Running since: ~{max(1, status['uptime_sec'] // 60)} min ago")
+                print(f"  Last check: {status['last_check_iso'] or 'N/A'}")
         else:
             from rshelper.monitor import run_monitor
             run_monitor(interval_sec=args.interval, no_notify=args.no_notify, profile=args.profile)

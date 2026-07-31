@@ -1,0 +1,213 @@
+name: CI / Deploy
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  IMAGE_NAME: ghcr.io/reedtrullz/rshelper
+
+concurrency:
+  group: rshelper-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Automatic checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Set up Python
+        uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create venv (stdlib only)
+        run: python -m venv .venv
+
+      - name: Run all test files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in tests/test_*.py; do
+            .venv/bin/python "$f"
+          done
+
+      - name: Verify stdout contract (--json pipes clean)
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src .venv/bin/python -m rshelper trade pnl --json 2>/dev/null \
+            | python -m json.tool > /dev/null
+          PYTHONPATH=src .venv/bin/python -m rshelper --version
+
+  build-and-push:
+    name: Build and push GHCR image
+    runs-on: ubuntu-24.04
+    needs: checks
+    timeout-minutes: 30
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      tag: ${{ steps.image.outputs.tag }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Set image tag
+        id: image
+        shell: bash
+        run: |
+          echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            VERSION=${{ github.sha }}
+          tags: |
+            ${{ steps.image.outputs.image }}:${{ steps.image.outputs.tag }}
+            ${{ steps.image.outputs.image }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS with Ansible
+    runs-on: ubuntu-24.04
+    needs:
+      - checks
+      - build-and-push
+    timeout-minutes: 20
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://rs.reidar.tech
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Install Ansible
+        shell: bash
+        run: |
+          python3 -m venv .ansible-venv
+          . .ansible-venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install ansible==12.3.0
+          ansible-galaxy collection install -r deploy/requirements.yml
+          echo "$PWD/.ansible-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Configure SSH key
+        shell: bash
+        env:
+          VPS_SSH_HOST_KEY: ${{ vars.VPS_SSH_HOST_KEY || secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_racknerd
+          chmod 600 ~/.ssh/id_rsa_racknerd
+
+          normalize_host_keys() {
+            sed -e 's/\r$//' -e '/^[[:space:]]*$/d' -e '/^[[:space:]]*#/d' | sort -u
+          }
+
+          expected_host_key="$(printf '%s\n' "${VPS_SSH_HOST_KEY:-}" | normalize_host_keys)"
+          if [[ -z "$expected_host_key" ]]; then
+            echo "VPS_SSH_HOST_KEY repository variable or secret must be set before production deploy." >&2
+            exit 1
+          fi
+
+          scanned_host_key="$(ssh-keyscan -T 10 -t ed25519 198.23.137.16 2>/dev/null | normalize_host_keys)"
+          if [[ -z "$scanned_host_key" ]]; then
+            echo "Unable to scan VPS SSH host key." >&2
+            exit 1
+          fi
+
+          if [[ "$scanned_host_key" != "$expected_host_key" ]]; then
+            echo "VPS SSH host key mismatch; refusing to update known_hosts." >&2
+            exit 1
+          fi
+
+          printf '%s\n' "$expected_host_key" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
+
+      - name: Deploy immutable image tag
+        shell: bash
+        env:
+          APP_VERSION: ${{ github.sha }}
+          ANSIBLE_CONFIG: deploy/ansible.cfg
+        run: |
+          ansible-playbook \
+            -i deploy/inventory/hosts.yml \
+            deploy/playbook.yml \
+            -e "docker_image=${{ needs.build-and-push.outputs.image }}:${{ needs.build-and-push.outputs.tag }}"
+
+      - name: Verify public deployment version
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import time
+          import urllib.request
+
+          expected = os.environ['GITHUB_SHA']
+          url = 'https://rs.reidar.tech/api/health'
+          last = None
+          for _ in range(12):
+              try:
+                  request = urllib.request.Request(
+                      url,
+                      headers={
+                          'Accept': 'application/json',
+                          'User-Agent': 'RSHelper CI deploy verifier',
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=10) as response:
+                      last = response.read().decode('utf-8')
+                      payload = json.loads(last)
+                      if payload.get('status') == 'healthy' and payload.get('version') == expected:
+                          print(json.dumps(payload, indent=2))
+                          sys.exit(0)
+              except Exception as exc:
+                  last = repr(exc)
+          print(f'Public health check did not expose expected version {expected}. Last response: {last}', file=sys.stderr)
+          sys.exit(1)
+          PY

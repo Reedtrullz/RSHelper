@@ -1,0 +1,362 @@
+---
+# Playbook: deploy-rshelper.yml
+# Description: Deploy RSHelper to the Racknerd VPS as a GHCR-backed Docker
+#   container and expose it at rs.reidar.tech through host Caddy.
+# Requirements:
+#   - Target host has Docker, Docker Compose v2, and Caddy installed.
+#   - Target host is logged into GHCR if the image is private.
+#   - community.docker collection installed on the control node.
+# Variables:
+#   - docker_image: immutable image tag to deploy
+#     (for example ghcr.io/reedtrullz/rshelper:<git-sha>)
+#   - app_version: full 40-character git SHA exposed by /api/health
+#     (default APP_VERSION env)
+#   - allow_mutable_tag: set true only for an intentional latest/manual
+#     recovery deploy
+#   - app_domain: public domain (inventory default rs.reidar.tech)
+# Usage:
+#   APP_VERSION=$(git rev-parse HEAD) ansible-playbook \
+#     -i deploy/inventory/hosts.yml deploy/playbook.yml \
+#     -e "docker_image=ghcr.io/reedtrullz/rshelper:$(git rev-parse --short=12 HEAD)"
+
+- name: Deploy RSHelper to VPS
+  hosts: rshelper
+  become: true
+  gather_facts: false
+
+  vars:
+    app_name: rshelper
+    container_name: rshelper
+    app_dir: /opt/apps/rshelper
+    docker_image: ghcr.io/reedtrullz/rshelper:latest
+    app_version: "{{ lookup('ansible.builtin.env', 'APP_VERSION') | default('latest', true) }}"
+    allow_mutable_tag: false
+    health_url: "http://{{ app_bind_address }}:{{ app_host_port }}/api/health"
+    public_health_url: "https://{{ app_domain }}/api/health"
+    caddy_marker_name: RSHelper
+    rollback_image: "{{ app_name }}:rollback"
+
+  pre_tasks:
+    - name: Validate deployment variables
+      ansible.builtin.assert:
+        that:
+          - app_domain is match('^[a-z0-9.-]+$')
+          - app_host_port | int > 1024
+          - app_host_port | int < 65536
+          - app_bind_address in ['127.0.0.1', 'localhost']
+          - docker_image is match('^ghcr.io/[a-z0-9._-]+/[a-z0-9._-]+:[A-Za-z0-9._-]+$')
+          - allow_mutable_tag | bool or docker_image is match('^ghcr.io/[a-z0-9._-]+/[a-z0-9._-]+:(?:staging-)?[0-9a-f]{7,40}$')
+          - allow_mutable_tag | bool or app_version is match('^[0-9a-f]{40}$')
+        fail_msg: >-
+          Invalid RSHelper deployment variables. Production deploys require
+          an immutable SHA-like GHCR image tag, and app_version must be the
+          full 40-character git SHA exposed by /api/health. Set
+          allow_mutable_tag=true only for an intentional mutable-tag deploy.
+        success_msg: RSHelper deployment variables validated.
+      tags: [always]
+
+    - name: Verify Docker is available on target host
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+      check_mode: false
+      tags: [always]
+
+    - name: Verify Docker Compose is available on target host
+      ansible.builtin.command: docker compose version
+      register: compose_version
+      changed_when: false
+      check_mode: false
+      tags: [always]
+
+    - name: Verify Caddy is available on target host
+      ansible.builtin.command: caddy version
+      register: caddy_version
+      changed_when: false
+      check_mode: false
+      tags: [always]
+
+  tasks:
+    - name: Ensure app directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: deploy
+        group: deploy
+        mode: '0755'
+      tags: [deploy]
+
+    - name: Capture current RSHelper container before deploy
+      community.docker.docker_container_info:
+        name: "{{ container_name }}"
+      register: current_container
+      check_mode: false
+      tags: [deploy, rollback]
+
+    - name: Remember previous deployment for rollback
+      ansible.builtin.set_fact:
+        previous_container_exists: "{{ current_container.exists | default(false) }}"
+        previous_image_id: "{{ current_container.container.Image | default('') }}"
+        previous_app_version: >-
+          {{
+            (
+              current_container.container.Config.Env
+              | default([])
+              | select('match', '^VERSION=')
+              | list
+              | first
+              | default('VERSION=unknown')
+            )
+            | regex_replace('^VERSION=', '')
+            | default('unknown', true)
+          }}
+      tags: [deploy, rollback]
+
+    - name: Tag previous image for rollback
+      ansible.builtin.command:
+        argv:
+          - docker
+          - tag
+          - "{{ previous_image_id }}"
+          - "{{ rollback_image }}"
+      when:
+        - previous_container_exists | bool
+        - previous_image_id | length > 0
+      changed_when: true
+      check_mode: false
+      tags: [deploy, rollback]
+
+    - name: Deploy candidate image and verify exact public version
+      block:
+        - name: Pull requested GHCR image
+          community.docker.docker_image:
+            name: "{{ docker_image }}"
+            source: pull
+            force_source: true
+          tags: [deploy]
+
+        - name: Render production Compose file
+          ansible.builtin.template:
+            src: templates/compose.production.yml.j2
+            dest: "{{ app_dir }}/compose.production.yml"
+            owner: deploy
+            group: deploy
+            mode: '0644'
+          tags: [deploy]
+
+        - name: Start RSHelper with Docker Compose
+          community.docker.docker_compose_v2:
+            project_src: "{{ app_dir }}"
+            files:
+              - compose.production.yml
+            state: present
+            recreate: always
+            remove_orphans: true
+            wait: true
+            wait_timeout: 120
+          tags: [deploy]
+
+        - name: Wait for local RSHelper health endpoint
+          ansible.builtin.uri:
+            url: "{{ health_url }}"
+            return_content: true
+            status_code: 200
+            timeout: 5
+          register: local_health
+          until: >-
+            local_health.status == 200
+            and (local_health.json.status | default('')) == 'healthy'
+            and (local_health.json.version | default('')) == app_version
+          retries: 12
+          delay: 5
+          failed_when: false
+          tags: [verify]
+
+        - name: Fail if local health endpoint is not healthy
+          ansible.builtin.fail:
+            msg: "Local health check failed for {{ health_url }}: {{ local_health }}"
+          when: >-
+            local_health.status | default(0) != 200
+            or (local_health.json.status | default('')) != 'healthy'
+            or (local_health.json.version | default('')) != app_version
+          tags: [verify]
+
+        - name: Manage Caddy reverse proxy block
+          ansible.builtin.blockinfile:
+            path: /etc/caddy/Caddyfile
+            marker: "# {mark} ANSIBLE MANAGED - {{ caddy_marker_name }}"
+            block: |
+              {{ app_domain }} {
+                reverse_proxy {{ app_bind_address }}:{{ app_host_port }} {
+                  header_up X-Real-IP {remote_host}
+                  header_up X-Forwarded-For {remote_host}
+                }
+              }
+            backup: true
+            mode: '0644'
+            validate: caddy validate --config %s --adapter caddyfile
+          notify: Reload Caddy
+          tags: [caddy]
+
+        - name: Validate Caddy configuration
+          ansible.builtin.command: caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          changed_when: false
+          tags: [caddy, verify]
+
+        - name: Apply Caddy configuration before public verification
+          ansible.builtin.meta: flush_handlers
+          tags: [caddy]
+
+        - name: Verify public deployment version
+          ansible.builtin.uri:
+            url: "{{ public_health_url }}"
+            return_content: true
+            status_code: 200
+            timeout: 10
+          register: public_health
+          until: >-
+            public_health.status == 200
+            and (public_health.json.status | default('')) == 'healthy'
+            and (public_health.json.version | default('')) == app_version
+          retries: 12
+          delay: 5
+          failed_when: false
+          delegate_to: localhost
+          become: false
+          tags: [verify]
+
+        - name: Fail if public deployment version is not healthy
+          ansible.builtin.fail:
+            msg: "Public health check failed for {{ public_health_url }}: {{ public_health }}"
+          when: >-
+            public_health.status | default(0) != 200
+            or (public_health.json.status | default('')) != 'healthy'
+            or (public_health.json.version | default('')) != app_version
+          tags: [verify]
+
+        - name: Report successful deployment
+          ansible.builtin.debug:
+            msg:
+              - "RSHelper deployed at {{ public_health_url }}"
+              - "Container: {{ container_name }}"
+              - "Image: {{ docker_image }}"
+              - "Version: {{ app_version }}"
+          tags: [verify]
+
+      rescue:
+        - name: Fail when rollback image is unavailable
+          ansible.builtin.fail:
+            msg: "Deployment failed and no previous image was available for rollback: {{ ansible_failed_result | default({}) }}"
+          when: >-
+            not (previous_container_exists | bool)
+            or (previous_image_id | length == 0)
+          tags: [rollback]
+
+        - name: Report rollback start
+          ansible.builtin.debug:
+            msg:
+              - "Candidate deployment failed; restoring previous image {{ rollback_image }}."
+              - "Previous version: {{ previous_app_version }}"
+              - "Failure: {{ ansible_failed_result | default({}) }}"
+          tags: [rollback]
+
+        - name: Render rollback Compose file
+          ansible.builtin.template:
+            src: templates/compose.production.yml.j2
+            dest: "{{ app_dir }}/compose.production.yml"
+            owner: deploy
+            group: deploy
+            mode: '0644'
+          vars:
+            compose_image: "{{ rollback_image }}"
+            compose_app_version: "{{ previous_app_version }}"
+          tags: [rollback]
+
+        - name: Restore previous RSHelper container
+          community.docker.docker_compose_v2:
+            project_src: "{{ app_dir }}"
+            files:
+              - compose.production.yml
+            state: present
+            recreate: always
+            remove_orphans: true
+            wait: true
+            wait_timeout: 120
+          tags: [rollback]
+
+        - name: Wait for local rollback health endpoint
+          ansible.builtin.uri:
+            url: "{{ health_url }}"
+            return_content: true
+            status_code: 200
+            timeout: 5
+          register: rollback_local_health
+          until: >-
+            rollback_local_health.status == 200
+            and (rollback_local_health.json.status | default('')) == 'healthy'
+            and (
+              previous_app_version == 'unknown'
+              or (rollback_local_health.json.version | default('')) == previous_app_version
+            )
+          retries: 12
+          delay: 5
+          failed_when: false
+          tags: [rollback, verify]
+
+        - name: Fail if rollback local health endpoint is not healthy
+          ansible.builtin.fail:
+            msg: "Rollback local health check failed for {{ health_url }}: {{ rollback_local_health }}"
+          when: >-
+            rollback_local_health.status | default(0) != 200
+            or (rollback_local_health.json.status | default('')) != 'healthy'
+            or (
+              previous_app_version != 'unknown'
+              and (rollback_local_health.json.version | default('')) != previous_app_version
+            )
+          tags: [rollback, verify]
+
+        - name: Verify public deployment version after rollback
+          ansible.builtin.uri:
+            url: "{{ public_health_url }}"
+            return_content: true
+            status_code: 200
+            timeout: 10
+          register: rollback_public_health
+          until: >-
+            rollback_public_health.status == 200
+            and (rollback_public_health.json.status | default('')) == 'healthy'
+            and (
+              previous_app_version == 'unknown'
+              or (rollback_public_health.json.version | default('')) == previous_app_version
+            )
+          retries: 12
+          delay: 5
+          failed_when: false
+          delegate_to: localhost
+          become: false
+          tags: [rollback, verify]
+
+        - name: Fail if rollback public health endpoint is not healthy
+          ansible.builtin.fail:
+            msg: "Rollback public health check failed for {{ public_health_url }}: {{ rollback_public_health }}"
+          when: >-
+            rollback_public_health.status | default(0) != 200
+            or (rollback_public_health.json.status | default('')) != 'healthy'
+            or (
+              previous_app_version != 'unknown'
+              and (rollback_public_health.json.version | default('')) != previous_app_version
+            )
+          tags: [rollback, verify]
+
+        - name: Fail deployment after successful rollback
+          ansible.builtin.fail:
+            msg: >-
+              Candidate deployment failed and RSHelper was rolled back to
+              previous image {{ rollback_image }} with version {{ previous_app_version }}.
+          tags: [rollback]
+
+  handlers:
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded

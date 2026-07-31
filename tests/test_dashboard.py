@@ -86,7 +86,8 @@ class TestHandlerRouting(unittest.TestCase):
         self.handler.do_GET()
         self.assertEqual(self.handler.response_code, 200)
         body = json.loads(self._get_body())
-        self.assertEqual(body["status"], "ok")
+        self.assertEqual(body["status"], "healthy")
+        self.assertIn("version", body)
 
     def test_api_pnl_includes_roi(self):
         import tempfile

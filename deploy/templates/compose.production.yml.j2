@@ -1,0 +1,25 @@
+services:
+  web:
+    image: "{{ compose_image | default(docker_image) }}"
+    container_name: "{{ container_name }}"
+    restart: unless-stopped
+    ports:
+      - "{{ app_bind_address }}:{{ app_host_port }}:5555"
+    environment:
+      VERSION: "{{ compose_app_version | default(app_version) }}"
+    volumes:
+      - "{{ app_dir }}/data:/home/rshelper"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5555/api/health', timeout=5).status == 200 else 1)"
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

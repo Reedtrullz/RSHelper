@@ -1,0 +1,42 @@
+name: Privacy-safe monitoring
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-uptime:
+    name: Synthetic public uptime checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify health JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 10 --retry 2 --retry-delay 3 \
+            --header "Accept: application/json" \
+            --header "User-Agent: RSHelper synthetic uptime monitor" \
+            "https://rs.reidar.tech/api/health" \
+            | python3 -c '
+              import json, sys
+              health = json.load(sys.stdin)
+              print(json.dumps({k: health.get(k) for k in ("status", "version")}, indent=2))
+              if health.get("status") != "healthy" or not isinstance(health.get("version"), str):
+                  sys.exit(2)
+            '
+
+      - name: Check public endpoints only
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in "https://rs.reidar.tech/api/health" "https://rs.reidar.tech/"; do
+            echo "Checking ${url}"
+            curl -fsS --max-time 10 --retry 2 --retry-delay 3 \
+              --header "User-Agent: RSHelper synthetic uptime monitor" \
+              "${url}" >/dev/null
+          done
