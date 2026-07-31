@@ -13,7 +13,8 @@ Current version: `1.5.0` (`rshelper --version`). Latest handoff:
 - Zero external dependencies. Do not add PyPI packages; the OSRS Wiki API
   client uses `urllib` and the dashboard uses `http.server`.
 - Cache at `~/.cache/rshelper/` (0600, atomic writes). Config, watchlist,
-  trades, snapshots, cooldowns, monitor state at `~/.config/rshelper/`.
+  trades, snapshots, cooldowns, volume baselines, monitor state at
+  `~/.config/rshelper/`.
 - Run tests:
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done

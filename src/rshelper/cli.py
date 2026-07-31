@@ -415,7 +415,11 @@ def _trade_paper(args: argparse.Namespace) -> None:
     if args.qty > 0:
         qty = args.qty
     elif args.capital > 0 and buy_price > 0:
-        qty = min(buy_limit, max(1, args.capital // buy_price))
+        qty = min(buy_limit, args.capital // buy_price)
+        if qty <= 0:
+            print(f"Capital {args.capital:,} gp is below one unit of "
+                  f"{entry['name']} at {buy_price:,} gp.", file=sys.stderr)
+            sys.exit(1)
     else:
         qty = 1
 
@@ -1367,6 +1371,9 @@ def main() -> None:
                         break
             trade = log_trade(item_id, args.item, args.qty, args.buy_price,
                               args.sell_price, args.note, profile=profile)
+            if item_id == 0:
+                print(f"Warning: '{args.item}' not found in item mapping; "
+                      f"logged with item_id=0.", file=sys.stderr)
             print(f"Logged trade #{trade.id}: bought {trade.qty}x {trade.name} "
                   f"at {trade.buy_price:,} gp, sold at {trade.sell_price:,} gp "
                   f"— profit: {trade.profit:+,} gp (tax: {trade.tax_paid:,})")

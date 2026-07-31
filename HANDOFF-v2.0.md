@@ -147,6 +147,8 @@ column in the table/HTML so capital-heavy items are not misleading.
    renamed/unmatched item logs with `item_id = 0`.
 6. `detect_signals` DUMP/CRASH compare current sell price against the 5m
    average only; no 1h baseline. Known ceiling, documented in `signals.py`.
+   SURGE uses a persisted rolling EMA baseline (`volume_baseline.json`) so a
+   single snapshot has nothing to compare against until a second scan seeds it.
 
 ## Verification Gates
 

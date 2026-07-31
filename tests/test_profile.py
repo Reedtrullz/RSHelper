@@ -95,17 +95,26 @@ def test_profile_trade_isolation():
 
 def test_profile_cli_create_switch():
     import subprocess
+    import tempfile
     _clean()
-    r = subprocess.run([sys.executable, "-m", "rshelper", "profile", "create", "testcli"],
-                       capture_output=True, text=True,
-                       cwd=os.path.join(os.path.dirname(__file__), ".."),
-                       env={**os.environ, "PYTHONPATH": "src"})
-    assert r.returncode == 0
-    r = subprocess.run([sys.executable, "-m", "rshelper", "profile", "switch", "testcli"],
-                       capture_output=True, text=True,
-                       cwd=os.path.join(os.path.dirname(__file__), ".."),
-                       env={**os.environ, "PYTHONPATH": "src"})
-    assert r.returncode == 0
+    with tempfile.TemporaryDirectory() as tmp:
+        env = {**os.environ, "PYTHONPATH": "src", "HOME": tmp}
+        r = subprocess.run([sys.executable, "-m", "rshelper", "profile", "create", "testcli"],
+                           capture_output=True, text=True,
+                           cwd=os.path.join(os.path.dirname(__file__), ".."),
+                           env=env)
+        assert r.returncode == 0
+        r = subprocess.run([sys.executable, "-m", "rshelper", "profile", "switch", "testcli"],
+                           capture_output=True, text=True,
+                           cwd=os.path.join(os.path.dirname(__file__), ".."),
+                           env=env)
+        assert r.returncode == 0
+        r = subprocess.run([sys.executable, "-m", "rshelper", "profile", "list"],
+                           capture_output=True, text=True,
+                           cwd=os.path.join(os.path.dirname(__file__), ".."),
+                           env=env)
+        assert r.returncode == 0
+        assert "testcli" in r.stdout
     set_active_profile("default")
     delete_profile("testcli", force=True)
     print("  PASSED test_profile_cli_create_switch")
@@ -113,11 +122,14 @@ def test_profile_cli_create_switch():
 def test_global_profile_flag():
     """--profile flag is accepted by CLI."""
     import subprocess
-    r = subprocess.run([sys.executable, "-m", "rshelper", "--profile", "default", "flip-scan", "--top", "1"],
-                       capture_output=True, text=True,
-                       cwd=os.path.join(os.path.dirname(__file__), ".."),
-                       env={**os.environ, "PYTHONPATH": "src"})
-    assert r.returncode == 0
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        env = {**os.environ, "PYTHONPATH": "src", "HOME": tmp}
+        r = subprocess.run([sys.executable, "-m", "rshelper", "--profile", "default", "flip-scan", "--top", "1"],
+                           capture_output=True, text=True,
+                           cwd=os.path.join(os.path.dirname(__file__), ".."),
+                           env=env)
+        assert r.returncode == 0
     print("  PASSED test_global_profile_flag")
 
 def test_default_profile_backward_compat():

@@ -201,6 +201,32 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(t.buy_price, 140)  # bid
         self.assertEqual(t.sell_price, 150)  # offer
 
+    def test_trade_paper_insufficient_capital(self):
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import tempfile
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.journal as jmod
+        import rshelper.cli as cmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "1": {"high": 150, "low": 140}}):
+                        with self.assertRaises(SystemExit):
+                            cmod._trade_paper(Namespace(
+                                item="nature rune", qty=0, capital=100,
+                                note="", profile=None,
+                                flip_direction="arbitrage"))
+                self.assertEqual(jmod.list_trades(), [])
+            finally:
+                jmod.TRADES_PATH = original_path
+
     def test_trade_pnl_by_item_json(self):
         r = run("trade", "pnl", "--by-item", "--json")
         self.assertEqual(r.returncode, 0)

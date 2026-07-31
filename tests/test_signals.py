@@ -12,6 +12,11 @@ from rshelper.signals import (
     DUMP_THRESHOLD, CRASH_THRESHOLD, SURGE_MULTIPLIER,
 )
 
+import rshelper.signals as _s
+_baseline_state = {}
+_s._load_baselines = lambda: dict(_baseline_state)
+_s._save_baselines = lambda data: _baseline_state.update(data)
+
 
 
 # --- RS Score tests ---
@@ -103,13 +108,16 @@ def test_crash_detection():
 
 
 def test_surge_detection():
-    """5m volume >3x baseline -> SURGE signal."""
-    item = _make_item(item_id=50, volume=10)
+    """5m volume >3x rolling baseline -> SURGE signal on a later scan."""
+    item = _make_item(item_id=777, volume=100)
     items = [item]
-    vol_5m = {"50": _make_vol(high_vol=40, low_vol=40)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0)
+    detect_signals(items, {"777": _make_vol(high_vol=50, low_vol=50)},
+                   cooldown_sec=0)  # seeds baseline 100
+    signals = detect_signals(items, {"777": _make_vol(high_vol=200, low_vol=200)},
+                             cooldown_sec=0)  # 400 > 3x100
     surge_signals = [s for s in signals if s.type == "SURGE"]
     assert len(surge_signals) == 1
+    assert surge_signals[0].deviation >= 3.0
     print("  PASSED test_surge_detection")
 
 

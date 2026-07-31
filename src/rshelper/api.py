@@ -26,8 +26,8 @@ CACHE_MAX_AGE = {
 }
 STALE_MULTIPLIER = 3  # serve stale cache up to 3x max_age if API fails
 
-# Ensure cache dir exists at import time
-CACHE_DIR.mkdir(exist_ok=True)
+# Ensure cache dir exists at import time (parents for fresh HOMEs)
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _throttle() -> None:

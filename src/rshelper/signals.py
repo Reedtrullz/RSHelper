@@ -11,11 +11,13 @@ from rshelper.models import Item
 from rshelper.profile import resolve_config_path
 COOLDOWN_DIR = resolve_config_path("")
 COOLDOWN_PATH = resolve_config_path("signal_cooldowns.json")
+BASELINE_PATH = resolve_config_path("volume_baseline.json")
 
 # Thresholds
 DUMP_THRESHOLD = 0.10   # 10% below 5m average = DUMP
 CRASH_THRESHOLD = 0.20  # 20% below 5m average = CRASH
 SURGE_MULTIPLIER = 3.0  # 3x baseline volume = SURGE
+SURGE_VOLUME_MIN = 100  # ignore tiny-volume noise
 FLIP_SPREAD_MIN = 0.05  # 5% spread of buy price
 FLIP_VOLUME_MIN = 500   # minimum total volume for a FLIP signal
 STALE_MINUTES = 30      # data older than this = STALE
@@ -71,6 +73,35 @@ def _set_cooldown(item_id: int, signal_type: str,
     cooldowns[key] = time.time()
 
 
+def _load_baselines() -> dict[str, float]:
+    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        if BASELINE_PATH.exists():
+            return json.loads(BASELINE_PATH.read_text())
+    except (json.JSONDecodeError, OSError):
+        pass
+    return {}
+
+
+def _save_baselines(data: dict) -> None:
+    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = BASELINE_PATH.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data))
+    os.replace(tmp, BASELINE_PATH)
+
+
+def _update_baseline(baselines: dict, item_id: int, current: int) -> float:
+    """Rolling EMA baseline so a single snapshot has no 'normal' to compare."""
+    key = str(item_id)
+    prev = baselines.get(key)
+    if prev is None or prev <= 0:
+        baseline = float(current)
+    else:
+        baseline = 0.7 * prev + 0.3 * current
+    baselines[key] = baseline
+    return prev if (prev is not None and prev > 0) else 0.0
+
+
 def detect_signals(
     items: list[Item],
     volume_5m: dict[str, dict],
@@ -83,6 +114,7 @@ def detect_signals(
     """
     signals: list[Signal] = []
     cooldowns = _load_cooldowns()  # load once for entire scan
+    baselines = _load_baselines()
 
     for item in items:
         # Skip items without price data
@@ -119,17 +151,19 @@ def detect_signals(
                     ))
                     _set_cooldown(item.id, "DUMP", cooldowns)
 
-        # SURGE: 5m volume > 3x normal. Use items average volume as baseline.
-        # Normal is proxied by the item's volume field (which IS the 5m volume from /5m).
-        # SURGE triggers when current 5m vol > 3x the stored average.
-        item_vol = item.volume if item.volume > 0 else 1
-        if five_min_vol > item_vol * SURGE_MULTIPLIER:
-            if not _is_cooling(item.id, "SURGE", cooldown_sec, cooldowns):
+        # SURGE: 5m volume > 3x the rolling baseline (persisted across scans).
+        # A single snapshot has no 'normal', so the baseline seeds from the
+        # first observation and adapts via EMA; SURGE needs monitor-style
+        # polling history to be meaningful.
+        if five_min_vol >= SURGE_VOLUME_MIN:
+            prev = _update_baseline(baselines, item.id, five_min_vol)
+            surge_ok = prev > 0 and five_min_vol > prev * SURGE_MULTIPLIER
+            if surge_ok and not _is_cooling(item.id, "SURGE", cooldown_sec, cooldowns):
                 signals.append(Signal(
                     type="SURGE", item_id=item.id, name=item.name,
                     severity="MEDIUM", current_price=item.buy_price,
-                    deviation=round(five_min_vol / max(1, item_vol), 1),
-                    message=f"{item.name}: {five_min_vol} volume (normal: ~{item_vol})",
+                    deviation=round(five_min_vol / max(1.0, prev), 1),
+                    message=f"{item.name}: {five_min_vol} volume (normal: ~{prev:.0f})",
                 ))
                 _set_cooldown(item.id, "SURGE", cooldowns)
 
@@ -154,6 +188,7 @@ def detect_signals(
                     _set_cooldown(item.id, "FLIP", cooldowns)
 
     _save_cooldowns(cooldowns)  # save once after entire scan
+    _save_baselines(baselines)
 
     # Sort: HIGH severity first, then by type
     severity_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
