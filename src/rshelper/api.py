@@ -1,4 +1,5 @@
-"""OSRS Wiki Realtime Prices API client."""
+"""OSRS GE price clients: OSRS Wiki Realtime Prices API, with a GE Tracker
+fallback for datacenter IPs that the wiki's Cloudflare blocks (403)."""
 
 import concurrent.futures
 import json
@@ -15,6 +16,7 @@ from typing import Any
 from rshelper.profile import resolve_cache_path
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
+GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
 USER_AGENT = "RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)"
 _LAST_REQUEST = 0.0
 _THROTTLE_LOCK = threading.Lock()
@@ -23,6 +25,7 @@ CACHE_MAX_AGE = {
     "mapping": 86400,  # 24h — item metadata rarely changes
     "latest": 120,     # 2 min — prices update frequently
     "5m": 120,         # 2 min — volume data refreshes often
+    "ge_tracker": 300,  # 5 min — full GE Tracker dump; one fetch per cycle
 }
 STALE_MULTIPLIER = 3  # serve stale cache up to 3x max_age if API fails
 
@@ -45,14 +48,12 @@ MAX_RETRIES = 3
 RETRY_DELAY = 2.0  # seconds, doubles each retry
 
 
-def _get(path: str, retries: int = MAX_RETRIES) -> Any:
-    """GET a Wiki API endpoint with retry+backoff, return parsed JSON."""
+def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
+    """GET url with retry+backoff, return parsed JSON (None on failure)."""
     last_exc = None
     for attempt in range(retries + 1):
-        if attempt == 0:
-            _throttle()  # retries sleep RETRY_DELAY*2^n below, so no re-throttle
         req = urllib.request.Request(
-            f"{BASE_URL}/{path}",
+            url,
             headers={"User-Agent": USER_AGENT},
         )
         try:
@@ -61,22 +62,82 @@ def _get(path: str, retries: int = MAX_RETRIES) -> Any:
         except urllib.error.HTTPError as exc:
             if exc.code in (429, 503) and attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
-                print(f"  Retrying {path} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})")
+                print(f"  Retrying {url} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})")
                 time.sleep(delay)
                 last_exc = exc
                 continue
-            print(f"  Warning: HTTP {exc.code} fetching {path}: {exc.reason}")
+            print(f"  Warning: HTTP {exc.code} fetching {url}: {exc.reason}")
             return None
         except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
             if attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
-                print(f"  Retrying {path} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})")
+                print(f"  Retrying {url} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})")
                 time.sleep(delay)
                 last_exc = exc
                 continue
-            print(f"  Warning: failed to fetch {path}: {exc}")
+            print(f"  Warning: failed to fetch {url}: {exc}")
             return None
     return None
+
+
+def _get(path: str, retries: int = MAX_RETRIES) -> Any:
+    """GET a Wiki API endpoint with retry+backoff, return parsed JSON."""
+    _throttle()  # retries sleep RETRY_DELAY*2^n below, so no re-throttle
+    return _fetch_url(f"{BASE_URL}/{path}", retries)
+
+
+def _get_ge_tracker(profile: str | None = None) -> Any | None:
+    """Fetch the GE Tracker all-items dump (undocumented, no auth), cached."""
+    cached = _load_cache("ge_tracker", profile)
+    if cached is not None:
+        return cached
+    _throttle()
+    data = _fetch_url(GE_TRACKER_URL)
+    if data is not None:
+        _save_cache("ge_tracker", data, profile)
+        return data
+    return _load_stale_cache("ge_tracker", profile)
+
+
+def _ge_tracker_items(dump: Any) -> list[dict]:
+    items = dump.get("data", dump) if isinstance(dump, dict) else dump
+    return items if isinstance(items, list) else []
+
+
+def _mapping_from_ge_tracker(dump: Any) -> list[dict]:
+    """GE Tracker item rows -> wiki-shaped mapping entries."""
+    return [
+        {
+            "id": e["itemId"],
+            "name": e["name"],
+            "members": e["members"],
+            "limit": e["buyLimit"],
+            "highalch": e["highAlch"],
+            "lowalch": e["lowAlch"],
+        }
+        for e in _ge_tracker_items(dump)
+    ]
+
+
+def _latest_from_ge_tracker(dump: Any) -> dict[str, dict]:
+    """GE Tracker buying/selling -> wiki-shaped latest prices keyed by item ID."""
+    return {
+        str(e["itemId"]): {"high": e["buying"], "low": e["selling"]}
+        for e in _ge_tracker_items(dump)
+    }
+
+
+def _5m_from_ge_tracker(dump: Any) -> dict[str, dict]:
+    # ponytail: GE Tracker has no 5m trade volume; use its current order
+    # quantities as a relative volume proxy so scans have something to rank.
+    # Real 5m trade volume is wiki-only.
+    return {
+        str(e["itemId"]): {
+            "highPriceVolume": e["buyingQuantity"],
+            "lowPriceVolume": e["sellingQuantity"],
+        }
+        for e in _ge_tracker_items(dump)
+    }
 
 
 def _cache_path(name: str, profile: str | None = None) -> Path:
@@ -151,7 +212,11 @@ def cleanup_stale_cache(profile: str | None = None) -> int:
 
 
 def fetch_mapping(profile: str | None = None) -> list[dict] | None:
-    """Fetch item ID -> metadata (name, buy limit, alch value, members)."""
+    """Fetch item ID -> metadata (name, buy limit, alch value, members).
+
+    Wiki first; falls back to the GE Tracker dump when the wiki is
+    unreachable (e.g. Cloudflare 403 from datacenter IPs).
+    """
     cached = _load_cache("mapping", profile)
     if cached is not None:
         return cached
@@ -160,11 +225,17 @@ def fetch_mapping(profile: str | None = None) -> list[dict] | None:
         result = data.get("data", data) if isinstance(data, dict) else data
         _save_cache("mapping", result, profile)
         return result
+    dump = _get_ge_tracker(profile)
+    if dump is not None:
+        print("  Note: OSRS Wiki unavailable; using GE Tracker fallback.", file=sys.stderr)
+        result = _mapping_from_ge_tracker(dump)
+        _save_cache("mapping", result, profile)
+        return result
     return _load_stale_cache("mapping", profile)
 
 
 def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
-    """Fetch latest high/low prices keyed by item ID."""
+    """Fetch latest high/low prices keyed by item ID (wiki, GE Tracker fallback)."""
     cached = _load_cache("latest", profile)
     if cached is not None:
         return cached
@@ -173,17 +244,27 @@ def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
         result = data.get("data", data)
         _save_cache("latest", result, profile)
         return result
+    dump = _get_ge_tracker(profile)
+    if dump is not None:
+        result = _latest_from_ge_tracker(dump)
+        _save_cache("latest", result, profile)
+        return result
     return _load_stale_cache("latest", profile)
 
 
 def fetch_5m(profile: str | None = None) -> dict[str, dict] | None:
-    """Fetch 5-minute OHLC averages keyed by item ID."""
+    """Fetch 5-minute OHLC averages keyed by item ID (wiki, GE Tracker fallback)."""
     cached = _load_cache("5m", profile)
     if cached is not None:
         return cached
     data = _get("5m")
     if data is not None:
         result = data.get("data", data)
+        _save_cache("5m", result, profile)
+        return result
+    dump = _get_ge_tracker(profile)
+    if dump is not None:
+        result = _5m_from_ge_tracker(dump)
         _save_cache("5m", result, profile)
         return result
     return _load_stale_cache("5m", profile)

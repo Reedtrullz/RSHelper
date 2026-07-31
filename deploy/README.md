@@ -38,10 +38,12 @@ The live SHA — not this file — is the source of truth for what is deployed.
 
 The OSRS Wiki API (Cloudflare-fronted) returns HTTP 403 for the VPS datacenter
 IP (confirmed 2026-07-31 with both `curl` and `urllib` from the VPS host,
-independent of User-Agent). Live GE data cannot be fetched from the VPS, so
-the deployed dashboard starts with cached/empty item data and stays healthy
-(`server.py` deliberately survives the failed bootstrap fetch). Progression,
-history, and tuning views read local state and are unaffected.
+independent of User-Agent). The API client falls back to the GE Tracker
+all-items dump (`www.ge-tracker.com/api/items`, no auth, verified reachable
+from the VPS) for item metadata, live buy/sell prices, and a quantity-based
+volume proxy, so the deployed dashboard serves live item data instead of an
+empty list. Real 5m/1h trade-volume timeseries remain wiki-only; `server.py`
+still survives a total failure of both sources.
 
 To seed item data, copy a populated `~/.cache/rshelper` from a machine that
 can reach the wiki into the container HOME at
@@ -51,8 +53,8 @@ can reach the wiki into the container HOME at
 cd /opt/apps/rshelper && docker compose -f compose.production.yml restart
 ```
 
-The mapping cache is served stale for up to 72h; re-seed per deploy if live
-item scans are wanted.
+The mapping cache is served stale for up to 72h; the GE Tracker fallback
+makes seeding optional for live prices.
 
 ## One-time prerequisites
 
