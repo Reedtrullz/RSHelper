@@ -15,7 +15,7 @@ from typing import Any
 from rshelper.profile import resolve_cache_path
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
-USER_AGENT = "RSHelper/0.1 (rshelper@users.noreply.github.com)"
+USER_AGENT = "RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)"
 _LAST_REQUEST = 0.0
 _THROTTLE_LOCK = threading.Lock()
 CACHE_DIR = Path.home() / ".cache" / "rshelper"

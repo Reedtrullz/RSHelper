@@ -18,8 +18,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     Blocks until interrupted. Handles KeyboardInterrupt for graceful shutdown.
     Data re-fetches from the API every 120 seconds (ponytail TTL cache).
     """
-    # Initial fetch — seed the TTL cache
-    _mapping, _latest, _vol_5m, items = _fetch_bootstrap()
+    # Initial fetch — seed the TTL cache. A failed live fetch must not kill
+    # the dashboard: start with cached/empty data and retry on refresh.
+    try:
+        _mapping, _latest, _vol_5m, items = _fetch_bootstrap()
+    except SystemExit:
+        print("[dashboard] WARNING: initial OSRS Wiki fetch failed; starting with cached/empty data.",
+              file=sys.stderr)
+        items = []
 
     from rshelper.tuning import record_if_changed
     record_if_changed()
@@ -32,15 +38,21 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         now = time.time()
         if (now - cache["last_fetch"]) > 120:
             print("[dashboard] Re-fetching GE data...", file=sys.stderr)
-            _m, _l, _v, fresh = _fetch_bootstrap()
-            cache["items"] = fresh
+            try:
+                _m, _l, _v, fresh = _fetch_bootstrap()
+                cache["items"] = fresh
+            except SystemExit:
+                print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
             cache["last_fetch"] = now
         return list(cache["items"])
 
     scanner = FlipScanner(direction="arbitrage")
 
     def get_signals():
-        _m, _l, vol_data, fresh_items = _fetch_bootstrap()
+        try:
+            _m, _l, vol_data, fresh_items = _fetch_bootstrap()
+        except SystemExit:
+            return []
         flip_scanner = FlipScanner(direction="arbitrage")
         flips = flip_scanner.scan(fresh_items)
         return detect_signals(flips, vol_data)
