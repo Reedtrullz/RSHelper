@@ -178,6 +178,13 @@ jobs:
             deploy/playbook.yml \
             -e "docker_image=${{ needs.build-and-push.outputs.image }}:${{ needs.build-and-push.outputs.tag }}"
 
+      - name: Dump container logs (temporary diagnostic)
+        if: always()
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+            'docker logs --tail 40 rshelper 2>&1; echo "---INSPECT---"; docker inspect rshelper --format "exit={{.State.ExitCode}} status={{.State.Status}} err={{.State.Error}}"; ls -lan /opt/apps/rshelper/data'
+
       - name: Verify public deployment version
         shell: bash
         run: |
