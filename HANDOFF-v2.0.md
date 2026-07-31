@@ -52,8 +52,9 @@ rshelper monitor       [--interval N] [--no-notify] [--stop] [--status]
 rshelper watch         add <item> [--alert-above N] [--alert-below N] | remove <id>
                        | list | check [--flip-direction ...] [-v]
 rshelper trade         log <item> <qty> <buy> <sell> [--note] | paper <item>
-                       [qty] [--capital N] [--note] | list [--item] [--since]
-                       [--top] [--json|--csv] | pnl [--since] [--json] | delete <id>
+                       [qty] [--capital N] [--flip-direction ...] [--note]
+                       | list [--item] [--since] [--top] [--json|--csv]
+                       | pnl [--since] [--by-item] [--json] | delete <id>
 rshelper profile       create|switch|list|delete <name> [--force]
 rshelper diff          [alch|flip|margin] [--date YYYY-MM-DD]
 rshelper snapshots     [alch|flip|margin]
@@ -128,6 +129,10 @@ column in the table/HTML so capital-heavy items are not misleading.
   `dashboard` subcommand wired into the real CLI.
 - hardening (`cf153a2`): last stdout leaks to stderr, `_roi_pct()` helper,
   test hygiene (temp dirs, dynamic version assertion), Opus review triage.
+- paper trading round (`747d8b1`): ROI/cost basis in P&L, `pnl --by-item`
+  per-item breakdown, `trade paper --flip-direction` (traditional mode),
+  and `--profile` threaded through trade log/list/delete (was split-brain:
+  pnl read the alt ledger while log/list wrote the default).
 
 ## Remaining Sharp Edges
 

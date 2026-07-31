@@ -26,7 +26,8 @@ rshelper item-info <item>   # prices, tax curve, history, prediction, wiki
 rshelper signals            # DUMP / CRASH / SURGE / FLIP / STALE detection
 rshelper monitor            # daemon polling with notifications (--stop/--status)
 rshelper watch              # watchlist with margin alert thresholds
-rshelper trade              # log / paper / list / pnl / delete
+rshelper trade              # log / paper [--flip-direction] / list /
+                            # pnl [--by-item] / delete
 rshelper profile            # multi-account isolated config, cache, journal
 rshelper diff               # compare scans across days (--save-snapshot first)
 rshelper snapshots          # list saved scan snapshots
@@ -47,8 +48,11 @@ PYTHONPATH=src .venv/bin/python -m rshelper flip-scan --top 20 --json | jq
 
 1. `flip-scan --capital 500000` shows ROI% and buy quantity per flip.
 2. `trade paper "Nature rune" --capital 100000` logs a trade at live GE
-   prices (instant buy, estimated sell) with a `paper` note.
-3. `trade pnl` reports realized profit, tax, win rate, best/worst, GP/hr.
+   prices (instant round-trip) with a `paper` note; add
+   `--flip-direction traditional` to model buy-at-bid/sell-at-offer.
+3. `trade pnl` reports realized profit, cost basis, ROI, tax, win rate,
+   best/worst, and GP/hr. `trade pnl --by-item` shows the per-item breakdown
+   so you can see which items to keep flipping.
 4. `dashboard` shows the flip table plus a Trades view with P&L.
 
 GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
