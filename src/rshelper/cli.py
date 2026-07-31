@@ -13,6 +13,7 @@ from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_item
 from rshelper.config import load_config
 from rshelper import snapshot, watchlist
 from rshelper.profile import resolve_config_path
+from rshelper import __version__
 
 
 def _fetch_bootstrap(profile: str | None = None):
@@ -66,16 +67,18 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
     name_width = max(len(r.name) for r in rows)
     name_width = min(name_width, 36)
     name_width = max(name_width, 8)
+    def _roi(item) -> float:
+        return item.profit / item.buy_price * 100 if item.buy_price > 0 else 0.0
     has_qty = capital > 0
     if has_qty:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Qty':>6} {'Limit':>6}"
+            f"{'Margin':>7} {'ROI':>5} {'RS':>4} {'GP/hr':>9} {'Qty':>6} {'Limit':>6}"
         )
     else:
         header = (
             f"{'Rank':<4} {'Item':<{name_width}} {'Buy':>9} {'Sell':>9} "
-            f"{'Margin':>7} {'RS':>4} {'GP/hr':>9} {'Limit':>7}"
+            f"{'Margin':>7} {'ROI':>5} {'RS':>4} {'GP/hr':>9} {'Limit':>7}"
         )
     sep = "-" * len(header)
     lines = [header, sep]
@@ -85,12 +88,14 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
             qty = trade_size(item, capital)
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {item.rs_score:>4.0f} {item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
+                f"{item.profit:>7,} {_roi(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
             )
         else:
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {item.rs_score:>4.0f} {item.gp_per_hour:>9,} {item.buy_limit:>7,}"
+                f"{item.profit:>7,} {_roi(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
 def _html_output(rows: list[dict], columns: list[str], title: str) -> str:
@@ -199,9 +204,18 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(file=sys.stderr)
 
     if args.csv:
-        fields = ["rank", "name", "buy_price", "alch_value", "profit", "gp_per_hour", "sell_price", "volume", "buy_limit"]
-        fm = {f: (lambda r, f=f: getattr(r, f, "")) for f in fields if f != "rank"}
-        print(_csv_output(results, args.top, fields, fm))
+        from dataclasses import asdict
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=[
+            "rank", "name", "buy_price", "alch_value", "profit", "gp_per_hour",
+            "sell_price", "volume", "buy_limit",
+        ], extrasaction='ignore')
+        writer.writeheader()
+        for i, item in enumerate(results[:args.top], 1):
+            row = asdict(item)
+            row["rank"] = i
+            writer.writerow(row)
+        print(out.getvalue())
     elif args.json:
         print(json.dumps([
             {
@@ -267,13 +281,15 @@ def flip_scan(args: argparse.Namespace) -> None:
         from dataclasses import asdict
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
-            "rank", "name", "buy_price", "sell_price", "profit", "gp_per_hour",
-            "volume", "buy_limit",
+            "rank", "name", "buy_price", "sell_price", "profit", "roi",
+            "capital_per_unit", "gp_per_hour", "volume", "buy_limit",
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
             row["rank"] = i
+            row["roi"] = round(item.profit / item.buy_price * 100, 2) if item.buy_price > 0 else 0.0
+            row["capital_per_unit"] = item.buy_price
             writer.writerow(row)
         print(out.getvalue())
     elif args.json:
@@ -284,6 +300,8 @@ def flip_scan(args: argparse.Namespace) -> None:
                 "buy_price": r.buy_price,
                 "sell_price": r.sell_price,
                 "margin": r.profit,
+                "roi": round(r.profit / r.buy_price * 100, 2) if r.buy_price > 0 else 0.0,
+                "capital_per_unit": r.buy_price,
                 "gp_per_hour": r.gp_per_hour,
                 "volume": r.volume,
                 "buy_limit": r.buy_limit,
@@ -292,9 +310,10 @@ def flip_scan(args: argparse.Namespace) -> None:
         ], indent=2))
     elif args.html:
         capital = getattr(args, 'capital', 0)
-        cols = ["Rank", "Item", "Buy", "Sell", "Margin", "RS", "GP/hr", "Limit"]
+        cols = ["Rank", "Item", "Buy", "Sell", "Margin", "ROI%", "RS", "GP/hr", "Limit"]
         rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
                  "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
+                 "ROI%": f"{r.profit / r.buy_price * 100:.1f}" if r.buy_price > 0 else "0.0",
                  "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
                 for i, r in enumerate(results[:args.top])]
         if capital:
@@ -353,6 +372,52 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
                 f"{a.avg_margin:>8,.0f} {a.window_hours:>5.0f}"
             )
     return "\n".join(lines)
+
+
+def _trade_paper(args: argparse.Namespace) -> None:
+    """Log a paper trade at live GE prices, sized from --capital or --qty."""
+    from rshelper.journal import log_trade
+    from rshelper.api import fetch_mapping, fetch_latest
+
+    profile = args.profile if hasattr(args, "profile") else None
+    mapping = fetch_mapping(profile) or []
+    q = args.item.lower()
+    entry = next((e for e in mapping if (e.get("name") or "").lower() == q), None)
+    if entry is None:
+        matches = [e for e in mapping if q in (e.get("name") or "").lower()]
+        if len(matches) == 1:
+            entry = matches[0]
+        elif len(matches) > 1:
+            print(f"Multiple matches for '{args.item}':", file=sys.stderr)
+            for e in matches[:20]:
+                print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
+            sys.exit(1)
+        else:
+            print(f"Item not found: {args.item}", file=sys.stderr)
+            sys.exit(1)
+
+    latest = fetch_latest(profile) or {}
+    price = latest.get(str(entry["id"])) or {}
+    buy_price = int(price.get("high", 0) or 0)
+    sell_price = int(price.get("low", 0) or 0)
+    if buy_price <= 0 or sell_price <= 0:
+        print(f"No live price data for {entry['name']}.", file=sys.stderr)
+        sys.exit(1)
+
+    buy_limit = int(entry.get("limit") or 0)
+    if args.qty > 0:
+        qty = args.qty
+    elif args.capital > 0 and buy_price > 0:
+        qty = min(buy_limit, max(1, args.capital // buy_price))
+    else:
+        qty = 1
+
+    trade = log_trade(entry["id"], entry["name"], qty, buy_price,
+                      sell_price, note=args.note or "paper", profile=profile)
+    print(f"Paper trade #{trade.id}: {trade.qty:,}x {trade.name} at "
+          f"{trade.buy_price:,} gp (instant buy), estimated sell "
+          f"{trade.sell_price:,} gp — profit: {trade.profit:+,} gp "
+          f"(tax: {trade.tax_paid:,})")
 
 def margin_check(args: argparse.Namespace) -> None:
     """Fetch data, scan flips, then analyze timeseries history for confidence scoring."""
@@ -1012,12 +1077,14 @@ def main() -> None:
     )
     parser.add_argument("--profile", type=str, default=None, help="Profile to use for this command")
     parser.add_argument("--quiet", action="store_true", help="Suppress status output (cron-friendly)")
+    parser.add_argument("--version", action="version", version=f"rshelper {__version__}")
     sub = parser.add_subparsers(dest="command")
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
     alch.add_argument("--nature-rune-cost", type=int, default=cfg.alch.nature_rune_cost,
                        help="GP cost of nature runes (default: auto-fetch from API)")
-    alch.add_argument("--members-only", action="store_true",
+    alch.add_argument("--members-only", action=argparse.BooleanOptionalAction,
+                       default=cfg.alch.members_only,
                        help="Filter to members items only")
     alch.add_argument("--min-volume", type=int, default=cfg.alch.min_volume,
                        help="Minimum 5-minute trade volume")
@@ -1035,7 +1102,8 @@ def main() -> None:
                        help="Save results for later diff/trend comparison")
 
     flip = sub.add_parser("flip-scan", help="Scan for profitable GE flip margins")
-    flip.add_argument("--members-only", action="store_true",
+    flip.add_argument("--members-only", action=argparse.BooleanOptionalAction,
+                       default=cfg.flip.members_only,
                        help="Filter to members items only")
     flip.add_argument("--min-volume", type=int, default=cfg.flip.min_volume,
                        help="Minimum 5-minute trade volume")
@@ -1095,6 +1163,15 @@ def main() -> None:
     trade_log.add_argument("buy_price", type=int, help="Buy price per unit (gp)")
     trade_log.add_argument("sell_price", type=int, help="Sell price per unit (gp)")
     trade_log.add_argument("--note", type=str, default="", help="Optional note")
+    trade_paper = trade_sub.add_parser(
+        "paper", help="Log a paper trade at live GE prices")
+    trade_paper.add_argument("item", help="Item name")
+    trade_paper.add_argument("qty", type=int, nargs="?", default=0,
+                             help="Quantity (default: sized from --capital or 1)")
+    trade_paper.add_argument("--capital", type=int, default=0,
+                             help="GP to spend; sizes quantity within buy limit")
+    trade_paper.add_argument("--note", type=str, default="",
+                             help="Optional note")
     trade_list = trade_sub.add_parser("list", help="List logged trades")
     trade_list.add_argument("--item", type=str, default="", help="Filter by item name")
     trade_list.add_argument("--since", type=str, default="", help="Filter from date (YYYY-MM-DD)")
@@ -1110,7 +1187,8 @@ def main() -> None:
 
     # Signals subcommand
     sig = sub.add_parser("signals", help="Detect market signals: dumps, crashes, surges, flips")
-    sig.add_argument("--members-only", action="store_true",
+    sig.add_argument("--members-only", action=argparse.BooleanOptionalAction,
+                      default=False,
                       help="Filter to members items only")
     sig.add_argument("--flip-direction", type=str, default="arbitrage",
                       choices=["arbitrage", "traditional"],
@@ -1173,8 +1251,13 @@ def main() -> None:
     config_sub.add_parser("show", help="Print current config as JSON")
     config_sub.add_parser("path", help="Print config file path")
 
+    dash = sub.add_parser("dashboard", help="Launch local web dashboard")
+    dash.add_argument("--port", type=int, default=5555)
+    dash.add_argument("--bind", type=str, default="127.0.0.1")
+
     margin = sub.add_parser("margin-check", help="Analyze timeseries history for flip confidence scoring")
-    margin.add_argument("--members-only", action="store_true",
+    margin.add_argument("--members-only", action=argparse.BooleanOptionalAction,
+                       default=cfg.margin.members_only,
                        help="Filter to members items only")
     margin.add_argument("--min-volume", type=int, default=cfg.margin.min_volume,
                        help="Minimum 5-minute trade volume")
@@ -1232,6 +1315,10 @@ def main() -> None:
     elif args.command == "signals":
         signals_cmd(args)
 
+    elif args.command == "dashboard":
+        from rshelper.dashboard.server import run
+        run(bind=args.bind, port=args.port)
+
     elif args.command == "margin-check":
         margin_check(args)
     elif args.command == "alch-scan":
@@ -1266,6 +1353,8 @@ def main() -> None:
             print(f"Logged trade #{trade.id}: bought {trade.qty}x {trade.name} "
                   f"at {trade.buy_price:,} gp, sold at {trade.sell_price:,} gp "
                   f"— profit: {trade.profit:+,} gp (tax: {trade.tax_paid:,})")
+        elif args.trade_action == "paper":
+            _trade_paper(args)
         elif args.trade_action == "list":
             from rshelper.journal import list_trades
             trades = list_trades(item_name=args.item, since=args.since, top=args.top)

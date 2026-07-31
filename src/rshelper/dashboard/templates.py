@@ -107,6 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
     <option value="rs_score">RS Score</option>
   </select>
   <button id="btnDir" onclick="toggleDirection()" class="active">Desc</button>
+  <button id="btnTrades" onclick="toggleTrades()">Trades</button>
   <span class="count" id="filterCount"></span>
 </div>
 <div class="main">
@@ -125,6 +126,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
 let allItems=[];
 let selectedId=null;
 let sortCol='margin',sortDir='desc';
+let showTrades=false;
 const refreshSecs=60;
 let countdown=refreshSecs;
 
@@ -189,6 +191,57 @@ function toggleDirection(){
   sortDir=sortDir==='desc'?'asc':'desc';
   document.getElementById('btnDir').textContent=sortDir==='desc'?'Desc':'Asc';
   applyFilters();
+}
+
+function toggleTrades(){
+  showTrades=!showTrades;
+  document.getElementById('btnTrades').classList.toggle('active',showTrades);
+  if(showTrades) renderTrades();
+  else applyFilters();
+}
+
+async function renderTrades(){
+  const panel=document.getElementById('tablePanel');
+  const detail=document.getElementById('detailPanel');
+  panel.innerHTML='<div class="loading"><span class="spinner"></span>Loading trades...</div>';
+  try{
+    const [pr,tr]=await Promise.all([fetch('/api/pnl'),fetch('/api/trades')]);
+    if(!pr.ok||!tr.ok)throw new Error('trades API failed');
+    const pnl=await pr.json();
+    const trades=(await tr.json()).trades||[];
+    const h='<div class="item-name" style="margin-bottom:12px">P&L Summary</div>'+
+      '<div class="metric-grid">'+
+      metric('Total Profit',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':'red')+
+      metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
+      metric('Trades',format(pnl.trade_count||0),'')+
+      metric('Tax Paid',format(pnl.total_tax_paid||0)+' gp','')+
+      metric('Best','<span class="val green">'+format(pnl.best_trade||0)+'</span>','')+
+      metric('Worst','<span class="val red">'+format(pnl.worst_trade||0)+'</span>','')+
+      metric('Items',format(pnl.items_traded||0),'')+
+      metric('Active GP/hr',format(pnl.active_gp_per_hour||0)+' gp','gold')+
+      '</div>';
+    detail.innerHTML=h;
+    if(!trades.length){
+      panel.innerHTML='<div class="loading">No trades logged</div>';
+      return;
+    }
+    let th='<table><thead><tr>';
+    th+='<th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th>';
+    th+='</tr></thead><tbody>';
+    trades.slice(0,50).forEach(t=>{
+      const p=t.profit||0;
+      th+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td>';
+      th+='<td class="name">'+escHtml(t.name||'')+'</td>';
+      th+='<td>'+format(t.qty||0)+'</td>';
+      th+='<td>'+format(t.buy_price||0)+'</td>';
+      th+='<td>'+format(t.sell_price||0)+'</td>';
+      th+='<td class="margin '+(p>0?'pos':p<0?'neg':'neutral')+'">'+format(p)+'</td></tr>';
+    });
+    th+='</tbody></table>';
+    panel.innerHTML=th;
+  }catch(e){
+    panel.innerHTML='<div class="loading">Error loading trades: '+escHtml(e.message)+'</div>';
+  }
 }
 
 function renderTable(items){

@@ -49,7 +49,8 @@ def _get(path: str, retries: int = MAX_RETRIES) -> Any:
     """GET a Wiki API endpoint with retry+backoff, return parsed JSON."""
     last_exc = None
     for attempt in range(retries + 1):
-        _throttle()
+        if attempt == 0:
+            _throttle()  # retry backoff already spaces subsequent attempts
         req = urllib.request.Request(
             f"{BASE_URL}/{path}",
             headers={"User-Agent": USER_AGENT},

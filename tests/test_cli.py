@@ -64,10 +64,106 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(r.returncode, 0)
         self.assertIn("--ge-slots", r.stdout)
 
+    def test_version_flag(self):
+        r = run("--version")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("rshelper 1.5.0", r.stdout)
+
+    def test_members_boolean_optional(self):
+        r = run("flip-scan", "--help")
+        self.assertIn("--no-members-only", r.stdout)
+
     def test_margin_check_help(self):
         r = run("margin-check", "--help")
         self.assertEqual(r.returncode, 0)
         self.assertIn("--ge-slots", r.stdout)
+
+    def test_dashboard_help(self):
+        r = run("dashboard", "--help")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("--port", r.stdout)
+        self.assertIn("--bind", r.stdout)
+
+    def test_flip_table_roi_column(self):
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        from rshelper.models import Item
+        from rshelper.cli import _format_flip_table
+        items = [
+            Item(id=1, name="Cheap flip", members=False, buy_limit=1000,
+                 alch_value=0, buy_price=100, sell_price=150, volume=500,
+                 profit=47, gp_per_hour=10000, rs_score=80),
+            Item(id=2, name="Expensive flip", members=False, buy_limit=10,
+                 alch_value=0, buy_price=100_000, sell_price=120_000, volume=50,
+                 profit=19_600, gp_per_hour=5000, rs_score=50),
+        ]
+        out = _format_flip_table(items, top=10)
+        self.assertIn("ROI", out)
+        self.assertIn("47.0", out)   # 47/100 = 47.0%
+        self.assertIn("19.6", out)   # 19600/100000 = 19.6%
+
+    def test_config_members_only_honored(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.profile as pmod
+        import rshelper.config as cmod
+        tmp = tempfile.TemporaryDirectory()
+        pmod.CONFIG_DIR = Path(tmp.name) / "config"
+        pmod.CACHE_DIR = Path(tmp.name) / "cache"
+        prof_dir = pmod.CONFIG_DIR / "profiles" / "main"
+        prof_dir.mkdir(parents=True)
+        (prof_dir / "config.toml").write_text("[flip]\nmembers_only = true\n")
+        cfg = cmod.load_config("main")
+        self.assertTrue(cfg.flip.members_only)
+
+    def test_trade_paper_uses_live_prices(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.journal as jmod
+        import rshelper.cli as cmod
+        tmp = tempfile.TemporaryDirectory()
+        jmod.TRADES_PATH = Path(tmp.name) / "trades.json"
+        with mock.patch.object(amod, "fetch_mapping", return_value=[
+                {"id": 1, "name": "Nature rune", "limit": 13000}]):
+            with mock.patch.object(amod, "fetch_latest", return_value={
+                    "1": {"high": 150, "low": 140}}):
+                cmod._trade_paper(Namespace(
+                    item="nature rune", qty=100, capital=0, note="",
+                    profile=None))
+        trades = jmod.list_trades()
+        self.assertEqual(len(trades), 1)
+        t = trades[0]
+        self.assertEqual(t.name, "Nature rune")
+        self.assertEqual(t.qty, 100)
+        self.assertEqual(t.buy_price, 150)
+        self.assertEqual(t.sell_price, 140)
+        self.assertEqual(t.note, "paper")
+
+    def test_trade_paper_sizes_from_capital(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.journal as jmod
+        import rshelper.cli as cmod
+        tmp = tempfile.TemporaryDirectory()
+        jmod.TRADES_PATH = Path(tmp.name) / "trades.json"
+        with mock.patch.object(amod, "fetch_mapping", return_value=[
+                {"id": 1, "name": "Nature rune", "limit": 13000}]):
+            with mock.patch.object(amod, "fetch_latest", return_value={
+                    "1": {"high": 150, "low": 140}}):
+                cmod._trade_paper(Namespace(
+                    item="nature rune", qty=0, capital=3000, note="",
+                    profile=None))
+        trades = jmod.list_trades()
+        self.assertEqual(len(trades), 1)
+        self.assertEqual(trades[0].qty, 20)  # 3000 // 150, capped by limit
 
 
 if __name__ == "__main__":

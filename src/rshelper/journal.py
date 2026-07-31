@@ -75,6 +75,12 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
 
     Tax is per-item (OSRS GE tax is per item, capped at 5M per item).
     """
+    if qty <= 0:
+        raise ValueError(f"qty must be positive, got {qty}")
+    if buy_price <= 0:
+        raise ValueError(f"buy_price must be positive, got {buy_price}")
+    if sell_price <= 0:
+        raise ValueError(f"sell_price must be positive, got {sell_price}")
     trades = _load(profile)
     per_item_tax = min(5_000_000, max(1, int(sell_price * 0.02)))
     tax_paid = per_item_tax * qty

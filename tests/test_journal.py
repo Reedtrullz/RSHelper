@@ -31,6 +31,24 @@ def test_log_trade():
     assert t.note == "test flip"
     print("  PASSED test_log_trade")
 
+
+def test_log_trade_rejects_invalid_input():
+    _clean()
+    bad = [
+        (1, "x", 0, 100, 110),    # zero qty
+        (1, "x", -5, 100, 110),   # negative qty
+        (1, "x", 10, 0, 110),     # zero buy price
+        (1, "x", 10, 100, -1),    # negative sell price
+    ]
+    for args in bad:
+        try:
+            log_trade(*args)
+            assert False, f"Expected ValueError for {args}"
+        except ValueError:
+            pass
+    assert list_trades() == []
+    print("  PASSED test_log_trade_rejects_invalid_input")
+
 def test_log_trade_auto_increment():
     _clean()
     # IDs are auto-generated, not passed in
