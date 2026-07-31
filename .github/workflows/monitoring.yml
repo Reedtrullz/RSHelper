@@ -22,13 +22,7 @@ jobs:
             --header "Accept: application/json" \
             --header "User-Agent: RSHelper synthetic uptime monitor" \
             "https://rs.reidar.tech/api/health" \
-            | python3 -c '
-              import json, sys
-              health = json.load(sys.stdin)
-              print(json.dumps({k: health.get(k) for k in ("status", "version")}, indent=2))
-              if health.get("status") != "healthy" or not isinstance(health.get("version"), str):
-                  sys.exit(2)
-            '
+            | python3 -c "import json,sys; h=json.load(sys.stdin); print(json.dumps({k: h.get(k) for k in ('status','version')}, indent=2)); sys.exit(0 if h.get('status')=='healthy' and isinstance(h.get('version'), str) else 2)"
 
       - name: Check public endpoints only
         shell: bash
