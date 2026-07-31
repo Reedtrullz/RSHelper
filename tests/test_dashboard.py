@@ -172,7 +172,7 @@ class TestHandlerRouting(unittest.TestCase):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(
             self.scanner, lambda: [],
-            meta_fn=lambda: {"source": "wiki", "items": 5, "signals": 2,
+            meta_fn=lambda: {"source": "wiki", "items": 5, "flips": 3, "signals": 2,
                              "trades": 3, "watchlist": 1, "watch_ids": [1, 2]})
         h = BaseHTTPRequestHandler.__new__(Handler)
         h.path = "/api/meta"
