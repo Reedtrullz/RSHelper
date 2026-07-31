@@ -1,4 +1,4 @@
-# RSHelper Handoff v3.0: Current State (v1.6.0)
+# RSHelper Handoff v3.0: Current State (v1.7.0)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python
 CLI plus local web dashboard for OSRS Grand Exchange trading, with a
@@ -18,8 +18,8 @@ VPS-hosted public dashboard deployed by CI.
                  config, watchlist, snapshot, journal, monitor, profile,
                  history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-16 test files, 183 tests, all passing:
-  test_analysis (16)        test_cli (20)         test_dashboard (27)
+16 test files, 186 tests, all passing:
+  test_analysis (16)        test_cli (20)         test_dashboard (30)
   test_ge_tracker_fallback (9) test_history (5)   test_integration (4)
   test_journal (19)         test_market (4)       test_monitor (8)
   test_profile (10)
@@ -71,7 +71,7 @@ rshelper config        show | path
 rshelper dashboard     [--bind BIND] [--port PORT]
 ```
 
-Global flags: `--profile NAME`, `--quiet`, `--version` (prints `1.6.0`).
+Global flags: `--profile NAME`, `--quiet`, `--version` (prints `1.7.0`).
 
 ## Architecture Decisions — DO NOT REGRESS
 

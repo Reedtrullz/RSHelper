@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
 from rshelper.config import load_config
+from rshelper.market import price_issue
 from rshelper.scanner import FlipScanner
 from rshelper.signals import detect_signals
 from rshelper.dashboard.handlers import make_handler
@@ -41,7 +42,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
 
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     # Add configurable --refresh N flag when needed.
-    cache = {"items": items, "vol": _vol_5m, "last_fetch": time.time()}
+    cache = {"items": items, "vol": _vol_5m, "latest": _latest, "last_fetch": time.time()}
 
     def refresh():
         now = time.time()
@@ -51,6 +52,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                 _m, _l, _v, fresh = _fetch_bootstrap()
                 cache["items"] = fresh
                 cache["vol"] = _v
+                cache["latest"] = _l
             except SystemExit:
                 print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
             cache["last_fetch"] = now
@@ -66,8 +68,23 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         flips = scanner.scan(cache["items"], **scan_kwargs)
         return detect_signals(flips, cache["vol"])
 
+    def get_prices(item_ids: list[int]) -> dict:
+        refresh()
+        latest = cache["latest"] or {}
+        out = {}
+        for item_id in item_ids:
+            price = latest.get(str(item_id))
+            issue = price_issue(price) if isinstance(price, dict) else "no data"
+            if issue:
+                out[str(item_id)] = {"usable": False, "reason": issue}
+            else:
+                out[str(item_id)] = {"usable": True,
+                                     "buy": int(price.get("high", 0)),
+                                     "sell": int(price.get("low", 0))}
+        return out
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
-                           scan_kwargs=scan_kwargs)
+                           scan_kwargs=scan_kwargs, price_lookup=get_prices)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

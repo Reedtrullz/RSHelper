@@ -108,6 +108,66 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertIn("total_cost_basis", body)
         self.assertGreater(body["total_cost_basis"], 0)
 
+    def test_api_pnl_note_filter(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.journal as jmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                jmod.log_trade(1, "Paper", 1, 100, 200, note="paper")
+                jmod.log_trade(2, "Live", 1, 100, 200, note="live")
+                self.handler.path = "/api/pnl?note=paper"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                jmod.TRADES_PATH = original_path
+        self.assertEqual(body["trade_count"], 1)
+        self.assertEqual(body["total_profit"], 96)  # (200-100) - ge_tax(200)=4
+
+    def test_api_trades_note_filter(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.journal as jmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                jmod.log_trade(1, "Paper", 1, 100, 200, note="paper")
+                jmod.log_trade(2, "Live", 1, 100, 200, note="live")
+                self.handler.path = "/api/trades?note=paper"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                jmod.TRADES_PATH = original_path
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["trades"][0]["name"], "Paper")
+
+    def test_api_prices(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            price_lookup=lambda ids: {str(i): {"usable": True, "buy": 100, "sell": 110}
+                                      for i in ids})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/prices?ids=561,2"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.response_code = None
+        h.response_headers = []
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: setattr(h, "response_code", code)
+        h.send_header = lambda key, value: h.response_headers.append((key, value))
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["prices"]["561"]["buy"], 100)
+        self.assertEqual(body["prices"]["2"]["sell"], 110)
+
     def test_scan_kwargs_passed_to_scanner(self):
         calls = []
 

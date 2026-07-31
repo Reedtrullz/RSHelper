@@ -222,13 +222,17 @@ def test_pnl_note_filter():
 
 def test_cli_trade_log_parse():
     import subprocess
+    import tempfile
     _clean()
-    result = subprocess.run(
-        [sys.executable, "-m", "rshelper", "trade", "log", "Nature rune", "100", "150", "200"],
-        capture_output=True, text=True,
-        cwd=os.path.join(os.path.dirname(__file__), ".."),
-        env={**os.environ, "PYTHONPATH": "src"},
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        # Isolate HOME so the subprocess cannot write to the real journal.
+        result = subprocess.run(
+            [sys.executable, "-m", "rshelper", "trade", "log",
+             "Nature rune", "100", "150", "200"],
+            capture_output=True, text=True,
+            cwd=os.path.join(os.path.dirname(__file__), ".."),
+            env={**os.environ, "PYTHONPATH": "src", "HOME": tmp},
+        )
     assert result.returncode == 0, result.stderr
     assert "Logged trade" in result.stdout
     print("  PASSED test_cli_trade_log_parse")

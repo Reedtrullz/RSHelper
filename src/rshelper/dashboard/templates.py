@@ -111,7 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
   <button id="btnDir" onclick="toggleDirection()" class="active">Desc</button>
   <button id="btnTrades" onclick="toggleTrades()">Trades</button>
   <button id="btnProgress" onclick="toggleProgress()">Progression</button>
-  <button id="btnPaper" onclick="togglePaper()" class="active">Paper</button>
+  <button id="btnPaper" onclick="togglePaper()">Paper Trading</button>
   <span class="count" id="filterCount"></span>
 </div>
 <div class="main">
@@ -130,7 +130,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
 let allItems=[];
 let selectedId=null;
 let sortCol='margin',sortDir='desc';
-let showTrades=false;
+let showTrades=false,showProgress=false,showPaper=false;
+let paperOnly=false;
 const refreshSecs=60;
 let countdown=refreshSecs;
 
@@ -154,6 +155,9 @@ async function fetchData(){
     updateStats();
     updateTime();
     if(selectedId!=null)reselectItem();
+    if(showTrades)renderTrades();
+    else if(showProgress)renderProgress();
+    else if(showPaper)renderPaper();
     countdown=refreshSecs;
   }catch(e){
     document.getElementById('statusText').textContent='Error: '+e.message;
@@ -198,23 +202,26 @@ function toggleDirection(){
 }
 
 function toggleTrades(){
-  showTrades=!showTrades;
-  document.getElementById('btnTrades').classList.toggle('active',showTrades);
-  if(showTrades) renderTrades();
-  else applyFilters();
+  setView(showTrades?'none':'trades');
 }
 
-let showProgress=false,paperOnly=true;
 function toggleProgress(){
-  showProgress=!showProgress;
-  document.getElementById('btnProgress').classList.toggle('active',showProgress);
-  if(showProgress) renderProgress();
-  else{selectedId=null;applyFilters()}
+  setView(showProgress?'none':'progress');
 }
 function togglePaper(){
-  paperOnly=!paperOnly;
-  document.getElementById('btnPaper').classList.toggle('active',paperOnly);
-  if(showProgress) renderProgress();
+  setView(showPaper?'none':'paper');
+}
+function setView(name){
+  showTrades=(name==='trades');
+  showProgress=(name==='progress');
+  showPaper=(name==='paper');
+  document.getElementById('btnTrades').classList.toggle('active',showTrades);
+  document.getElementById('btnProgress').classList.toggle('active',showProgress);
+  document.getElementById('btnPaper').classList.toggle('active',showPaper);
+  if(showTrades)renderTrades();
+  else if(showProgress)renderProgress();
+  else if(showPaper)renderPaper();
+  else{selectedId=null;applyFilters()}
 }
 async function renderProgress(){
   const panel=document.getElementById('tablePanel');
@@ -234,36 +241,15 @@ async function renderProgress(){
       metric('Items',format(s.items_traded||0),'')+
       metric('Active Days',format(s.active_days||0),'')+
       '</div>';
-    const buckets=h.buckets||[],eras=h.eras||[],items=h.items||[];
-    let html='';
+    const buckets=h.buckets||[];
+    let html=paperToggleHtml();
     if(buckets.length<2){
       html+='<div class="loading">Not enough days yet — log paper trades across a few days and tune config.toml between them.</div>';
     }else{
       html+='<h3 class="chart-title">Cumulative P&L with tuning changes</h3><canvas id="cumChart" height="220"></canvas>';
       html+='<h3 class="chart-title">Daily trades and win rate</h3><canvas id="dailyChart" height="220"></canvas>';
     }
-    if(eras.length){
-      html+='<h3 class="chart-title">Tuning eras</h3><table><thead><tr><th>Start</th><th>End</th><th>Changed</th><th>Trades</th><th>Profit</th><th>Win%</th><th>ROI%</th><th>/day</th></tr></thead><tbody>';
-      let prev=null;
-      eras.forEach(e=>{
-        const c=e.config||{};
-        const changed=prev?Object.keys(c).filter(k=>JSON.stringify(c[k])!==JSON.stringify(prev[k])).join(', ')||'(none)':'(initial)';
-        prev=c;
-        html+='<tr><td>'+escHtml(e.start)+'</td><td>'+escHtml(e.end)+'</td><td class="name">'+escHtml(changed)+'</td>'+
-          '<td>'+format(e.trade_count||0)+'</td><td class="margin '+(e.profit>0?'pos':e.profit<0?'neg':'neutral')+'">'+format(e.profit||0)+'</td>'+
-          '<td>'+(e.win_rate==null?'-':e.win_rate.toFixed(1))+'</td><td>'+(e.roi_pct==null?'-':e.roi_pct.toFixed(2))+'</td><td>'+(e.trades_per_day||0)+'</td></tr>';
-      });
-      html+='</tbody></table>';
-    }
-    if(items.length){
-      html+='<h3 class="chart-title">Per-item P&L</h3><table><thead><tr><th>Item</th><th>Trades</th><th>Qty</th><th>Cost</th><th>Profit</th><th>ROI%</th><th>Win%</th></tr></thead><tbody>';
-      items.forEach(i=>{
-        html+='<tr><td class="name">'+escHtml(i.name)+'</td><td>'+format(i.trade_count)+'</td><td>'+format(i.qty)+'</td>'+
-          '<td>'+format(i.cost_basis)+'</td><td class="margin '+(i.profit>0?'pos':i.profit<0?'neg':'neutral')+'">'+format(i.profit)+'</td>'+
-          '<td>'+i.roi_pct.toFixed(2)+'</td><td>'+i.win_rate.toFixed(1)+'</td></tr>';
-      });
-      html+='</tbody></table>';
-    }
+    html+=historyTablesHtml(h);
     panel.innerHTML=html;
     if(buckets.length>=2){
       drawCumulative(document.getElementById('cumChart'),buckets);
@@ -341,6 +327,132 @@ function drawDaily(cv,buckets){
   });
   ctx.stroke();ctx.lineWidth=1;
   ctx.fillStyle='#60a5fa';ctx.fillText('win %',w-46,pad.t+4);
+}
+
+function paperToggleHtml(){
+  return '<div style="display:flex;gap:8px;align-items:center;margin:14px 0">'+
+    '<span style="font-size:12px;color:var(--text-dim)">Scope:</span>'+
+    '<button class="'+(paperOnly?'active':'')+'" onclick="setPaperOnly(true)">Paper only</button>'+
+    '<button class="'+(paperOnly?'':'active')+'" onclick="setPaperOnly(false)">All trades</button></div>';
+}
+function setPaperOnly(v){
+  paperOnly=v;
+  renderProgress();
+}
+
+function historyTablesHtml(h){
+  const eras=h.eras||[],items=h.items||[];
+  let html='';
+  if(eras.length){
+    html+='<h3 class="chart-title">Tuning eras</h3><table><thead><tr><th>Start</th><th>End</th><th>Changed</th><th>Trades</th><th>Profit</th><th>Win%</th><th>ROI%</th><th>/day</th></tr></thead><tbody>';
+    let prev=null;
+    eras.forEach(e=>{
+      const c=e.config||{};
+      const changed=prev?Object.keys(c).filter(k=>JSON.stringify(c[k])!==JSON.stringify(prev[k])).join(', ')||'(none)':'(initial)';
+      prev=c;
+      html+='<tr><td>'+escHtml(e.start)+'</td><td>'+escHtml(e.end)+'</td><td class="name">'+escHtml(changed)+'</td>'+
+        '<td>'+format(e.trade_count||0)+'</td><td class="margin '+(e.profit>0?'pos':e.profit<0?'neg':'neutral')+'">'+format(e.profit||0)+'</td>'+
+        '<td>'+(e.win_rate==null?'-':e.win_rate.toFixed(1))+'</td><td>'+(e.roi_pct==null?'-':e.roi_pct.toFixed(2))+'</td><td>'+(e.trades_per_day||0)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  if(items.length){
+    html+='<h3 class="chart-title">Per-item P&L</h3><table><thead><tr><th>Item</th><th>Trades</th><th>Qty</th><th>Cost</th><th>Profit</th><th>ROI%</th><th>Win%</th></tr></thead><tbody>';
+    items.forEach(i=>{
+      html+='<tr><td class="name">'+escHtml(i.name)+'</td><td>'+format(i.trade_count)+'</td><td>'+format(i.qty)+'</td>'+
+        '<td>'+format(i.cost_basis)+'</td><td class="margin '+(i.profit>0?'pos':i.profit<0?'neg':'neutral')+'">'+format(i.profit)+'</td>'+
+        '<td>'+i.roi_pct.toFixed(2)+'</td><td>'+i.win_rate.toFixed(1)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  return html;
+}
+
+async function renderPaper(){
+  const panel=document.getElementById('tablePanel');
+  const detail=document.getElementById('detailPanel');
+  panel.innerHTML='<div class="loading"><span class="spinner"></span>Loading paper trading...</div>';
+  detail.innerHTML='<div class="loading"><span class="spinner"></span></div>';
+  try{
+    const [pr,tr,hr]=await Promise.all([
+      fetch('/api/pnl'),fetch('/api/trades'),fetch('/api/history?paper=0')
+    ]);
+    if(!pr.ok||!tr.ok||!hr.ok)throw new Error('paper API failed');
+    const pnl=await pr.json();
+    const trades=(await tr.json()).trades||[];
+    const h=await hr.json();
+    const s=h.summary||{};
+    detail.innerHTML='<div class="item-name" style="margin-bottom:12px">Paper Trading</div>'+
+      '<div class="metric-grid">'+
+      metric('Total P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
+      metric('ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
+      metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
+      metric('Trades',format(pnl.trade_count||0),'')+
+      metric('Items',format(pnl.items_traded||0),'')+
+      metric('Active Days',format(s.active_days||0),'')+
+      metric('Tax Paid',format(pnl.total_tax_paid||0)+' gp','')+
+      metric('Cost Basis',format(pnl.total_cost_basis||0)+' gp','')+
+      metric('Best','<span class="val green">'+format(pnl.best_trade||0)+'</span>','')+
+      metric('Worst','<span class="val red">'+format(pnl.worst_trade||0)+'</span>','')+
+      metric('Active GP/hr',format(pnl.active_gp_per_hour||0)+' gp','gold')+
+      '</div>';
+    let html='';
+    const traded=(h.items||[]).filter(i=>i.trade_count>0);
+    html+='<h3 class="chart-title">Current status — live market on traded items</h3>';
+    if(!traded.length){
+      html+='<div class="loading">No trades yet — log one with trade paper &lt;item&gt; or the Trades tab.</div>';
+    }else{
+      let prices={};
+      try{
+        const ids=traded.map(i=>i.item_id).join(',');
+        const pr=await fetch('/api/prices?ids='+ids);
+        if(pr.ok)prices=(await pr.json()).prices||{};
+      }catch(e){}
+      html+='<table><thead><tr><th>Item</th><th>Trades</th><th>Qty</th><th>Realized P&L</th><th>Live Buy</th><th>Live Sell</th><th>Live Margin</th></tr></thead><tbody>';
+      traded.forEach(i=>{
+        const cur=prices[String(i.item_id)];
+        const live=cur&&cur.usable;
+        const liveBuy=live?cur.buy:null;
+        const liveSell=live?cur.sell:null;
+        const mp=(liveBuy>0)?((liveSell-liveBuy)/liveBuy*100):null;
+        html+='<tr><td class="name">'+escHtml(i.name)+'</td><td>'+format(i.trade_count)+'</td><td>'+format(i.qty)+'</td>'+
+          '<td class="margin '+(i.profit>0?'pos':i.profit<0?'neg':'neutral')+'">'+format(i.profit)+'</td>'+
+          (live?'<td>'+format(liveBuy)+'</td><td>'+format(liveSell)+'</td>'+
+            '<td class="margin '+(mp>2?'pos':mp<-2?'neg':'neutral')+'">'+mp.toFixed(1)+'%</td>'
+            :'<td>-</td><td>-</td><td>-</td>')+
+          '</tr>';
+      });
+      html+='</tbody></table>';
+    }
+    html+='<h3 class="chart-title">Recent trades</h3>';
+    if(!trades.length){
+      html+='<div class="loading">No trades logged.</div>';
+    }else{
+      html+='<table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th></tr></thead><tbody>';
+      trades.slice(0,15).forEach(t=>{
+        const p=t.profit||0;
+        html+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
+          '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+
+          '<td class="margin '+(p>0?'pos':p<0?'neg':'neutral')+'">'+format(p)+'</td></tr>';
+      });
+      html+='</tbody></table>';
+    }
+    const buckets=h.buckets||[];
+    if(buckets.length>=2){
+      html+='<h3 class="chart-title">Historical results — cumulative P&L</h3><canvas id="paperCum" height="220"></canvas>';
+      html+='<h3 class="chart-title">Historical results — daily trades and win rate</h3><canvas id="paperDaily" height="220"></canvas>';
+    }else if(buckets.length===1){
+      html+='<h3 class="chart-title">Historical results</h3><div class="loading">One active day so far — cumulative charts appear from the second day.</div>';
+    }
+    html+=historyTablesHtml(h);
+    panel.innerHTML=html;
+    if(buckets.length>=2){
+      drawCumulative(document.getElementById('paperCum'),buckets);
+      drawDaily(document.getElementById('paperDaily'),buckets);
+    }
+  }catch(e){
+    panel.innerHTML='<div class="loading">Error loading paper trading: '+escHtml(e.message)+'</div>';
+  }
 }
 
 async function renderTrades(){

@@ -5,6 +5,7 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler
 from typing import Callable
+from urllib.parse import parse_qs
 
 from rshelper.dashboard.templates import INDEX_HTML
 
@@ -28,13 +29,15 @@ def _item_to_dict(item) -> dict:
 
 def make_handler(scanner, scan_items: Callable[[], list],
                  signal_detector: Callable[[], list] | None = None,
-                 scan_kwargs: dict | None = None) -> type:
+                 scan_kwargs: dict | None = None,
+                 price_lookup: Callable[[list[int]], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
     scan_items: Callable that returns list[Item] (fresh fetch each call)
     signal_detector: Optional callable that returns list[Signal] for /api/signals
     scan_kwargs: Optional kwargs (members_only, min_volume, min_margin) for scanner.scan
+    price_lookup: Optional callable(list[item_id]) -> {id: {usable, buy, sell}}
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -58,6 +61,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_pnl()
             elif path == "/api/history":
                 self._serve_history()
+            elif path == "/api/prices":
+                self._serve_prices()
             else:
                 self.send_error(404)
 
@@ -125,12 +130,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_trades(self):
             from rshelper.journal import list_trades
             from dataclasses import asdict
-            trades = list_trades()
+            note = self._query().get("note", [""])[0]
+            trades = list_trades(note=note)
             self._serve_json({"trades": [asdict(t) for t in trades], "count": len(trades)})
 
         def _serve_pnl(self):
             from rshelper.journal import compute_pnl
-            pnl = compute_pnl()
+            note = self._query().get("note", [""])[0]
+            pnl = compute_pnl(note=note)
             d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
                  "total_cost_basis": pnl.total_cost_basis,
                  "roi_pct": round(pnl.roi_pct, 2),
@@ -144,15 +151,23 @@ def make_handler(scanner, scan_items: Callable[[], list],
             self._serve_json(d)
 
         def _serve_history(self):
-            from urllib.parse import parse_qs
             from rshelper.history import build_history
-            qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+            qs = self._query()
             paper_only = qs.get("paper", ["1"])[0] != "0"
             try:
                 self._serve_json(build_history(paper_only=paper_only))
             except Exception as e:
                 print(f"[dashboard] history error: {e}", file=sys.stderr)
                 self.send_error(500, "History failed")
+
+        def _serve_prices(self):
+            if price_lookup is None:
+                self._serve_json({"prices": {}})
+                return
+            qs = self._query()
+            raw = qs.get("ids", [""])[0]
+            ids = [int(i) for i in raw.split(",") if i.strip().isdigit()]
+            self._serve_json({"prices": price_lookup(ids)})
 
         def _handle_log_trade(self):
             try:
@@ -183,6 +198,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             self.wfile.write(body)
+
+        def _query(self):
+            return parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
 
         def log_message(self, format, *args):
             print(f"[dashboard] {format % args}", file=sys.stderr)
