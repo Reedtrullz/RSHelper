@@ -21,7 +21,7 @@ served at https://rs.reidar.tech. Current version: `1.6.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 167 tests across 15 files, all passing.
+  Expected: 183 tests across 16 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -32,7 +32,10 @@ served at https://rs.reidar.tech. Current version: `1.6.0`
 1. **GE tax is 2%** on the sell price, capped at 5M per item. It was raised
    from 1% on 29 May 2025 (OSRS Wiki). The `1%` claims in `research/*` are
    stale — see the correction banners at the top of those files. Do not
-   "fix" the tax rate to 1%.
+   "fix" the tax rate to 1%. The 2% is rounded down per item with **no
+   minimum** (items sold below 50 gp pay no tax) — the wiki is explicit.
+   Always route tax through `rshelper.market.ge_tax()`; never re-derive it
+   with a `max(1, ...)` floor.
 2. **Margin convention**: `buy_price = API "high"` (instant buy),
    `sell_price = API "low"` (instant sell). The `direction` parameter decides
    which way the margin is computed, never which API field maps to which price.
@@ -67,11 +70,15 @@ served at https://rs.reidar.tech. Current version: `1.6.0`
   trade-volume timeseries are wiki-only. The GE Tracker dump is cached 300s
   so the undocumented endpoint gets one fetch per refresh cycle.
 - `dashboard/templates.py`: inline HTML template, no template engine.
+- `market.py`: staleness (>24h) and spread-ratio (>20x) thresholds are
+  hardcoded guards shared by every price consumer; price sanity is applied
+  in `build_items_from_api` and by all raw-price paths (watch-check,
+  monitor alerts, item-info, trade paper).
 
 ## Workflow Gates
 
 Before committing a round:
-1. Run all 15 test files; zero failures.
+1. Run all 16 test files; zero failures.
 2. Smoke-test every touched subcommand against the live Wiki API (or the GE
    Tracker fallback when testing from a datacenter IP).
 3. Verify `--json` output pipes through `json.tool` without stderr leakage.

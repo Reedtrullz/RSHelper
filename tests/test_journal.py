@@ -71,6 +71,15 @@ def test_log_trade_zero_profit():
     assert t.tax_paid > 0
     print("  PASSED test_log_trade_zero_profit")
 
+
+def test_log_trade_no_tax_below_50():
+    """Items sold below 50 gp have no tax obligation (wiki rule)."""
+    _clean()
+    t = log_trade(1, "Cheap", 10, buy_price=1, sell_price=40)
+    assert t.tax_paid == 0
+    assert t.profit == (40 - 1) * 10
+    print("  PASSED test_log_trade_no_tax_below_50")
+
 def test_log_trade_tax_cap():
     """Tax capped at 5M per item."""
     _clean()
@@ -228,6 +237,7 @@ if __name__ == "__main__":
     test_log_trade()
     test_log_trade_auto_increment()
     test_log_trade_zero_profit()
+    test_log_trade_no_tax_below_50()
     test_log_trade_tax_cap()
     test_delete_trade_exists()
     test_delete_trade_nonexistent()

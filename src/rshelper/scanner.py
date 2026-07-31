@@ -1,18 +1,19 @@
 """Alch-profit and flip-margin scanner — core calculation engine."""
 
 import sys
-import time
-from typing import Any
 from dataclasses import dataclass
+from rshelper.market import (
+    MAX_PRICE_RATIO,
+    STALE_PRICE_AGE,
+    ge_tax,
+    price_issue,
+    safe_int,
+)
 from rshelper.models import Item
 from rshelper.analysis import analyze_timeseries, MarginAnalysis
 from rshelper.signals import compute_rs_score_flip, compute_rs_score_alch
 
 MAX_CASTS_PER_HOUR = 1200  # 5-tick cast speed
-# ponytail: hardcoded anti-manipulation thresholds. Add config knobs if a
-# user ever legitimately trades items with >20x bid/ask gaps or >24h-old ticks.
-STALE_PRICE_AGE = 24 * 3600
-MAX_PRICE_RATIO = 20
 
 @dataclass
 class AlchScanner:
@@ -58,14 +59,6 @@ class AlchScanner:
         compute_rs_score_alch(results)
 
         return results
-def _safe_int(val: Any, default: int = 0) -> int:
-    """Convert a value to int safely, handling strings and None."""
-    if val is None:
-        return default
-    try:
-        return int(float(val))  # float first handles "500.0" strings
-    except (ValueError, TypeError):
-        return default
 def build_items_from_api(
     mapping: list[dict],
     latest: dict[str, dict],
@@ -84,37 +77,19 @@ def build_items_from_api(
         vol = volume_5m.get(str(item_id))
         if not isinstance(vol, dict):
             vol = {}
-        buy_price = _safe_int(price.get("high"))
-        sell_price = _safe_int(price.get("low"))
-        volume = _safe_int(vol.get("highPriceVolume")) + _safe_int(vol.get("lowPriceVolume"))
-        # Skip items with no price data (not traded or untradeable)
-        if buy_price <= 0 or sell_price <= 0:
+        issue = price_issue(price)
+        if issue is not None:
+            skipped[issue] = skipped.get(issue, 0) + 1
             continue
-        # A spread is only real when both price legs are recent, both market
-        # sides have standing depth, and the prices are not absurdly apart.
-        # GE manipulation artifacts (1 gp buy / 170k sell on dead items) fail here.
-        high_time = price.get("highTime")
-        low_time = price.get("lowTime")
-        if not isinstance(high_time, (int, float)) or not isinstance(low_time, (int, float)):
-            skipped["stale"] += 1
-            continue
-        if time.time() - min(high_time, low_time) > STALE_PRICE_AGE:
-            skipped["stale"] += 1
-            continue
-        if "high_volume" in price and (
-            _safe_int(price.get("high_volume")) <= 0 or _safe_int(price.get("low_volume")) <= 0
-        ):
-            skipped["depth"] += 1
-            continue
-        if max(buy_price, sell_price) > MAX_PRICE_RATIO * min(buy_price, sell_price):
-            skipped["ratio"] += 1
-            continue
+        buy_price = safe_int(price.get("high"))
+        sell_price = safe_int(price.get("low"))
+        volume = safe_int(vol.get("highPriceVolume")) + safe_int(vol.get("lowPriceVolume"))
         items.append(Item(
             id=item_id,
             name=entry.get("name", ""),
             members=entry.get("members", False),
-            buy_limit=_safe_int(entry.get("limit")),
-            alch_value=_safe_int(entry.get("highalch")),
+            buy_limit=safe_int(entry.get("limit")),
+            alch_value=safe_int(entry.get("highalch")),
             buy_price=buy_price,
             sell_price=sell_price,
             volume=volume,
@@ -172,16 +147,14 @@ class FlipScanner:
             # Traditional: buy at bid(low), sell at offer(high) — standard GE flipping
             if self.direction == "arbitrage":
                 margin = item.sell_price - item.buy_price
-                raw_tax = int(item.sell_price * 0.02)
             else:  # traditional
                 margin = item.buy_price - item.sell_price
-                raw_tax = int(item.buy_price * 0.02)
-            tax = min(5_000_000, max(1, raw_tax))
 
             if margin < min_margin:
                 continue
             if item.buy_limit <= 0:
                 continue
+            tax = ge_tax(item.sell_price if self.direction == "arbitrage" else item.buy_price)
             profit = margin - tax
             if profit <= 0:
                 continue
@@ -249,13 +222,10 @@ class MarginScanner:
 
             # Compute current profit using same direction-aware logic as FlipScanner
             if direction == "arbitrage":
-                raw_tax = int(item.sell_price * 0.02)
-                tax = min(5_000_000, max(1, raw_tax))
                 margin = item.sell_price - item.buy_price
             else:
-                raw_tax = int(item.buy_price * 0.02)
-                tax = min(5_000_000, max(1, raw_tax))
                 margin = item.buy_price - item.sell_price
+            tax = ge_tax(item.sell_price if direction == "arbitrage" else item.buy_price)
             current_profit = margin - tax
 
             # throughput = items per hour given market constraints

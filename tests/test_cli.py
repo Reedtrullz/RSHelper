@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import unittest
 
 
@@ -118,6 +119,23 @@ class TestCLI(unittest.TestCase):
         cfg = cmod.load_config("main")
         self.assertTrue(cfg.flip.members_only)
 
+    def test_config_min_volume_default_ten(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.profile as pmod
+        import rshelper.config as cmod
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(pmod, "CONFIG_DIR", Path(tmp) / "config"), \
+                 mock.patch.object(pmod, "CACHE_DIR", Path(tmp) / "cache"):
+                prof_dir = pmod.CONFIG_DIR / "profiles" / "main"
+                prof_dir.mkdir(parents=True)
+                (prof_dir / "config.toml").write_text("[flip]\ndirection = \"arbitrage\"\n")
+                cfg = cmod.load_config("main")
+        self.assertEqual(cfg.flip.min_volume, 10)
+        self.assertEqual(cfg.margin.min_volume, 10)
+
     def test_trade_paper_uses_live_prices(self):
         from pathlib import Path
         from unittest import mock
@@ -134,7 +152,9 @@ class TestCLI(unittest.TestCase):
                 with mock.patch.object(amod, "fetch_mapping", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
                     with mock.patch.object(amod, "fetch_latest", return_value={
-                            "1": {"high": 150, "low": 140}}):
+                            "1": {"high": 150, "low": 140,
+                                  "highTime": int(time.time()) - 60,
+                                  "lowTime": int(time.time()) - 60}}):
                         cmod._trade_paper(Namespace(
                             item="nature rune", qty=100, capital=0, note="",
                             profile=None, flip_direction="arbitrage"))
@@ -165,7 +185,9 @@ class TestCLI(unittest.TestCase):
                 with mock.patch.object(amod, "fetch_mapping", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
                     with mock.patch.object(amod, "fetch_latest", return_value={
-                            "1": {"high": 150, "low": 140}}):
+                            "1": {"high": 150, "low": 140,
+                                  "highTime": int(time.time()) - 60,
+                                  "lowTime": int(time.time()) - 60}}):
                         cmod._trade_paper(Namespace(
                             item="nature rune", qty=0, capital=3000, note="",
                             profile=None, flip_direction="arbitrage"))
@@ -191,7 +213,9 @@ class TestCLI(unittest.TestCase):
                 with mock.patch.object(amod, "fetch_mapping", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
                     with mock.patch.object(amod, "fetch_latest", return_value={
-                            "1": {"high": 150, "low": 140}}):
+                            "1": {"high": 150, "low": 140,
+                                  "highTime": int(time.time()) - 60,
+                                  "lowTime": int(time.time()) - 60}}):
                         cmod._trade_paper(Namespace(
                             item="nature rune", qty=10, capital=0, note="",
                             profile=None, flip_direction="traditional"))
@@ -217,7 +241,9 @@ class TestCLI(unittest.TestCase):
                 with mock.patch.object(amod, "fetch_mapping", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
                     with mock.patch.object(amod, "fetch_latest", return_value={
-                            "1": {"high": 150, "low": 140}}):
+                            "1": {"high": 150, "low": 140,
+                                  "highTime": int(time.time()) - 60,
+                                  "lowTime": int(time.time()) - 60}}):
                         with self.assertRaises(SystemExit):
                             cmod._trade_paper(Namespace(
                                 item="nature rune", qty=0, capital=100,

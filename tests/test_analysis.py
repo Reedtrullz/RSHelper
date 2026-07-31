@@ -109,6 +109,18 @@ def test_mixed_margin_consistency():
         f"consistency {result.margin_consistency} should be ~0.5"
     print("  PASSED test_mixed_margin_consistency")
 
+
+def test_manipulated_history_windows_skipped():
+    """Manipulated 5m windows (1 gp buy / 170k sell) must not poison margins."""
+    dp = _make_datapoints([(100, 95)] * 20 + [(1, 170000)] * 5)
+    result = analyze_timeseries(1, dp, current_buy=100, current_sell=95)
+    assert result is not None
+    assert result.datapoints == 20, f"expected 20 accepted windows, got {result.datapoints}"
+    # Arbitrage convention: sell at low (95), buy at high (100), tax ge_tax(95)=1.
+    # Each sane window is a small loss; the 170k-spread windows are excluded.
+    assert result.avg_margin == (95 - 100 - 1)
+    print("  PASSED test_manipulated_history_windows_skipped")
+
 def test_margin_scanner_happy_path():
     """MarginScanner produces sorted results for items with valid timeseries."""
     from rshelper.scanner import MarginScanner
@@ -244,6 +256,7 @@ if __name__ == "__main__":
     test_confidence_bounds()
     test_negative_margin_confidence_nonnegative()
     test_mixed_margin_consistency()
+    test_manipulated_history_windows_skipped()
     test_reliable_loser_gets_low_confidence()
     test_margin_scanner_happy_path()
     test_margin_scanner_missing_lookup()

@@ -95,7 +95,7 @@ def _get_ge_tracker(profile: str | None = None) -> Any | None:
         return cached
     _throttle()
     data = _fetch_url(GE_TRACKER_URL)
-    if data is not None:
+    if data is not None and _ge_tracker_items(data):
         _save_cache("ge_tracker", data, profile)
         return data
     return _load_stale_cache("ge_tracker", profile)
@@ -171,6 +171,8 @@ def _load_cache(name: str, profile: str | None = None) -> Any | None:
         return None
     max_age = CACHE_MAX_AGE.get(name, 300)
     age = time.time() - p.stat().st_mtime
+    if age < 0:
+        return None  # future-dated file (clock skew/restore) is not fresh
     try:
         data = json.loads(p.read_text())
     except (json.JSONDecodeError, OSError):
@@ -188,7 +190,7 @@ def _load_stale_cache(name: str, profile: str | None = None) -> Any | None:
         return None
     max_age = CACHE_MAX_AGE.get(name, 300)
     age = time.time() - p.stat().st_mtime
-    if age >= max_age * STALE_MULTIPLIER:
+    if age < 0 or age >= max_age * STALE_MULTIPLIER:
         return None
     try:
         data = json.loads(p.read_text())
@@ -243,14 +245,16 @@ def fetch_mapping(profile: str | None = None) -> list[dict] | None:
     data = _get("mapping")
     if data is not None:
         result = data.get("data", data) if isinstance(data, dict) else data
-        _save_cache("mapping", result, profile)
-        return result
+        if result:
+            _save_cache("mapping", result, profile)
+            return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
         print("  Note: OSRS Wiki unavailable; using GE Tracker fallback.", file=sys.stderr)
         result = _mapping_from_ge_tracker(dump)
-        _save_cache("mapping", result, profile)
-        return result
+        if result:
+            _save_cache("mapping", result, profile)
+            return result
     return _load_stale_cache("mapping", profile)
 
 
@@ -262,13 +266,15 @@ def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
     data = _get("latest")
     if data is not None:
         result = data.get("data", data)
-        _save_cache("latest", result, profile)
-        return result
+        if result:
+            _save_cache("latest", result, profile)
+            return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
         result = _latest_from_ge_tracker(dump)
-        _save_cache("latest", result, profile)
-        return result
+        if result:
+            _save_cache("latest", result, profile)
+            return result
     return _load_stale_cache("latest", profile)
 
 
@@ -280,13 +286,15 @@ def fetch_5m(profile: str | None = None) -> dict[str, dict] | None:
     data = _get("5m")
     if data is not None:
         result = data.get("data", data)
-        _save_cache("5m", result, profile)
-        return result
+        if result:
+            _save_cache("5m", result, profile)
+            return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
         result = _5m_from_ge_tracker(dump)
-        _save_cache("5m", result, profile)
-        return result
+        if result:
+            _save_cache("5m", result, profile)
+            return result
     return _load_stale_cache("5m", profile)
 
 

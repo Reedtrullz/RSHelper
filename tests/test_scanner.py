@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from rshelper.models import Item
-from rshelper.scanner import AlchScanner, build_items_from_api
+from rshelper.scanner import AlchScanner, MarginScanner, build_items_from_api
 
 
 def test_alch_scanner_basic():
@@ -169,6 +169,21 @@ def test_build_items_skips_stale_and_manipulated_prices():
     print("  PASSED test_build_items_skips_stale_and_manipulated_prices")
 
 
+def test_margin_scanner_matches_analysis_direction():
+    """MarginScanner current_profit must match analyze_timeseries window math."""
+    ts = [{"avgHighPrice": 100, "avgLowPrice": 120, "highPriceVolume": 10,
+           "lowPriceVolume": 10, "timestamp": 1_700_000_000 + i}
+          for i in range(10)]
+    item = Item(id=1, name="Momentum", members=False, buy_limit=100,
+                alch_value=0, buy_price=100, sell_price=120, volume=20)
+    results = MarginScanner().scan({1: item}, {1: ts})
+    assert len(results) == 1
+    a = results[0]
+    assert a.avg_margin == 18  # (120-100) - ge_tax(120)=2
+    assert a.current_profit == 18
+    print("  PASSED test_margin_scanner_matches_analysis_direction")
+
+
 
 
 def test_flip_scanner_arbitrage():
@@ -252,6 +267,7 @@ if __name__ == "__main__":
     test_sorted_by_gp_per_hour_descending()
     test_build_items_from_api()
     test_build_items_skips_stale_and_manipulated_prices()
+    test_margin_scanner_matches_analysis_direction()
     test_flip_scanner_arbitrage()
     test_flip_scanner_traditional()
     test_flip_scanner_invalid_direction()

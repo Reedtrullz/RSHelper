@@ -10,6 +10,7 @@ from datetime import date
 
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
+from rshelper.market import MAX_PRICE_RATIO, ge_tax, price_issue
 from rshelper.config import load_config
 from rshelper import snapshot, watchlist, tuning
 from rshelper.profile import resolve_config_path
@@ -401,6 +402,10 @@ def _trade_paper(args: argparse.Namespace) -> None:
 
     latest = fetch_latest(profile) or {}
     price = latest.get(str(entry["id"])) or {}
+    if not isinstance(price, dict) or price_issue(price):
+        print(f"No reliable live price data for {entry['name']} "
+              f"(stale or manipulated prices).", file=sys.stderr)
+        sys.exit(1)
     high = int(price.get("high", 0) or 0)
     low = int(price.get("low", 0) or 0)
     if args.flip_direction == "traditional":
@@ -538,10 +543,12 @@ def margin_check(args: argparse.Namespace) -> None:
                     l = dp.get("avgLowPrice")
                     if h and l:
                         h, l = int(h), int(l)
+                        if max(h, l) > MAX_PRICE_RATIO * min(h, l):
+                            continue
                         if direction == "traditional":
-                            m = h - l - min(5000000, max(1, int(h * 0.02)))
+                            m = h - l - ge_tax(h)
                         else:
-                            m = l - h - min(5000000, max(1, int(l * 0.02)))
+                            m = l - h - ge_tax(l)
                         margins.append(m)
                 if margins:
                     mean = sum(margins) / len(margins)
@@ -611,12 +618,17 @@ def item_info(args: argparse.Namespace) -> None:
     price = latest.get(str(item_id), {})
     buy_price = int(price.get("high") or 0)
     sell_price = int(price.get("low") or 0)
+    issue = price_issue(price)
+    if issue:
+        print(f"  Warning: price data for {name} is unusable ({issue}); "
+              f"values may be stale or manipulated.", file=sys.stderr)
 
     if args.json:
         out = {
             "id": item_id, "name": name, "members": members,
             "buy_limit": buy_limit, "alch_value": alch_value,
             "buy_price": buy_price, "sell_price": sell_price,
+            "price_warning": issue if issue else None,
         }
         # Alch
         nature_cost = _fetch_nature_rune_cost(mapping, latest)
@@ -625,7 +637,7 @@ def item_info(args: argparse.Namespace) -> None:
         # Flip
         # Margin: buy-high minus sell-low (consistent with spread display)
         flip_margin = buy_price - sell_price
-        tax_flip = min(5000000, max(1, int(buy_price * 0.02)))
+        tax_flip = ge_tax(buy_price)
         flip_profit = flip_margin - tax_flip
         out["flip_margin"] = flip_margin
         out["flip_tax"] = tax_flip
@@ -652,7 +664,7 @@ def item_info(args: argparse.Namespace) -> None:
         # Flip
         # Margin: buy-high minus sell-low (consistent with spread display)
         flip_margin = buy_price - sell_price
-        tax_flip = min(5000000, max(1, int(buy_price * 0.02)))
+        tax_flip = ge_tax(buy_price)
         flip_profit = flip_margin - tax_flip
         flip_line = f"  Flip margin: {flip_margin:,} gp (tax: {tax_flip:,}, net: {flip_profit:,})"
         if flip_profit <= 0:
@@ -676,17 +688,16 @@ def item_info(args: argparse.Namespace) -> None:
             print(f"\n  Tax curve (buy at {buy_price:,} gp):")
             print(f"  {'Sell Price':>12}  {'Tax':>10}  {'Profit':>10}  {'ROI':>6}")
             print(f"  " + "-" * 45)
-            tax_cap = 5_000_000
             steps = [1.00, 1.01, 1.02, 1.03, 1.05, 1.07, 1.10, 1.15, 1.20, 1.30, 1.50]
             for mult in steps:
                 sp = int(buy_price * mult)
-                tax = min(tax_cap, max(1, int(sp * 0.02)))
+                tax = ge_tax(sp)
                 profit = sp - buy_price - tax
                 roi = profit / buy_price * 100 if buy_price > 0 else 0
-                cap_mark = " *" if tax == tax_cap else ""
+                cap_mark = " *" if tax == 5_000_000 else ""
                 print(f"  {sp:>12,}  {tax:>10,}  {profit:>+10,}  {roi:>5.1f}%{cap_mark}")
             if args.json:
-                out["tax_curve"] = [{"sell_price": int(buy_price * m), "tax": min(tax_cap, max(1, int(int(buy_price * m) * 0.02))), "profit": int(buy_price * m) - buy_price - min(tax_cap, max(1, int(int(buy_price * m) * 0.02)))} for m in steps]
+                out["tax_curve"] = [{"sell_price": int(buy_price * m), "tax": ge_tax(int(buy_price * m)), "profit": int(buy_price * m) - buy_price - ge_tax(int(buy_price * m))} for m in steps]
 
     # Timeseries if requested
     if args.timeseries or getattr(args, "predict", False):
@@ -837,6 +848,11 @@ def watch_check(args: argparse.Namespace) -> None:
         price = latest.get(item_id_str)
         if not price or not isinstance(price, dict):
             continue
+        issue = price_issue(price)
+        if issue:
+            print(f"  Skipped {entry['name']}: price data {issue} "
+                  f"(stale or manipulated)", file=sys.stderr)
+            continue
         buy = int(price.get("high", 0) or 0)
         sell = int(price.get("low", 0) or 0)
         if buy <= 0 or sell <= 0:
@@ -844,10 +860,10 @@ def watch_check(args: argparse.Namespace) -> None:
 
         if direction == "traditional":
             margin = buy - sell
-            tax = min(5000000, max(1, int(buy * 0.02)))
+            tax = ge_tax(buy)
         else:
             margin = sell - buy
-            tax = min(5000000, max(1, int(sell * 0.02)))
+            tax = ge_tax(sell)
         profit = margin - tax
 
         above = entry.get("alert_margin_above")

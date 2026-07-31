@@ -108,6 +108,32 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertIn("total_cost_basis", body)
         self.assertGreater(body["total_cost_basis"], 0)
 
+    def test_scan_kwargs_passed_to_scanner(self):
+        calls = []
+
+        class StubScanner:
+            def scan(self, items, **kw):
+                calls.append(kw)
+                return []
+
+        Handler = make_handler(StubScanner(), lambda: [],
+                               scan_kwargs={"min_volume": 10})
+        from http.server import BaseHTTPRequestHandler
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/scan"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.response_code = None
+        h.response_headers = []
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: setattr(h, "response_code", code)
+        h.send_header = lambda key, value: h.response_headers.append((key, value))
+        h.end_headers = lambda: None
+        h.do_GET()
+        self.assertEqual(calls, [{"min_volume": 10}])
+        self.assertEqual(h.response_code, 200)
+
     def test_api_history_route(self):
         import tempfile
         from pathlib import Path

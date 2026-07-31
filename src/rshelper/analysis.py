@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import math
+from rshelper.market import MAX_PRICE_RATIO, ge_tax
 
 
 @dataclass
@@ -35,7 +36,6 @@ def analyze_timeseries(
     current_buy: int,
     current_sell: int,
     direction: str = "arbitrage",
-    tax_rate: float = 0.02,
 ) -> MarginAnalysis | None:
     """Analyze timeseries data to score margin reliability.
 
@@ -63,6 +63,9 @@ def analyze_timeseries(
         l = int(low)
         if h <= 0 or l <= 0:
             continue
+        # Skip manipulated windows: >20x gap between buy and sell averages.
+        if max(h, l) > MAX_PRICE_RATIO * min(h, l):
+            continue
 
         if direction == "arbitrage":
             margin_raw = l - h
@@ -70,8 +73,7 @@ def analyze_timeseries(
         else:
             margin_raw = h - l
             sell_price_for_tax = h  # traditional: sell at h (offer price)
-        raw_tax = int(sell_price_for_tax * tax_rate)
-        tax = min(5_000_000, max(1, raw_tax))
+        tax = ge_tax(sell_price_for_tax)
         margin_after_tax = margin_raw - tax
 
         margins.append(margin_after_tax)
@@ -97,12 +99,10 @@ def analyze_timeseries(
 
     # Current margin — direction-aware with 5M tax cap
     if direction == "arbitrage":
-        current_raw_tax = int(current_sell * tax_rate)
-        current_tax = min(5_000_000, max(1, current_raw_tax))
+        current_tax = ge_tax(current_sell)
         current_margin = current_sell - current_buy - current_tax
     else:
-        current_raw_tax = int(current_buy * tax_rate)  # sell at buy_price (h)
-        current_tax = min(5_000_000, max(1, current_raw_tax))
+        current_tax = ge_tax(current_buy)  # traditional: sell at buy_price (h)
         current_margin = current_buy - current_sell - current_tax
     current_vs_avg = (current_margin / avg_margin) if avg_margin != 0 else 0.0
 

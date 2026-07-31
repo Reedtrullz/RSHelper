@@ -27,12 +27,14 @@ def _item_to_dict(item) -> dict:
 
 
 def make_handler(scanner, scan_items: Callable[[], list],
-                 signal_detector: Callable[[], list] | None = None) -> type:
+                 signal_detector: Callable[[], list] | None = None,
+                 scan_kwargs: dict | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
     scan_items: Callable that returns list[Item] (fresh fetch each call)
     signal_detector: Optional callable that returns list[Signal] for /api/signals
+    scan_kwargs: Optional kwargs (members_only, min_volume, min_margin) for scanner.scan
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -78,7 +80,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_scan(self):
             try:
                 items = scan_items()
-                results = scanner.scan(items)
+                results = scanner.scan(items, **(scan_kwargs or {}))
                 data = {
                     "items": [_item_to_dict(r) for r in results],
                     "count": len(results),

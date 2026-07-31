@@ -137,6 +137,16 @@ def test_flip_detection():
     print("  PASSED test_flip_detection")
 
 
+def test_no_signals_without_real_5m_data():
+    """Tracker-shaped volume (no avg prices) must not produce signals."""
+    item = _make_item(item_id=99, buy=100, sell=90, volume=600)
+    item.rs_score = 50
+    vol_5m = {"99": {"highPriceVolume": 300, "lowPriceVolume": 300}}
+    signals = detect_signals([item], vol_5m, cooldown_sec=0)
+    assert signals == []
+    print("  PASSED test_no_signals_without_real_5m_data")
+
+
 def test_cooldown_suppression():
     """Same signal type for same item suppressed within cooldown."""
     orig = _reset_cooldowns()
@@ -258,6 +268,7 @@ if __name__ == "__main__":
     test_crash_detection()
     test_surge_detection()
     test_flip_detection()
+    test_no_signals_without_real_5m_data()
     test_cooldown_suppression()
     test_cooldown_expiry()
     test_no_false_positives()

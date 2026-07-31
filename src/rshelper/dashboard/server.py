@@ -6,9 +6,10 @@ import time
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
+from rshelper.config import load_config
 from rshelper.scanner import FlipScanner
-from rshelper.dashboard.handlers import make_handler
 from rshelper.signals import detect_signals
+from rshelper.dashboard.handlers import make_handler
 
 
 def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
@@ -18,6 +19,13 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     Blocks until interrupted. Handles KeyboardInterrupt for graceful shutdown.
     Data re-fetches from the API every 120 seconds (ponytail TTL cache).
     """
+    cfg = load_config()
+    scan_kwargs = {
+        "members_only": cfg.flip.members_only,
+        "min_volume": cfg.flip.min_volume,
+        "min_margin": cfg.flip.min_margin,
+    }
+
     # Initial fetch — seed the TTL cache. A failed live fetch must not kill
     # the dashboard: start with cached/empty data and retry on refresh.
     try:
@@ -26,39 +34,40 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         print("[dashboard] WARNING: initial OSRS Wiki fetch failed; starting with cached/empty data.",
               file=sys.stderr)
         items = []
+        _vol_5m = {}
 
     from rshelper.tuning import record_if_changed
     record_if_changed()
 
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     # Add configurable --refresh N flag when needed.
-    cache = {"items": items, "last_fetch": time.time()}
+    cache = {"items": items, "vol": _vol_5m, "last_fetch": time.time()}
 
-    def get_items():
+    def refresh():
         now = time.time()
         if (now - cache["last_fetch"]) > 120:
             print("[dashboard] Re-fetching GE data...", file=sys.stderr)
             try:
                 _m, _l, _v, fresh = _fetch_bootstrap()
                 cache["items"] = fresh
+                cache["vol"] = _v
             except SystemExit:
                 print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
             cache["last_fetch"] = now
+
+    def get_items():
+        refresh()
         return list(cache["items"])
 
-    scanner = FlipScanner(direction="arbitrage")
+    scanner = FlipScanner(direction=cfg.flip.direction)
 
     def get_signals():
-        try:
-            _m, _l, vol_data, fresh_items = _fetch_bootstrap()
-        except SystemExit:
-            return []
-        flip_scanner = FlipScanner(direction="arbitrage")
-        flips = flip_scanner.scan(fresh_items)
-        return detect_signals(flips, vol_data)
+        refresh()
+        flips = scanner.scan(cache["items"], **scan_kwargs)
+        return detect_signals(flips, cache["vol"])
 
-    scanner = FlipScanner(direction="arbitrage")
-    handler = make_handler(scanner, get_items, signal_detector=get_signals)
+    handler = make_handler(scanner, get_items, signal_detector=get_signals,
+                           scan_kwargs=scan_kwargs)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

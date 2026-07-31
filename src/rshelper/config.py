@@ -100,14 +100,14 @@ def load_config(profile: str | None = None) -> Config:
         flip=FlipConfig(
             direction=flip_raw.get("direction", "arbitrage"),
             members_only=flip_raw.get("members_only", False),
-            min_volume=flip_raw.get("min_volume", 0),
+            min_volume=flip_raw.get("min_volume", 10),
             min_margin=flip_raw.get("min_margin", 0),
             top=flip_raw.get("top", 50),
         ),
         margin=MarginConfig(
             direction=margin_raw.get("direction", "arbitrage"),
             members_only=margin_raw.get("members_only", False),
-            min_volume=margin_raw.get("min_volume", 0),
+            min_volume=margin_raw.get("min_volume", 10),
             min_margin=margin_raw.get("min_margin", 0),
             check=margin_raw.get("check", 20),
             top=margin_raw.get("top", 20),

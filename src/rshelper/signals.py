@@ -130,9 +130,14 @@ def detect_signals(
         avg_high = vol_data.get("avgHighPrice", item.buy_price) or item.buy_price
         avg_low = vol_data.get("avgLowPrice", item.sell_price) or item.sell_price
         five_min_vol = (vol_data.get("highPriceVolume", 0) or 0) + (vol_data.get("lowPriceVolume", 0) or 0)
+        # Real 5m averages/volumes are wiki-only; the GE Tracker fallback only
+        # carries offer quantities, which would produce misleading signals.
+        # FLIP is gated too: its liquidity test reads five_min_vol, which is
+        # offer quantity on the fallback, not executed trade volume.
+        has_real_5m = "avgHighPrice" in vol_data or "avgLowPrice" in vol_data
 
         # DUMP: sell price >10% below 5m average sell price, with some volume
-        if avg_low > 0 and five_min_vol >= 100:
+        if has_real_5m and avg_low > 0 and five_min_vol >= 100:
             drop = (item.sell_price - avg_low) / avg_low
             if drop <= -CRASH_THRESHOLD:
                 if not _is_cooling(item.id, "CRASH", cooldown_sec, cooldowns):
@@ -157,7 +162,7 @@ def detect_signals(
         # A single snapshot has no 'normal', so the baseline seeds from the
         # first observation and adapts via EMA; SURGE needs monitor-style
         # polling history to be meaningful.
-        if five_min_vol >= SURGE_VOLUME_MIN:
+        if has_real_5m and five_min_vol >= SURGE_VOLUME_MIN:
             prev = _update_baseline(baselines, item.id, five_min_vol)
             surge_ok = prev > 0 and five_min_vol > prev * SURGE_MULTIPLIER
             if surge_ok and not _is_cooling(item.id, "SURGE", cooldown_sec, cooldowns):
@@ -170,7 +175,7 @@ def detect_signals(
                 _set_cooldown(item.id, "SURGE", cooldowns)
 
         # FLIP: spread > 5% of buy price, with sufficient volume
-        if item.buy_price > 0:
+        if has_real_5m and item.buy_price > 0:
             spread_pct = (item.buy_price - item.sell_price) / item.buy_price
             if spread_pct >= FLIP_SPREAD_MIN and five_min_vol >= FLIP_VOLUME_MIN:
                 # Severity based on RS Score

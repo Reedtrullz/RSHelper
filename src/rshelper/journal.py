@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from rshelper.market import ge_tax
 from rshelper.profile import resolve_config_path
 
 TRADES_PATH = Path.home() / ".config" / "rshelper" / "trades.json"
@@ -84,7 +85,7 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
     if sell_price <= 0:
         raise ValueError(f"sell_price must be positive, got {sell_price}")
     trades = _load(profile)
-    per_item_tax = min(5_000_000, max(1, int(sell_price * 0.02)))
+    per_item_tax = ge_tax(sell_price)
     tax_paid = per_item_tax * qty
     profit = (sell_price - buy_price) * qty - tax_paid
     trade = {

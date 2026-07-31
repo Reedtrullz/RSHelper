@@ -7,6 +7,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from rshelper.market import ge_tax, price_issue
 from rshelper.profile import resolve_config_path
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
@@ -34,8 +35,8 @@ def _monitor_dir(profile: str | None = None) -> Path:
 
 def notify(title: str, message: str) -> None:
     """Fire macOS notification via osascript. No-op on failure."""
-    safe_msg = message.replace('"', '\\"')
-    safe_title = title.replace('"', '\\"')
+    safe_msg = message.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+    safe_title = title.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
     try:
         subprocess.run(
             ["osascript", "-e",
@@ -79,11 +80,15 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
     from rshelper.cli import _fetch_bootstrap
     from rshelper.scanner import FlipScanner
     from rshelper.signals import detect_signals
+    from rshelper.config import load_config
     from rshelper import watchlist
 
     _mapping, _latest, vol_5m, items = _fetch_bootstrap(profile)
-    scanner = FlipScanner(direction="arbitrage")
-    flips = scanner.scan(items)
+    cfg = load_config(profile)
+    scanner = FlipScanner(direction=cfg.flip.direction)
+    flips = scanner.scan(items, members_only=cfg.flip.members_only,
+                         min_volume=cfg.flip.min_volume,
+                         min_margin=cfg.flip.min_margin)
     signals = detect_signals(flips, vol_5m)
     if signals and not no_notify:
         high = [s for s in signals if s.severity == "HIGH"]
@@ -96,12 +101,15 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
             price = _latest.get(item_id_str)
             if not price or not isinstance(price, dict):
                 continue
+            issue = price_issue(price)
+            if issue:
+                print(f"[monitor] Skipped watchlist {entry['name']}: {issue} prices",
+                      file=sys.stderr)
+                continue
             buy = int(price.get("high", 0) or 0)
             sell = int(price.get("low", 0) or 0)
-            if buy <= 0 or sell <= 0:
-                continue
             margin = sell - buy
-            tax = min(5_000_000, max(1, int(sell * 0.02)))
+            tax = ge_tax(sell)
             profit = margin - tax
             above, below = entry.get("alert_margin_above"), entry.get("alert_margin_below")
             if (above is not None and profit > above) or (below is not None and profit < below):
@@ -129,6 +137,21 @@ def stop_monitor(profile: str | None = None) -> bool:
         return False
     try:
         os.kill(pid, signal.SIGTERM)
+        deadline = time.time() + 3
+        exited = False
+        while time.time() < deadline:
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                exited = True
+                break  # process exited
+            time.sleep(0.1)
+        if not exited:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except OSError:
+                pass
+            time.sleep(0.2)
         p_path.unlink(missing_ok=True)
         s_path = _state_path(profile)
         s_path.unlink(missing_ok=True)

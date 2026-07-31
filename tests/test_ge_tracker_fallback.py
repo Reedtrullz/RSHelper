@@ -86,6 +86,30 @@ class GeTrackerFallbackTest(unittest.TestCase):
         parsed = api._parse_tracker_time("2026-07-31 16:40:36")
         self.assertEqual(parsed, 1785516036)
 
+    def test_empty_wiki_latest_not_cached(self):
+        with mock.patch.object(api, "_get", return_value={"data": {}}):
+            with mock.patch.object(api, "_get_ge_tracker", return_value=None):
+                latest = api.fetch_latest("default")
+        self.assertIsNone(latest)
+        self.assertFalse((self.cache / "latest.json").exists())
+
+    def test_empty_ge_tracker_dump_not_cached(self):
+        with mock.patch.object(api, "_fetch_url", return_value={"data": []}):
+            with mock.patch.object(api, "_throttle"):
+                dump = api._get_ge_tracker("default")
+        self.assertIsNone(dump)
+        self.assertFalse((self.cache / "ge_tracker.json").exists())
+
+    def test_future_dated_cache_is_expired(self):
+        import os
+        import time
+        p = self.cache / "latest.json"
+        p.write_text('{"1": {"high": 1, "low": 1}}')
+        future = time.time() + 3600
+        os.utime(p, (future, future))
+        self.assertIsNone(api._load_cache("latest", "default"))
+        self.assertIsNone(api._load_stale_cache("latest", "default"))
+
     def test_5m_fallback_volume_proxy(self):
         with mock.patch.object(api, "_get", return_value=None):
             with mock.patch.object(api, "_get_ge_tracker", return_value=DUMP):
