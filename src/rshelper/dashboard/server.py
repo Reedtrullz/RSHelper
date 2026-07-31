@@ -42,6 +42,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     record_if_changed()
 
     def _source(latest: dict) -> str:
+        if not latest:
+            return "none"
         sample = next(iter(latest.values()), {}) if latest else {}
         return "ge_tracker" if isinstance(sample, dict) and "high_volume" in sample else "wiki"
 
@@ -70,13 +72,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
 
     scanner = FlipScanner(direction=cfg.flip.direction)
 
-    sig_cache = {"list": [], "ts": 0.0}
+    sig_cache = {"list": [], "flips": 0, "ts": 0.0}
 
     def active_signals():
         now = time.time()
         if now - sig_cache["ts"] > 30:
             flips = scanner.scan(cache["items"], **scan_kwargs)
             sig_cache["list"] = detect_signals(flips, cache["vol"])
+            sig_cache["flips"] = len(flips)
             sig_cache["ts"] = now
         return sig_cache["list"]
 
@@ -101,13 +104,12 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
 
     def get_meta() -> dict:
         refresh()
-        flips = scanner.scan(cache["items"], **scan_kwargs)
         signals = active_signals()
         from rshelper.journal import list_trades
         return {
             "source": cache["source"],
             "items": len(cache["items"]),
-            "flips": len(flips),
+            "flips": sig_cache["flips"],
             "signals": len(signals),
             "trades": len(list_trades()),
             "watchlist": len(watchlist.get_watched_ids()),

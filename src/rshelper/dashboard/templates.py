@@ -455,14 +455,10 @@ async function renderSignals(){
   const bar=document.getElementById('viewbar');
   bar.innerHTML=viewbarHtml();
   const body=document.getElementById('listBody');
-  let signals;
-  try{
-    const r=await fetch('/api/signals');
-    signals=(await r.json()).signals||[];
-  }catch(e){
-    body.innerHTML='<div class="loading">Error loading signals: '+escHtml(e.message)+'</div>';
-    return;
-  }
+  viewRows=[];
+  const signals=Object.values(signalsMap);
+  const order={HIGH:0,MEDIUM:1,LOW:2};
+  signals.sort((a,b)=>(order[a.severity]||3)-(order[b.severity]||3)||String(a.type).localeCompare(String(b.type)));
   viewRows=signals.map(s=>({id:s.item_id,name:s.name}));
   if(!signals.length){
     const note=meta.source==='ge_tracker'
@@ -475,12 +471,13 @@ async function renderSignals(){
   let h='<table><thead><tr><th class="th-sort">Type</th><th>Sev</th><th>Item</th><th>Price</th><th>Deviation</th><th class="name">Message</th></tr></thead><tbody>';
   signals.forEach(s=>{
     const sel=s.item_id===selectedId?' selected':'';
+    const dev=Number(s.deviation)||0;
     h+='<tr class="'+sel+'" data-id="'+s.item_id+'" onclick="selectId('+s.item_id+',false)">'+
       '<td><span class="sig-badge sig-'+escHtml(s.type)+'">'+escHtml(s.type)+'</span></td>'+
       '<td class="sev-'+escHtml(s.severity)+'">'+escHtml(s.severity)+'</td>'+
       '<td class="name">'+escHtml(s.name)+'</td>'+
       '<td>'+format(s.current_price)+'</td>'+
-      '<td class="'+(s.deviation>0?'pos':'neg')+'">'+(s.deviation>0?'+':'')+s.deviation+'%</td>'+
+      '<td class="'+(dev>0?'pos':'neg')+'">'+(dev>0?'+':'')+dev+'%</td>'+
       '<td class="name">'+escHtml(s.message)+'</td></tr>';
   });
   h+='</tbody></table>';
@@ -493,6 +490,7 @@ async function renderWatchlist(){
   const bar=document.getElementById('viewbar');
   bar.innerHTML=viewbarHtml();
   const body=document.getElementById('listBody');
+  viewRows=[];
   let items;
   try{
     const r=await fetch('/api/watchlist');
@@ -520,8 +518,8 @@ async function renderWatchlist(){
       (i.usable
         ?'<td>'+gp(i.buy)+'</td><td>'+gp(i.sell)+'</td>'+
          '<td class="margin '+marginClass(mp)+'">'+mp.toFixed(1)+'%</td>'+
-         '<td class="'+marginClass(profit)+'">'+gp(profit)+'</td>'
-        :'<td class="dim" colspan="3">'+escHtml(i.reason||'no data')+'</td>')+
+         '<td class="'+(profit>0?'pos':profit<0?'neg':'dim')+'">'+gp(profit)+'</td>'
+        :'<td class="dim" colspan="4">'+escHtml(i.reason||'no data')+'</td>')+
       '<td class="dim">'+escHtml(alert)+'</td></tr>';
   });
   h+='</tbody></table>';
@@ -538,6 +536,12 @@ function renderDetail(id){
   const item=allItems.find(i=>i.id===id)||watchDetail(id);
   if(!item){
     renderContextEmpty();
+    return;
+  }
+  if(item.unusable){
+    document.getElementById('contextPanel').innerHTML=
+      '<div class="item-name">'+escHtml(item.name)+'</div>'+
+      '<div class="notice warn-red">No usable price data ('+escHtml(item.reason||'unknown')+').</div>';
     return;
   }
   const mp=marginPct(item),rp=roiPct(item);
@@ -567,7 +571,8 @@ function renderDetail(id){
 }
 function watchDetail(id){
   const w=viewRows.find(r=>r.id===id);
-  if(!w||!w.usable)return null;
+  if(!w)return null;
+  if(!w.usable)return {id:w.id,name:w.name,unusable:true,reason:w.reason};
   return {id:w.id,name:w.name,buy_price:w.buy,sell_price:w.sell,volume:0,
           buy_limit:0,alch_value:0,members:false,profit:w.sell-w.buy-taxOf(w.sell),gp_per_hour:0,rs_score:0};
 }
@@ -702,6 +707,7 @@ async function renderPaper(){
     }
   }catch(e){
     body.innerHTML='<div class="loading">Error loading paper trading: '+escHtml(e.message)+'</div>';
+    context.innerHTML='';
   }
 }
 
@@ -726,7 +732,8 @@ function historyTablesHtml(h){
     items.forEach(i=>{
       html+='<tr><td class="name">'+escHtml(i.name)+'</td><td>'+format(i.trade_count)+'</td><td>'+format(i.qty)+'</td>'+
         '<td>'+format(i.cost_basis)+'</td><td class="margin '+(i.profit>0?'pos':i.profit<0?'neg':'neutral')+'">'+format(i.profit)+'</td>'+
-        '<td>'+i.roi_pct.toFixed(2)+'</td><td>'+i.win_rate.toFixed(1)+'</td></tr>';
+        '<td>'+(i.roi_pct==null?'-':i.roi_pct.toFixed(2))+'</td>'+
+        '<td>'+(i.win_rate==null?'-':i.win_rate.toFixed(1))+'</td></tr>';
     });
     html+='</tbody></table>';
   }
@@ -734,6 +741,7 @@ function historyTablesHtml(h){
 }
 
 function drawCumulative(cv,buckets){
+  if(!buckets||buckets.length<2)return;
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
   if(!w){requestAnimationFrame(()=>drawCumulative(cv,buckets));return}
   const h=220;

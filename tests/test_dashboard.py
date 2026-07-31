@@ -245,6 +245,41 @@ class TestHandlerRouting(unittest.TestCase):
         body = json.loads(h.wfile.getvalue())
         self.assertEqual(body["points"][0]["avgHigh"], 100)
 
+    def test_api_timeseries_bad_id_rejected(self):
+        from http.server import BaseHTTPRequestHandler
+        called = []
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            timeseries_fn=lambda i: called.append(i) or {"points": []})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/timeseries?id=abc"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.do_GET()
+        self.assertEqual(h.error_code, 400)
+        self.assertEqual(called, [])
+
+    def test_api_watchlist_post_foreign_origin_rejected(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            watchlist_update_fn=lambda a, i: {"items": []})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/watchlist"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"action": "add", "item_id": 5}).encode()
+        h.headers = {"Content-Length": str(len(payload)), "Host": "127.0.0.1:5555",
+                     "Origin": "https://evil.example"}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.do_POST()
+        self.assertEqual(h.error_code, 403)
+
     def test_scan_kwargs_passed_to_scanner(self):
         calls = []
 

@@ -5,7 +5,7 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler
 from typing import Callable
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from rshelper.dashboard.templates import INDEX_HTML
 
@@ -82,6 +82,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def do_POST(self):
             path = self.path.split("?", 1)[0]
+            if not self._origin_ok():
+                self.send_error(403, "Origin check failed")
+                return
             if path == "/api/trades":
                 self._handle_log_trade()
             elif path == "/api/watchlist":
@@ -194,7 +197,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_timeseries(self):
             qs = self._query()
             raw = qs.get("id", [""])[0]
-            item_id = int(raw) if raw.isdigit() else 0
+            if not raw.isdigit():
+                self.send_error(400, "Invalid item id")
+                return
+            item_id = int(raw)
             self._serve_json(timeseries_fn(item_id) if timeseries_fn else {"points": []})
 
         def _handle_watchlist(self):
@@ -212,7 +218,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
             try:
                 self._serve_json(watchlist_update_fn(action, item_id))
             except (ValueError, TypeError) as e:
-                self.send_error(400, str(e))
+                print(f"[dashboard] watchlist error: {e}", file=sys.stderr)
+                self.send_error(400, "Watchlist update failed")
 
         def _handle_log_trade(self):
             try:
@@ -246,6 +253,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _query(self):
             return parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+
+        def _origin_ok(self) -> bool:
+            """Reject state-mutating requests from foreign origins."""
+            origin = self.headers.get("Origin")
+            if not origin:
+                return True
+            host = self.headers.get("Host", "")
+            return bool(host) and urlparse(origin).netloc == host
 
         def log_message(self, format, *args):
             print(f"[dashboard] {format % args}", file=sys.stderr)
