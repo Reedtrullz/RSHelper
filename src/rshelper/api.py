@@ -1,7 +1,9 @@
 """OSRS GE price clients: OSRS Wiki Realtime Prices API, with a GE Tracker
 fallback for datacenter IPs that the wiki's Cloudflare blocks (403)."""
 
+import calendar
 import concurrent.futures
+import datetime
 import json
 import os
 import sys
@@ -104,6 +106,17 @@ def _ge_tracker_items(dump: Any) -> list[dict]:
     return items if isinstance(items, list) else []
 
 
+def _parse_tracker_time(value: Any) -> int | None:
+    """GE Tracker 'YYYY-MM-DD HH:MM:SS' (UTC) -> epoch seconds, None if unparseable."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+    return calendar.timegm(parsed.timetuple())
+
+
 def _mapping_from_ge_tracker(dump: Any) -> list[dict]:
     """GE Tracker item rows -> wiki-shaped mapping entries."""
     return [
@@ -122,7 +135,14 @@ def _mapping_from_ge_tracker(dump: Any) -> list[dict]:
 def _latest_from_ge_tracker(dump: Any) -> dict[str, dict]:
     """GE Tracker buying/selling -> wiki-shaped latest prices keyed by item ID."""
     return {
-        str(e["itemId"]): {"high": e["buying"], "low": e["selling"]}
+        str(e["itemId"]): {
+            "high": e["buying"],
+            "low": e["selling"],
+            "highTime": _parse_tracker_time(e.get("lastKnownBuyTime")),
+            "lowTime": _parse_tracker_time(e.get("lastKnownSellTime")),
+            "high_volume": e.get("buyingQuantity", 0),
+            "low_volume": e.get("sellingQuantity", 0),
+        }
         for e in _ge_tracker_items(dump)
     }
 

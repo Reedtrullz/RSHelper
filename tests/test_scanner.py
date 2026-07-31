@@ -1,6 +1,7 @@
 """Tests for the alch scanner."""
 
 import sys
+import time
 from pathlib import Path
 
 # Ensure src/ is on the path for imports
@@ -122,7 +123,11 @@ def test_build_items_from_api():
         {"id": 1, "name": "Sword", "members": False, "limit": 100, "highalch": 1000},
         {"id": 2, "name": "Untradeable", "members": False, "limit": 0, "highalch": 0},
     ]
-    latest = {"1": {"high": 800, "low": 750}, "2": {"high": 0, "low": 0}}
+    now = int(time.time())
+    latest = {
+        "1": {"high": 800, "low": 750, "highTime": now - 60, "lowTime": now - 60},
+        "2": {"high": 0, "low": 0, "highTime": now - 60, "lowTime": now - 60},
+    }
     volume_5m = {"1": {"highPriceVolume": 300, "lowPriceVolume": 200}}
     items = build_items_from_api(mapping, latest, volume_5m)
     assert len(items) == 1  # untradeable filtered out
@@ -130,6 +135,38 @@ def test_build_items_from_api():
     assert items[0].buy_price == 800
     assert items[0].volume == 500
     print("  PASSED test_build_items_from_api")
+
+
+def test_build_items_skips_stale_and_manipulated_prices():
+    """Stale, zero-depth, or absurdly spread prices never reach the scanners."""
+    now = int(time.time())
+    mapping = [
+        {"id": i, "name": name, "members": False, "limit": 100, "highalch": 0}
+        for i, name in enumerate(
+            ("Fresh", "Stale", "NoTimes", "ZeroDepth", "WikiAbsurd", "TrackerAbsurd"), 1
+        )
+    ]
+    latest = {
+        # healthy item: kept
+        "1": {"high": 100, "low": 95, "highTime": now - 60, "lowTime": now - 30},
+        # one price leg 3 days old: skipped
+        "2": {"high": 100, "low": 95, "highTime": now - 3 * 86400, "lowTime": now - 60},
+        # no trade timestamps at all: skipped
+        "3": {"high": 100, "low": 95},
+        # fresh but zero offers on one side (GE Tracker shape): skipped
+        "4": {"high": 100, "low": 95000, "highTime": now - 60, "lowTime": now - 30,
+              "high_volume": 50, "low_volume": 0},
+        # wiki shape, 1 gp buy vs 170k sell, both fresh: skipped by ratio
+        "5": {"high": 1, "low": 170000, "highTime": now - 60, "lowTime": now - 30},
+        # tracker shape, 1 gp buy vs 170k sell with depth: skipped by ratio
+        "6": {"high": 1, "low": 170000, "highTime": now - 60, "lowTime": now - 30,
+              "high_volume": 115, "low_volume": 10},
+    }
+    items = build_items_from_api(mapping, latest, {})
+    assert [i.name for i in items] == ["Fresh"]
+    assert items[0].buy_price == 100
+    assert items[0].sell_price == 95
+    print("  PASSED test_build_items_skips_stale_and_manipulated_prices")
 
 
 
@@ -214,6 +251,7 @@ if __name__ == "__main__":
     test_min_volume_filter()
     test_sorted_by_gp_per_hour_descending()
     test_build_items_from_api()
+    test_build_items_skips_stale_and_manipulated_prices()
     test_flip_scanner_arbitrage()
     test_flip_scanner_traditional()
     test_flip_scanner_invalid_direction()

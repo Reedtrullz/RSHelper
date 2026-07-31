@@ -1,5 +1,7 @@
 """Alch-profit and flip-margin scanner — core calculation engine."""
 
+import sys
+import time
 from typing import Any
 from dataclasses import dataclass
 from rshelper.models import Item
@@ -7,6 +9,11 @@ from rshelper.analysis import analyze_timeseries, MarginAnalysis
 from rshelper.signals import compute_rs_score_flip, compute_rs_score_alch
 
 MAX_CASTS_PER_HOUR = 1200  # 5-tick cast speed
+# ponytail: hardcoded anti-manipulation thresholds. Add config knobs if a
+# user ever legitimately trades items with >20x bid/ask gaps or >24h-old ticks.
+STALE_PRICE_AGE = 24 * 3600
+MAX_PRICE_RATIO = 20
+
 @dataclass
 class AlchScanner:
     nature_rune_cost: int = 147  # default GE price
@@ -64,8 +71,9 @@ def build_items_from_api(
     latest: dict[str, dict],
     volume_5m: dict[str, dict],
 ) -> list[Item]:
-    """Merge API responses into Item list."""
+    """Merge API responses into Item list, dropping stale/manipulated prices."""
     items: list[Item] = []
+    skipped = {"stale": 0, "depth": 0, "ratio": 0}
     for entry in mapping:
         item_id = entry.get("id")
         if item_id is None:
@@ -80,7 +88,26 @@ def build_items_from_api(
         sell_price = _safe_int(price.get("low"))
         volume = _safe_int(vol.get("highPriceVolume")) + _safe_int(vol.get("lowPriceVolume"))
         # Skip items with no price data (not traded or untradeable)
-        if buy_price <= 0:
+        if buy_price <= 0 or sell_price <= 0:
+            continue
+        # A spread is only real when both price legs are recent, both market
+        # sides have standing depth, and the prices are not absurdly apart.
+        # GE manipulation artifacts (1 gp buy / 170k sell on dead items) fail here.
+        high_time = price.get("highTime")
+        low_time = price.get("lowTime")
+        if not isinstance(high_time, (int, float)) or not isinstance(low_time, (int, float)):
+            skipped["stale"] += 1
+            continue
+        if time.time() - min(high_time, low_time) > STALE_PRICE_AGE:
+            skipped["stale"] += 1
+            continue
+        if "high_volume" in price and (
+            _safe_int(price.get("high_volume")) <= 0 or _safe_int(price.get("low_volume")) <= 0
+        ):
+            skipped["depth"] += 1
+            continue
+        if max(buy_price, sell_price) > MAX_PRICE_RATIO * min(buy_price, sell_price):
+            skipped["ratio"] += 1
             continue
         items.append(Item(
             id=item_id,
@@ -92,6 +119,14 @@ def build_items_from_api(
             sell_price=sell_price,
             volume=volume,
         ))
+    total = sum(skipped.values())
+    if total:
+        print(
+            f"  Skipped {total} items with stale/manipulated prices "
+            f"({skipped['stale']} stale, {skipped['depth']} no offer depth, "
+            f"{skipped['ratio']} absurd spread)",
+            file=sys.stderr,
+        )
     return items
 
 @dataclass
