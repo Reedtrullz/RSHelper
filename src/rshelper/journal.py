@@ -34,6 +34,8 @@ class Trade:
 class PnLSummary:
     total_profit: int = 0
     total_tax_paid: int = 0
+    total_cost_basis: int = 0
+    roi_pct: float = 0.0
     trade_count: int = 0
     winning_trades: int = 0
     losing_trades: int = 0
@@ -132,6 +134,7 @@ def compute_pnl(since: str = "", profile: str | None = None) -> PnLSummary:
 
     total_profit = sum(t.profit for t in trades_list)
     total_tax = sum(t.tax_paid for t in trades_list)
+    total_cost = sum(t.buy_price * t.qty for t in trades_list)
     winners = [t for t in trades_list if t.profit > 0]
     losers = [t for t in trades_list if t.profit < 0]
     best = max(trades_list, key=lambda t: t.profit)
@@ -152,6 +155,8 @@ def compute_pnl(since: str = "", profile: str | None = None) -> PnLSummary:
 
     return PnLSummary(
         total_profit=total_profit, total_tax_paid=total_tax,
+        total_cost_basis=total_cost,
+        roi_pct=(total_profit / total_cost * 100) if total_cost > 0 else 0.0,
         trade_count=len(trades_list),
         winning_trades=len(winners), losing_trades=len(losers),
         win_rate=len(winners) / len(trades_list) * 100 if trades_list else 0,
@@ -159,3 +164,35 @@ def compute_pnl(since: str = "", profile: str | None = None) -> PnLSummary:
         active_gp_per_hour=round(active_gp_per_hour),
         items_traded=unique_items,
     )
+
+
+@dataclass
+class ItemPnL:
+    item_id: int
+    name: str
+    trade_count: int = 0
+    qty: int = 0
+    cost_basis: int = 0
+    profit: int = 0
+    roi_pct: float = 0.0
+    win_rate: float = 0.0
+
+
+def compute_pnl_by_item(since: str = "",
+                        profile: str | None = None) -> list[ItemPnL]:
+    """Per-item P&L breakdown, sorted by profit descending."""
+    trades_list = list_trades(since=since, profile=profile) if since else list_trades(profile=profile)
+    rows: dict[int, ItemPnL] = {}
+    wins: dict[int, int] = {}
+    for t in trades_list:
+        row = rows.setdefault(t.item_id, ItemPnL(item_id=t.item_id, name=t.name))
+        row.trade_count += 1
+        row.qty += t.qty
+        row.cost_basis += t.buy_price * t.qty
+        row.profit += t.profit
+        if t.profit > 0:
+            wins[t.item_id] = wins.get(t.item_id, 0) + 1
+    for row in rows.values():
+        row.roi_pct = (row.profit / row.cost_basis * 100) if row.cost_basis > 0 else 0.0
+        row.win_rate = (wins.get(row.item_id, 0) / row.trade_count * 100) if row.trade_count else 0.0
+    return sorted(rows.values(), key=lambda r: r.profit, reverse=True)

@@ -212,9 +212,11 @@ async function renderTrades(){
     const h='<div class="item-name" style="margin-bottom:12px">P&L Summary</div>'+
       '<div class="metric-grid">'+
       metric('Total Profit',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':'red')+
+      metric('ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
       metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
       metric('Trades',format(pnl.trade_count||0),'')+
       metric('Tax Paid',format(pnl.total_tax_paid||0)+' gp','')+
+      metric('Cost Basis',format(pnl.total_cost_basis||0)+' gp','')+
       metric('Best','<span class="val green">'+format(pnl.best_trade||0)+'</span>','')+
       metric('Worst','<span class="val red">'+format(pnl.worst_trade||0)+'</span>','')+
       metric('Items',format(pnl.items_traded||0),'')+

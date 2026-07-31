@@ -10,7 +10,7 @@ _test_dir = Path(_tmpdir.name)
 jmod.TRADES_PATH = _test_dir / "trades.json"
 
 from rshelper.journal import (log_trade, delete_trade, list_trades, compute_pnl,
-                               Trade, PnLSummary, TRADES_PATH)
+                               compute_pnl_by_item, Trade, PnLSummary, TRADES_PATH)
 
 def _clean():
     if TRADES_PATH.exists():
@@ -166,6 +166,37 @@ def test_pnl_gp_per_hour():
     assert pnl.active_gp_per_hour > 0
     print("  PASSED test_pnl_gp_per_hour")
 
+
+def test_pnl_cost_basis_and_roi():
+    _clean()
+    log_trade(1, "Nature rune", 1000, 100, 110)  # profit
+    log_trade(1, "Nature rune", 500, 100, 90)    # loss
+    pnl = compute_pnl()
+    expected_cost = 100 * 1000 + 100 * 500
+    assert pnl.total_cost_basis == expected_cost
+    expected_roi = pnl.total_profit / expected_cost * 100
+    assert abs(pnl.roi_pct - expected_roi) < 0.01
+    print("  PASSED test_pnl_cost_basis_and_roi")
+
+
+def test_pnl_by_item_breakdown():
+    _clean()
+    log_trade(1, "Nature rune", 1000, 100, 110)  # profit +8,000
+    log_trade(1, "Nature rune", 500, 100, 90)    # loss -5,500
+    log_trade(2, "Coal", 2000, 50, 60)           # profit +18,000
+    rows = compute_pnl_by_item()
+    assert len(rows) == 2
+    nature = next(r for r in rows if r.item_id == 1)
+    coal = next(r for r in rows if r.item_id == 2)
+    assert nature.trade_count == 2
+    assert nature.cost_basis == 150_000
+    assert nature.win_rate == 50.0
+    assert coal.trade_count == 1
+    assert coal.win_rate == 100.0
+    assert rows[0].profit >= rows[1].profit  # sorted descending
+    assert rows[0].item_id == 2  # Coal is the top item
+    print("  PASSED test_pnl_by_item_breakdown")
+
 def test_cli_trade_log_parse():
     import subprocess
     _clean()
@@ -193,5 +224,7 @@ if __name__ == "__main__":
     test_pnl_mixed_wins_losses()
     test_pnl_empty_ledger()
     test_pnl_gp_per_hour()
+    test_pnl_cost_basis_and_roi()
+    test_pnl_by_item_breakdown()
     test_cli_trade_log_parse()
     print("\nAll journal tests passed.")

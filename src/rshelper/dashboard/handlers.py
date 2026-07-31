@@ -122,6 +122,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
             from rshelper.journal import compute_pnl
             pnl = compute_pnl()
             d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
+                 "total_cost_basis": pnl.total_cost_basis,
+                 "roi_pct": round(pnl.roi_pct, 2),
                  "trade_count": pnl.trade_count, "winning_trades": pnl.winning_trades,
                  "losing_trades": pnl.losing_trades, "win_rate": round(pnl.win_rate, 1),
                  "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded}

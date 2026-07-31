@@ -88,6 +88,25 @@ class TestHandlerRouting(unittest.TestCase):
         body = json.loads(self._get_body())
         self.assertEqual(body["status"], "ok")
 
+    def test_api_pnl_includes_roi(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.journal as jmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                jmod.log_trade(1, "Nature rune", 1000, 100, 110)
+                self.handler.path = "/api/pnl"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                jmod.TRADES_PATH = original_path
+        self.assertIn("roi_pct", body)
+        self.assertIn("total_cost_basis", body)
+        self.assertGreater(body["total_cost_basis"], 0)
+
     def test_api_scan_returns_json(self):
         self.handler.path = "/api/scan"
         self.handler.do_GET()
