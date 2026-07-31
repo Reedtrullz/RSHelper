@@ -1,4 +1,8 @@
-# RSHelper v0.1 — Implementation Handoff
+> **HISTORICAL (v0.1).** This is the original v0.1 implementation plan and is
+> kept for reference only. Current state and architecture live in
+> **HANDOFF-v2.0.md**; agent workflow rules live in **AGENTS.md**.
+
+# RSHelper v0.1 — Implementation Handoff (historical)
 
 ## Task
 

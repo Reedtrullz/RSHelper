@@ -1,4 +1,11 @@
-# RSHelper v1.0 Handoff: From CLI Tool to Trading Platform
+> **SUPERSEDED (2026-07-31).** This handoff describes the v0.9/v1.0-era state
+> (3001 lines, 61 tests, 8 subcommands) and is kept for history. The current
+> authoritative handoff is **HANDOFF-v2.0.md** (v1.5, 3720 lines, 140 tests,
+> 13 subcommands). Several "remaining sharp edges" listed here are already
+> fixed: config booleans (#1), alch CSV field map (#3), retry throttle (#5),
+> and `--version` (#10).
+
+# RSHelper v1.0 Handoff: From CLI Tool to Trading Platform (historical)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python CLI
 tool for Old School RuneScape Grand Exchange profit scanning. The codebase has

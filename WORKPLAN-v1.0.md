@@ -1,5 +1,10 @@
 # RSHelper v1.0–v1.4 Work Plan
 
+> **COMPLETED (2026-07-31).** All phases in this plan shipped in commit
+> `b8143d8` (v1.0-v1.4, 133 tests) and were extended by v1.5 + hardening
+> rounds. This document is kept as the historical plan. See
+> **HANDOFF-v2.0.md** for the current state and **AGENTS.md** for workflow.
+
 > Generated 2026-07-29 from competitive intelligence research across 16 OSRS
 > GE tools. Each phase is self-contained and shippable. Phases are sequenced:
 > each builds on the previous. Tests are specified per-module, not per-function.

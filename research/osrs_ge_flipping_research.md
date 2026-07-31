@@ -1,5 +1,10 @@
 # OSRS Grand Exchange Flipping Research — RSHelper Actionable Insights
 
+> **TAX CORRECTION (2026-07-31):** The GE tax is **2%** on sells, capped at
+> 5M per item, since the 29 May 2025 update (OSRS Wiki). The "1%" lines in
+> this file predate that change and are stale. RSHelper's code uses 2%
+> everywhere. Do not trust the 1% claims below.
+
 **Research date:** 2026-07-26
 **Sources:** 30+ ge-tracker.com articles, OSRS Wiki, gemargin.com, 07flip.com, osrs-alchemy.com, tristanrhodes.com
 **Agents used:** 5 parallel research agents fetching 40+ URLs
