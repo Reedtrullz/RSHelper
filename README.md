@@ -62,8 +62,28 @@ GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
 ## Development
 
 ```bash
-for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 140 tests, 12 files
+for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 167 tests, 15 files
 ```
 
 See `AGENTS.md` for invariants (tax, margin convention, stdout/stderr,
-stdlib-only) and `HANDOFF-v2.0.md` for the full architecture and CLI surface.
+stdlib-only) and `HANDOFF-v3.0.md` for the full architecture and CLI surface.
+
+## Data sources
+
+Live GE data comes from the OSRS Wiki prices API (`prices.runescape.wiki`).
+When it is unreachable (it returns HTTP 403 from datacenter IPs), the client
+falls back to the GE Tracker all-items dump (`www.ge-tracker.com/api/items`,
+no auth) for item metadata, live buy/sell prices, and a quantity-based volume
+proxy. The wiki remains primary; see `deploy/README.md` for the VPS-specific
+reachability notes.
+
+## Deployment
+
+Pushing to `main` builds a GHCR image and deploys it to the Racknerd VPS
+behind Caddy at https://rs.reidar.tech (Ansible playbook in `deploy/`,
+exact-SHA health verification in CI). A scheduled workflow runs public
+uptime checks; the current live SHA is the source of truth:
+
+```bash
+curl -fsS https://rs.reidar.tech/api/health
+```

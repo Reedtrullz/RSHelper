@@ -3,15 +3,17 @@
 RSHelper is a stdlib-only Python CLI and local web dashboard for Old School
 RuneScape Grand Exchange trading: alch-profit scanning, flip/margin analysis,
 market signals, a daemon monitor, a trade journal, and multi-account profiles.
-Current version: `1.5.0` (`rshelper --version`). Latest handoff:
-`HANDOFF-v2.0.md`.
+It also ships a production deployment (Docker on a Racknerd VPS behind Caddy)
+served at https://rs.reidar.tech. Current version: `1.6.0`
+(`rshelper --version`). Latest handoff: `HANDOFF-v3.0.md`.
 
 ## Environment
 
 - Python 3.11+ required (`tomllib`); venv at `.venv/`. Run everything through
   `.venv/bin/python`.
-- Zero external dependencies. Do not add PyPI packages; the OSRS Wiki API
-  client uses `urllib` and the dashboard uses `http.server`.
+- Zero external dependencies. Do not add PyPI packages; the API clients
+  (OSRS Wiki + GE Tracker fallback) use `urllib` and the dashboard uses
+  `http.server`.
 - Cache at `~/.cache/rshelper/` (0600, atomic writes). Config, watchlist,
   trades, snapshots, cooldowns, volume baselines, monitor state at
   `~/.config/rshelper/`.
@@ -19,7 +21,7 @@ Current version: `1.5.0` (`rshelper --version`). Latest handoff:
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 140 tests across 12 files, all passing.
+  Expected: 167 tests across 15 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -37,15 +39,18 @@ Current version: `1.5.0` (`rshelper --version`). Latest handoff:
 3. **Confidence model**: `confidence = reliability x profitability`, split so
    a "reliable loser" scores near zero. MarginScanner sorts by expected
    GP/hr (confidence x current_profit x throughput).
-4. **Cache strategy**: fresh cache -> live API -> stale cache fallback. Never
-   serve stale data ahead of a network attempt. All cache writes are atomic
-   (temp file + `os.replace`).
+4. **Cache strategy**: fresh cache -> live API -> GE Tracker fallback -> stale
+   cache. Never serve stale data ahead of a network attempt. The OSRS Wiki
+   prices API returns HTTP 403 from datacenter IPs (Cloudflare), so on the VPS
+   the fallback (GE Tracker all-items dump, no auth) is the effective live
+   source; the wiki stays primary on residential IPs. All cache writes are
+   atomic (temp file + `os.replace`).
 5. **stdout is for data only**. Tables, JSON, CSV, HTML, and primary command
    output go to stdout. Every fetch/progress/status/error message goes to
    stderr. Breaking this breaks `--json`/`--csv` piping — it is the most
    common regression in this repo.
 6. **`--quiet`** routes status output to `/dev/null`; `--version` prints the
-   `__version__` constant. Keep the CLI surface listed in `HANDOFF-v2.0.md`
+   `__version__` constant. Keep the CLI surface listed in `HANDOFF-v3.0.md`
    working: every subcommand and flag must have at least one test and a smoke
    check.
 7. **Defaults are tuned for paper trading**: flip/margin scans default
@@ -57,13 +62,18 @@ Current version: `1.5.0` (`rshelper --version`). Latest handoff:
 
 - `scanner.py`: 5-min volume is extrapolated to hourly with `volume * 12`.
 - `dashboard/server.py`: closure-based TTL cache, re-fetch every 120s.
+- `api.py`: GE Tracker fallback volume is order quantities
+  (`buyingQuantity`/`sellingQuantity`), not real 5m trade volume; real
+  trade-volume timeseries are wiki-only. The GE Tracker dump is cached 300s
+  so the undocumented endpoint gets one fetch per refresh cycle.
 - `dashboard/templates.py`: inline HTML template, no template engine.
 
 ## Workflow Gates
 
 Before committing a round:
-1. Run all 12 test files; zero failures.
-2. Smoke-test every touched subcommand against the live Wiki API.
+1. Run all 15 test files; zero failures.
+2. Smoke-test every touched subcommand against the live Wiki API (or the GE
+   Tracker fallback when testing from a datacenter IP).
 3. Verify `--json` output pipes through `json.tool` without stderr leakage.
 4. For larger rounds, run an `$anti` sidecar review on the diff and triage
    every finding (verify locally before fixing; record skips).
@@ -71,6 +81,17 @@ Before committing a round:
 6. Log to Obsidian: today's daily note (`Daily/DD-MM-YYYY.md`) under `## Log`
    with commit SHA, test counts, and evidence; add a version section to
    `Personal/Projects/RSHelper.md`. State plainly if logging was skipped.
+
+## Deployment
+
+- Push to `main` runs the CI pipeline (checks -> GHCR build/push -> Ansible
+  deploy -> exact-SHA public health verify) in `.github/workflows/ci.yml`.
+- The playbook and inventory live in `deploy/`; secrets
+  `VPS_SSH_PRIVATE_KEY` / `VPS_SSH_HOST_KEY` are set on the repo.
+- `.github/workflows/monitoring.yml` runs scheduled public uptime checks.
+- `.github/workflows/probe-sources.yml` is a manual (dispatch-only) diagnostic
+  that curls candidate GE data sources from the VPS host; it does not touch
+  the deployed app.
 
 ## Disk Hygiene
 

@@ -22,6 +22,14 @@ The GitHub Actions version of the flow (`.github/workflows/ci.yml`):
 push/PR -> automatic checks -> main-only Docker build/push -> main-only Ansible deploy -> exact-SHA public health verification
 ```
 
+`probe-sources.yml` is a manual (dispatch-only) diagnostic that curls
+candidate GE data sources from the VPS host and prints HTTP codes. Run it
+whenever a source's reachability needs re-checking:
+
+```bash
+gh workflow run probe-sources.yml --repo Reedtrullz/RSHelper
+```
+
 ## Deployment verification status
 
 Verify the current live SHA with:
