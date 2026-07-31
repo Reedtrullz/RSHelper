@@ -34,6 +34,26 @@ gh run list --commit "$(git rev-parse origin/main)" --limit 5 --json databaseId,
 
 The live SHA — not this file — is the source of truth for what is deployed.
 
+## OSRS Wiki access from the VPS
+
+The OSRS Wiki API (Cloudflare-fronted) returns HTTP 403 for the VPS datacenter
+IP (confirmed 2026-07-31 with both `curl` and `urllib` from the VPS host,
+independent of User-Agent). Live GE data cannot be fetched from the VPS, so
+the deployed dashboard starts with cached/empty item data and stays healthy
+(`server.py` deliberately survives the failed bootstrap fetch). Progression,
+history, and tuning views read local state and are unaffected.
+
+To seed item data, copy a populated `~/.cache/rshelper` from a machine that
+can reach the wiki into the container HOME at
+`/opt/apps/rshelper/data/.cache/rshelper`, then restart the container:
+
+```bash
+cd /opt/apps/rshelper && docker compose -f compose.production.yml restart
+```
+
+The mapping cache is served stale for up to 72h; re-seed per deploy if live
+item scans are wanted.
+
 ## One-time prerequisites
 
 GitHub Actions secrets (set in the repo settings):

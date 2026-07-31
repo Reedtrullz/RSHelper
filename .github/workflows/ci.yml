@@ -178,13 +178,6 @@ jobs:
             deploy/playbook.yml \
             -e "docker_image=${{ needs.build-and-push.outputs.image }}:${{ needs.build-and-push.outputs.tag }}"
 
-      - name: Dump container logs (temporary diagnostic)
-        if: always()
-        shell: bash
-        run: |
-          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
-            'docker logs --tail 40 rshelper 2>&1; echo "---VPS CURL WIKI---"; curl -s -o /dev/null -w "vps-host curl wiki: %{http_code}\n" --max-time 10 "https://prices.runescape.wiki/api/v1/osrs/mapping" -H "User-Agent: RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)"; echo "---VPS URLLIB WIKI---"; python3 -c "import urllib.request as u; print(\"vps-host urllib wiki:\", u.urlopen(u.Request(\"https://prices.runescape.wiki/api/v1/osrs/mapping\", headers={\"User-Agent\": \"RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)\"}), timeout=10).status)"; echo "---INSPECT---"; docker inspect rshelper --format "exit={{.State.ExitCode}} status={{.State.Status}} err={{.State.Error}}"'
-
       - name: Verify public deployment version
         shell: bash
         run: |
