@@ -67,7 +67,9 @@ class TestCLI(unittest.TestCase):
     def test_version_flag(self):
         r = run("--version")
         self.assertEqual(r.returncode, 0)
-        self.assertIn("rshelper 1.5.0", r.stdout)
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        from rshelper import __version__
+        self.assertIn(f"rshelper {__version__}", r.stdout)
 
     def test_members_boolean_optional(self):
         r = run("flip-scan", "--help")
@@ -117,24 +119,28 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(cfg.flip.members_only)
 
     def test_trade_paper_uses_live_prices(self):
-        import tempfile
         from pathlib import Path
         from unittest import mock
         from argparse import Namespace
+        import tempfile
         sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
         import rshelper.api as amod
         import rshelper.journal as jmod
         import rshelper.cli as cmod
-        tmp = tempfile.TemporaryDirectory()
-        jmod.TRADES_PATH = Path(tmp.name) / "trades.json"
-        with mock.patch.object(amod, "fetch_mapping", return_value=[
-                {"id": 1, "name": "Nature rune", "limit": 13000}]):
-            with mock.patch.object(amod, "fetch_latest", return_value={
-                    "1": {"high": 150, "low": 140}}):
-                cmod._trade_paper(Namespace(
-                    item="nature rune", qty=100, capital=0, note="",
-                    profile=None))
-        trades = jmod.list_trades()
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "1": {"high": 150, "low": 140}}):
+                        cmod._trade_paper(Namespace(
+                            item="nature rune", qty=100, capital=0, note="",
+                            profile=None))
+                trades = jmod.list_trades()
+            finally:
+                jmod.TRADES_PATH = original_path
         self.assertEqual(len(trades), 1)
         t = trades[0]
         self.assertEqual(t.name, "Nature rune")
@@ -144,24 +150,28 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(t.note, "paper")
 
     def test_trade_paper_sizes_from_capital(self):
-        import tempfile
         from pathlib import Path
         from unittest import mock
         from argparse import Namespace
+        import tempfile
         sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
         import rshelper.api as amod
         import rshelper.journal as jmod
         import rshelper.cli as cmod
-        tmp = tempfile.TemporaryDirectory()
-        jmod.TRADES_PATH = Path(tmp.name) / "trades.json"
-        with mock.patch.object(amod, "fetch_mapping", return_value=[
-                {"id": 1, "name": "Nature rune", "limit": 13000}]):
-            with mock.patch.object(amod, "fetch_latest", return_value={
-                    "1": {"high": 150, "low": 140}}):
-                cmod._trade_paper(Namespace(
-                    item="nature rune", qty=0, capital=3000, note="",
-                    profile=None))
-        trades = jmod.list_trades()
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "1": {"high": 150, "low": 140}}):
+                        cmod._trade_paper(Namespace(
+                            item="nature rune", qty=0, capital=3000, note="",
+                            profile=None))
+                trades = jmod.list_trades()
+            finally:
+                jmod.TRADES_PATH = original_path
         self.assertEqual(len(trades), 1)
         self.assertEqual(trades[0].qty, 20)  # 3000 // 150, capped by limit
 

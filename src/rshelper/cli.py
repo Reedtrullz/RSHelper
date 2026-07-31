@@ -59,6 +59,11 @@ def _format_table(results, top: int) -> str:
     return "\n".join(lines)
 
 
+def _roi_pct(item) -> float:
+    """Return flip ROI as a percentage of buy price."""
+    return item.profit / item.buy_price * 100 if item.buy_price > 0 else 0.0
+
+
 def _format_flip_table(results, top: int, capital: int = 0) -> str:
     """Render flip results as an aligned text table."""
     rows = results[:top]
@@ -67,8 +72,6 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
     name_width = max(len(r.name) for r in rows)
     name_width = min(name_width, 36)
     name_width = max(name_width, 8)
-    def _roi(item) -> float:
-        return item.profit / item.buy_price * 100 if item.buy_price > 0 else 0.0
     has_qty = capital > 0
     if has_qty:
         header = (
@@ -88,13 +91,13 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
             qty = trade_size(item, capital)
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {_roi(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.profit:>7,} {_roi_pct(item):>5.1f} {item.rs_score:>4.0f} "
                 f"{item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
             )
         else:
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {_roi(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.profit:>7,} {_roi_pct(item):>5.1f} {item.rs_score:>4.0f} "
                 f"{item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
@@ -288,7 +291,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
             row["rank"] = i
-            row["roi"] = round(item.profit / item.buy_price * 100, 2) if item.buy_price > 0 else 0.0
+            row["roi"] = round(_roi_pct(item), 2)
             row["capital_per_unit"] = item.buy_price
             writer.writerow(row)
         print(out.getvalue())
@@ -300,7 +303,7 @@ def flip_scan(args: argparse.Namespace) -> None:
                 "buy_price": r.buy_price,
                 "sell_price": r.sell_price,
                 "margin": r.profit,
-                "roi": round(r.profit / r.buy_price * 100, 2) if r.buy_price > 0 else 0.0,
+                "roi": round(_roi_pct(r), 2),
                 "capital_per_unit": r.buy_price,
                 "gp_per_hour": r.gp_per_hour,
                 "volume": r.volume,
@@ -313,7 +316,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         cols = ["Rank", "Item", "Buy", "Sell", "Margin", "ROI%", "RS", "GP/hr", "Limit"]
         rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
                  "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
-                 "ROI%": f"{r.profit / r.buy_price * 100:.1f}" if r.buy_price > 0 else "0.0",
+                 "ROI%": f"{_roi_pct(r):.1f}",
                  "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
                 for i, r in enumerate(results[:args.top])]
         if capital:
@@ -453,7 +456,8 @@ def margin_check(args: argparse.Namespace) -> None:
     ts_data = fetch_timeseries_batch(
         candidate_ids,
         timestep="5m",
-        on_progress=lambda cur, tot: print(f"  [{cur}/{tot}] fetching history...", end="\r"),
+        on_progress=lambda cur, tot: print(
+            f"  [{cur}/{tot}] fetching history...", end="\r", file=sys.stderr),
         workers=getattr(args, "workers", 4),
         profile=args.profile if hasattr(args, "profile") else None,
     )
@@ -809,7 +813,7 @@ def watch_check(args: argparse.Namespace) -> None:
         print("Watchlist is empty.")
         return
 
-    print("Fetching latest prices...")
+    print("Fetching latest prices...", file=sys.stderr)
     latest = fetch_latest(args.profile if hasattr(args, "profile") else None)
     if not latest:
         print("Error: could not fetch prices.", file=sys.stderr)

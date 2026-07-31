@@ -50,7 +50,7 @@ def _get(path: str, retries: int = MAX_RETRIES) -> Any:
     last_exc = None
     for attempt in range(retries + 1):
         if attempt == 0:
-            _throttle()  # retry backoff already spaces subsequent attempts
+            _throttle()  # retries sleep RETRY_DELAY*2^n below, so no re-throttle
         req = urllib.request.Request(
             f"{BASE_URL}/{path}",
             headers={"User-Agent": USER_AGENT},
