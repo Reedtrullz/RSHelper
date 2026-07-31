@@ -30,7 +30,11 @@ def _item_to_dict(item) -> dict:
 def make_handler(scanner, scan_items: Callable[[], list],
                  signal_detector: Callable[[], list] | None = None,
                  scan_kwargs: dict | None = None,
-                 price_lookup: Callable[[list[int]], dict] | None = None) -> type:
+                 price_lookup: Callable[[list[int]], dict] | None = None,
+                 meta_fn: Callable[[], dict] | None = None,
+                 watchlist_fn: Callable[[], dict] | None = None,
+                 watchlist_update_fn: Callable[[str, int], dict] | None = None,
+                 timeseries_fn: Callable[[int], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -38,6 +42,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
     signal_detector: Optional callable that returns list[Signal] for /api/signals
     scan_kwargs: Optional kwargs (members_only, min_volume, min_margin) for scanner.scan
     price_lookup: Optional callable(list[item_id]) -> {id: {usable, buy, sell}}
+    meta_fn: Optional callable() -> {source, items, signals, watchlist, last_fetch}
+    watchlist_fn: Optional callable() -> {items: [...]}
+    watchlist_update_fn: Optional callable(action, item_id) -> {items: [...]}
+    timeseries_fn: Optional callable(item_id) -> {points: [...]}
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -63,6 +71,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_history()
             elif path == "/api/prices":
                 self._serve_prices()
+            elif path == "/api/meta":
+                self._serve_meta()
+            elif path == "/api/watchlist":
+                self._serve_watchlist()
+            elif path == "/api/timeseries":
+                self._serve_timeseries()
             else:
                 self.send_error(404)
 
@@ -70,6 +84,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
             path = self.path.split("?", 1)[0]
             if path == "/api/trades":
                 self._handle_log_trade()
+            elif path == "/api/watchlist":
+                self._handle_watchlist()
             else:
                 self.send_error(404)
 
@@ -168,6 +184,35 @@ def make_handler(scanner, scan_items: Callable[[], list],
             raw = qs.get("ids", [""])[0]
             ids = [int(i) for i in raw.split(",") if i.strip().isdigit()]
             self._serve_json({"prices": price_lookup(ids)})
+
+        def _serve_meta(self):
+            self._serve_json(meta_fn() if meta_fn else {"source": "unknown"})
+
+        def _serve_watchlist(self):
+            self._serve_json(watchlist_fn() if watchlist_fn else {"items": []})
+
+        def _serve_timeseries(self):
+            qs = self._query()
+            raw = qs.get("id", [""])[0]
+            item_id = int(raw) if raw.isdigit() else 0
+            self._serve_json(timeseries_fn(item_id) if timeseries_fn else {"points": []})
+
+        def _handle_watchlist(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                action = body.get("action", "")
+                item_id = int(body.get("item_id", 0))
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if watchlist_update_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(watchlist_update_fn(action, item_id))
+            except (ValueError, TypeError) as e:
+                self.send_error(400, str(e))
 
         def _handle_log_trade(self):
             try:

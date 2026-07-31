@@ -147,6 +147,37 @@ def test_no_signals_without_real_5m_data():
     print("  PASSED test_no_signals_without_real_5m_data")
 
 
+def test_concurrent_cooldown_save():
+    """Concurrent signal scans must not race on the shared .tmp path."""
+    import threading
+    import tempfile
+    from pathlib import Path
+    import rshelper.signals as _s
+    tmp = Path(tempfile.mkdtemp())
+    old_dir, old_path = _s.COOLDOWN_DIR, _s.COOLDOWN_PATH
+    _s.COOLDOWN_DIR = tmp
+    _s.COOLDOWN_PATH = tmp / "signal_cooldowns.json"
+    errors = []
+
+    def writer():
+        try:
+            _s._save_cooldowns({"k": 1})
+        except Exception as e:
+            errors.append(e)
+
+    try:
+        threads = [threading.Thread(target=writer) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert errors == [], f"race errors: {errors}"
+        assert _s.COOLDOWN_PATH.exists()
+    finally:
+        _s.COOLDOWN_DIR, _s.COOLDOWN_PATH = old_dir, old_path
+    print("  PASSED test_concurrent_cooldown_save")
+
+
 def test_cooldown_suppression():
     """Same signal type for same item suppressed within cooldown."""
     orig = _reset_cooldowns()
@@ -269,6 +300,7 @@ if __name__ == "__main__":
     test_surge_detection()
     test_flip_detection()
     test_no_signals_without_real_5m_data()
+    test_concurrent_cooldown_save()
     test_cooldown_suppression()
     test_cooldown_expiry()
     test_no_false_positives()

@@ -168,6 +168,83 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertEqual(body["prices"]["561"]["buy"], 100)
         self.assertEqual(body["prices"]["2"]["sell"], 110)
 
+    def test_api_meta(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            meta_fn=lambda: {"source": "wiki", "items": 5, "signals": 2,
+                             "trades": 3, "watchlist": 1, "watch_ids": [1, 2]})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/meta"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["source"], "wiki")
+        self.assertEqual(body["watch_ids"], [1, 2])
+
+    def test_api_watchlist_get(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            watchlist_fn=lambda: {"items": [{"id": 1, "name": "Nature rune",
+                                             "usable": True, "buy": 100, "sell": 110}]})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/watchlist"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["items"][0]["name"], "Nature rune")
+
+    def test_api_watchlist_post(self):
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            watchlist_update_fn=lambda a, i: calls.append((a, i)) or {"items": []})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/watchlist"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"action": "add", "item_id": 5}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_POST()
+        self.assertEqual(calls, [("add", 5)])
+
+    def test_api_timeseries(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            timeseries_fn=lambda i: {"points": [{"ts": 1, "avgHigh": 100, "avgLow": 90}]})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/timeseries?id=561"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["points"][0]["avgHigh"], 100)
+
     def test_scan_kwargs_passed_to_scanner(self):
         calls = []
 
@@ -254,8 +331,11 @@ class TestHandlerRouting(unittest.TestCase):
                 (jmod.TRADES_PATH, smod.SNAPSHOT_DIR, pmod.CONFIG_DIR,
                  pmod.ACTIVE_PROFILE_PATH) = old
 
-    def test_progression_markup_present(self):
-        self.assertIn("Progression", INDEX_HTML)
+    def test_navigation_markup_present(self):
+        self.assertIn("Market", INDEX_HTML)
+        self.assertIn("Paper Trading", INDEX_HTML)
+        self.assertIn("Signals", INDEX_HTML)
+        self.assertIn("Watchlist", INDEX_HTML)
         self.assertIn("/api/history", INDEX_HTML)
 
     def test_api_scan_returns_json(self):

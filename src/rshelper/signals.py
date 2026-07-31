@@ -2,6 +2,7 @@
 
 import json
 import os
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -47,9 +48,17 @@ def _load_cooldowns() -> dict:
 
 def _save_cooldowns(data: dict) -> None:
     COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = COOLDOWN_PATH.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data))
-    os.replace(tmp, COOLDOWN_PATH)
+    fd, tmp = tempfile.mkstemp(dir=COOLDOWN_DIR, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, COOLDOWN_PATH)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def _cooldown_key(item_id: int, signal_type: str) -> str:
@@ -85,9 +94,17 @@ def _load_baselines() -> dict[str, float]:
 
 def _save_baselines(data: dict) -> None:
     COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = BASELINE_PATH.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data))
-    os.replace(tmp, BASELINE_PATH)
+    fd, tmp = tempfile.mkstemp(dir=COOLDOWN_DIR, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, BASELINE_PATH)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def _update_baseline(baselines: dict, item_id: int, current: int) -> float:

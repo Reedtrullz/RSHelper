@@ -11,6 +11,7 @@ from rshelper.market import price_issue
 from rshelper.scanner import FlipScanner
 from rshelper.signals import detect_signals
 from rshelper.dashboard.handlers import make_handler
+from rshelper import watchlist
 
 
 def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
@@ -40,9 +41,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     from rshelper.tuning import record_if_changed
     record_if_changed()
 
+    def _source(latest: dict) -> str:
+        sample = next(iter(latest.values()), {}) if latest else {}
+        return "ge_tracker" if isinstance(sample, dict) and "high_volume" in sample else "wiki"
+
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     # Add configurable --refresh N flag when needed.
-    cache = {"items": items, "vol": _vol_5m, "latest": _latest, "last_fetch": time.time()}
+    cache = {"items": items, "vol": _vol_5m, "latest": _latest,
+             "source": _source(_latest), "last_fetch": time.time()}
 
     def refresh():
         now = time.time()
@@ -53,6 +59,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                 cache["items"] = fresh
                 cache["vol"] = _v
                 cache["latest"] = _l
+                cache["source"] = _source(_l)
             except SystemExit:
                 print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
             cache["last_fetch"] = now
@@ -63,10 +70,19 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
 
     scanner = FlipScanner(direction=cfg.flip.direction)
 
+    sig_cache = {"list": [], "ts": 0.0}
+
+    def active_signals():
+        now = time.time()
+        if now - sig_cache["ts"] > 30:
+            flips = scanner.scan(cache["items"], **scan_kwargs)
+            sig_cache["list"] = detect_signals(flips, cache["vol"])
+            sig_cache["ts"] = now
+        return sig_cache["list"]
+
     def get_signals():
         refresh()
-        flips = scanner.scan(cache["items"], **scan_kwargs)
-        return detect_signals(flips, cache["vol"])
+        return active_signals()
 
     def get_prices(item_ids: list[int]) -> dict:
         refresh()
@@ -83,8 +99,74 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                                      "sell": int(price.get("low", 0))}
         return out
 
+    def get_meta() -> dict:
+        refresh()
+        flips = scanner.scan(cache["items"], **scan_kwargs)
+        signals = active_signals()
+        from rshelper.journal import list_trades
+        return {
+            "source": cache["source"],
+            "items": len(cache["items"]),
+            "flips": len(flips),
+            "signals": len(signals),
+            "trades": len(list_trades()),
+            "watchlist": len(watchlist.get_watched_ids()),
+            "watch_ids": watchlist.get_watched_ids(),
+            "last_fetch": cache["last_fetch"],
+        }
+
+    def get_watchlist() -> dict:
+        refresh()
+        latest = cache["latest"] or {}
+        rows = []
+        for id_str, entry in watchlist.load().get("items", {}).items():
+            price = latest.get(id_str)
+            issue = price_issue(price) if isinstance(price, dict) else "no data"
+            row = {"id": int(id_str), "name": entry.get("name", id_str),
+                   "added": entry.get("added", ""),
+                   "alert_above": entry.get("alert_margin_above"),
+                   "alert_below": entry.get("alert_margin_below"),
+                   "usable": issue is None}
+            if issue is None:
+                row["buy"] = int(price.get("high", 0))
+                row["sell"] = int(price.get("low", 0))
+            else:
+                row["reason"] = issue
+            rows.append(row)
+        rows.sort(key=lambda r: r["name"].lower())
+        return {"items": rows}
+
+    def update_watchlist(action: str, item_id: int) -> dict:
+        if action == "add":
+            item = next((i for i in cache["items"] if i.id == item_id), None)
+            if item is None:
+                raise ValueError(f"item {item_id} not in the current scan")
+            watchlist.add(item_id, item.name)
+        elif action == "remove":
+            watchlist.remove(item_id)
+        else:
+            raise ValueError(f"unknown watchlist action '{action}'")
+        return get_watchlist()
+
+    def get_timeseries(item_id: int) -> dict:
+        from rshelper.api import fetch_timeseries
+        ts = fetch_timeseries(item_id, "5m")
+        points = []
+        for dp in (ts or [])[-96:]:
+            high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
+            if high is None or low is None:
+                continue
+            h, l = int(high), int(low)
+            if h <= 0 or l <= 0:
+                continue
+            points.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
+        return {"points": points}
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
-                           scan_kwargs=scan_kwargs, price_lookup=get_prices)
+                           scan_kwargs=scan_kwargs, price_lookup=get_prices,
+                           meta_fn=get_meta, watchlist_fn=get_watchlist,
+                           watchlist_update_fn=update_watchlist,
+                           timeseries_fn=get_timeseries)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):
