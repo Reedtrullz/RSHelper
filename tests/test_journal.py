@@ -237,6 +237,30 @@ def test_cli_trade_log_parse():
     assert "Logged trade" in result.stdout
     print("  PASSED test_cli_trade_log_parse")
 
+
+def test_concurrent_log_trade_no_lost_updates():
+    """Concurrent log_trade calls must not lose trades or corrupt the file."""
+    import threading
+    _clean()
+    errors = []
+
+    def writer(i):
+        try:
+            log_trade(i, "Concurrent", 1, 100, 200)
+        except Exception as e:
+            errors.append(e)
+
+    threads = [threading.Thread(target=writer, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == [], f"errors: {errors}"
+    trades = list_trades()
+    assert len(trades) == 8, f"expected 8 trades, got {len(trades)}"
+    print("  PASSED test_concurrent_log_trade_no_lost_updates")
+
+
 if __name__ == "__main__":
     test_log_trade()
     test_log_trade_auto_increment()
@@ -256,4 +280,5 @@ if __name__ == "__main__":
     test_pnl_by_item_breakdown()
     test_pnl_note_filter()
     test_cli_trade_log_parse()
+    test_concurrent_log_trade_no_lost_updates()
     print("\nAll journal tests passed.")

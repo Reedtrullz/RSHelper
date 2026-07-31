@@ -110,6 +110,25 @@ class GeTrackerFallbackTest(unittest.TestCase):
         self.assertIsNone(api._load_cache("latest", "default"))
         self.assertIsNone(api._load_stale_cache("latest", "default"))
 
+    def test_malformed_tracker_rows_skipped(self):
+        """Records missing expected fields must be skipped, not crash the fallback."""
+        dump = {"data": [
+            {"itemId": 1, "name": "Good", "members": True, "buyLimit": 10,
+             "highAlch": 5, "lowAlch": 2, "buying": 100, "selling": 95,
+             "buyingQuantity": 10, "sellingQuantity": 5,
+             "lastKnownBuyTime": _fresh_ts(), "lastKnownSellTime": _fresh_ts()},
+            {"name": "No id"},                      # missing itemId
+            {"itemId": 2, "buying": 50},            # missing most fields
+        ]}
+        mapping = api._mapping_from_ge_tracker(dump)
+        latest = api._latest_from_ge_tracker(dump)
+        vol = api._5m_from_ge_tracker(dump)
+        # rows with an itemId survive with defaults; the id-less row is skipped
+        self.assertEqual([e["id"] for e in mapping], [1, 2])
+        self.assertEqual(latest["1"]["high"], 100)
+        self.assertEqual(latest["1"]["high_volume"], 10)
+        self.assertEqual(vol["1"]["lowPriceVolume"], 5)
+
     def test_5m_fallback_volume_proxy(self):
         with mock.patch.object(api, "_get", return_value=None):
             with mock.patch.object(api, "_get_ge_tracker", return_value=DUMP):

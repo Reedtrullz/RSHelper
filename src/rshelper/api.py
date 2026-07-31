@@ -119,45 +119,51 @@ def _parse_tracker_time(value: Any) -> int | None:
 
 def _mapping_from_ge_tracker(dump: Any) -> list[dict]:
     """GE Tracker item rows -> wiki-shaped mapping entries."""
-    return [
-        {
+    out = []
+    for e in _ge_tracker_items(dump):
+        if not isinstance(e, dict) or "itemId" not in e:
+            continue
+        out.append({
             "id": e["itemId"],
-            "name": e["name"],
-            "members": e["members"],
-            "limit": e["buyLimit"],
-            "highalch": e["highAlch"],
-            "lowalch": e["lowAlch"],
-        }
-        for e in _ge_tracker_items(dump)
-    ]
+            "name": e.get("name", ""),
+            "members": bool(e.get("members", False)),
+            "limit": e.get("buyLimit", 0),
+            "highalch": e.get("highAlch", 0),
+            "lowalch": e.get("lowAlch", 0),
+        })
+    return out
 
 
 def _latest_from_ge_tracker(dump: Any) -> dict[str, dict]:
     """GE Tracker buying/selling -> wiki-shaped latest prices keyed by item ID."""
-    return {
-        str(e["itemId"]): {
-            "high": e["buying"],
-            "low": e["selling"],
+    out = {}
+    for e in _ge_tracker_items(dump):
+        if not isinstance(e, dict) or "itemId" not in e:
+            continue
+        out[str(e["itemId"])] = {
+            "high": e.get("buying", 0),
+            "low": e.get("selling", 0),
             "highTime": _parse_tracker_time(e.get("lastKnownBuyTime")),
             "lowTime": _parse_tracker_time(e.get("lastKnownSellTime")),
             "high_volume": e.get("buyingQuantity", 0),
             "low_volume": e.get("sellingQuantity", 0),
         }
-        for e in _ge_tracker_items(dump)
-    }
+    return out
 
 
 def _5m_from_ge_tracker(dump: Any) -> dict[str, dict]:
     # ponytail: GE Tracker has no 5m trade volume; use its current order
     # quantities as a relative volume proxy so scans have something to rank.
     # Real 5m trade volume is wiki-only.
-    return {
-        str(e["itemId"]): {
-            "highPriceVolume": e["buyingQuantity"],
-            "lowPriceVolume": e["sellingQuantity"],
+    out = {}
+    for e in _ge_tracker_items(dump):
+        if not isinstance(e, dict) or "itemId" not in e:
+            continue
+        out[str(e["itemId"])] = {
+            "highPriceVolume": e.get("buyingQuantity", 0),
+            "lowPriceVolume": e.get("sellingQuantity", 0),
         }
-        for e in _ge_tracker_items(dump)
-    }
+    return out
 
 
 def _cache_path(name: str, profile: str | None = None) -> Path:

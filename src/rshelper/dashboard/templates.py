@@ -185,6 +185,7 @@ let selectedId=null,view='market';
 let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
 let chip='all',density='normal',paperOnly=false;
 let viewRows=[];
+let sparkSeq=0;
 let countdown=refreshSecs;
 
 function marginPct(item){
@@ -265,6 +266,7 @@ function setView(v){
   else if(v==='paper')renderPaper();
   else if(v==='signals')renderSignals();
   else renderWatchlist();
+  if(v==='market'&&selectedId==null)renderContextEmpty();
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
 
@@ -304,6 +306,7 @@ async function fetchData(){
     else if(view==='paper')renderPaper();
     else if(view==='signals')renderSignals();
     else renderWatchlist();
+    if(view==='market'&&selectedId!=null)renderDetail(selectedId);
     countdown=refreshSecs;
   }catch(e){
     document.getElementById('statusText').textContent='Error: '+e.message;
@@ -317,7 +320,7 @@ function updateTop(){
   document.getElementById('statBest').textContent=best>0?best.toFixed(1)+'%':'-';
 }
 function updateBadges(){
-  document.getElementById('badgeMarket').textContent=meta.items||0;
+  document.getElementById('badgeMarket').textContent=meta.flips||0;
   document.getElementById('badgePaper').textContent=meta.trades||0;
   document.getElementById('badgeSignals').textContent=meta.signals||0;
   document.getElementById('badgeWatchlist').textContent=meta.watchlist||0;
@@ -385,8 +388,7 @@ function viewbarHtml(){
 function selectId(id,scroll){
   selectedId=id;
   if(view==='market')renderMarket();
-  else if(view==='watchlist')renderWatchlist();
-  else if(view==='signals'){
+  else if(view==='watchlist'||view==='signals'){
     document.querySelectorAll('tr.selected').forEach(r=>r.classList.remove('selected'));
     const row=document.querySelector('tr[data-id="'+id+'"]');
     if(row)row.classList.add('selected');
@@ -456,7 +458,9 @@ async function renderSignals(){
   bar.innerHTML=viewbarHtml();
   const body=document.getElementById('listBody');
   viewRows=[];
-  const signals=Object.values(signalsMap);
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  let signals=Object.values(signalsMap);
+  if(q)signals=signals.filter(s=>s.name.toLowerCase().includes(q));
   const order={HIGH:0,MEDIUM:1,LOW:2};
   signals.sort((a,b)=>(order[a.severity]||3)-(order[b.severity]||3)||String(a.type).localeCompare(String(b.type)));
   viewRows=signals.map(s=>({id:s.item_id,name:s.name}));
@@ -472,12 +476,13 @@ async function renderSignals(){
   signals.forEach(s=>{
     const sel=s.item_id===selectedId?' selected':'';
     const dev=Number(s.deviation)||0;
+    const devTxt=s.type==='SURGE'?dev+'x':(dev>0?'+':'')+dev+'%';
     h+='<tr class="'+sel+'" data-id="'+s.item_id+'" onclick="selectId('+s.item_id+',false)">'+
       '<td><span class="sig-badge sig-'+escHtml(s.type)+'">'+escHtml(s.type)+'</span></td>'+
       '<td class="sev-'+escHtml(s.severity)+'">'+escHtml(s.severity)+'</td>'+
       '<td class="name">'+escHtml(s.name)+'</td>'+
       '<td>'+format(s.current_price)+'</td>'+
-      '<td class="'+(dev>0?'pos':'neg')+'">'+(dev>0?'+':'')+dev+'%</td>'+
+      '<td class="'+(dev>0?'pos':'neg')+'">'+devTxt+'</td>'+
       '<td class="name">'+escHtml(s.message)+'</td></tr>';
   });
   h+='</tbody></table>';
@@ -500,14 +505,22 @@ async function renderWatchlist(){
     return;
   }
   watchIds=new Set(items.map(i=>i.id));
-  viewRows=items;
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const shown=q?items.filter(i=>i.name.toLowerCase().includes(q)):items;
+  viewRows=shown;
   if(!items.length){
     body.innerHTML='<div class="loading">No watched items — click the &#9734; star on any Market row to track it.</div>';
     renderContextEmpty();
     return;
   }
+  if(!shown.length){
+    body.innerHTML='<div class="loading">No watched items match the filter.</div>';
+    if(selectedId!=null)renderDetail(selectedId);
+    else renderContextEmpty();
+    return;
+  }
   let h='<table><thead><tr><th></th><th>Item</th><th>Buy</th><th>Sell</th><th>Margin</th><th>Profit</th><th>Alerts</th></tr></thead><tbody>';
-  items.forEach(i=>{
+  shown.forEach(i=>{
     const sel=i.id===selectedId?' selected':'';
     const mp=i.usable?((i.sell-i.buy)/i.buy*100):null;
     const profit=i.usable?(i.sell-i.buy-taxOf(i.sell)):null;
@@ -579,12 +592,14 @@ function watchDetail(id){
 async function drawSpark(id){
   const cv=document.getElementById('spark');
   if(!cv)return;
+  const seq=++sparkSeq;
   let pts=[];
   try{
     const r=await fetch('/api/timeseries?id='+id);
     pts=(await r.json()).points||[];
   }catch(e){}
   if(pts.length<2){
+    if(seq!==sparkSeq)return;
     cv.style.display='none';
     const note=document.createElement('div');
     note.className='loading';
@@ -593,6 +608,7 @@ async function drawSpark(id){
     return;
   }
   const draw=()=>{
+    if(seq!==sparkSeq)return;
     const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
     if(!w){requestAnimationFrame(draw);return}
     const h=84;
@@ -684,7 +700,7 @@ async function renderPaper(){
       html+='<div class="loading">No trades logged.</div>';
     }else{
       html+='<table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th></tr></thead><tbody>';
-      trades.slice(0,15).forEach(t=>{
+      trades.forEach(t=>{
         const p=t.profit||0;
         html+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
           '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+

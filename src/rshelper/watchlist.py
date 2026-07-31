@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rshelper.profile import resolve_config_path
+from rshelper.profile import atomic_write_json, resolve_config_path
 
 WATCHLIST_PATH = Path.home() / ".config" / "rshelper" / "watchlist.json"
 
@@ -30,11 +30,7 @@ def load(profile: str | None = None) -> dict:
 
 def _save(data: dict, profile: str | None = None) -> None:
     """Atomic write: temp file + rename."""
-    path = _watchlist_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data, indent=2))
-    os.replace(tmp, path)
+    atomic_write_json(_watchlist_path(profile), data, indent=2)
 
 
 def add(item_id: int, name: str,

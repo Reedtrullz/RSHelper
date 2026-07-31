@@ -36,6 +36,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         print("[dashboard] WARNING: initial OSRS Wiki fetch failed; starting with cached/empty data.",
               file=sys.stderr)
         items = []
+        _latest = {}
         _vol_5m = {}
 
     from rshelper.tuning import record_if_changed

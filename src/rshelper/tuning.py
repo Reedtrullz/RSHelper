@@ -5,7 +5,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 
 from rshelper.config import load_config
-from rshelper.profile import resolve_config_path
+from rshelper.profile import atomic_write_json, resolve_config_path
 
 
 def params(profile: str | None = None) -> dict:
@@ -37,11 +37,7 @@ def record_if_changed(profile: str | None = None, note: str = "auto") -> dict | 
     entry = {"ts": datetime.now(timezone.utc).isoformat(),
              "params": current, "note": note}
     entries.append(entry)
-    path = log_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"entries": entries}))
-    os.replace(tmp, path)
+    atomic_write_json(log_path(profile), {"entries": entries})
     return entry
 
 

@@ -5,7 +5,7 @@ import os
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from rshelper.profile import CONFIG_DIR
+from rshelper.profile import CONFIG_DIR, atomic_write_json
 
 SNAPSHOT_DIR = CONFIG_DIR / "snapshots"
 
@@ -34,9 +34,7 @@ def save(scan_type: str, results: list[dict], profile: str | None = None) -> Pat
     }
 
     # Atomic write
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(payload))
-    os.replace(tmp, path)
+    atomic_write_json(path, payload)
     return path
 
 

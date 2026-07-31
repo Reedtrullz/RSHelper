@@ -187,6 +187,7 @@ class TestHandlerRouting(unittest.TestCase):
         body = json.loads(h.wfile.getvalue())
         self.assertEqual(body["source"], "wiki")
         self.assertEqual(body["watch_ids"], [1, 2])
+        self.assertIsInstance(body["flips"], int)
 
     def test_api_watchlist_get(self):
         from http.server import BaseHTTPRequestHandler
@@ -279,6 +280,22 @@ class TestHandlerRouting(unittest.TestCase):
         h.send_error = lambda code, message=None: setattr(h, "error_code", code)
         h.do_POST()
         self.assertEqual(h.error_code, 403)
+
+    def test_dashboard_boot_survives_total_fetch_failure(self):
+        """A total source failure must not crash the dashboard at startup."""
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        sys.path.insert(0, "src")
+        import rshelper.profile as pmod
+        import rshelper.dashboard.server as smod
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(pmod, "CONFIG_DIR", Path(tmp) / "config"), \
+                 mock.patch.object(pmod, "CACHE_DIR", Path(tmp) / "cache"), \
+                 mock.patch.object(smod, "_fetch_bootstrap", side_effect=SystemExit), \
+                 mock.patch.object(smod.ThreadingHTTPServer, "serve_forever",
+                                   side_effect=KeyboardInterrupt):
+                smod.run(bind="127.0.0.1", port=0)
 
     def test_scan_kwargs_passed_to_scanner(self):
         calls = []

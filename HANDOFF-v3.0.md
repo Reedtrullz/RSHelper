@@ -18,10 +18,10 @@ VPS-hosted public dashboard deployed by CI.
                  config, watchlist, snapshot, journal, monitor, profile,
                  history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-16 test files, 193 tests, all passing:
-  test_analysis (16)        test_cli (20)         test_dashboard (36)
+16 test files, 196 tests, all passing:
+  test_analysis (16)        test_cli (20)         test_dashboard (37)
   test_ge_tracker_fallback (9) test_history (5)   test_integration (4)
-  test_journal (19)         test_market (4)       test_monitor (8)
+  test_journal (20)         test_market (4)       test_monitor (8)
   test_profile (10)
   test_properties (8)       test_scanner (14)     test_signals (16)
   test_snapshot (9)         test_tuning (6)       test_watchlist (9)

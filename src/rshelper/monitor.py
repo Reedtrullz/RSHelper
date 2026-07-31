@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from rshelper.market import ge_tax, price_issue
-from rshelper.profile import resolve_config_path
+from rshelper.profile import atomic_write_json, atomic_write_text, resolve_config_path
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = MONITOR_DIR / "monitor.pid"
@@ -55,9 +55,7 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
     pid = os.getpid()
     started = datetime.now(timezone.utc).isoformat()
     p_path = _pid_path(profile)
-    tmp = p_path.with_suffix(".tmp")
-    tmp.write_text(str(pid))
-    os.replace(tmp, p_path)
+    atomic_write_text(p_path, str(pid))
     state = {"pid": pid, "started_iso": started, "last_check_iso": None, "profile": prof_name}
     _write_state(state, profile)
     print(f"[monitor] Started (PID {pid}, interval {interval_sec}s)", file=sys.stderr)
@@ -194,11 +192,7 @@ def monitor_status(profile: str | None = None) -> dict | None:
 
 
 def _write_state(state: dict, profile: str | None = None) -> None:
-    s_path = _state_path(profile)
-    s_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = s_path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(state))
-    os.replace(tmp, s_path)
+    atomic_write_json(_state_path(profile), state)
 
 
 def _cleanup(profile: str | None = None) -> None:

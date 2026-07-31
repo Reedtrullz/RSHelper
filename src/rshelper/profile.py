@@ -1,5 +1,9 @@
 """Multi-account profile management."""
-import os, re, shutil, json
+import os
+import re
+import shutil
+import json
+import tempfile
 from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "rshelper"
@@ -27,9 +31,39 @@ def get_active_profile() -> str:
 
 def set_active_profile(name: str) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = ACTIVE_PROFILE_PATH.with_suffix(".tmp")
-    tmp.write_text(name)
-    os.replace(tmp, ACTIVE_PROFILE_PATH)
+    atomic_write_text(ACTIVE_PROFILE_PATH, name)
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """Write text atomically with a unique temp file (safe under concurrency)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def atomic_write_json(path: Path, data, indent: int | None = None) -> None:
+    """Write JSON atomically with a unique temp file (safe under concurrency)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=indent)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def resolve_config_path(subpath: str, profile: str | None = None) -> Path:

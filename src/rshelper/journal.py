@@ -1,14 +1,16 @@
 """Trade journal: log trades, compute P&L."""
 import json
 import os
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
-from rshelper.profile import resolve_config_path
+from rshelper.profile import atomic_write_json, resolve_config_path
 
 TRADES_PATH = Path.home() / ".config" / "rshelper" / "trades.json"
+_TRADE_LOCK = threading.Lock()
 
 
 def _trades_path(profile: str | None = None) -> Path:
@@ -59,11 +61,7 @@ def _load(profile: str | None = None) -> list[dict]:
 
 
 def _save(trades: list[dict], profile: str | None = None) -> None:
-    path = _trades_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"trades": trades}))
-    os.replace(tmp, path)
+    atomic_write_json(_trades_path(profile), {"trades": trades})
 
 
 def _next_id(trades: list[dict]) -> int:
@@ -84,31 +82,33 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
         raise ValueError(f"buy_price must be positive, got {buy_price}")
     if sell_price <= 0:
         raise ValueError(f"sell_price must be positive, got {sell_price}")
-    trades = _load(profile)
     per_item_tax = ge_tax(sell_price)
     tax_paid = per_item_tax * qty
     profit = (sell_price - buy_price) * qty - tax_paid
-    trade = {
-        "id": _next_id(trades), "item_id": item_id, "name": name, "qty": qty,
-        "buy_price": buy_price, "sell_price": sell_price,
-        "tax_paid": tax_paid, "profit": profit,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "note": note,
-    }
-    trades.append(trade)
-    _save(trades, profile)
+    with _TRADE_LOCK:
+        trades = _load(profile)
+        trade = {
+            "id": _next_id(trades), "item_id": item_id, "name": name, "qty": qty,
+            "buy_price": buy_price, "sell_price": sell_price,
+            "tax_paid": tax_paid, "profit": profit,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "note": note,
+        }
+        trades.append(trade)
+        _save(trades, profile)
     return Trade(**trade)
 
 
 def delete_trade(trade_id: int, profile: str | None = None) -> bool:
     """Delete a trade by ID. Returns True if it existed."""
-    trades = _load(profile)
-    for i, t in enumerate(trades):
-        if t["id"] == trade_id:
-            trades.pop(i)
-            _save(trades, profile)
-            return True
-    return False
+    with _TRADE_LOCK:
+        trades = _load(profile)
+        for i, t in enumerate(trades):
+            if t["id"] == trade_id:
+                trades.pop(i)
+                _save(trades, profile)
+                return True
+        return False
 
 
 def list_trades(item_name: str = "", since: str = "", top: int = 0,
