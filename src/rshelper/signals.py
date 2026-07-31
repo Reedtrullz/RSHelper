@@ -97,6 +97,8 @@ def _update_baseline(baselines: dict, item_id: int, current: int) -> float:
     if prev is None or prev <= 0:
         baseline = float(current)
     else:
+        # ponytail: alpha=0.3 spikes pull the baseline up fast, damping future
+        # surges; make alpha configurable if surge sensitivity needs tuning
         baseline = 0.7 * prev + 0.3 * current
     baselines[key] = baseline
     return prev if (prev is not None and prev > 0) else 0.0

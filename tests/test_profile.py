@@ -115,8 +115,6 @@ def test_profile_cli_create_switch():
                            env=env)
         assert r.returncode == 0
         assert "testcli" in r.stdout
-    set_active_profile("default")
-    delete_profile("testcli", force=True)
     print("  PASSED test_profile_cli_create_switch")
 
 def test_global_profile_flag():

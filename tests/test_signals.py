@@ -109,10 +109,13 @@ def test_crash_detection():
 
 def test_surge_detection():
     """5m volume >3x rolling baseline -> SURGE signal on a later scan."""
+    _baseline_state.clear()
     item = _make_item(item_id=777, volume=100)
     items = [item]
-    detect_signals(items, {"777": _make_vol(high_vol=50, low_vol=50)},
-                   cooldown_sec=0)  # seeds baseline 100
+    first = detect_signals(items, {"777": _make_vol(high_vol=50, low_vol=50)},
+                           cooldown_sec=0)  # seeds baseline 100
+    assert not [s for s in first if s.type == "SURGE"], \
+        "First scan has no baseline, so no SURGE yet"
     signals = detect_signals(items, {"777": _make_vol(high_vol=200, low_vol=200)},
                              cooldown_sec=0)  # 400 > 3x100
     surge_signals = [s for s in signals if s.type == "SURGE"]
