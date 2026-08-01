@@ -1,37 +1,40 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 6685,
-      "name": "Saradomin brew(4)",
-      "qty": 36,
-      "buy_price": 6793,
+      "id": 2,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 1910,
+      "buy_price": 109,
       "direction": "traditional",
-      "opened_at": "2026-08-01T15:48:38.203615+00:00",
+      "opened_at": "2026-08-01T18:24:03.720663+00:00",
       "note": "auto",
-      "entry_sell": 6793
+      "entry_sell": 109,
+      "entry_offer": 113
     },
     {
-      "id": 7,
-      "item_id": 21946,
-      "name": "Diamond dragon bolts (e)",
-      "qty": 87,
-      "buy_price": 2860,
+      "id": 4,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 236,
+      "buy_price": 1058,
       "direction": "traditional",
-      "opened_at": "2026-08-01T16:08:38.435670+00:00",
+      "opened_at": "2026-08-01T18:29:04.987488+00:00",
       "note": "auto",
-      "entry_sell": 2860
+      "entry_sell": 1058,
+      "entry_offer": 1097
     },
     {
-      "id": 8,
-      "item_id": 21820,
-      "name": "Revenant ether",
-      "qty": 1479,
-      "buy_price": 169,
+      "id": 5,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 1515,
+      "buy_price": 165,
       "direction": "traditional",
-      "opened_at": "2026-08-01T18:23:38.734320+00:00",
+      "opened_at": "2026-08-01T18:34:05.107023+00:00",
       "note": "auto",
-      "entry_sell": 169
+      "entry_sell": 165,
+      "entry_offer": 171
     }
   ]
 }
