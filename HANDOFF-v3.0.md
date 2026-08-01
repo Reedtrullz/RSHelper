@@ -18,7 +18,7 @@ VPS-hosted public dashboard deployed by CI.
                  config, watchlist, snapshot, journal, positions, trader,
                  monitor, profile, history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-18 test files, 222 tests, all passing:
+18 test files, 223 tests, all passing:
   test_analysis (16)        test_cli (23)         test_dashboard (40)
   test_ge_tracker_fallback (10) test_history (5)  test_integration (4)
   test_journal (20)         test_market (4)       test_monitor (8)
@@ -192,6 +192,22 @@ and honors `config.toml`. Flip output includes `roi` and
   access) with a staged copy outside the protected tree. Verified: the
   agent pushed and CI deployed automatically (`6eda04f`), live site showed
   `stale: False` with a 7-min-old cycle. 222 tests across 18 files.
+- v2.3 (commit `7943842`): evidence-driven tuning from 34 live auto trades
+  (33 wins / 1 loss / +297k gp). Analysis: the edge is bid-to-offer spread
+  capture (19/34 close at the first 5-min check, 100% win rate in that
+  bucket), which is the real GE flip model — a $anti suggestion to measure
+  take-profit from the entry offer instead was backtest-rejected (would cut
+  win rate 92.5% -> 63.8%). The one loss (Adamant dart, bid 24) was a
+  tick-amplification artifact: a 1gp tick is 4% at that price, so the -2%
+  stop is sub-tick and rounds to -8% with slippage. Changes: `min_price=25`
+  entry floor (skips sub-tick cheap items, validated in config), separate
+  `stop_reentry_minutes=90` cooldown after stop-losses vs 30 min after
+  take-profits (prevents compounding re-entry into a downtrend), and the
+  dashboard auto-trader section now shows capital efficiency (bps/min) plus
+  a win-rate-by-hold-bucket table (<=5min spread capture / 5-60min / >60min).
+  $anti review: 3 findings all fixed (cooldown test now exercises the real
+  90-min window via an explicit clock, removed the dead `<10` guard with a
+  `min_price >= 10` config assertion, added bps/min unit label). 223 tests.
 - v2.1: paper-trader observability and persistence.
   - Journal trades carry `strategy` (`auto`/`manual`), `exit_reason`,
     `hold_minutes`, and `quote_sell` (pre-slippage quote) metadata; journal,
