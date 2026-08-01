@@ -248,6 +248,26 @@ class TestHandlerRouting(unittest.TestCase):
         h.do_POST()
         self.assertEqual(calls, [("open", "nature rune", 5)])
 
+    def test_api_trader_status(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            trader_fn=lambda: {"running": True, "pid": 42,
+                               "last_result": {"opened": [], "closed": []}})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/trader"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertTrue(body["running"])
+        self.assertEqual(body["pid"], 42)
+
     def test_api_timeseries(self):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(

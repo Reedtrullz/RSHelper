@@ -238,13 +238,19 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
             return {"ok": True, "trade": asdict(trade)}
         raise ValueError(f"unknown action '{action}'")
 
+    def get_trader_status() -> dict:
+        from rshelper.trader import trader_status
+        status = trader_status()
+        return status if status else {"running": False}
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
                            watchlist_update_fn=update_watchlist,
                            timeseries_fn=get_timeseries,
                            positions_fn=get_positions,
-                           paper_trade_fn=paper_trade)
+                           paper_trade_fn=paper_trade,
+                           trader_fn=get_trader_status)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

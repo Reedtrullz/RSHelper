@@ -684,15 +684,17 @@ async function renderPaper(){
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   const noteParam=paperOnly?'?note=paper':'';
   try{
-    const [pr,tr,hr,posr]=await Promise.all([
+    const [pr,tr,hr,posr,trr]=await Promise.all([
       fetch('/api/pnl'+noteParam),fetch('/api/trades'+noteParam),
-      fetch('/api/history?paper='+(paperOnly?1:0)),fetch('/api/positions')
+      fetch('/api/history?paper='+(paperOnly?1:0)),fetch('/api/positions'),
+      fetch('/api/trader')
     ]);
-    if(!pr.ok||!tr.ok||!hr.ok||!posr.ok)throw new Error('paper API failed');
+    if(!pr.ok||!tr.ok||!hr.ok||!posr.ok||!trr.ok)throw new Error('paper API failed');
     const pnl=await pr.json();
     const trades=(await tr.json()).trades||[];
     const h=await hr.json();
     const pos=(await posr.json())||{positions:[]};
+    const trader=(await trr.json())||{running:false};
     const s=h.summary||{};
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Paper Trading</div>'+
       '<div class="metric-grid">'+
@@ -712,6 +714,16 @@ async function renderPaper(){
       '</div>';
     let html='';
     const openPos=pos.positions||[];
+    if(trader.running){
+      const last=trader.last_result||{};
+      html+='<div class="notice">Auto-trader running'+
+        (last.opened&&last.opened.length?' — opened '+last.opened.length+' this cycle':'')+
+        (last.closed&&last.closed.length?' — closed '+last.closed.length+' this cycle':'')+
+        '</div>';
+    }else{
+      html+='<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
+        'Auto-trader not running — start it with <code>rshelper auto-trade</code>.</div>';
+    }
     html+='<h3 class="chart-title">Open positions</h3>';
     if(!openPos.length){
       html+='<div class="loading">No open positions — open one with <code>trade open &lt;item&gt;</code>.</div>';

@@ -36,7 +36,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  watchlist_update_fn: Callable[[str, int], dict] | None = None,
                  timeseries_fn: Callable[[int], dict] | None = None,
                  positions_fn: Callable[[], dict] | None = None,
-                 paper_trade_fn: Callable[[str, str, int], dict] | None = None) -> type:
+                 paper_trade_fn: Callable[[str, str, int], dict] | None = None,
+                 trader_fn: Callable[[], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -50,6 +51,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
     timeseries_fn: Optional callable(item_id) -> {points: [...]}
     positions_fn: Optional callable() -> {positions, open_qty, unrealized}
     paper_trade_fn: Optional callable(action, item, qty) -> {ok, ...}
+    trader_fn: Optional callable() -> trader status dict
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -83,6 +85,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_timeseries()
             elif path == "/api/positions":
                 self._serve_positions()
+            elif path == "/api/trader":
+                self._serve_trader()
             else:
                 self.send_error(404)
 
@@ -214,6 +218,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_positions(self):
             self._serve_json(positions_fn() if positions_fn else
                              {"positions": [], "open_qty": 0, "unrealized": 0})
+
+        def _serve_trader(self):
+            self._serve_json(trader_fn() if trader_fn else {"running": False})
 
         def _handle_paper_trade(self):
             try:

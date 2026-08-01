@@ -4,7 +4,7 @@ RSHelper is a stdlib-only Python CLI and local web dashboard for Old School
 RuneScape Grand Exchange trading: alch-profit scanning, flip/margin analysis,
 market signals, a daemon monitor, a trade journal, and multi-account profiles.
 It also ships a production deployment (Docker on a Racknerd VPS behind Caddy)
-served at https://rs.reidar.tech. Current version: `1.9.0`
+served at https://rs.reidar.tech. Current version: `2.0.0`
 (`rshelper --version`). Latest handoff: `HANDOFF-v3.0.md`.
 
 ## Environment
@@ -21,7 +21,7 @@ served at https://rs.reidar.tech. Current version: `1.9.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 206 tests across 17 files, all passing.
+  Expected: 212 tests across 18 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -80,7 +80,7 @@ served at https://rs.reidar.tech. Current version: `1.9.0`
 ## Workflow Gates
 
 Before committing a round:
-1. Run all 17 test files; zero failures.
+1. Run all 18 test files; zero failures.
 2. Smoke-test every touched subcommand against the live Wiki API (or the GE
    Tracker fallback when testing from a datacenter IP).
 3. Verify `--json` output pipes through `json.tool` without stderr leakage.

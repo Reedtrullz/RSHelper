@@ -321,6 +321,11 @@ class TestCLI(unittest.TestCase):
         # (140-100)*5 - ge_tax(140)=2 per item
         self.assertEqual(rows[0]["unrealized"], 190)
 
+    def test_auto_trade_status(self):
+        r = run("auto-trade", "--status")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("not running", r.stdout)
+
     def test_trade_pnl_by_item_json(self):
         r = run("trade", "pnl", "--by-item", "--json")
         self.assertEqual(r.returncode, 0)

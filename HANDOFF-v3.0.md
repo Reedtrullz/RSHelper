@@ -1,4 +1,4 @@
-# RSHelper Handoff v3.0: Current State (v1.9.0)
+# RSHelper Handoff v3.0: Current State (v2.0.0)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python
 CLI plus local web dashboard for OSRS Grand Exchange trading, with a
@@ -14,15 +14,15 @@ VPS-hosted public dashboard deployed by CI.
 
 ```
 4276 lines of Python
-21 source files: __init__, __main__, api, models, analysis, scanner, signals,
-                 config, watchlist, snapshot, journal, positions, monitor,
-                 profile, history, tuning, cli,
+22 source files: __init__, __main__, api, models, analysis, scanner, signals,
+                 config, watchlist, snapshot, journal, positions, trader,
+                 monitor, profile, history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-17 test files, 206 tests, all passing:
-  test_analysis (16)        test_cli (22)         test_dashboard (39)
+18 test files, 212 tests, all passing:
+  test_analysis (16)        test_cli (23)         test_dashboard (40)
   test_ge_tracker_fallback (10) test_history (5)  test_integration (4)
   test_journal (20)         test_market (4)       test_monitor (8)
-  test_positions (6)        test_profile (10)
+  test_positions (6)        test_profile (10)     test_trader (4)
   test_properties (8)       test_scanner (14)     test_signals (16)
   test_snapshot (9)         test_tuning (6)       test_watchlist (9)
 ```
@@ -66,6 +66,7 @@ rshelper trade         log <item> <qty> <buy> <sell> [--note] | paper <item>
                        [--note] | close <item> [qty] | positions [--json]
                        | list [--item] [--since] [--top] [--json|--csv]
                        | pnl [--since] [--by-item] [--json] | delete <id>
+rshelper auto-trade    [--once] [--interval N] [--stop] [--status] [--json]
 rshelper profile       create|switch|list|delete <name> [--force]
 rshelper diff          [alch|flip|margin] [--date YYYY-MM-DD]
 rshelper snapshots     [alch|flip|margin]
@@ -73,7 +74,7 @@ rshelper config        show | path
 rshelper dashboard     [--bind BIND] [--port PORT]
 ```
 
-Global flags: `--profile NAME`, `--quiet`, `--version` (prints `1.9.0`).
+Global flags: `--profile NAME`, `--quiet`, `--version` (prints `2.0.0`).
 
 ## Architecture Decisions — DO NOT REGRESS
 

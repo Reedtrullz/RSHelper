@@ -541,6 +541,39 @@ def _trade_positions(args: argparse.Namespace) -> None:
     return rows
 
 
+def auto_trade_cmd(args: argparse.Namespace) -> None:
+    """Autonomous paper trader: find and execute paper trades on a loop."""
+    from rshelper.trader import run_trader, stop_trader, trader_status
+    profile = getattr(args, "profile", None)
+    if args.stop:
+        stopped = stop_trader(profile)
+        print("Trader stopped." if stopped else "No trader running.",
+              file=sys.stdout if stopped else sys.stderr)
+        return
+    if args.status:
+        status = trader_status(profile)
+        if not status:
+            print("Trader not running.")
+            return
+        if args.json:
+            print(json.dumps(status, indent=2))
+            return
+        print(f"Trader: running (PID {status['pid']}, profile {status['profile']})")
+        print(f"  Started: {status.get('started_iso', '-')}")
+        print(f"  Last cycle: {status.get('last_cycle_iso', '-')}")
+        if status.get("last_result"):
+            r = status["last_result"]
+            print(f"  Last result: candidates={r.get('candidates', 0)} "
+                  f"opened={len(r.get('opened', []))} "
+                  f"closed={len(r.get('closed', []))} "
+                  f"error={r.get('error', 'none')}")
+        return
+    from rshelper.config import load_config
+    cfg = load_config(profile)
+    run_trader(cfg.trader, interval=args.interval or None, profile=profile,
+               once=args.once)
+
+
 def margin_check(args: argparse.Namespace) -> None:
     """Fetch data, scan flips, then analyze timeseries history for confidence scoring."""
     mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
@@ -1291,6 +1324,20 @@ def main() -> None:
                       help="Stop a running monitor")
     mon.add_argument("--status", action="store_true", help="Show monitor status")
 
+    # Auto-trader subcommand
+    trader_p = sub.add_parser(
+        "auto-trade", help="Autonomous paper trader (paper-only, no real GP)")
+    trader_p.add_argument("--once", action="store_true",
+                          help="Run a single cycle and exit")
+    trader_p.add_argument("--interval", type=int, default=0,
+                          help="Override poll interval (seconds)")
+    trader_p.add_argument("--stop", action="store_true",
+                          help="Stop a running trader")
+    trader_p.add_argument("--status", action="store_true",
+                          help="Show trader status")
+    trader_p.add_argument("--json", action="store_true",
+                          help="JSON status output")
+
     # Trade subcommand
     trade_p = sub.add_parser("trade", help="Trade journal and P&L tracking")
     trade_sub = trade_p.add_subparsers(dest="trade_action")
@@ -1474,6 +1521,9 @@ def main() -> None:
         else:
             from rshelper.monitor import run_monitor
             run_monitor(interval_sec=args.interval, no_notify=args.no_notify, profile=args.profile)
+
+    elif args.command == "auto-trade":
+        auto_trade_cmd(args)
 
     elif args.command == "signals":
         signals_cmd(args)
