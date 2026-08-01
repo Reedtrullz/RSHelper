@@ -1,37 +1,37 @@
 {
   "positions": [
     {
-      "id": 14,
-      "item_id": 1955,
-      "name": "Cooking apple",
-      "qty": 2619,
-      "buy_price": 27,
+      "id": 1,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2000,
+      "buy_price": 125,
       "direction": "traditional",
-      "opened_at": "2026-08-01T11:05:59.341203+00:00",
+      "opened_at": "2026-08-01T12:20:59.896647+00:00",
       "note": "auto",
-      "entry_sell": 27
+      "entry_sell": 125
     },
     {
-      "id": 15,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 4273,
-      "buy_price": 49,
+      "id": 2,
+      "item_id": 573,
+      "name": "Air orb",
+      "qty": 125,
+      "buy_price": 1993,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:05:59.831574+00:00",
+      "opened_at": "2026-08-01T12:20:59.896932+00:00",
       "note": "auto",
-      "entry_sell": 49
+      "entry_sell": 1993
     },
     {
-      "id": 16,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 249,
-      "buy_price": 1001,
+      "id": 3,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 322,
+      "buy_price": 119,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:05:59.832052+00:00",
+      "opened_at": "2026-08-01T12:20:59.897180+00:00",
       "note": "auto",
-      "entry_sell": 1001
+      "entry_sell": 119
     }
   ]
 }
