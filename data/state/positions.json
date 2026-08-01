@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 236,
-      "buy_price": 1058,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T18:29:04.987488+00:00",
-      "note": "auto",
-      "entry_sell": 1058,
-      "entry_offer": 1097
-    },
-    {
       "id": 6,
       "item_id": 447,
       "name": "Mithril ore",
@@ -25,16 +13,28 @@
       "entry_offer": 150
     },
     {
-      "id": 7,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 301,
-      "buy_price": 454,
+      "id": 8,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 129,
+      "buy_price": 1688,
       "direction": "traditional",
-      "opened_at": "2026-08-01T19:29:05.514411+00:00",
+      "opened_at": "2026-08-01T19:39:05.772324+00:00",
       "note": "auto",
-      "entry_sell": 454,
-      "entry_offer": 473
+      "entry_sell": 1688,
+      "entry_offer": 1758
+    },
+    {
+      "id": 9,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 320,
+      "buy_price": 305,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T19:49:05.859061+00:00",
+      "note": "auto",
+      "entry_sell": 305,
+      "entry_offer": 319
     }
   ]
 }
