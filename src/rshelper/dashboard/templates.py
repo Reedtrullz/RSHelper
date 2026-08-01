@@ -717,12 +717,29 @@ async function renderPaper(){
       });
       html+='</tbody></table>';
     }
-    html+='<h3 class="chart-title">Recent trades</h3>';
+    html+='<h3 class="chart-title">Trades by item</h3>';
     if(!trades.length){
-      html+='<div class="loading">No trades logged.</div>';
+      html+='<div class="loading">No trades yet — open one with <code>trade open &lt;item&gt;</code> or <code>trade paper &lt;item&gt;</code>.</div>';
     }else{
-      html+='<table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th></tr></thead><tbody>';
+      const byItem={};
       trades.forEach(t=>{
+        const k=t.item_id||t.name||'?';
+        const g=byItem[k]||(byItem[k]={name:t.name||'?',count:0,qty:0,profit:0,wins:0,last:''});
+        g.count++;g.qty+=t.qty||0;g.profit+=t.profit||0;
+        if(t.profit>0)g.wins++;
+        if(!g.last||t.timestamp>g.last)g.last=t.timestamp||'';
+      });
+      const grouped=Object.values(byItem).sort((a,b)=>b.profit-a.profit);
+      html+='<table><thead><tr><th>Item</th><th># Trades</th><th>Total Qty</th><th>Total P&L</th><th>Win Rate</th><th>Last Trade</th></tr></thead><tbody>';
+      grouped.forEach(g=>{
+        const wr=g.count?g.wins/g.count*100:0;
+        html+='<tr><td class="name">'+escHtml(g.name)+'</td><td>'+format(g.count)+'</td><td>'+format(g.qty)+'</td>'+
+          '<td class="margin '+(g.profit>0?'pos':g.profit<0?'neg':'neutral')+'">'+format(g.profit)+'</td>'+
+          '<td>'+wr.toFixed(0)+'%</td><td>'+escHtml(String(g.last).slice(0,10))+'</td></tr>';
+      });
+      html+='</tbody></table>';
+      html+='<h3 class="chart-title">Recent trades</h3><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th></tr></thead><tbody>';
+      trades.slice(0,10).forEach(t=>{
         const p=t.profit||0;
         html+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
           '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+
