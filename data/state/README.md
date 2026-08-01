@@ -4,6 +4,7 @@ This directory holds a copy of the local RSHelper trading state that gets
 seeded into the live site's state volume on every deploy:
 
 - `trades.json` — paper trade journal (the live Paper Trading history)
+- `positions.json` — open paper positions (buy-and-hold until closed)
 - `watchlist.json` — watched items and alert thresholds
 - `tuning_log.json` — config-change eras for the Progression view
 - `volume_baseline.json` / `signal_cooldowns.json` — signal state

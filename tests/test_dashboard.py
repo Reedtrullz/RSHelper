@@ -263,6 +263,29 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertEqual(h.error_code, 400)
         self.assertEqual(called, [])
 
+    def test_api_positions(self):
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            positions_fn=lambda: {"positions": [
+                {"id": 1, "name": "Nature rune", "qty": 10, "buy_price": 100,
+                 "current": 120, "unrealized": 180,
+                 "opened_at": "2026-07-31T00:00:00Z"}],
+                "open_qty": 10, "unrealized": 180})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/positions"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["open_qty"], 10)
+        self.assertEqual(body["positions"][0]["unrealized"], 180)
+
     def test_api_watchlist_post_foreign_origin_rejected(self):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(

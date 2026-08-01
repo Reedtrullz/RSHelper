@@ -165,11 +165,42 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
             points.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
         return {"points": points}
 
+    def get_positions() -> dict:
+        refresh()
+        from rshelper.market import ge_tax
+        from rshelper.positions import list_positions
+        latest = cache["latest"] or {}
+        rows = []
+        for p in list_positions():
+            price = latest.get(str(p.item_id))
+            issue = price_issue(price) if isinstance(price, dict) else "no data"
+            row = {"id": p.id, "item_id": p.item_id, "name": p.name,
+                   "qty": p.qty, "buy_price": p.buy_price,
+                   "direction": p.direction, "opened_at": p.opened_at,
+                   "usable": issue is None}
+            if issue is None:
+                sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
+                    else int(price.get("high", 0) or 0)
+                row["current"] = sell
+                tax = ge_tax(sell)
+                row["unrealized"] = (sell - p.buy_price) * p.qty - tax * p.qty
+                row["unrealized_pct"] = round(
+                    ((sell - p.buy_price - tax) / p.buy_price * 100), 2
+                ) if p.buy_price > 0 else 0.0
+            else:
+                row["reason"] = issue
+            rows.append(row)
+        rows.sort(key=lambda r: r["opened_at"])
+        return {"positions": rows,
+                "open_qty": sum(r["qty"] for r in rows),
+                "unrealized": sum(r.get("unrealized", 0) for r in rows)}
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
                            watchlist_update_fn=update_watchlist,
-                           timeseries_fn=get_timeseries)
+                           timeseries_fn=get_timeseries,
+                           positions_fn=get_positions)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

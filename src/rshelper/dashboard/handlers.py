@@ -34,7 +34,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  meta_fn: Callable[[], dict] | None = None,
                  watchlist_fn: Callable[[], dict] | None = None,
                  watchlist_update_fn: Callable[[str, int], dict] | None = None,
-                 timeseries_fn: Callable[[int], dict] | None = None) -> type:
+                 timeseries_fn: Callable[[int], dict] | None = None,
+                 positions_fn: Callable[[], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -46,6 +47,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
     watchlist_fn: Optional callable() -> {items: [...]}
     watchlist_update_fn: Optional callable(action, item_id) -> {items: [...]}
     timeseries_fn: Optional callable(item_id) -> {points: [...]}
+    positions_fn: Optional callable() -> {positions, open_qty, unrealized}
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -77,6 +79,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_watchlist()
             elif path == "/api/timeseries":
                 self._serve_timeseries()
+            elif path == "/api/positions":
+                self._serve_positions()
             else:
                 self.send_error(404)
 
@@ -202,6 +206,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 return
             item_id = int(raw)
             self._serve_json(timeseries_fn(item_id) if timeseries_fn else {"points": []})
+
+        def _serve_positions(self):
+            self._serve_json(positions_fn() if positions_fn else
+                             {"positions": [], "open_qty": 0, "unrealized": 0})
 
         def _handle_watchlist(self):
             try:

@@ -253,6 +253,74 @@ class TestCLI(unittest.TestCase):
             finally:
                 jmod.TRADES_PATH = original_path
 
+    def test_trade_open_close_positions(self):
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import tempfile
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.journal as jmod
+        import rshelper.positions as pmod
+        import rshelper.cli as cmod
+        original_path = jmod.TRADES_PATH
+        original_pos = pmod.POSITIONS_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            pmod.POSITIONS_PATH = Path(tmp) / "positions.json"
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 561, "name": "Nature rune", "limit": 13000}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "561": {"high": 150, "low": 140,
+                                    "highTime": int(time.time()) - 60,
+                                    "lowTime": int(time.time()) - 60}}):
+                        cmod._trade_open(Namespace(
+                            item="nature rune", qty=10, capital=0, note="",
+                            profile=None, flip_direction="arbitrage"))
+                        self.assertEqual(len(pmod.list_positions()), 1)
+                        cmod._trade_close(Namespace(
+                            item="nature rune", qty=0, profile=None))
+                trades = jmod.list_trades()
+                positions_after = pmod.list_positions()
+            finally:
+                jmod.TRADES_PATH = original_path
+                pmod.POSITIONS_PATH = original_pos
+        self.assertEqual(len(trades), 1)
+        self.assertEqual(trades[0].qty, 10)
+        self.assertEqual(trades[0].buy_price, 150)  # arbitrage: buy at high
+        self.assertEqual(trades[0].sell_price, 140)
+        self.assertEqual(trades[0].note, "paper")
+        self.assertEqual(positions_after, [])
+
+    def test_trade_positions_json_round_trip(self):
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import tempfile
+        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.positions as pmod
+        import rshelper.cli as cmod
+        original_pos = pmod.POSITIONS_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            pmod.POSITIONS_PATH = Path(tmp) / "positions.json"
+            try:
+                pmod.open_position(561, "Nature rune", 5, 100,
+                                   direction="arbitrage")
+                with mock.patch.object(amod, "fetch_latest", return_value={
+                        "561": {"high": 150, "low": 140,
+                                "highTime": int(time.time()) - 60,
+                                "lowTime": int(time.time()) - 60}}):
+                    rows = cmod._trade_positions(Namespace(profile=None, json=True))
+            finally:
+                pmod.POSITIONS_PATH = original_pos
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["qty"], 5)
+        self.assertEqual(rows[0]["current"], 140)
+        # (140-100)*5 - ge_tax(140)=2 per item
+        self.assertEqual(rows[0]["unrealized"], 190)
+
     def test_trade_pnl_by_item_json(self):
         r = run("trade", "pnl", "--by-item", "--json")
         self.assertEqual(r.returncode, 0)

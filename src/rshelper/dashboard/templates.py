@@ -646,13 +646,15 @@ async function renderPaper(){
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   const noteParam=paperOnly?'?note=paper':'';
   try{
-    const [pr,tr,hr]=await Promise.all([
-      fetch('/api/pnl'+noteParam),fetch('/api/trades'+noteParam),fetch('/api/history?paper='+(paperOnly?1:0))
+    const [pr,tr,hr,posr]=await Promise.all([
+      fetch('/api/pnl'+noteParam),fetch('/api/trades'+noteParam),
+      fetch('/api/history?paper='+(paperOnly?1:0)),fetch('/api/positions')
     ]);
-    if(!pr.ok||!tr.ok||!hr.ok)throw new Error('paper API failed');
+    if(!pr.ok||!tr.ok||!hr.ok||!posr.ok)throw new Error('paper API failed');
     const pnl=await pr.json();
     const trades=(await tr.json()).trades||[];
     const h=await hr.json();
+    const pos=(await posr.json())||{positions:[]};
     const s=h.summary||{};
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Paper Trading</div>'+
       '<div class="metric-grid">'+
@@ -667,8 +669,28 @@ async function renderPaper(){
       metric('Best','<span class="val green">'+format(pnl.best_trade||0)+'</span>','')+
       metric('Worst','<span class="val red">'+format(pnl.worst_trade||0)+'</span>','')+
       metric('Active GP/hr',format(pnl.active_gp_per_hour||0)+' gp','gold')+
+      metric('Open Positions',format((pos.positions||[]).length),'')+
+      metric('Unrealized',format(pos.unrealized||0)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
       '</div>';
     let html='';
+    const openPos=pos.positions||[];
+    html+='<h3 class="chart-title">Open positions</h3>';
+    if(!openPos.length){
+      html+='<div class="loading">No open positions — open one with <code>trade open &lt;item&gt;</code>.</div>';
+    }else{
+      html+='<table><thead><tr><th>Item</th><th>Qty</th><th>Buy</th><th>Current</th><th>Unrealized</th><th>Opened</th></tr></thead><tbody>';
+      openPos.forEach(p=>{
+        const unreal=p.unrealized;
+        const cur=p.usable?p.current:null;
+        html+='<tr><td class="name">'+escHtml(p.name)+'</td><td>'+format(p.qty)+'</td>'+
+          '<td>'+format(p.buy_price)+'</td>'+
+          (cur!=null?'<td>'+format(cur)+'</td>':'<td class="dim">-</td>')+
+          '<td class="margin '+(unreal!=null?(unreal>0?'pos':unreal<0?'neg':'neutral'):'dim')+'">'+
+          (unreal!=null?format(unreal):'-')+'</td>'+
+          '<td>'+escHtml(String(p.opened_at||'').slice(0,10))+'</td></tr>';
+      });
+      html+='</tbody></table>';
+    }
     const traded=(h.items||[]).filter(i=>i.trade_count>0);
     html+='<h3 class="chart-title">Current status — live market on traded items</h3>';
     if(!traded.length){

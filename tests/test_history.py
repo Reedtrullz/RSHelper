@@ -55,19 +55,19 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(h_all["summary"]["trade_count"], 2)
 
     def test_config_assignment_and_change_flags(self):
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        today = now.strftime("%Y-%m-%d")
+        yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
         self._write_entries([
-            {"ts": "2026-07-29T10:00:00Z", "params": {"v": 1}, "note": "auto"},
-            {"ts": "2026-07-31T10:00:00Z", "params": {"v": 2}, "note": "auto"},
+            {"ts": f"{yesterday}T10:00:00Z", "params": {"v": 1}, "note": "auto"},
+            {"ts": f"{today}T10:00:00Z", "params": {"v": 2}, "note": "auto"},
         ])
         jmod.log_trade(1, "A", 1, 100, 200, "paper")
         h = history.build_history()
-        day = h["buckets"][0]["date"]
-        if day == "2026-07-31":
-            self.assertTrue(h["buckets"][0]["config_changed"])
-            self.assertEqual(h["buckets"][0]["config"], {"v": 2})
-        else:
-            self.assertFalse(h["buckets"][0]["config_changed"])
-            self.assertEqual(h["buckets"][0]["config"], {"v": 1})
+        self.assertEqual(h["buckets"][0]["date"], today)
+        self.assertTrue(h["buckets"][0]["config_changed"])
+        self.assertEqual(h["buckets"][0]["config"], {"v": 2})
 
     def test_snapshot_join(self):
         snapshot.save("flip", [
@@ -83,9 +83,13 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(snaps[0]["avg_value"], 200)
 
     def test_eras_split_trades(self):
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        today = now.strftime("%Y-%m-%d")
+        yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
         self._write_entries([
-            {"ts": "2026-07-29T10:00:00Z", "params": {"v": 1}, "note": "auto"},
-            {"ts": "2026-07-31T10:00:00Z", "params": {"v": 2}, "note": "auto"},
+            {"ts": f"{yesterday}T10:00:00Z", "params": {"v": 1}, "note": "auto"},
+            {"ts": f"{today}T10:00:00Z", "params": {"v": 2}, "note": "auto"},
         ])
         jmod.log_trade(1, "A", 1, 100, 200, "paper")
         h = history.build_history()

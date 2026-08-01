@@ -1,4 +1,4 @@
-# RSHelper Handoff v3.0: Current State (v1.8.0)
+# RSHelper Handoff v3.0: Current State (v1.9.0)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python
 CLI plus local web dashboard for OSRS Grand Exchange trading, with a
@@ -14,15 +14,15 @@ VPS-hosted public dashboard deployed by CI.
 
 ```
 4276 lines of Python
-20 source files: __init__, __main__, api, models, analysis, scanner, signals,
-                 config, watchlist, snapshot, journal, monitor, profile,
-                 history, tuning, cli,
+21 source files: __init__, __main__, api, models, analysis, scanner, signals,
+                 config, watchlist, snapshot, journal, positions, monitor,
+                 profile, history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-16 test files, 196 tests, all passing:
-  test_analysis (16)        test_cli (20)         test_dashboard (37)
-  test_ge_tracker_fallback (9) test_history (5)   test_integration (4)
+17 test files, 205 tests, all passing:
+  test_analysis (16)        test_cli (22)         test_dashboard (38)
+  test_ge_tracker_fallback (10) test_history (5)  test_integration (4)
   test_journal (20)         test_market (4)       test_monitor (8)
-  test_profile (10)
+  test_positions (6)        test_profile (10)
   test_properties (8)       test_scanner (14)     test_signals (16)
   test_snapshot (9)         test_tuning (6)       test_watchlist (9)
 ```
@@ -62,6 +62,8 @@ rshelper watch         add <item> [--alert-above N] [--alert-below N] | remove <
                        | list | check [--flip-direction ...] [-v]
 rshelper trade         log <item> <qty> <buy> <sell> [--note] | paper <item>
                        [qty] [--capital N] [--flip-direction ...] [--note]
+                       | open <item> [qty] [--capital N] [--flip-direction ...]
+                       [--note] | close <item> [qty] | positions [--json]
                        | list [--item] [--since] [--top] [--json|--csv]
                        | pnl [--since] [--by-item] [--json] | delete <id>
 rshelper profile       create|switch|list|delete <name> [--force]
@@ -71,7 +73,7 @@ rshelper config        show | path
 rshelper dashboard     [--bind BIND] [--port PORT]
 ```
 
-Global flags: `--profile NAME`, `--quiet`, `--version` (prints `1.8.0`).
+Global flags: `--profile NAME`, `--quiet`, `--version` (prints `1.9.0`).
 
 ## Architecture Decisions — DO NOT REGRESS
 

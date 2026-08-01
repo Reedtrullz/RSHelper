@@ -378,56 +378,72 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
     return "\n".join(lines)
 
 
-def _trade_paper(args: argparse.Namespace) -> None:
-    """Log a paper trade at live GE prices, sized from --capital or --qty."""
-    from rshelper.journal import log_trade
-    from rshelper.api import fetch_mapping, fetch_latest
-
-    profile = args.profile if hasattr(args, "profile") else None
+def _resolve_item(args: argparse.Namespace) -> dict:
+    """Look up an item by exact name or unique substring; exits on failure."""
+    from rshelper.api import fetch_mapping
+    profile = getattr(args, "profile", None)
     mapping = fetch_mapping(profile) or []
     q = args.item.lower()
     entry = next((e for e in mapping if (e.get("name") or "").lower() == q), None)
-    if entry is None:
-        matches = [e for e in mapping if q in (e.get("name") or "").lower()]
-        if len(matches) == 1:
-            entry = matches[0]
-        elif len(matches) > 1:
-            print(f"Multiple matches for '{args.item}':", file=sys.stderr)
-            for e in matches[:20]:
-                print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
-            sys.exit(1)
-        else:
-            print(f"Item not found: {args.item}", file=sys.stderr)
-            sys.exit(1)
+    if entry is not None:
+        return entry
+    matches = [e for e in mapping if q in (e.get("name") or "").lower()]
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        print(f"Multiple matches for '{args.item}':", file=sys.stderr)
+        for e in matches[:20]:
+            print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
+    else:
+        print(f"Item not found: {args.item}", file=sys.stderr)
+    sys.exit(1)
 
+
+def _resolve_paper_prices(entry: dict, profile: str | None, direction: str
+                          ) -> tuple[int, int]:
+    """Live guarded (buy_price, sell_price) for the given flip direction."""
+    from rshelper.api import fetch_latest
     latest = fetch_latest(profile) or {}
     price = latest.get(str(entry["id"])) or {}
     if not isinstance(price, dict) or price_issue(price):
-        print(f"No reliable live price data for {entry['name']} "
+        print(f"No reliable live price data for {entry.get('name')} "
               f"(stale or manipulated prices).", file=sys.stderr)
         sys.exit(1)
     high = int(price.get("high", 0) or 0)
     low = int(price.get("low", 0) or 0)
-    if args.flip_direction == "traditional":
+    if direction == "traditional":
         buy_price, sell_price = low, high
     else:
         buy_price, sell_price = high, low
     if buy_price <= 0 or sell_price <= 0:
-        print(f"No live price data for {entry['name']}.", file=sys.stderr)
+        print(f"No live price data for {entry.get('name')}.", file=sys.stderr)
         sys.exit(1)
+    return buy_price, sell_price
 
-    buy_limit = int(entry.get("limit") or 0)
+
+def _size_qty(args: argparse.Namespace, entry: dict, buy_price: int) -> int:
+    """Size a trade from --qty, --capital, or default to 1."""
     if args.qty > 0:
-        qty = args.qty
-    elif args.capital > 0 and buy_price > 0:
-        qty = min(buy_limit, args.capital // buy_price)
+        return args.qty
+    if args.capital > 0:
+        buy_limit = int(entry.get("limit") or 0)
+        qty = min(buy_limit, args.capital // buy_price) if buy_price > 0 else 0
         if qty <= 0:
             print(f"Capital {args.capital:,} gp is below one unit of "
-                  f"{entry['name']} at {buy_price:,} gp.", file=sys.stderr)
+                  f"{entry.get('name')} at {buy_price:,} gp.", file=sys.stderr)
             sys.exit(1)
-    else:
-        qty = 1
+        return qty
+    return 1
 
+
+def _trade_paper(args: argparse.Namespace) -> None:
+    """Log a paper trade at live GE prices, sized from --capital or --qty."""
+    from rshelper.journal import log_trade
+    profile = getattr(args, "profile", None)
+    entry = _resolve_item(args)
+    buy_price, sell_price = _resolve_paper_prices(
+        entry, profile, args.flip_direction)
+    qty = _size_qty(args, entry, buy_price)
     trade = log_trade(entry["id"], entry["name"], qty, buy_price,
                       sell_price, note=args.note or "paper", profile=profile)
     mode = args.flip_direction
@@ -435,6 +451,95 @@ def _trade_paper(args: argparse.Namespace) -> None:
           f"({mode}) buy {trade.buy_price:,} gp, sell {trade.sell_price:,} gp "
           f"— profit: {trade.profit:+,} gp "
           f"(tax: {trade.tax_paid:,})")
+
+
+def _trade_open(args: argparse.Namespace) -> None:
+    """Open a paper position: buy and hold at the live price."""
+    from rshelper.positions import open_position
+    profile = getattr(args, "profile", None)
+    entry = _resolve_item(args)
+    buy_price, _ = _resolve_paper_prices(entry, profile, args.flip_direction)
+    qty = _size_qty(args, entry, buy_price)
+    pos = open_position(entry["id"], entry["name"], qty, buy_price,
+                        direction=args.flip_direction,
+                        note=args.note or "paper", profile=profile)
+    print(f"Opened position #{pos.id}: {pos.qty:,}x {pos.name} at "
+          f"{pos.buy_price:,} gp ({pos.direction})")
+
+
+def _trade_close(args: argparse.Namespace) -> None:
+    """Close open paper positions for an item at the live price."""
+    from rshelper.positions import close_positions, list_positions, open_qty
+    from rshelper.journal import log_trade
+    profile = getattr(args, "profile", None)
+    entry = _resolve_item(args)
+    open_positions = [p for p in list_positions(profile) if p.item_id == entry["id"]]
+    if not open_positions:
+        print(f"No open positions for {entry['name']}.", file=sys.stderr)
+        sys.exit(1)
+    # Close at the price convention of the oldest open lot for this item.
+    direction = open_positions[0].direction
+    _, sell_price = _resolve_paper_prices(entry, profile, direction)
+    qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
+    try:
+        lots = close_positions(entry["id"], qty, sell_price, profile)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    for lot in lots:
+        log_trade(entry["id"], lot["name"], lot["qty"], lot["buy_price"],
+                  sell_price, note="paper", profile=profile)
+    profit = sum(l["profit"] for l in lots)
+    tax = sum(l["tax_paid"] for l in lots)
+    print(f"Closed {qty:,}x {entry['name']} at {sell_price:,} gp "
+          f"({direction}) — profit: {profit:+,} gp (tax: {tax:,})")
+
+
+def _trade_positions(args: argparse.Namespace) -> None:
+    """List open paper positions with unrealized P&L at live prices."""
+    from rshelper.positions import list_positions
+    from rshelper.api import fetch_latest
+    from rshelper.market import ge_tax
+    profile = getattr(args, "profile", None)
+    positions = list_positions(profile)
+    latest = fetch_latest(profile) or {}
+    rows = []
+    for p in positions:
+        price = latest.get(str(p.item_id))
+        usable = isinstance(price, dict) and price_issue(price) is None
+        sell = None
+        unrealized = None
+        if usable:
+            sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
+                else int(price.get("high", 0) or 0)
+        if usable and sell and sell > 0:
+            tax = ge_tax(sell)
+            unrealized = (sell - p.buy_price) * p.qty - tax * p.qty
+        rows.append({
+            "id": p.id, "item_id": p.item_id, "name": p.name, "qty": p.qty,
+            "buy_price": p.buy_price, "direction": p.direction,
+            "opened_at": p.opened_at, "current": sell,
+            "unrealized": unrealized,
+        })
+    if args.json:
+        print(json.dumps(rows, indent=2))
+        return rows
+    if not rows:
+        print("No open positions.")
+        return rows
+    nw = max(len(r["name"]) for r in rows)
+    nw = min(nw, 30)
+    print(f"{'ID':<4} {'Item':<{nw}} {'Qty':>6} {'Buy':>10} {'Current':>10} "
+          f"{'Unrealized':>12} {'Opened':<12}")
+    print("-" * (66 + nw))
+    for r in rows:
+        cur = f"{r['current']:,}" if r["current"] else "-"
+        unreal = f"{r['unrealized']:+,}" if r["unrealized"] is not None else "-"
+        print(f"{r['id']:<4} {r['name'][:nw]:<{nw}} {r['qty']:>6,} "
+              f"{r['buy_price']:>10,} {cur:>10} {unreal:>12} "
+              f"{r['opened_at'][:10]}")
+    return rows
+
 
 def margin_check(args: argparse.Namespace) -> None:
     """Fetch data, scan flips, then analyze timeseries history for confidence scoring."""
@@ -1208,6 +1313,26 @@ def main() -> None:
                                   "traditional: buy at bid, sell at offer")
     trade_paper.add_argument("--note", type=str, default="",
                              help="Optional note")
+    trade_open = trade_sub.add_parser(
+        "open", help="Open a paper position (buy and hold at live price)")
+    trade_open.add_argument("item", help="Item name")
+    trade_open.add_argument("qty", type=int, nargs="?", default=0,
+                            help="Quantity (default: sized from --capital or 1)")
+    trade_open.add_argument("--capital", type=int, default=0,
+                            help="GP to spend; sizes quantity within buy limit")
+    trade_open.add_argument("--flip-direction", type=str, default="arbitrage",
+                            choices=["arbitrage", "traditional"],
+                            help="arbitrage: buy at instant-buy (default); "
+                                 "traditional: buy at bid")
+    trade_open.add_argument("--note", type=str, default="", help="Optional note")
+    trade_close = trade_sub.add_parser(
+        "close", help="Close open paper positions at live price (FIFO)")
+    trade_close.add_argument("item", help="Item name")
+    trade_close.add_argument("qty", type=int, nargs="?", default=0,
+                             help="Units to close (default: all open)")
+    trade_pos = trade_sub.add_parser(
+        "positions", help="List open paper positions with unrealized P&L")
+    trade_pos.add_argument("--json", action="store_true")
     trade_list = trade_sub.add_parser("list", help="List logged trades")
     trade_list.add_argument("--item", type=str, default="", help="Filter by item name")
     trade_list.add_argument("--since", type=str, default="", help="Filter from date (YYYY-MM-DD)")
@@ -1398,6 +1523,12 @@ def main() -> None:
                   f"— profit: {trade.profit:+,} gp (tax: {trade.tax_paid:,})")
         elif args.trade_action == "paper":
             _trade_paper(args)
+        elif args.trade_action == "open":
+            _trade_open(args)
+        elif args.trade_action == "close":
+            _trade_close(args)
+        elif args.trade_action == "positions":
+            _trade_positions(args)
         elif args.trade_action == "list":
             from rshelper.journal import list_trades
             profile = args.profile if hasattr(args, "profile") else None
