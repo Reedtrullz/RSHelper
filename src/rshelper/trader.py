@@ -42,10 +42,31 @@ EXIT_MAX_AGE = 300
 STOP_SLIPPAGE = 0.97  # model worse fills when stopping out
 MAX_VOLUME_FRACTION = 0.10  # never size above 10% of the last 5m volume
 
-# ponytail: in-memory only; a daemon restart forgets recent exits, which is
-# fine (worst case one early re-entry per restart).
+# Recent exits persist to disk so a daemon restart cannot erase a cooldown;
+# the in-memory map is just the fast path for the current process.
 # Maps item_id -> (exit_ts, reason) so stop-losses get a longer cooldown.
 _RECENT_EXITS: dict[int, tuple[float, str]] = {}
+EXITS_PATH = TRADER_DIR / "recent_exits.json"
+
+
+def _load_recent_exits() -> None:
+    """Merge persisted exits into the in-memory map (survives restarts)."""
+    try:
+        data = json.loads(EXITS_PATH.read_text())
+    except (OSError, json.JSONDecodeError, ValueError):
+        return
+    for key, val in data.items():
+        try:
+            _RECENT_EXITS[int(key)] = (float(val["ts"]), str(val["reason"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+
+
+def _persist_recent_exits() -> None:
+    atomic_write_json(EXITS_PATH, {
+        str(iid): {"ts": ts, "reason": reason}
+        for iid, (ts, reason) in _RECENT_EXITS.items()
+    })
 
 
 def _pid_path(profile: str | None = None) -> Path:
@@ -227,6 +248,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
     from rshelper.positions import close_positions, list_positions, open_position
     from rshelper.journal import log_trade
 
+    _load_recent_exits()
     _mapping, latest, vol_5m, items = _fetch_bootstrap(profile)
     candidates = select_candidates(items, latest, vol_5m, cfg)
 
@@ -277,6 +299,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                        "quote_sell": quote_sell, "hold_minutes": hold_minutes,
                        "profit": sum(l["profit"] for l in lots)})
         _RECENT_EXITS[p.item_id] = (now, reason)
+        _persist_recent_exits()
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))

@@ -17,6 +17,7 @@ import rshelper.positions as pmod
 _tmpdir = tempfile.TemporaryDirectory()
 jmod.TRADES_PATH = Path(_tmpdir.name) / "trades.json"
 pmod.POSITIONS_PATH = Path(_tmpdir.name) / "positions.json"
+tmod.EXITS_PATH = Path(_tmpdir.name) / "recent_exits.json"
 
 from rshelper.trader import (
     exit_reason,
@@ -28,6 +29,8 @@ from rshelper.trader import (
 
 def _clean():
     tmod._RECENT_EXITS.clear()
+    if tmod.EXITS_PATH.exists():
+        tmod.EXITS_PATH.unlink()
     for path in (jmod.TRADES_PATH, pmod.POSITIONS_PATH):
         if path.exists():
             path.unlink()
@@ -285,6 +288,33 @@ def test_stop_loss_cooldown_is_longer():
     print("  PASSED test_stop_loss_cooldown_is_longer")
 
 
+def test_stop_cooldown_survives_restart():
+    """A daemon restart must not erase the stop-loss re-entry cooldown."""
+    _clean()
+    from unittest import mock
+    now = int(time.time())
+    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    latest = _latest(now, **{"1": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100}}
+    cfg = _cfg()
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, items)):
+        run_cycle(cfg)  # opens position 1
+    latest_sl = _latest(now, **{"1": (100, 94)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest_sl, vol_5m, items)):
+        result = run_cycle(cfg)
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "stop_loss"
+    assert tmod.EXITS_PATH.exists(), "exit cooldown must be persisted"
+    tmod._RECENT_EXITS.clear()  # simulate a daemon restart
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, items)):
+        result2 = run_cycle(cfg)
+    assert result2["opened"] == [], result2  # still on the stop cooldown
+    print("  PASSED test_stop_cooldown_survives_restart")
+
+
 def test_trader_daemon_guards_and_pnl():
     import json
     import os
@@ -418,6 +448,7 @@ if __name__ == "__main__":
     test_stop_loss_legacy_position_uses_buy_mark()
     test_reentry_cooldown()
     test_stop_loss_cooldown_is_longer()
+    test_stop_cooldown_survives_restart()
     test_trader_daemon_guards_and_pnl()
     test_max_hold_flat_close()
     test_trader_config_validation()
