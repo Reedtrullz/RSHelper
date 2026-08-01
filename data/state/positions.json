@@ -24,14 +24,14 @@
     },
     {
       "id": 8,
-      "item_id": 31111,
-      "name": "Demon tear",
-      "qty": 871,
-      "buy_price": 287,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 219,
+      "buy_price": 477,
       "direction": "traditional",
-      "opened_at": "2026-08-01T06:50:54.702528+00:00",
+      "opened_at": "2026-08-01T07:00:54.735960+00:00",
       "note": "auto",
-      "entry_sell": 287
+      "entry_sell": 477
     }
   ]
 }
