@@ -445,7 +445,8 @@ def _trade_paper(args: argparse.Namespace) -> None:
         entry, profile, args.flip_direction)
     qty = _size_qty(args, entry, buy_price)
     trade = log_trade(entry["id"], entry["name"], qty, buy_price,
-                      sell_price, note=args.note or "paper", profile=profile)
+                      sell_price, note=args.note or "paper", profile=profile,
+                      strategy="manual")
     mode = args.flip_direction
     print(f"Paper trade #{trade.id}: {trade.qty:,}x {trade.name} "
           f"({mode}) buy {trade.buy_price:,} gp, sell {trade.sell_price:,} gp "
@@ -458,11 +459,13 @@ def _trade_open(args: argparse.Namespace) -> None:
     from rshelper.positions import open_position
     profile = getattr(args, "profile", None)
     entry = _resolve_item(args)
-    buy_price, _ = _resolve_paper_prices(entry, profile, args.flip_direction)
+    buy_price, sell_price = _resolve_paper_prices(
+        entry, profile, args.flip_direction)
     qty = _size_qty(args, entry, buy_price)
     pos = open_position(entry["id"], entry["name"], qty, buy_price,
                         direction=args.flip_direction,
-                        note=args.note or "paper", profile=profile)
+                        note=args.note or "paper", profile=profile,
+                        entry_sell=sell_price)
     print(f"Opened position #{pos.id}: {pos.qty:,}x {pos.name} at "
           f"{pos.buy_price:,} gp ({pos.direction})")
 
@@ -488,7 +491,8 @@ def _trade_close(args: argparse.Namespace) -> None:
         sys.exit(1)
     for lot in lots:
         log_trade(entry["id"], lot["name"], lot["qty"], lot["buy_price"],
-                  sell_price, note="paper", profile=profile)
+                  sell_price, note="paper", profile=profile, strategy="manual",
+                  exit_reason="manual")
     profit = sum(l["profit"] for l in lots)
     tax = sum(l["tax_paid"] for l in lots)
     print(f"Closed {qty:,}x {entry['name']} at {sell_price:,} gp "
@@ -558,9 +562,21 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         if args.json:
             print(json.dumps(status, indent=2))
             return
-        print(f"Trader: running (PID {status['pid']}, profile {status['profile']})")
+        running = "running" if status.get("running") else "not running"
+        where = "this machine" if status.get("local") else "synced state (runs on Mac)"
+        print(f"Trader: {running} ({where}, profile {status['profile']})")
+        if status.get("pid"):
+            print(f"  PID: {status['pid']}")
         print(f"  Started: {status.get('started_iso', '-')}")
         print(f"  Last cycle: {status.get('last_cycle_iso', '-')}")
+        print(f"  Realized P&L: {status.get('realized_pnl', 0):+,} gp")
+        print(f"  Cycles: {status.get('cycles', 0)}  "
+              f"Errors: {status.get('errors', 0)}")
+        exits = status.get("exits_by_reason") or {}
+        if exits:
+            for reason, row in sorted(exits.items()):
+                print(f"  Exits [{reason}]: {row.get('count', 0)} "
+                      f"(P&L {row.get('profit', 0):+,} gp)")
         if status.get("last_result"):
             r = status["last_result"]
             print(f"  Last result: candidates={r.get('candidates', 0)} "
@@ -1389,12 +1405,18 @@ def main() -> None:
     trade_list.add_argument("--item", type=str, default="", help="Filter by item name")
     trade_list.add_argument("--since", type=str, default="", help="Filter from date (YYYY-MM-DD)")
     trade_list.add_argument("--top", type=int, default=0, help="Show top N most recent")
+    trade_list.add_argument("--strategy", type=str, default="",
+                            choices=["", "auto", "manual"],
+                            help="Filter by strategy (auto=trader, manual=hand)")
     trade_list.add_argument("--json", action="store_true")
     trade_list.add_argument("--csv", action="store_true")
     trade_pnl = trade_sub.add_parser("pnl", help="Show P&L summary")
     trade_pnl.add_argument("--since", type=str, default="", help="Filter from date")
     trade_pnl.add_argument("--by-item", action="store_true",
                            help="Show per-item P&L breakdown instead of summary")
+    trade_pnl.add_argument("--strategy", type=str, default="",
+                           choices=["", "auto", "manual"],
+                           help="Filter by strategy (auto=trader, manual=hand)")
     trade_pnl.add_argument("--json", action="store_true")
     trade_del = trade_sub.add_parser("delete", help="Delete a trade by ID")
     trade_del.add_argument("id", type=int, help="Trade ID to delete")
@@ -1591,17 +1613,18 @@ def main() -> None:
             from rshelper.journal import list_trades
             profile = args.profile if hasattr(args, "profile") else None
             trades = list_trades(item_name=args.item, since=args.since,
-                                 top=args.top, profile=profile)
+                                 top=args.top, profile=profile,
+                                 strategy=args.strategy)
             if args.json:
                 from dataclasses import asdict
                 print(json.dumps([asdict(t) for t in trades], indent=2))
             elif args.csv:
                 import csv, io
                 out = io.StringIO()
-                writer = csv.DictWriter(out, fieldnames=["id","item_id","name","qty","buy_price","sell_price","tax_paid","profit","timestamp","note"])
+                writer = csv.DictWriter(out, fieldnames=["id","item_id","name","qty","buy_price","sell_price","tax_paid","profit","timestamp","note","strategy","exit_reason","hold_minutes","quote_sell"])
                 writer.writeheader()
                 for t in trades:
-                    writer.writerow({"id":t.id,"item_id":t.item_id,"name":t.name,"qty":t.qty,"buy_price":t.buy_price,"sell_price":t.sell_price,"tax_paid":t.tax_paid,"profit":t.profit,"timestamp":t.timestamp,"note":t.note})
+                    writer.writerow({"id":t.id,"item_id":t.item_id,"name":t.name,"qty":t.qty,"buy_price":t.buy_price,"sell_price":t.sell_price,"tax_paid":t.tax_paid,"profit":t.profit,"timestamp":t.timestamp,"note":t.note,"strategy":t.strategy,"exit_reason":t.exit_reason,"hold_minutes":t.hold_minutes,"quote_sell":t.quote_sell})
                 print(out.getvalue())
             else:
                 if not trades:
@@ -1618,7 +1641,8 @@ def main() -> None:
             profile = args.profile if hasattr(args, "profile") else None
             if args.by_item:
                 from rshelper.journal import compute_pnl_by_item
-                rows = compute_pnl_by_item(since=args.since, profile=profile)
+                rows = compute_pnl_by_item(since=args.since, profile=profile,
+                                           strategy=args.strategy)
                 if args.json:
                     print(json.dumps([
                         {"name": r.name, "item_id": r.item_id,
@@ -1643,7 +1667,8 @@ def main() -> None:
                                   f"{r.roi_pct:>6.1f}% {r.win_rate:>5.1f}%")
                         print()
             else:
-                pnl = compute_pnl(since=args.since, profile=profile)
+                pnl = compute_pnl(since=args.since, profile=profile,
+                                  strategy=args.strategy)
                 if args.json:
                     d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
                          "total_cost_basis": pnl.total_cost_basis,

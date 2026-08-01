@@ -146,6 +146,49 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertEqual(body["count"], 1)
         self.assertEqual(body["trades"][0]["name"], "Paper")
 
+    def test_api_trades_strategy_filter(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.journal as jmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                jmod.log_trade(1, "Auto", 1, 100, 200, note="paper",
+                               strategy="auto")
+                jmod.log_trade(2, "Manual", 1, 100, 200, note="paper",
+                               strategy="manual")
+                self.handler.path = "/api/trades?note=paper&strategy=auto"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                jmod.TRADES_PATH = original_path
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["trades"][0]["name"], "Auto")
+        self.assertEqual(body["trades"][0]["strategy"], "auto")
+
+    def test_api_pnl_strategy_filter(self):
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, "src")
+        import rshelper.journal as jmod
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                jmod.log_trade(1, "Auto", 1, 100, 200, note="paper",
+                               strategy="auto")
+                jmod.log_trade(2, "Manual", 1, 100, 200, note="paper",
+                               strategy="manual")
+                self.handler.path = "/api/pnl?note=paper&strategy=auto"
+                self.handler.do_GET()
+                body = json.loads(self._get_body())
+            finally:
+                jmod.TRADES_PATH = original_path
+        self.assertEqual(body["trade_count"], 1)
+        self.assertEqual(body["total_profit"], 96)
+
     def test_api_prices(self):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(

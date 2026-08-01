@@ -12,7 +12,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="${RSHELPER_CONFIG_DIR:-$HOME/.config/rshelper}"
 DEST="$REPO_DIR/data/state"
 
-FILES=(trades.json positions.json watchlist.json tuning_log.json volume_baseline.json signal_cooldowns.json)
+FILES=(trades.json positions.json watchlist.json tuning_log.json volume_baseline.json signal_cooldowns.json trader_state.json)
 mkdir -p "$DEST" "$DEST/snapshots"
 
 changed=0

@@ -135,7 +135,13 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None):
     pct = unrealized_pct(position.buy_price, sell, position.qty)
     if pct >= cfg.take_profit_pct:
         return "take_profit"
-    if pct <= cfg.stop_loss_pct:
+    # Stop is measured from the sell quote when the position opened, not from
+    # the buy price: the buy/sell spread (and GE tax) is a standing entry
+    # cost, so pricing the stop against it would stop out every position the
+    # moment it opens on any item with a spread >= the stop distance.
+    mark = position.entry_sell if position.entry_sell is not None else position.buy_price
+    move_pct = (sell - mark) / mark * 100
+    if move_pct <= cfg.stop_loss_pct:
         return "stop_loss"
     return None
 
@@ -161,34 +167,47 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
 
     closed = []
     auto_open = set()
+    now = time.time()
     for p in list_positions(profile):
         if p.note != "auto":
             continue
         auto_open.add(p.item_id)
-        reason = exit_reason(p, latest, cfg)
+        reason = exit_reason(p, latest, cfg, now=now)
         if reason is None:
             continue
         price = latest.get(str(p.item_id))
         usable = isinstance(price, dict) and price_issue(price) is None \
-            and _fresh(price, EXIT_MAX_AGE, time.time())
+            and _fresh(price, EXIT_MAX_AGE, now)
+        quote_sell = None
         if reason == "max_hold" and not usable:
             sell = p.buy_price  # expired; close flat without a fresh quote
         elif usable:
-            sell = int(price.get("low", 0) or 0)
+            quote_sell = int(price.get("low", 0) or 0)
+            sell = quote_sell
             if reason == "stop_loss":
                 sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
         else:
             continue
         if sell <= 0:
             continue
+        try:
+            opened = datetime.fromisoformat(p.opened_at.replace("Z", "+00:00")).timestamp()
+            hold_minutes = round((now - opened) / 60, 1)
+        except (ValueError, TypeError):
+            print(f"[trader] warning: could not parse opened_at "
+                  f"{p.opened_at!r} for position {p.id}", file=sys.stderr)
+            hold_minutes = None
         lots = close_positions(p.item_id, p.qty, sell, profile)
         for lot in lots:
             log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
-                      sell, note="paper", profile=profile)
+                      sell, note="paper", profile=profile, strategy="auto",
+                      exit_reason=reason, hold_minutes=hold_minutes,
+                      quote_sell=quote_sell)
         closed.append({"item_id": p.item_id, "name": p.name, "qty": p.qty,
                        "reason": reason, "sell_price": sell,
+                       "quote_sell": quote_sell, "hold_minutes": hold_minutes,
                        "profit": sum(l["profit"] for l in lots)})
-        _RECENT_EXITS[p.item_id] = time.time()
+        _RECENT_EXITS[p.item_id] = now
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))
@@ -203,7 +222,8 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         if qty <= 0:
             continue
         open_position(cand.id, cand.name, qty, cand.buy_price,
-                      direction="arbitrage", note="auto", profile=profile)
+                      direction="arbitrage", note="auto", profile=profile,
+                      entry_sell=cand.sell_price)
         capital_used += qty * cand.buy_price
         slots -= 1
         opened.append({"item_id": cand.id, "name": cand.name,
@@ -215,6 +235,9 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
 def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                once: bool = False) -> dict | None:
     """Poll loop: manage and open paper positions. Blocks until stopped."""
+    def _sigterm(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, _sigterm)
     if cfg.capital <= 0:
         raise ValueError("trader capital must be > 0")
     if not (0 < cfg.trade_capital_frac <= 1):
@@ -243,7 +266,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
     atomic_write_text(p_path, str(pid))
     state = {"pid": pid, "started_iso": datetime.now(timezone.utc).isoformat(),
              "last_cycle_iso": None, "last_result": None,
-             "realized_pnl": 0, "profile": prof_name}
+             "realized_pnl": 0, "profile": prof_name, "running": True,
+             "cycles": 0, "errors": 0, "exits_by_reason": {}}
     _write_state(state, profile)
     print(f"[trader] Paper trader started (PID {pid}, interval {interval}s, "
           f"capital {cfg.capital:,} gp)", file=sys.stderr)
@@ -258,8 +282,17 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
             except Exception as e:
                 result = {"error": str(e)}
             print(f"[trader] cycle: {json.dumps(result)}", file=sys.stderr)
+            state["cycles"] = state.get("cycles", 0) + 1
             if result.get("closed_pnl"):
                 state["realized_pnl"] = state.get("realized_pnl", 0) + result["closed_pnl"]
+            for c in result.get("closed", []):
+                reason = c.get("reason", "unknown")
+                exits = state.setdefault("exits_by_reason", {})
+                row = exits.setdefault(reason, {"count": 0, "profit": 0})
+                row["count"] += 1
+                row["profit"] += c.get("profit", 0)
+            if result.get("error"):
+                state["errors"] = state.get("errors", 0) + 1
             state["last_cycle_iso"] = datetime.now(timezone.utc).isoformat()
             state["last_result"] = result
             _write_state(state, profile)
@@ -276,6 +309,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                 _pid_path(profile).unlink(missing_ok=True)
         except (ValueError, OSError):
             pass
+        state["running"] = False
+        _write_state(state, profile)
     return state.get("last_result")
 
 
@@ -317,16 +352,57 @@ def stop_trader(profile: str | None = None) -> bool:
 
 
 def trader_status(profile: str | None = None) -> dict | None:
+    """Live status when the pid file is present, else synced-state snapshot."""
     p_path = _pid_path(profile)
     state = _read_state(profile)
-    if not p_path.exists() or state is None:
+    if state is None:
         return None
+    local_pid = None
+    pid_file_present = False
     try:
-        pid = int(p_path.read_text().strip())
-        os.kill(pid, 0)
-    except (OSError, ValueError):
-        return None
-    return {"running": True, "pid": pid, "profile": state.get("profile", "default"),
+        pid_file_present = p_path.exists()
+        local_pid = int(p_path.read_text().strip())
+        os.kill(local_pid, 0)
+    except (OSError, ValueError, AttributeError):
+        local_pid = None
+    if pid_file_present and local_pid is None:
+        # A pid file exists here but the process is dead (SIGKILL/reboot):
+        # report truthfully as stopped and drop the stale pid file.
+        try:
+            p_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return {
+            "running": False, "local": True, "pid": None,
+            "profile": state.get("profile", "default"),
             "started_iso": state.get("started_iso"),
             "last_cycle_iso": state.get("last_cycle_iso"),
-            "last_result": state.get("last_result")}
+            "last_result": state.get("last_result"),
+            "realized_pnl": state.get("realized_pnl", 0),
+            "cycles": state.get("cycles", 0),
+            "errors": state.get("errors", 0),
+            "exits_by_reason": state.get("exits_by_reason", {}),
+        }
+    if local_pid is None:
+        # No live process here: report the synced snapshot truthfully.
+        return {
+            "running": bool(state.get("running")),
+            "local": False, "pid": None,
+            "profile": state.get("profile", "default"),
+            "started_iso": state.get("started_iso"),
+            "last_cycle_iso": state.get("last_cycle_iso"),
+            "last_result": state.get("last_result"),
+            "realized_pnl": state.get("realized_pnl", 0),
+            "cycles": state.get("cycles", 0),
+            "errors": state.get("errors", 0),
+            "exits_by_reason": state.get("exits_by_reason", {}),
+        }
+    return {"running": True, "local": True, "pid": local_pid,
+            "profile": state.get("profile", "default"),
+            "started_iso": state.get("started_iso"),
+            "last_cycle_iso": state.get("last_cycle_iso"),
+            "last_result": state.get("last_result"),
+            "realized_pnl": state.get("realized_pnl", 0),
+            "cycles": state.get("cycles", 0),
+            "errors": state.get("errors", 0),
+            "exits_by_reason": state.get("exits_by_reason", {})}

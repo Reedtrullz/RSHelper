@@ -7,12 +7,13 @@ from rshelper import snapshot, tuning
 from rshelper.journal import compute_pnl, compute_pnl_by_item, list_trades
 
 
-def build_history(profile: str | None = None, paper_only: bool = True) -> dict:
+def build_history(profile: str | None = None, paper_only: bool = True,
+                  strategy: str = "") -> dict:
     """Join trades, snapshots, and tuning entries into daily buckets and eras."""
     note = "paper" if paper_only else ""
-    trades = list_trades(note=note, profile=profile)
-    pnl = compute_pnl(note=note, profile=profile)
-    items = compute_pnl_by_item(note=note, profile=profile)
+    trades = list_trades(note=note, profile=profile, strategy=strategy)
+    pnl = compute_pnl(note=note, profile=profile, strategy=strategy)
+    items = compute_pnl_by_item(note=note, profile=profile, strategy=strategy)
     entries = tuning.load_entries(profile)
 
     daily: dict[str, list] = defaultdict(list)

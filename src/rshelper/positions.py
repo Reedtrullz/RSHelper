@@ -30,6 +30,7 @@ class Position:
     direction: str  # "arbitrage" | "traditional"
     opened_at: str
     note: str = ""
+    entry_sell: int | None = None  # sell quote (low) when the position opened
 
 
 def _positions_path(profile: str | None = None) -> Path:
@@ -61,6 +62,7 @@ def _next_id(positions: list[dict]) -> int:
 
 def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   direction: str = "arbitrage", note: str = "",
+                  entry_sell: int | None = None,
                   profile: str | None = None) -> Position:
     """Open a hold position at buy_price. Returns the Position."""
     if qty <= 0:
@@ -75,6 +77,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
             "id": _next_id(positions), "item_id": item_id, "name": name,
             "qty": qty, "buy_price": buy_price, "direction": direction,
             "opened_at": datetime.now(timezone.utc).isoformat(), "note": note,
+            "entry_sell": entry_sell,
         }
         positions.append(position)
         _save(positions, profile)

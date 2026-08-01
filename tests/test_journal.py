@@ -220,6 +220,23 @@ def test_pnl_note_filter():
     print("  PASSED test_pnl_note_filter")
 
 
+def test_strategy_filter():
+    _clean()
+    log_trade(1, "Auto item", 1, 100, 200, strategy="auto",
+              exit_reason="take_profit", hold_minutes=45.0, quote_sell=200)
+    log_trade(2, "Manual item", 1, 100, 200, strategy="manual")
+    log_trade(3, "Legacy item", 1, 100, 200)  # pre-strategy trade
+    auto = list_trades(strategy="auto")
+    assert len(auto) == 1 and auto[0].name == "Auto item"
+    assert auto[0].exit_reason == "take_profit"
+    assert auto[0].hold_minutes == 45.0
+    manual = list_trades(strategy="manual")
+    assert len(manual) == 2, f"legacy trades count as manual, got {len(manual)}"
+    assert compute_pnl(strategy="auto").trade_count == 1
+    assert compute_pnl(strategy="manual").trade_count == 2
+    print("  PASSED test_strategy_filter")
+
+
 def test_cli_trade_log_parse():
     import subprocess
     import tempfile
@@ -279,6 +296,7 @@ if __name__ == "__main__":
     test_pnl_cost_basis_and_roi()
     test_pnl_by_item_breakdown()
     test_pnl_note_filter()
+    test_strategy_filter()
     test_cli_trade_log_parse()
     test_concurrent_log_trade_no_lost_updates()
     print("\nAll journal tests passed.")

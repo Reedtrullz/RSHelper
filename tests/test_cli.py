@@ -324,7 +324,9 @@ class TestCLI(unittest.TestCase):
     def test_auto_trade_status(self):
         r = run("auto-trade", "--status")
         self.assertEqual(r.returncode, 0)
-        self.assertIn("not running", r.stdout)
+        self.assertIn("Trader:", r.stdout)
+        # Status must be truthful about where it runs: local pid or synced state.
+        self.assertIn("running", r.stdout)
 
     def test_trade_pnl_by_item_json(self):
         r = run("trade", "pnl", "--by-item", "--json")

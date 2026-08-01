@@ -31,6 +31,10 @@ class Trade:
     profit: int
     timestamp: str
     note: str = ""
+    strategy: str = ""          # "auto" (trader) | "manual" (hand paper trade)
+    exit_reason: str = ""       # "take_profit" | "stop_loss" | "max_hold" | ""
+    hold_minutes: float | None = None
+    quote_sell: int | None = None  # raw low quote before stop-loss slippage
 
 
 @dataclass
@@ -71,7 +75,10 @@ def _next_id(trades: list[dict]) -> int:
 
 
 def log_trade(item_id: int, name: str, qty: int, buy_price: int,
-              sell_price: int, note: str = "", profile: str | None = None) -> Trade:
+              sell_price: int, note: str = "", profile: str | None = None,
+              strategy: str = "", exit_reason: str = "",
+              hold_minutes: float | None = None,
+              quote_sell: int | None = None) -> Trade:
     """Log a completed trade. Returns the Trade object.
 
     Tax is per-item (OSRS GE tax is per item, capped at 5M per item).
@@ -93,6 +100,10 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
             "tax_paid": tax_paid, "profit": profit,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "note": note,
+            "strategy": strategy,
+            "exit_reason": exit_reason,
+            "hold_minutes": hold_minutes,
+            "quote_sell": quote_sell,
         }
         trades.append(trade)
         _save(trades, profile)
@@ -112,8 +123,13 @@ def delete_trade(trade_id: int, profile: str | None = None) -> bool:
 
 
 def list_trades(item_name: str = "", since: str = "", top: int = 0,
-                profile: str | None = None, note: str = "") -> list[Trade]:
-    """List trades, optionally filtered by item name, date, or note."""
+                profile: str | None = None, note: str = "",
+                strategy: str = "") -> list[Trade]:
+    """List trades, optionally filtered by item name, date, note, or strategy.
+
+    strategy="auto" matches only trader closes; strategy="manual" also
+    matches legacy trades that predate strategy tagging.
+    """
     trades = _load(profile)
     result = [Trade(**t) for t in trades]
     if item_name:
@@ -123,16 +139,21 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
         result = [t for t in result if t.timestamp >= since]
     if note:
         result = [t for t in result if t.note == note]
+    if strategy == "auto":
+        result = [t for t in result if t.strategy == "auto"]
+    elif strategy == "manual":
+        result = [t for t in result if t.strategy != "auto"]
     result.sort(key=lambda t: t.timestamp, reverse=True)
     if top > 0:
         result = result[:top]
     return result
 
 
-def compute_pnl(since: str = "", profile: str | None = None, note: str = "") -> PnLSummary:
+def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
+                strategy: str = "") -> PnLSummary:
     """Compute profit and loss summary, optionally since a date."""
-    trades_list = (list_trades(since=since, profile=profile, note=note) if since
-                   else list_trades(profile=profile, note=note))
+    trades_list = list_trades(since=since, profile=profile, note=note,
+                              strategy=strategy)
     if not trades_list:
         return PnLSummary()
 
@@ -183,10 +204,11 @@ class ItemPnL:
 
 
 def compute_pnl_by_item(since: str = "",
-                        profile: str | None = None, note: str = "") -> list[ItemPnL]:
+                        profile: str | None = None, note: str = "",
+                        strategy: str = "") -> list[ItemPnL]:
     """Per-item P&L breakdown, sorted by profit descending."""
-    trades_list = (list_trades(since=since, profile=profile, note=note) if since
-                   else list_trades(profile=profile, note=note))
+    trades_list = list_trades(since=since, profile=profile, note=note,
+                              strategy=strategy)
     rows: dict[int, ItemPnL] = {}
     wins: dict[int, int] = {}
     for t in trades_list:

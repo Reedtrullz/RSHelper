@@ -1,3 +1,37 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 908,
+      "buy_price": 31,
+      "direction": "arbitrage",
+      "opened_at": "2026-08-01T02:27:09.688989+00:00",
+      "note": "auto",
+      "entry_sell": null
+    },
+    {
+      "id": 3,
+      "item_id": 830,
+      "name": "Rune javelin",
+      "qty": 357,
+      "buy_price": 135,
+      "direction": "arbitrage",
+      "opened_at": "2026-08-01T02:27:09.689216+00:00",
+      "note": "auto",
+      "entry_sell": null
+    },
+    {
+      "id": 4,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1572,
+      "buy_price": 159,
+      "direction": "arbitrage",
+      "opened_at": "2026-08-01T02:32:34.032309+00:00",
+      "note": "auto",
+      "entry_sell": 152
+    }
+  ]
 }

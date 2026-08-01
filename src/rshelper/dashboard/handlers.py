@@ -161,14 +161,18 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_trades(self):
             from rshelper.journal import list_trades
             from dataclasses import asdict
-            note = self._query().get("note", [""])[0]
-            trades = list_trades(note=note)
+            q = self._query()
+            note = q.get("note", [""])[0]
+            strategy = q.get("strategy", [""])[0]
+            trades = list_trades(note=note, strategy=strategy)
             self._serve_json({"trades": [asdict(t) for t in trades], "count": len(trades)})
 
         def _serve_pnl(self):
             from rshelper.journal import compute_pnl
-            note = self._query().get("note", [""])[0]
-            pnl = compute_pnl(note=note)
+            q = self._query()
+            note = q.get("note", [""])[0]
+            strategy = q.get("strategy", [""])[0]
+            pnl = compute_pnl(note=note, strategy=strategy)
             d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
                  "total_cost_basis": pnl.total_cost_basis,
                  "roi_pct": round(pnl.roi_pct, 2),
@@ -185,8 +189,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
             from rshelper.history import build_history
             qs = self._query()
             paper_only = qs.get("paper", ["1"])[0] != "0"
+            strategy = qs.get("strategy", [""])[0]
             try:
-                self._serve_json(build_history(paper_only=paper_only))
+                self._serve_json(build_history(paper_only=paper_only,
+                                               strategy=strategy))
             except Exception as e:
                 print(f"[dashboard] history error: {e}", file=sys.stderr)
                 self.send_error(500, "History failed")

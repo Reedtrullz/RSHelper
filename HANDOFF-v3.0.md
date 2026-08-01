@@ -1,4 +1,4 @@
-# RSHelper Handoff v3.0: Current State (v2.0.0)
+# RSHelper Handoff v3.0: Current State (v2.1.0)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python
 CLI plus local web dashboard for OSRS Grand Exchange trading, with a
@@ -18,7 +18,7 @@ VPS-hosted public dashboard deployed by CI.
                  config, watchlist, snapshot, journal, positions, trader,
                  monitor, profile, history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-18 test files, 216 tests, all passing:
+18 test files, 220 tests, all passing:
   test_analysis (16)        test_cli (23)         test_dashboard (40)
   test_ge_tracker_fallback (10) test_history (5)  test_integration (4)
   test_journal (20)         test_market (4)       test_monitor (8)
@@ -74,7 +74,7 @@ rshelper config        show | path
 rshelper dashboard     [--bind BIND] [--port PORT]
 ```
 
-Global flags: `--profile NAME`, `--quiet`, `--version` (prints `2.0.0`).
+Global flags: `--profile NAME`, `--quiet`, `--version` (prints `2.1.0`).
 
 ## Architecture Decisions — DO NOT REGRESS
 
@@ -159,6 +159,22 @@ and honors `config.toml`. Flip output includes `roi` and
 
 ## What Each Version Built (history, not regress list)
 
+- v2.1 (this round): paper-trader observability and persistence.
+  - Journal trades carry `strategy` (`auto`/`manual`), `exit_reason`,
+    `hold_minutes`, and `quote_sell` (pre-slippage quote) metadata; journal,
+    CLI, and dashboard APIs all filter by strategy.
+  - Stop-loss is measured from the entry sell quote (`entry_sell` recorded
+    on open), not the buy price, so the buy/sell spread no longer stops out
+    a fresh position before the dip can recover.
+  - Trader state tracks `running`, `cycles`, `errors`, and `exits_by_reason`
+    (count + P&L); `auto-trade --status` and `/api/trader` report them, with
+    a truthful synced-state fallback when no local process exists.
+  - Paper page gains an All / Auto-trader / Manual filter and an
+    "Auto-trader performance" section: auto win rate, avg hold, avg stop
+    slippage, and an exit-reason table.
+  - `scripts/install-trader-launchd.sh` installs a KeepAlive LaunchAgent so
+    the trader runs continuously on the Mac; `trader_state.json` is now
+    synced to the live site. 220 tests across 18 files.
 - v0.1-v0.3: alch scanner, API client, caching, flip/margin analysis.
 - v0.4-v0.9: reliability x profitability split, direction-aware margins,
   parallel fetch, HTML export, snapshots/diff, watchlist, 60+ tests.

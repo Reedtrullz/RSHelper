@@ -144,8 +144,62 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     assert len(result2["closed"]) == 1
     assert result2["closed"][0]["reason"] == "take_profit"
     assert len(jmod.list_trades()) == 1
+    trade = jmod.list_trades()[0]
+    assert trade.strategy == "auto"
+    assert trade.exit_reason == "take_profit"
+    assert isinstance(trade.hold_minutes, float)
+    assert trade.quote_sell == 104  # raw low before any slippage
     assert pmod.list_positions() == []
     print("  PASSED test_run_cycle_opens_and_closes")
+
+
+def test_spread_does_not_insta_stop_and_stop_records_slippage():
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    # Buy at 100 (high), entry sell quote 97 (low): 3% spread. A stop priced
+    # against the buy price would fire instantly at ~-3.9% unrealized; it
+    # must instead be measured from the entry mark (97), so a flat quote
+    # holds the position.
+    open_position(1, "Dipped", 100, 100, note="auto", entry_sell=97)
+    latest = _latest(now, **{"1": (100, 97)})  # unchanged quote -> hold
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert result["closed"] == [], "flat quote after entry must hold"
+    # A real 4% drop from the entry mark (97 -> 93) triggers the stop.
+    latest = _latest(now, **{"1": (100, 93)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "stop_loss"
+    trade = jmod.list_trades()[0]
+    assert trade.exit_reason == "stop_loss"
+    assert trade.quote_sell == 93
+    assert trade.sell_price == int(93 * 0.97)  # slippage modeled
+    print("  PASSED test_spread_does_not_insta_stop_and_stop_records_slippage")
+
+
+def test_stop_loss_legacy_position_uses_buy_mark():
+    """Positions without entry_sell fall back to the buy price as the mark."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Legacy", 100, 100, note="auto")  # no entry_sell
+    latest = _latest(now, **{"1": (100, 98)})  # -2% from buy -> stop
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "stop_loss"
+    trade = jmod.list_trades()[0]
+    assert trade.exit_reason == "stop_loss"
+    assert trade.quote_sell == 98
+    assert trade.sell_price == int(98 * 0.97)  # slippage modeled
+    print("  PASSED test_stop_loss_legacy_position_uses_buy_mark")
 
 
 def test_reentry_cooldown():
@@ -200,6 +254,8 @@ def test_trader_daemon_guards_and_pnl():
             assert result["closed_pnl"] == 250
             state = json.loads(tmod.STATE_PATH.read_text())
             assert state["realized_pnl"] == 250
+            assert state["cycles"] == 1
+            assert state["running"] is False  # set false on clean exit
             assert not tmod.PID_PATH.exists()  # cleaned up on exit
         finally:
             tmod.PID_PATH, tmod.STATE_PATH = old_pid, old_state
@@ -223,6 +279,8 @@ def test_max_hold_flat_close():
     trades = jmod.list_trades()
     assert len(trades) == 1
     assert trades[0].sell_price == 100  # flat close at the buy price
+    assert trades[0].quote_sell is None  # no fresh quote on expiry
+    assert trades[0].strategy == "auto"
     assert pmod.list_positions() == []
     print("  PASSED test_max_hold_flat_close")
 
@@ -250,6 +308,8 @@ if __name__ == "__main__":
     test_exit_reason()
     test_size_position_caps()
     test_run_cycle_opens_and_closes()
+    test_spread_does_not_insta_stop_and_stop_records_slippage()
+    test_stop_loss_legacy_position_uses_buy_mark()
     test_reentry_cooldown()
     test_trader_daemon_guards_and_pnl()
     test_max_hold_flat_close()

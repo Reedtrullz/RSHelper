@@ -230,11 +230,12 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         from rshelper.journal import log_trade
         if action == "open":
             pos = open_position(entry["id"], entry["name"], qty, high,
-                                direction="arbitrage")
+                                direction="arbitrage", note="paper",
+                                entry_sell=low)
             return {"ok": True, "position": asdict(pos)}
         if action == "instant":
             trade = log_trade(entry["id"], entry["name"], qty, high, low,
-                              note="paper")
+                              note="paper", strategy="manual")
             return {"ok": True, "trade": asdict(trade)}
         raise ValueError(f"unknown action '{action}'")
 

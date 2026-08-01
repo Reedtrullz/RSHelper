@@ -193,7 +193,7 @@ const refreshSecs=60;
 let allItems=[],signalsMap={},meta={},watchIds=new Set();
 let selectedId=null,view='market';
 let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
-let chip='all',density='normal',paperOnly=false;
+let chip='all',density='normal',strategy='';
 let viewRows=[];
 let sparkSeq=0;
 let countdown=refreshSecs;
@@ -290,9 +290,9 @@ function setDensity(){
   document.getElementById('listBody').classList.toggle('dense',density==='dense');
   document.getElementById('btnDensity').classList.toggle('active',density==='dense');
 }
-function setPaperOnly(v){
-  paperOnly=v;
-  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.toggle('active',(b.dataset.scope==='paper')===paperOnly));
+function setStrategy(v){
+  strategy=v;
+  document.querySelectorAll('[data-strategy]').forEach(b=>b.classList.toggle('active',b.dataset.strategy===strategy));
   renderPaper();
 }
 
@@ -412,8 +412,9 @@ function viewbarHtml(){
   }
   if(view==='paper'){
     return '<div class="viewbar"><span class="title">Paper trading</span>'+
-      '<button class="toggle-btn'+(paperOnly?'':' active')+'" data-scope="paper" onclick="setPaperOnly(false)">All trades</button>'+
-      '<button class="toggle-btn'+(paperOnly?' active':'')+'" data-scope="paper" onclick="setPaperOnly(true)">Paper only</button>'+
+      '<button class="toggle-btn'+(strategy===''?' active':'')+'" data-strategy="" onclick="setStrategy(\'\')">All trades</button>'+
+      '<button class="toggle-btn'+(strategy==='auto'?' active':'')+'" data-strategy="auto" onclick="setStrategy(\'auto\')">Auto-trader</button>'+
+      '<button class="toggle-btn'+(strategy==='manual'?' active':'')+'" data-strategy="manual" onclick="setStrategy(\'manual\')">Manual</button>'+
       '<input id="ptItem" list="ptItems" placeholder="Item name" aria-label="Item name" style="width:150px">'+
       '<datalist id="ptItems">'+allItems.map(i=>'<option value="'+escHtml(i.name)+'">').join('')+'</datalist>'+
       '<input id="ptQty" type="number" min="1" placeholder="Qty" aria-label="Quantity" style="width:64px">'+
@@ -675,6 +676,64 @@ async function drawSpark(id){
   draw();
 }
 
+function traderNoticeHtml(trader){
+  if(!trader.running){
+    const last=trader.last_cycle_iso;
+    const stale=last?'<div class="dim" style="margin-top:4px">Last known cycle: '+escHtml(String(last).slice(0,16))+' (state may be stale)</div>':'';
+    return '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
+      'Auto-trader not running'+(trader.local===false?' on this machine (synced state)':'')+
+      ' — start it with <code>rshelper auto-trade</code>.'+stale+'</div>';
+  }
+  const last=trader.last_result||{};
+  const tpnl=trader.realized_pnl||0;
+  const cycles=trader.cycles||0;
+  const errors=trader.errors||0;
+  const where=trader.local?'this machine':'Mac (synced state)';
+  let html='<div class="notice">Auto-trader running on '+where;
+  html+='<div class="dim" style="margin-top:4px">Last cycle: '+escHtml(String(trader.last_cycle_iso||'-').slice(0,16))+
+    ' — cycles '+format(cycles)+', errors '+format(errors)+
+    ', realized P&L '+format(tpnl)+' gp'+
+    (last.opened&&last.opened.length?' — opened '+last.opened.length+' this cycle':'')+
+    (last.closed&&last.closed.length?' — closed '+last.closed.length+' this cycle':'')+
+    (last.error?' — last error: '+escHtml(String(last.error).slice(0,120)):'')+
+    '</div></div>';
+  return html;
+}
+
+function traderPerfHtml(trader,trades){
+  const autoTrades=trades.filter(t=>t.strategy==='auto');
+  if(!autoTrades.length)return '';
+  let html='<h3 class="chart-title">Auto-trader performance</h3>';
+  const byReason={};
+  let wins=0,holdSum=0,holdN=0,slippageSum=0,slippageN=0;
+  autoTrades.forEach(t=>{
+    const r=byReason[t.exit_reason||'other']||(byReason[t.exit_reason||'other']={count:0,profit:0,wins:0});
+    r.count++;r.profit+=t.profit||0;
+    if(t.profit>0)r.wins++;
+    if(t.profit>0)wins++;
+    if(typeof t.hold_minutes==='number'){holdSum+=t.hold_minutes;holdN++;}
+    if(typeof t.quote_sell==='number'&&typeof t.sell_price==='number'&&t.quote_sell>t.sell_price){
+      slippageSum+=t.quote_sell-t.sell_price;slippageN++;
+    }
+  });
+  const total=autoTrades.length;
+  html+='<div class="metric-grid">'+
+    metric('Auto Trades',format(total),'')+
+    metric('Auto Win Rate',(wins/total*100).toFixed(1)+'%','gold')+
+    metric('Avg Hold',holdN?(holdSum/holdN).toFixed(0)+' min':'-','')+
+    metric('Avg Stop Slippage',slippageN?format(Math.round(slippageSum/slippageN))+' gp':'-','')+
+    '</div>';
+  html+='<table><thead><tr><th>Exit</th><th>#</th><th>P&L</th><th>Win%</th></tr></thead><tbody>';
+  Object.keys(byReason).sort().forEach(r=>{
+    const row=byReason[r];
+    html+='<tr><td>'+escHtml(r)+'</td><td>'+format(row.count)+'</td>'+
+      '<td class="margin '+(row.profit>0?'pos':row.profit<0?'neg':'neutral')+'">'+format(row.profit)+'</td>'+
+      '<td>'+(row.count?(row.wins/row.count*100).toFixed(0):'0')+'%</td></tr>';
+  });
+  html+='</tbody></table>';
+  return html;
+}
+
 async function renderPaper(){
   const bar=document.getElementById('viewbar');
   bar.innerHTML=viewbarHtml();
@@ -682,11 +741,11 @@ async function renderPaper(){
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading paper trading...</div>';
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
-  const noteParam=paperOnly?'?note=paper':'';
+  const stratParam=strategy?'?strategy='+strategy:'';
   try{
     const [pr,tr,hr,posr,trr]=await Promise.all([
-      fetch('/api/pnl'+noteParam),fetch('/api/trades'+noteParam),
-      fetch('/api/history?paper='+(paperOnly?1:0)),fetch('/api/positions'),
+      fetch('/api/pnl'+stratParam),fetch('/api/trades'+stratParam),
+      fetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:'')),fetch('/api/positions'),
       fetch('/api/trader')
     ]);
     if(!pr.ok||!tr.ok||!hr.ok||!posr.ok||!trr.ok)throw new Error('paper API failed');
@@ -714,18 +773,8 @@ async function renderPaper(){
       '</div>';
     let html='';
     const openPos=pos.positions||[];
-    if(trader.running){
-      const last=trader.last_result||{};
-      const tpnl=trader.realized_pnl||0;
-      html+='<div class="notice">Auto-trader running'+
-        (tpnl?' — realized P&L '+format(tpnl)+' gp':'')+
-        (last.opened&&last.opened.length?' — opened '+last.opened.length+' this cycle':'')+
-        (last.closed&&last.closed.length?' — closed '+last.closed.length+' this cycle':'')+
-        '</div>';
-    }else{
-      html+='<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
-        'Auto-trader not running — start it with <code>rshelper auto-trade</code>.</div>';
-    }
+    html+=traderNoticeHtml(trader);
+    html+=traderPerfHtml(trader,trades);
     html+='<h3 class="chart-title">Open positions</h3>';
     if(!openPos.length){
       html+='<div class="loading">No open positions — open one with <code>trade open &lt;item&gt;</code>.</div>';
