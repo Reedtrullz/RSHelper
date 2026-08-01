@@ -24,14 +24,14 @@
     },
     {
       "id": 6,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 644,
-      "buy_price": 127,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 2840,
+      "buy_price": 88,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:17:28.333348+00:00",
+      "opened_at": "2026-08-01T04:18:36.667812+00:00",
       "note": "auto",
-      "entry_sell": 127
+      "entry_sell": 88
     }
   ]
 }
