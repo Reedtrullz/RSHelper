@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21483,
-      "name": "Ultracompost",
-      "qty": 420,
-      "buy_price": 518,
+      "item_id": 19669,
+      "name": "Redwood logs",
+      "qty": 388,
+      "buy_price": 644,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:04:05.918127+00:00",
+      "opened_at": "2026-08-01T20:24:06.304665+00:00",
       "note": "auto",
-      "entry_sell": 518,
-      "entry_offer": 534
+      "entry_sell": 644,
+      "entry_offer": 669
     },
     {
       "id": 3,
-      "item_id": 33595,
-      "name": "Seeking dragon arrow",
-      "qty": 107,
-      "buy_price": 2330,
+      "item_id": 8009,
+      "name": "Falador teleport (tablet)",
+      "qty": 398,
+      "buy_price": 601,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:14:06.085678+00:00",
+      "opened_at": "2026-08-01T20:24:06.305429+00:00",
       "note": "auto",
-      "entry_sell": 2330,
-      "entry_offer": 2400
+      "entry_sell": 601,
+      "entry_offer": 620
     },
     {
       "id": 4,
-      "item_id": 7218,
-      "name": "Summer pie",
-      "qty": 135,
-      "buy_price": 692,
+      "item_id": 21932,
+      "name": "Opal dragon bolts (e)",
+      "qty": 83,
+      "buy_price": 2857,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:19:04.978818+00:00",
+      "opened_at": "2026-08-01T20:34:06.339850+00:00",
       "note": "auto",
-      "entry_sell": 692,
-      "entry_offer": 721
+      "entry_sell": 2857,
+      "entry_offer": 2998
     }
   ]
 }
