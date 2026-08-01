@@ -13,16 +13,28 @@
       "entry_offer": 1097
     },
     {
-      "id": 5,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 418,
-      "buy_price": 109,
+      "id": 6,
+      "item_id": 447,
+      "name": "Mithril ore",
+      "qty": 651,
+      "buy_price": 145,
       "direction": "traditional",
-      "opened_at": "2026-08-01T19:19:05.451941+00:00",
+      "opened_at": "2026-08-01T19:24:05.466811+00:00",
       "note": "auto",
-      "entry_sell": 109,
-      "entry_offer": 113
+      "entry_sell": 145,
+      "entry_offer": 150
+    },
+    {
+      "id": 7,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 301,
+      "buy_price": 454,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T19:29:05.514411+00:00",
+      "note": "auto",
+      "entry_sell": 454,
+      "entry_offer": 473
     }
   ]
 }
