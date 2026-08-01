@@ -12,26 +12,26 @@
       "entry_sell": 761
     },
     {
-      "id": 9,
-      "item_id": 4822,
-      "name": "Mithril nails",
-      "qty": 1208,
-      "buy_price": 78,
+      "id": 7,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2439,
+      "buy_price": 24,
       "direction": "traditional",
-      "opened_at": "2026-08-01T05:13:38.760358+00:00",
+      "opened_at": "2026-08-01T05:28:39.207863+00:00",
       "note": "auto",
-      "entry_sell": 78
+      "entry_sell": 24
     },
     {
-      "id": 10,
-      "item_id": 562,
-      "name": "Chaos rune",
-      "qty": 2500,
-      "buy_price": 100,
+      "id": 8,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 2574,
+      "buy_price": 86,
       "direction": "traditional",
-      "opened_at": "2026-08-01T05:18:39.025922+00:00",
+      "opened_at": "2026-08-01T05:38:39.440417+00:00",
       "note": "auto",
-      "entry_sell": 100
+      "entry_sell": 86
     }
   ]
 }
