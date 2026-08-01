@@ -41,6 +41,9 @@ max_positions = 3        # concurrent auto positions
 min_volume = 500         # 5m executed volume floor
 max_spread_ratio = 5.0   # max buy/sell gap for entries
 dip_depth_pct = 2.0      # buy when sell is >=2% below the 5m average
+max_dip_pct = 10.0       # don't catch deeper freefalls than this
+max_entry_spread_pct = 5.0  # high/low gap cap so entries don't overpay
+reentry_minutes = 30     # wait before re-entering an item after an auto close
 take_profit_pct = 1.5    # close when unrealized >= this %
 stop_loss_pct = -1.5     # close when unrealized <= this %
 max_hold_minutes = 240   # force-close after this long
@@ -83,6 +86,9 @@ class TraderConfig:
     min_volume: int = 500
     max_spread_ratio: float = 5.0
     dip_depth_pct: float = 2.0
+    max_dip_pct: float = 10.0
+    max_entry_spread_pct: float = 5.0
+    reentry_minutes: int = 30
     take_profit_pct: float = 1.5
     stop_loss_pct: float = -1.5
     max_hold_minutes: int = 240
@@ -147,6 +153,9 @@ def load_config(profile: str | None = None) -> Config:
             min_volume=trader_raw.get("min_volume", 500),
             max_spread_ratio=trader_raw.get("max_spread_ratio", 5.0),
             dip_depth_pct=trader_raw.get("dip_depth_pct", 2.0),
+            max_dip_pct=trader_raw.get("max_dip_pct", 10.0),
+            max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.0),
+            reentry_minutes=trader_raw.get("reentry_minutes", 30),
             take_profit_pct=trader_raw.get("take_profit_pct", 1.5),
             stop_loss_pct=trader_raw.get("stop_loss_pct", -1.5),
             max_hold_minutes=trader_raw.get("max_hold_minutes", 240),

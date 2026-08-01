@@ -716,7 +716,9 @@ async function renderPaper(){
     const openPos=pos.positions||[];
     if(trader.running){
       const last=trader.last_result||{};
+      const tpnl=trader.realized_pnl||0;
       html+='<div class="notice">Auto-trader running'+
+        (tpnl?' — realized P&L '+format(tpnl)+' gp':'')+
         (last.opened&&last.opened.length?' — opened '+last.opened.length+' this cycle':'')+
         (last.closed&&last.closed.length?' — closed '+last.closed.length+' this cycle':'')+
         '</div>';

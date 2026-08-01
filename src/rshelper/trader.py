@@ -30,6 +30,10 @@ EXIT_MAX_AGE = 300
 STOP_SLIPPAGE = 0.97  # model worse fills when stopping out
 MAX_VOLUME_FRACTION = 0.25  # never size above 25% of the last 5m volume
 
+# ponytail: in-memory only; a daemon restart forgets recent exits, which is
+# fine (worst case one early re-entry per restart).
+_RECENT_EXITS: dict[int, float] = {}
+
 
 def _pid_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
@@ -80,14 +84,22 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
         lo, hi = min(item.buy_price, item.sell_price), max(item.buy_price, item.sell_price)
         if hi > cfg.max_spread_ratio * lo:
             continue
+        spread_pct = (item.buy_price - item.sell_price) / item.sell_price * 100
+        if abs(spread_pct) > cfg.max_entry_spread_pct:
+            continue
         price = latest.get(str(item.id))
         if not isinstance(price, dict) or not _fresh(price, ENTRY_MAX_AGE, now):
             continue
         avg_low = (vol_5m.get(str(item.id)) or {}).get("avgLowPrice")
         if not avg_low or avg_low <= 0:
             continue  # no dip baseline (e.g. fallback data)
-        if item.sell_price > avg_low * (1 - cfg.dip_depth_pct / 100):
+        dip_pct = (avg_low - item.sell_price) / avg_low * 100
+        if dip_pct < cfg.dip_depth_pct:
             continue  # not dipped enough below the 5m average
+        if dip_pct > cfg.max_dip_pct:
+            continue  # falling too hard; not a dip, a freefall
+        if now - _RECENT_EXITS.get(item.id, 0) < cfg.reentry_minutes * 60:
+            continue
         out.append(item)
     out.sort(key=lambda i: i.volume, reverse=True)
     return out
@@ -105,6 +117,15 @@ def unrealized_pct(buy: int, sell: int, qty: int) -> float:
 def exit_reason(position, latest: dict, cfg, now: float | None = None):
     """Return 'take_profit' | 'stop_loss' | 'max_hold' | None."""
     now = now if now is not None else time.time()
+    # max_hold first: it must fire even when no fresh price is available,
+    # otherwise a position on a dead item could sit open forever.
+    try:
+        opened = datetime.fromisoformat(position.opened_at.replace("Z", "+00:00")).timestamp()
+        age_min = (now - opened) / 60
+        if age_min >= cfg.max_hold_minutes:
+            return "max_hold"
+    except (ValueError, TypeError):
+        pass
     price = latest.get(str(position.item_id))
     if not isinstance(price, dict) or price_issue(price) or not _fresh(price, EXIT_MAX_AGE, now):
         return None  # no usable price this cycle; hold
@@ -116,13 +137,6 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None):
         return "take_profit"
     if pct <= cfg.stop_loss_pct:
         return "stop_loss"
-    try:
-        opened = datetime.fromisoformat(position.opened_at.replace("Z", "+00:00")).timestamp()
-    except (ValueError, TypeError):
-        return None
-    age_min = (now - opened) / 60
-    if age_min >= cfg.max_hold_minutes:
-        return "max_hold"
     return None
 
 
@@ -154,9 +168,17 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         reason = exit_reason(p, latest, cfg)
         if reason is None:
             continue
-        sell = int((latest.get(str(p.item_id)) or {}).get("low", 0) or 0)
-        if reason == "stop_loss":
-            sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
+        price = latest.get(str(p.item_id))
+        usable = isinstance(price, dict) and price_issue(price) is None \
+            and _fresh(price, EXIT_MAX_AGE, time.time())
+        if reason == "max_hold" and not usable:
+            sell = p.buy_price  # expired; close flat without a fresh quote
+        elif usable:
+            sell = int(price.get("low", 0) or 0)
+            if reason == "stop_loss":
+                sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
+        else:
+            continue
         if sell <= 0:
             continue
         lots = close_positions(p.item_id, p.qty, sell, profile)
@@ -164,7 +186,9 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
                       sell, note="paper", profile=profile)
         closed.append({"item_id": p.item_id, "name": p.name, "qty": p.qty,
-                       "reason": reason, "sell_price": sell})
+                       "reason": reason, "sell_price": sell,
+                       "profit": sum(l["profit"] for l in lots)})
+        _RECENT_EXITS[p.item_id] = time.time()
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))
@@ -184,20 +208,42 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         slots -= 1
         opened.append({"item_id": cand.id, "name": cand.name,
                        "qty": qty, "buy_price": cand.buy_price})
-    return {"candidates": len(candidates), "opened": opened, "closed": closed}
+    return {"candidates": len(candidates), "opened": opened, "closed": closed,
+            "closed_pnl": sum(c["profit"] for c in closed)}
 
 
 def run_trader(cfg, interval: int | None = None, profile: str | None = None,
-               once: bool = False) -> None:
+               once: bool = False) -> dict | None:
     """Poll loop: manage and open paper positions. Blocks until stopped."""
+    if cfg.capital <= 0:
+        raise ValueError("trader capital must be > 0")
+    if not (0 < cfg.trade_capital_frac <= 1):
+        raise ValueError("trade_capital_frac must be in (0, 1]")
+    if cfg.max_positions <= 0:
+        raise ValueError("max_positions must be > 0")
+    if cfg.take_profit_pct <= 0:
+        raise ValueError("take_profit_pct must be > 0")
+    if cfg.stop_loss_pct >= 0:
+        raise ValueError("stop_loss_pct must be < 0")
+    if cfg.max_hold_minutes <= 0:
+        raise ValueError("max_hold_minutes must be > 0")
     interval = interval or cfg.interval_sec
     prof_name = profile if profile else "default"
     pid = os.getpid()
     p_path = _pid_path(profile)
+    try:
+        old_pid = int(p_path.read_text().strip())
+        os.kill(old_pid, 0)
+        print(f"[trader] Already running (PID {old_pid}); use --stop first.",
+              file=sys.stderr)
+        sys.exit(1)
+    except (ValueError, OSError):
+        pass  # no live previous instance
     from rshelper.profile import atomic_write_text
     atomic_write_text(p_path, str(pid))
     state = {"pid": pid, "started_iso": datetime.now(timezone.utc).isoformat(),
-             "last_cycle_iso": None, "last_result": None, "profile": prof_name}
+             "last_cycle_iso": None, "last_result": None,
+             "realized_pnl": 0, "profile": prof_name}
     _write_state(state, profile)
     print(f"[trader] Paper trader started (PID {pid}, interval {interval}s, "
           f"capital {cfg.capital:,} gp)", file=sys.stderr)
@@ -212,6 +258,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
             except Exception as e:
                 result = {"error": str(e)}
             print(f"[trader] cycle: {json.dumps(result)}", file=sys.stderr)
+            if result.get("closed_pnl"):
+                state["realized_pnl"] = state.get("realized_pnl", 0) + result["closed_pnl"]
             state["last_cycle_iso"] = datetime.now(timezone.utc).isoformat()
             state["last_result"] = result
             _write_state(state, profile)
@@ -222,7 +270,13 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
     except KeyboardInterrupt:
         print("\n[trader] Stopping...", file=sys.stderr)
     finally:
-        _pid_path(profile).unlink(missing_ok=True)
+        try:
+            # Only remove our own pid file; a later instance may have taken over.
+            if _pid_path(profile).read_text().strip() == str(pid):
+                _pid_path(profile).unlink(missing_ok=True)
+        except (ValueError, OSError):
+            pass
+    return state.get("last_result")
 
 
 def stop_trader(profile: str | None = None) -> bool:
@@ -254,7 +308,11 @@ def stop_trader(profile: str | None = None) -> bool:
             os.kill(pid, signal.SIGKILL)
         except OSError:
             pass
-    p_path.unlink(missing_ok=True)
+    try:
+        if p_path.read_text().strip() == str(pid):
+            p_path.unlink(missing_ok=True)
+    except (ValueError, OSError):
+        pass
     return True
 
 

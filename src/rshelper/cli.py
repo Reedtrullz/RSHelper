@@ -570,8 +570,10 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         return
     from rshelper.config import load_config
     cfg = load_config(profile)
-    run_trader(cfg.trader, interval=args.interval or None, profile=profile,
-               once=args.once)
+    result = run_trader(cfg.trader, interval=args.interval or None,
+                        profile=profile, once=args.once)
+    if args.once and result:
+        print(json.dumps(result, indent=2))
 
 
 def margin_check(args: argparse.Namespace) -> None:
@@ -780,6 +782,13 @@ def item_info(args: argparse.Namespace) -> None:
         out["flip_margin"] = flip_margin
         out["flip_tax"] = tax_flip
         out["flip_profit"] = flip_profit
+        if getattr(args, "tax_curve", False) and buy_price > 0:
+            steps = [1.00, 1.01, 1.02, 1.03, 1.05, 1.07, 1.10, 1.15, 1.20, 1.30, 1.50]
+            out["tax_curve"] = [{"sell_price": int(buy_price * m),
+                                 "tax": ge_tax(int(buy_price * m)),
+                                 "profit": int(buy_price * m) - buy_price
+                                 - ge_tax(int(buy_price * m))}
+                                for m in steps]
         print(json.dumps(out, indent=2))
     else:
         tag = " (members)" if members else ""
@@ -834,9 +843,6 @@ def item_info(args: argparse.Namespace) -> None:
                 roi = profit / buy_price * 100 if buy_price > 0 else 0
                 cap_mark = " *" if tax == 5_000_000 else ""
                 print(f"  {sp:>12,}  {tax:>10,}  {profit:>+10,}  {roi:>5.1f}%{cap_mark}")
-            if args.json:
-                out["tax_curve"] = [{"sell_price": int(buy_price * m), "tax": ge_tax(int(buy_price * m)), "profit": int(buy_price * m) - buy_price - ge_tax(int(buy_price * m))} for m in steps]
-
     # Timeseries if requested
     if args.timeseries or getattr(args, "predict", False):
         ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
@@ -885,7 +891,7 @@ def item_info(args: argparse.Namespace) -> None:
                             else:
                                 print("\n  Prediction: insufficient data (need ≥6 datapoints)")
                         except ImportError:
-                            print("\n  Prediction: requires Python 3.14+ (statistics.linear_regression)")
+                            print("\n  Prediction: requires Python 3.10+ (statistics.linear_regression)")
                         except Exception:
                             print("\n  Prediction: could not compute")
             else:
@@ -979,7 +985,6 @@ def watch_check(args: argparse.Namespace) -> None:
 
     wl = watchlist.load(profile=args.profile)
     direction = getattr(args, "flip_direction", "arbitrage")
-    flip = FlipScanner(direction=direction, ge_slots=getattr(args, "ge_slots", 2))
     alerts = []
 
     for item_id_str, entry in wl["items"].items():
@@ -1498,6 +1503,9 @@ def main() -> None:
                          help="Save results for later diff/trend comparison")
 
     args, unknown = parser.parse_known_args()
+    if unknown:
+        print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
+              file=sys.stderr)
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
