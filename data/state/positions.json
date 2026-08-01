@@ -13,28 +13,28 @@
       "entry_offer": 534
     },
     {
-      "id": 2,
-      "item_id": 31235,
-      "name": "Gryphon feather",
-      "qty": 398,
-      "buy_price": 26,
+      "id": 3,
+      "item_id": 33595,
+      "name": "Seeking dragon arrow",
+      "qty": 107,
+      "buy_price": 2330,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:04:05.918344+00:00",
+      "opened_at": "2026-08-01T20:14:06.085678+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 2330,
+      "entry_offer": 2400
     },
     {
-      "id": 3,
-      "item_id": 442,
-      "name": "Silver ore",
-      "qty": 602,
-      "buy_price": 63,
+      "id": 4,
+      "item_id": 7218,
+      "name": "Summer pie",
+      "qty": 135,
+      "buy_price": 692,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:04:05.918587+00:00",
+      "opened_at": "2026-08-01T20:19:04.978818+00:00",
       "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 65
+      "entry_sell": 692,
+      "entry_offer": 721
     }
   ]
 }
