@@ -13,14 +13,25 @@
     },
     {
       "id": 2,
-      "item_id": 21483,
-      "name": "Ultracompost",
-      "qty": 162,
-      "buy_price": 522,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1572,
+      "buy_price": 122,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:36:00.044955+00:00",
+      "opened_at": "2026-08-01T12:51:00.220250+00:00",
       "note": "auto",
-      "entry_sell": 522
+      "entry_sell": 122
+    },
+    {
+      "id": 3,
+      "item_id": 6016,
+      "name": "Cactus spine",
+      "qty": 141,
+      "buy_price": 1439,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T12:51:00.220798+00:00",
+      "note": "auto",
+      "entry_sell": 1439
     }
   ]
 }
