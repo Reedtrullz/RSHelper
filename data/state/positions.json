@@ -14,27 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 8009,
-      "name": "Falador teleport (tablet)",
-      "qty": 398,
-      "buy_price": 601,
+      "item_id": 33595,
+      "name": "Seeking dragon arrow",
+      "qty": 107,
+      "buy_price": 2320,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:24:06.305429+00:00",
+      "opened_at": "2026-08-01T20:59:06.650502+00:00",
       "note": "auto",
-      "entry_sell": 601,
-      "entry_offer": 620
+      "entry_sell": 2320,
+      "entry_offer": 2400
     },
     {
       "id": 4,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 465,
-      "buy_price": 118,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 599,
+      "buy_price": 30,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:39:06.363321+00:00",
+      "opened_at": "2026-08-01T21:04:06.787996+00:00",
       "note": "auto",
-      "entry_sell": 118,
-      "entry_offer": 123
+      "entry_sell": 30,
+      "entry_offer": 31
     }
   ]
 }
