@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 21880,
-      "name": "Wrath rune",
-      "qty": 733,
-      "buy_price": 341,
+      "id": 11,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 204,
+      "buy_price": 266,
       "direction": "traditional",
-      "opened_at": "2026-08-01T21:44:07.398647+00:00",
+      "opened_at": "2026-08-01T22:49:07.941314+00:00",
       "note": "auto",
-      "entry_sell": 341,
-      "entry_offer": 352
+      "entry_sell": 266,
+      "entry_offer": 275
     },
     {
-      "id": 8,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 552,
-      "buy_price": 232,
+      "id": 12,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 3075,
+      "buy_price": 62,
       "direction": "traditional",
-      "opened_at": "2026-08-01T21:54:07.487769+00:00",
+      "opened_at": "2026-08-01T22:54:08.035134+00:00",
       "note": "auto",
-      "entry_sell": 232,
-      "entry_offer": 242
+      "entry_sell": 62,
+      "entry_offer": 65
     },
     {
-      "id": 9,
-      "item_id": 391,
-      "name": "Manta ray",
-      "qty": 179,
-      "buy_price": 1393,
+      "id": 13,
+      "item_id": 215,
+      "name": "Grimy cadantine",
+      "qty": 119,
+      "buy_price": 2100,
       "direction": "traditional",
-      "opened_at": "2026-08-01T21:54:07.488001+00:00",
+      "opened_at": "2026-08-01T22:54:08.035384+00:00",
       "note": "auto",
-      "entry_sell": 1393,
-      "entry_offer": 1442
+      "entry_sell": 2100,
+      "entry_offer": 2173
     }
   ]
 }
