@@ -1,17 +1,6 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 19580,
-      "name": "Rune javelin tips",
-      "qty": 688,
-      "buy_price": 363,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T04:16:58.853381+00:00",
-      "note": "auto",
-      "entry_sell": 363
-    },
-    {
       "id": 6,
       "item_id": 30843,
       "name": "Aether rune",
@@ -24,14 +13,25 @@
     },
     {
       "id": 7,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2539,
-      "buy_price": 47,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 2052,
+      "buy_price": 100,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:33:38.175387+00:00",
+      "opened_at": "2026-08-01T04:48:38.511405+00:00",
       "note": "auto",
-      "entry_sell": 47
+      "entry_sell": 100
+    },
+    {
+      "id": 8,
+      "item_id": 13439,
+      "name": "Raw anglerfish",
+      "qty": 123,
+      "buy_price": 2027,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T04:53:38.494700+00:00",
+      "note": "auto",
+      "entry_sell": 2027
     }
   ]
 }
