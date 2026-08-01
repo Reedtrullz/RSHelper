@@ -1,4 +1,5 @@
 """Multi-account profile management."""
+import dataclasses
 import os
 import re
 import shutil
@@ -72,6 +73,16 @@ def resolve_config_path(subpath: str, profile: str | None = None) -> Path:
     if profile == "default":
         return CONFIG_DIR / subpath
     return CONFIG_DIR / "profiles" / profile / subpath
+
+
+def filter_fields(cls, data: dict) -> dict:
+    """Keep only dataclass fields so older/newer JSON rows load tolerantly.
+
+    Missing fields fall back to the dataclass defaults; unknown fields from a
+    newer version are dropped instead of raising TypeError on construction.
+    """
+    known = {f.name for f in dataclasses.fields(cls)}
+    return {k: v for k, v in data.items() if k in known}
 
 
 def resolve_cache_path(subpath: str, profile: str | None = None) -> Path:

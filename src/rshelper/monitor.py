@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from rshelper.market import ge_tax, price_issue
-from rshelper.profile import atomic_write_json, atomic_write_text, resolve_config_path
+from rshelper.profile import atomic_write_json, resolve_config_path
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = MONITOR_DIR / "monitor.pid"
@@ -55,7 +55,24 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
     pid = os.getpid()
     started = datetime.now(timezone.utc).isoformat()
     p_path = _pid_path(profile)
-    atomic_write_text(p_path, str(pid))
+    # Claim the pid file with O_EXCL so a second monitor cannot silently
+    # clobber a live one (mirrors the trader's single-instance guard).
+    for _ in range(2):
+        try:
+            fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w") as f:
+                f.write(str(pid))
+            break
+        except FileExistsError:
+            try:
+                old_pid = int(p_path.read_text().strip())
+                os.kill(old_pid, 0)
+            except (ValueError, OSError):
+                p_path.unlink(missing_ok=True)  # stale pid; retry the claim
+                continue
+            print(f"[monitor] Already running (PID {old_pid}); "
+                  f"use --stop first.", file=sys.stderr)
+            sys.exit(1)
     state = {"pid": pid, "started_iso": started, "last_check_iso": None, "profile": prof_name}
     _write_state(state, profile)
     print(f"[monitor] Started (PID {pid}, interval {interval_sec}s)", file=sys.stderr)
@@ -87,7 +104,10 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
     flips = scanner.scan(items, members_only=cfg.flip.members_only,
                          min_volume=cfg.flip.min_volume,
                          min_margin=cfg.flip.min_margin)
-    signals = detect_signals(flips, vol_5m)
+    # DUMP/CRASH/SURGE must see the full priced universe, not just items that
+    # are currently profitable flips; FLIP stays restricted to the scanned
+    # candidates (they carry an RS score from the scanner).
+    signals = detect_signals(items, vol_5m, flip_ids={f.id for f in flips})
     if signals and not no_notify:
         high = [s for s in signals if s.severity == "HIGH"]
         notify("RSHelper Alert", f"{len(high)} high-severity signal(s)" if high else f"{len(signals)} signal(s)")

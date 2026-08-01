@@ -5,10 +5,9 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from rshelper.profile import resolve_config_path
+from rshelper.profile import atomic_write_text, resolve_config_path
 
 CONFIG_DIR = Path.home() / ".config" / "rshelper"
-CONFIG_PATH = CONFIG_DIR / "config.toml"
 
 DEFAULT_CONFIG_TOML = """\
 # RSHelper configuration — edit defaults for your trading style.
@@ -50,6 +49,8 @@ stop_reentry_minutes = 90  # wait before re-entering an item after a stop-loss
 take_profit_pct = 2.0    # close when net (after tax) >= this %
 stop_loss_pct = -2.0     # close when the bid falls this % below entry bid
 max_hold_minutes = 180   # force-close after this long
+spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
+min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
 interval_sec = 300       # poll cycle
 """
 
@@ -98,6 +99,8 @@ class TraderConfig:
     take_profit_pct: float = 2.0
     stop_loss_pct: float = -2.0
     max_hold_minutes: int = 180
+    spread_collapse_exit_minutes: int = 60
+    min_exit_spread_pct: float = 1.0
     interval_sec: int = 300
 
 
@@ -109,20 +112,12 @@ class Config:
     trader: TraderConfig = field(default_factory=TraderConfig)
 
 
-def _ensure_config_exists() -> Path:
-    """Create default config.toml if missing. Returns the config path."""
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    if not CONFIG_PATH.exists():
-        CONFIG_PATH.write_text(DEFAULT_CONFIG_TOML)
-    return CONFIG_PATH
-
-
 def load_config(profile: str | None = None) -> Config:
     """Load config from ~/.config/rshelper/config.toml, creating default if missing."""
     path = resolve_config_path("config.toml", profile)
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_text(DEFAULT_CONFIG_TOML)
+        atomic_write_text(path, DEFAULT_CONFIG_TOML)
     raw = tomllib.loads(path.read_text())
 
     alch_raw = raw.get("alch", {})
@@ -168,6 +163,9 @@ def load_config(profile: str | None = None) -> Config:
             take_profit_pct=trader_raw.get("take_profit_pct", 2.0),
             stop_loss_pct=trader_raw.get("stop_loss_pct", -2.0),
             max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
+            spread_collapse_exit_minutes=trader_raw.get(
+                "spread_collapse_exit_minutes", 60),
+            min_exit_spread_pct=trader_raw.get("min_exit_spread_pct", 1.0),
             interval_sec=trader_raw.get("interval_sec", 300),
         ),
     )

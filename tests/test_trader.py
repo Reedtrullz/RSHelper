@@ -43,7 +43,8 @@ def _cfg(**kw):
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=2.0, stop_loss_pct=-2.0,
-                    max_hold_minutes=180, interval_sec=300)
+                    max_hold_minutes=180, spread_collapse_exit_minutes=60,
+                    min_exit_spread_pct=1.0, interval_sec=300)
     defaults.update(kw)
     return TraderConfig(**defaults)
 
@@ -117,6 +118,83 @@ def test_exit_reason():
     # max hold fires even without any price data (dead item)
     assert exit_reason(old, {}, cfg, now=now) == "max_hold"
     print("  PASSED test_exit_reason")
+
+
+def test_candidate_edge_ranking():
+    """Candidates rank by expected edge (dip x net spread), not raw volume."""
+    _clean()
+    now = int(time.time())
+    items = [
+        _item(1, "BigShallow", 100, 97, 5000),  # dip ~2.1%
+        _item(2, "SmallDeep", 100, 97, 900),    # dip ~9.0%
+    ]
+    latest = _latest(now, **{"1": (100, 97), "2": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 99.1}, "2": {"avgLowPrice": 106.6}}
+    cfg = _cfg()
+    cands = select_candidates(items, latest, vol_5m, cfg, now=now)
+    assert [c.id for c in cands] == [2, 1], \
+        f"edge ranking expected [2, 1], got {[c.id for c in cands]}"
+    print("  PASSED test_candidate_edge_ranking")
+
+
+def test_spread_collapse_exit():
+    """After the collapse window, a gone edge exits at the bid; TP/SL first."""
+    _clean()
+    from rshelper.positions import open_position
+    cfg = _cfg(spread_collapse_exit_minutes=60, min_exit_spread_pct=1.0)
+    now = time.time()
+    open_position(1, "X", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=90)).isoformat()
+    pmod._save(pos)
+    p = pmod.list_positions()[0]
+    # net spread still >= 1% (1.03%): hold
+    assert exit_reason(p, _latest(now, **{"1": (100, 97)}), cfg, now=now) is None
+    # net spread collapsed to 0%: exit at the bid
+    assert exit_reason(p, _latest(now, **{"1": (98, 97)}), cfg, now=now) == \
+        "spread_collapse"
+    # young position with the same collapsed spread: hold (edge may re-widen)
+    open_position(2, "Y", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    p2 = [pp for pp in pmod.list_positions() if pp.item_id == 2][0]
+    assert exit_reason(p2, _latest(now, **{"2": (98, 97)}), cfg, now=now) is None
+    # max_hold still takes precedence over the collapse exit
+    pos2 = pmod._load()
+    for row in pos2:
+        if row["item_id"] == 1:
+            row["opened_at"] = (datetime.now(timezone.utc) -
+                                timedelta(hours=5)).isoformat()
+    pmod._save(pos2)
+    p1 = [pp for pp in pmod.list_positions() if pp.item_id == 1][0]
+    assert exit_reason(p1, _latest(now, **{"1": (98, 97)}), cfg, now=now) == \
+        "max_hold"
+    print("  PASSED test_spread_collapse_exit")
+
+
+def test_run_cycle_spread_collapse_closes_at_bid():
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    open_position(1, "X", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=90)).isoformat()
+    pmod._save(pos)
+    now = int(time.time())
+    latest = _latest(now, **{"1": (98, 97)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "spread_collapse"
+    assert result["closed"][0]["sell_price"] == 97  # sold at the bid, no slip
+    trade = jmod.list_trades()[0]
+    assert trade.exit_reason == "spread_collapse"
+    assert trade.entry_spread_pct == round((100 - 97) / 97 * 100, 2)
+    print("  PASSED test_run_cycle_spread_collapse_closes_at_bid")
 
 
 def test_size_position_caps():
@@ -372,6 +450,81 @@ def test_max_hold_flat_close():
     print("  PASSED test_max_hold_flat_close")
 
 
+def test_max_hold_stale_bid_close():
+    """Max-hold marks to the last known bid; flat close only with no data."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    open_position(1, "Stale", 10, 97, note="auto", direction="traditional")
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(hours=5)).isoformat()
+    pmod._save(pos)
+    now = int(time.time())
+    stale = {"1": {"high": 100, "low": 90,
+                   "highTime": now - 3600, "lowTime": now - 3600}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], stale, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "max_hold"
+    assert result["closed"][0]["sell_price"] == 90  # marked to stale bid
+    assert result["closed"][0]["quote_sell"] == 90
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == 90
+    print("  PASSED test_max_hold_stale_bid_close")
+
+
+def test_recent_exits_pruned():
+    """Exits older than the longest cooldown are pruned on load and persist."""
+    _clean()
+    import json
+    now = time.time()
+    tmod._RECENT_EXITS.clear()
+    tmod._RECENT_EXITS[1] = (now - 3 * 3600, "take_profit")  # stale
+    tmod._RECENT_EXITS[2] = (now - 60, "stop_loss")          # fresh
+    tmod._persist_recent_exits()
+    data = json.loads(tmod.EXITS_PATH.read_text())
+    assert set(data) == {"2"}, f"stale exits must be pruned, got {set(data)}"
+    tmod._RECENT_EXITS.clear()
+    tmod._load_recent_exits()
+    assert set(tmod._RECENT_EXITS) == {2}
+    # in-memory entries that expired while the daemon ran are pruned too
+    tmod._RECENT_EXITS[3] = (now - 5 * 3600, "take_profit")
+    tmod._load_recent_exits()
+    assert set(tmod._RECENT_EXITS) == {2}, \
+        f"expired in-memory exits must be pruned, got {set(tmod._RECENT_EXITS)}"
+    print("  PASSED test_recent_exits_pruned")
+
+
+def test_status_journal_pnl():
+    """Status exposes all-time journal P&L, not just the per-run counter."""
+    import json
+    import os
+    old_pid, old_state = tmod.PID_PATH, tmod.STATE_PATH
+    old_trades = jmod.TRADES_PATH
+    with tempfile.TemporaryDirectory() as tmp:
+        tmod.PID_PATH = Path(tmp) / "trader.pid"
+        tmod.STATE_PATH = Path(tmp) / "trader_state.json"
+        jmod.TRADES_PATH = Path(tmp) / "trades.json"
+        try:
+            jmod.log_trade(1, "A", 10, 100, 105, strategy="auto",
+                           exit_reason="take_profit")  # profit 30
+            tmod._write_state({"running": True, "profile": "default",
+                               "realized_pnl": 0, "cycles": 1, "errors": 0,
+                               "last_cycle_iso": None, "started_iso": None,
+                               "last_result": None, "exits_by_reason": {}})
+            tmod.PID_PATH.write_text(str(os.getpid()))
+            status = tmod.trader_status()
+            assert status["journal_realized_pnl"] == 30, status
+            assert status["journal_auto_trades"] == 1
+            assert status["running"] is True
+        finally:
+            tmod.PID_PATH, tmod.STATE_PATH = old_pid, old_state
+            jmod.TRADES_PATH = old_trades
+    print("  PASSED test_status_journal_pnl")
+
+
 def test_trader_config_validation():
     old_pid, old_state = tmod.PID_PATH, tmod.STATE_PATH
     with tempfile.TemporaryDirectory() as tmp:
@@ -468,6 +621,33 @@ def test_sync_script_reports_commit_failure():
     print("  PASSED test_sync_script_reports_commit_failure")
 
 
+def test_sync_script_ignores_snapshot_subdirs():
+    """A subdirectory inside snapshots must not abort the state sync."""
+    import importlib.util
+    from unittest import mock
+    spec = importlib.util.spec_from_file_location(
+        "sync_state_subdir", Path(__file__).resolve().parent.parent /
+        "scripts" / "sync-and-push-state.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "src"
+        dst = Path(tmp) / "dst"
+        (src / "snapshots" / "subdir").mkdir(parents=True)
+        (src / "snapshots" / "flip-2026-08-01.json").write_text("{}")
+        mod.SRC, mod.DEST = src, dst
+
+        def fake_git(*args, **kw):
+            import subprocess
+            return subprocess.CompletedProcess(args, 0, "", "")
+
+        with mock.patch.object(mod.subprocess, "run", side_effect=fake_git):
+            rc = mod.main()
+        assert rc == 0, f"sync must not crash on a snapshot subdir, rc={rc}"
+        assert (dst / "snapshots" / "flip-2026-08-01.json").exists()
+    print("  PASSED test_sync_script_ignores_snapshot_subdirs")
+
+
 if __name__ == "__main__":
     test_select_candidates_filters()
     test_exit_reason()
@@ -484,4 +664,11 @@ if __name__ == "__main__":
     test_status_staleness()
     test_sync_script_changed_detection()
     test_sync_script_reports_commit_failure()
+    test_sync_script_ignores_snapshot_subdirs()
+    test_candidate_edge_ranking()
+    test_spread_collapse_exit()
+    test_run_cycle_spread_collapse_closes_at_bid()
+    test_max_hold_stale_bid_close()
+    test_recent_exits_pruned()
+    test_status_journal_pnl()
     print("\nAll tests passed.")

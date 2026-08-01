@@ -101,6 +101,36 @@ def test_traditional_direction_stored():
     print("  PASSED test_traditional_direction_stored")
 
 
+def test_entry_offer_roundtrip():
+    _clean()
+    p = open_position(777, "Test", 5, 100, direction="traditional",
+                      entry_sell=100, entry_offer=105)
+    assert p.entry_offer == 105
+    loaded = list_positions()[0]
+    assert loaded.entry_offer == 105
+    assert loaded.entry_sell == 100
+    print("  PASSED test_entry_offer_roundtrip")
+
+
+def test_unknown_fields_tolerated():
+    """Rows with unknown fields (newer schema) load with defaults, no crash."""
+    _clean()
+    import json
+    path = pmod.POSITIONS_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"positions": [
+        {"id": 1, "item_id": 9, "name": "X", "qty": 3, "buy_price": 50,
+         "direction": "traditional", "opened_at": "2026-08-01T00:00:00Z",
+         "note": "", "entry_sell": 50, "future_field": 42}
+    ]}))
+    loaded = list_positions()
+    assert len(loaded) == 1
+    assert loaded[0].item_id == 9
+    assert loaded[0].entry_offer is None
+    assert loaded[0].qty == 3
+    print("  PASSED test_unknown_fields_tolerated")
+
+
 if __name__ == "__main__":
     test_open_and_close_round_trip()
     test_close_fifo_across_lots()
@@ -108,4 +138,6 @@ if __name__ == "__main__":
     test_validation()
     test_tax_free_close_below_50()
     test_traditional_direction_stored()
+    test_entry_offer_roundtrip()
+    test_unknown_fields_tolerated()
     print("\nAll tests passed.")

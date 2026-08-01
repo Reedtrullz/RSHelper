@@ -59,6 +59,26 @@ def test_rs_score_alch_percentile():
     print("  PASSED test_rs_score_alch_percentile")
 
 
+def test_rs_score_alch_sorts_unsorted_input():
+    """Percentile ranks must be correct even for an unsorted input list."""
+    items = [
+        Item(id=3, name="C", members=False, buy_limit=100,
+             alch_value=0, buy_price=100, sell_price=50, volume=10,
+             profit=5, gp_per_hour=100),
+        Item(id=1, name="A", members=False, buy_limit=100,
+             alch_value=0, buy_price=100, sell_price=50, volume=10,
+             profit=10, gp_per_hour=1000),
+        Item(id=2, name="B", members=False, buy_limit=100,
+             alch_value=0, buy_price=100, sell_price=50, volume=10,
+             profit=20, gp_per_hour=500),
+    ]
+    compute_rs_score_alch(items)
+    by_id = {i.id: i for i in items}
+    assert by_id[1].rs_score > by_id[2].rs_score > by_id[3].rs_score, \
+        "scores must follow gp_per_hour even when input was unsorted"
+    print("  PASSED test_rs_score_alch_sorts_unsorted_input")
+
+
 
 def _reset_cooldowns():
     """Clear all cooldowns and use in-memory state for test isolation."""
@@ -120,7 +140,10 @@ def test_surge_detection():
                              cooldown_sec=0)  # 400 > 3x100
     surge_signals = [s for s in signals if s.type == "SURGE"]
     assert len(surge_signals) == 1
-    assert surge_signals[0].deviation >= 3.0
+    # deviation is a percentage like the other signal types: 400 vs 100
+    # baseline is +300%, not a raw 4.0 multiplier
+    assert surge_signals[0].deviation == 300.0, \
+        f"expected +300% deviation, got {surge_signals[0].deviation}"
     print("  PASSED test_surge_detection")
 
 
@@ -135,6 +158,49 @@ def test_flip_detection():
     assert len(flip_signals) == 1
     assert flip_signals[0].severity == "MEDIUM"
     print("  PASSED test_flip_detection")
+
+
+def test_flip_ids_restrict_flip_detection():
+    """DUMP/CRASH must see the full universe; FLIP only fires for flip_ids."""
+    items = [
+        _make_item(item_id=1, name="A", buy=100, sell=70, volume=600),
+        _make_item(item_id=2, name="B", buy=100, sell=84, volume=600),
+    ]
+    items[0].rs_score = 80
+    items[1].rs_score = 80
+    vol_5m = {"1": _make_vol(avg_low=95, high_vol=300, low_vol=300),
+              "2": _make_vol(avg_low=95, high_vol=300, low_vol=300)}
+    signals = detect_signals(items, vol_5m, cooldown_sec=0, flip_ids={2})
+    flips = [s for s in signals if s.type == "FLIP"]
+    assert [s.item_id for s in flips] == [2], \
+        f"FLIP must be restricted to flip_ids, got {[s.item_id for s in flips]}"
+    crashes = {s.item_id for s in signals if s.type == "CRASH"}
+    dumps = {s.item_id for s in signals if s.type == "DUMP"}
+    assert crashes == {1}, \
+        "item 1 crashes even though it is not a flip candidate"
+    assert dumps == {2}
+    print("  PASSED test_flip_ids_restrict_flip_detection")
+
+
+def test_cooldown_save_failure_does_not_kill_scan():
+    """A failing cooldown save must not abort the scan or drop signals."""
+    import rshelper.signals as _s
+    orig = _reset_cooldowns()
+    orig_save = _s._save_cooldowns
+
+    def boom(data):
+        raise OSError("disk full")
+
+    _s._save_cooldowns = boom
+    try:
+        items = [_make_item(item_id=77, sell=70)]
+        vol_5m = {"77": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
+        signals = detect_signals(items, vol_5m, cooldown_sec=0)
+        assert len(signals) == 1, "signal must survive a cooldown save failure"
+    finally:
+        _s._save_cooldowns = orig_save
+        _restore_cooldowns(orig)
+    print("  PASSED test_cooldown_save_failure_does_not_kill_scan")
 
 
 def test_no_signals_without_real_5m_data():
@@ -295,10 +361,13 @@ if __name__ == "__main__":
     test_rs_score_flip_basic()
     test_rs_score_flip_zero_volume()
     test_rs_score_alch_percentile()
+    test_rs_score_alch_sorts_unsorted_input()
     test_dump_detection()
     test_crash_detection()
     test_surge_detection()
     test_flip_detection()
+    test_flip_ids_restrict_flip_detection()
+    test_cooldown_save_failure_does_not_kill_scan()
     test_no_signals_without_real_5m_data()
     test_concurrent_cooldown_save()
     test_cooldown_suppression()

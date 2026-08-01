@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #!/usr/bin/env python3
 """Sync RSHelper trading state into the repo and push it (schedule agent).
 
@@ -48,6 +47,10 @@ def _copy_atomic(src: Path, dst: Path) -> None:
 
 
 def main() -> int:
+    if not (REPO / ".git").is_dir():
+        print(f"[sync] error: {REPO} is not a git repository; "
+              f"set RSHELPER_REPO to the project root.", file=sys.stderr)
+        return 2
     DEST.mkdir(parents=True, exist_ok=True)
     (DEST / "snapshots").mkdir(exist_ok=True)
     changed = False
@@ -58,6 +61,8 @@ def main() -> int:
     snaps = SRC / "snapshots"
     if snaps.is_dir() and any(snaps.iterdir()):
         for p in snaps.iterdir():
+            if not p.is_file():
+                continue  # a stray subdirectory must not abort the sync
             dst = DEST / "snapshots" / p.name
             if not dst.exists() or dst.read_bytes() != p.read_bytes():
                 _copy_atomic(p, dst)

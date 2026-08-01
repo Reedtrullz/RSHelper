@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
-from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 TRADES_PATH = Path.home() / ".config" / "rshelper" / "trades.json"
 _TRADE_LOCK = threading.Lock()
@@ -35,6 +35,7 @@ class Trade:
     exit_reason: str = ""       # "take_profit" | "stop_loss" | "max_hold" | ""
     hold_minutes: float | None = None
     quote_sell: int | None = None  # raw low quote before stop-loss slippage
+    entry_spread_pct: float | None = None  # (offer - bid) / bid at entry
 
 
 @dataclass
@@ -58,7 +59,8 @@ def _load(profile: str | None = None) -> list[dict]:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         if path.exists():
-            return json.loads(path.read_text()).get("trades", [])
+            rows = json.loads(path.read_text()).get("trades", [])
+            return [filter_fields(Trade, t) for t in rows if isinstance(t, dict)]
     except (json.JSONDecodeError, OSError):
         pass
     return []
@@ -78,7 +80,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
               sell_price: int, note: str = "", profile: str | None = None,
               strategy: str = "", exit_reason: str = "",
               hold_minutes: float | None = None,
-              quote_sell: int | None = None) -> Trade:
+              quote_sell: int | None = None,
+              entry_spread_pct: float | None = None) -> Trade:
     """Log a completed trade. Returns the Trade object.
 
     Tax is per-item (OSRS GE tax is per item, capped at 5M per item).
@@ -104,6 +107,7 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
             "exit_reason": exit_reason,
             "hold_minutes": hold_minutes,
             "quote_sell": quote_sell,
+            "entry_spread_pct": entry_spread_pct,
         }
         trades.append(trade)
         _save(trades, profile)
@@ -130,7 +134,8 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
     strategy="auto" matches only trader closes; strategy="manual" also
     matches legacy trades that predate strategy tagging.
     """
-    trades = _load(profile)
+    with _TRADE_LOCK:
+        trades = _load(profile)
     result = [Trade(**t) for t in trades]
     if item_name:
         q = item_name.lower()

@@ -462,10 +462,11 @@ def _trade_open(args: argparse.Namespace) -> None:
     buy_price, sell_price = _resolve_paper_prices(
         entry, profile, args.flip_direction)
     qty = _size_qty(args, entry, buy_price)
+    entry_offer = sell_price if args.flip_direction == "traditional" else None
     pos = open_position(entry["id"], entry["name"], qty, buy_price,
                         direction=args.flip_direction,
                         note=args.note or "paper", profile=profile,
-                        entry_sell=sell_price)
+                        entry_sell=sell_price, entry_offer=entry_offer)
     print(f"Opened position #{pos.id}: {pos.qty:,}x {pos.name} at "
           f"{pos.buy_price:,} gp ({pos.direction})")
 
@@ -575,6 +576,11 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
             print("  WARNING: last cycle is stale (>15 min); the trader may "
                   "have stopped or the synced state is behind.", file=sys.stderr)
         print(f"  Realized P&L: {status.get('realized_pnl', 0):+,} gp")
+        jpnl = status.get("journal_realized_pnl")
+        if jpnl is not None:
+            jcount = status.get("journal_auto_trades")
+            label = f" ({jcount} auto trades)" if jcount is not None else ""
+            print(f"  Journal P&L (auto): {jpnl:+,} gp{label}")
         print(f"  Cycles: {status.get('cycles', 0)}  "
               f"Errors: {status.get('errors', 0)}")
         exits = status.get("exits_by_reason") or {}

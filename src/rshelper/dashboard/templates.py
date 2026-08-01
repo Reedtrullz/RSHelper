@@ -685,7 +685,9 @@ function traderNoticeHtml(trader){
       ' — start it with <code>rshelper auto-trade</code>.'+stale+'</div>';
   }
   const last=trader.last_result||{};
-  const tpnl=trader.realized_pnl||0;
+  // The journal is the authoritative ledger (the state counter resets on
+  // every daemon start), so prefer journal_realized_pnl when present.
+  const tpnl=trader.journal_realized_pnl!=null?trader.journal_realized_pnl:(trader.realized_pnl||0);
   const cycles=trader.cycles||0;
   const errors=trader.errors||0;
   const where=trader.local?'this machine':'the Mac';

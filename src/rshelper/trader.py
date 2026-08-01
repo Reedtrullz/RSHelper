@@ -47,6 +47,9 @@ MAX_VOLUME_FRACTION = 0.10  # never size above 10% of the last 5m volume
 # Maps item_id -> (exit_ts, reason) so stop-losses get a longer cooldown.
 _RECENT_EXITS: dict[int, tuple[float, str]] = {}
 EXITS_PATH = TRADER_DIR / "recent_exits.json"
+# Cooldowns are at most stop_reentry_minutes (90); entries older than 2h can
+# never block a re-entry, so pruning them keeps the file bounded.
+RECENT_EXIT_MAX_AGE = 2 * 3600
 
 
 def _load_recent_exits() -> None:
@@ -55,17 +58,29 @@ def _load_recent_exits() -> None:
         data = json.loads(EXITS_PATH.read_text())
     except (OSError, json.JSONDecodeError, ValueError):
         return
+    now = time.time()
+    # Prune expired entries already held in memory (a long-running daemon
+    # would otherwise keep them until restart).
+    for iid in [iid for iid, (ts, _) in _RECENT_EXITS.items()
+                if now - ts > RECENT_EXIT_MAX_AGE]:
+        del _RECENT_EXITS[iid]
     for key, val in data.items():
         try:
-            _RECENT_EXITS[int(key)] = (float(val["ts"]), str(val["reason"]))
+            ts = float(val["ts"])
+            if now - ts > RECENT_EXIT_MAX_AGE:
+                continue  # stale exit: no longer blocks any re-entry
+            _RECENT_EXITS[int(key)] = (ts, str(val["reason"]))
         except (KeyError, TypeError, ValueError):
             continue
 
 
 def _persist_recent_exits() -> None:
+    now = time.time()
+    fresh = {iid: (ts, reason) for iid, (ts, reason) in _RECENT_EXITS.items()
+             if now - ts <= RECENT_EXIT_MAX_AGE}
     atomic_write_json(EXITS_PATH, {
         str(iid): {"ts": ts, "reason": reason}
-        for iid, (ts, reason) in _RECENT_EXITS.items()
+        for iid, (ts, reason) in fresh.items()
     })
 
 
@@ -105,6 +120,15 @@ def _fresh(price: dict, max_age: int, now: float) -> bool:
     return True
 
 
+def _opened_ts(position) -> float | None:
+    """Epoch seconds of a position's open time, or None when unparseable."""
+    try:
+        return datetime.fromisoformat(
+            position.opened_at.replace("Z", "+00:00")).timestamp()
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
 def _last_cycle_age(state: dict, now: float | None = None) -> float | None:
     """Seconds since the last trader cycle, or None when unknown."""
     iso = state.get("last_cycle_iso")
@@ -138,6 +162,7 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
     """Filter items to liquid, sane, freshly-dipped buy-the-bid candidates."""
     now = now if now is not None else time.time()
     out = []
+    ranked = []
     for item in items:
         if item.sell_price < cfg.min_price:
             # One 1gp tick is >= 4% at sub-25gp prices, so a 2% stop is
@@ -173,8 +198,15 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
                     else cfg.reentry_minutes) * 60
         if now - last_ts < cooldown:
             continue
-        out.append(item)
-    out.sort(key=lambda i: i.volume, reverse=True)
+        # Rank by expected edge, not raw volume: dip depth (mean-reversion
+        # room) times net spread capture (spread minus the 2% sell tax — the
+        # profit if the offer simply holds). Volume stays as the tiebreaker;
+        # fill risk is already capped by MAX_VOLUME_FRACTION.
+        net_capture = spread_pct - 2.0
+        edge = dip_pct * max(0.0, net_capture)
+        ranked.append((edge, item.volume, item))
+    ranked.sort(key=lambda r: (r[0], r[1]), reverse=True)
+    out = [r[2] for r in ranked]
     return out
 
 
@@ -188,22 +220,23 @@ def unrealized_pct(buy: int, sell: int, qty: int) -> float:
 
 
 def exit_reason(position, latest: dict, cfg, now: float | None = None):
-    """Return 'take_profit' | 'stop_loss' | 'max_hold' | None.
+    """Return 'take_profit' | 'stop_loss' | 'spread_collapse' | 'max_hold' | None.
 
     Positions are opened at the bid (low). Take-profit sells at the offer
     (high) when it nets the target after tax; the stop sells at the bid
     (low) when the bid falls below the entry bid by the stop distance.
+    After spread_collapse_exit_minutes, a position whose net spread (after
+    tax) has collapsed below min_exit_spread_pct exits at the bid: the
+    spread-capture edge it was opened for is gone, so holding only waits for
+    a rally that may never come.
     """
     now = now if now is not None else time.time()
+    opened = _opened_ts(position)
+    age_min = (now - opened) / 60 if opened is not None else None
     # max_hold first: it must fire even when no fresh price is available,
     # otherwise a position on a dead item could sit open forever.
-    try:
-        opened = datetime.fromisoformat(position.opened_at.replace("Z", "+00:00")).timestamp()
-        age_min = (now - opened) / 60
-        if age_min >= cfg.max_hold_minutes:
-            return "max_hold"
-    except (ValueError, TypeError):
-        pass
+    if age_min is not None and age_min >= cfg.max_hold_minutes:
+        return "max_hold"
     price = latest.get(str(position.item_id))
     if not isinstance(price, dict) or price_issue(price) or not _fresh(price, EXIT_MAX_AGE, now):
         return None  # no usable price this cycle; hold
@@ -217,6 +250,12 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None):
             move_pct = (bid - position.buy_price) / position.buy_price * 100
             if move_pct <= cfg.stop_loss_pct:
                 return "stop_loss"
+            if (age_min is not None
+                    and age_min >= cfg.spread_collapse_exit_minutes
+                    and offer > 0):
+                net_spread_pct = (offer - bid - ge_tax(offer)) / bid * 100
+                if net_spread_pct < cfg.min_exit_spread_pct:
+                    return "spread_collapse"
     else:
         # Legacy arbitrage positions (bought at the ask): TP/SL on the bid.
         if bid <= 0:
@@ -263,12 +302,20 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         if reason is None:
             continue
         price = latest.get(str(p.item_id))
-        usable = isinstance(price, dict) and price_issue(price) is None \
-            and _fresh(price, EXIT_MAX_AGE, now)
+        valid = isinstance(price, dict) and price_issue(price) is None
+        fresh = valid and _fresh(price, EXIT_MAX_AGE, now)
         quote_sell = None
-        if reason == "max_hold" and not usable:
-            sell = p.buy_price  # expired; close flat without a fresh quote
-        elif usable:
+        if reason == "max_hold":
+            if valid:
+                # Mark to market at the last known bid (fresh or stale): a
+                # flat close at the entry price would ignore real moves and
+                # guarantee the 2% sale tax. Only with no price data at all
+                # do we close flat at the entry.
+                quote_sell = int(price.get("low", 0) or 0)
+                sell = quote_sell if quote_sell > 0 else p.buy_price
+            else:
+                sell = p.buy_price  # expired; close flat without any quote
+        elif fresh:
             if p.direction == "traditional" and reason == "take_profit":
                 quote_sell = int(price.get("high", 0) or 0)  # sell at the offer
                 sell = quote_sell
@@ -278,22 +325,30 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             if reason == "stop_loss":
                 sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
         else:
+            # Unreachable today: exit_reason returns None for TP/SL/collapse
+            # without a fresh price (only max_hold can arrive here with a
+            # stale/absent quote, handled above). If exit_reason is ever
+            # relaxed, hold rather than mis-price.
             continue
         if sell <= 0:
             continue
-        try:
-            opened = datetime.fromisoformat(p.opened_at.replace("Z", "+00:00")).timestamp()
-            hold_minutes = round((now - opened) / 60, 1)
-        except (ValueError, TypeError):
+        opened = _opened_ts(p)
+        if opened is None:
             print(f"[trader] warning: could not parse opened_at "
                   f"{p.opened_at!r} for position {p.id}", file=sys.stderr)
             hold_minutes = None
+        else:
+            hold_minutes = round((now - opened) / 60, 1)
         lots = close_positions(p.item_id, p.qty, sell, profile)
+        entry_spread_pct = None
+        if p.entry_offer and p.buy_price > 0:
+            entry_spread_pct = round(
+                (p.entry_offer - p.buy_price) / p.buy_price * 100, 2)
         for lot in lots:
             log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
                       sell, note="paper", profile=profile, strategy="auto",
                       exit_reason=reason, hold_minutes=hold_minutes,
-                      quote_sell=quote_sell)
+                      quote_sell=quote_sell, entry_spread_pct=entry_spread_pct)
         closed.append({"item_id": p.item_id, "name": p.name, "qty": p.qty,
                        "reason": reason, "sell_price": sell,
                        "quote_sell": quote_sell, "hold_minutes": hold_minutes,
@@ -312,10 +367,12 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             continue  # one auto position per item at a time
         qty = size_position(cfg, capital_used, cand)
         if qty <= 0:
+            print(f"[trader] skipped {cand.name}: size 0 "
+                  f"(limit/by-market/budget constraint)", file=sys.stderr)
             continue
         open_position(cand.id, cand.name, qty, cand.sell_price,
                       direction="traditional", note="auto", profile=profile,
-                      entry_sell=cand.sell_price)
+                      entry_sell=cand.sell_price, entry_offer=cand.buy_price)
         capital_used += qty * cand.sell_price
         slots -= 1
         opened.append({"item_id": cand.id, "name": cand.name,
@@ -344,20 +401,32 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("stop_loss_pct must be < 0")
     if cfg.max_hold_minutes <= 0:
         raise ValueError("max_hold_minutes must be > 0")
+    if cfg.spread_collapse_exit_minutes < 0:
+        raise ValueError("spread_collapse_exit_minutes must be >= 0")
+    if cfg.min_exit_spread_pct < 0:
+        raise ValueError("min_exit_spread_pct must be >= 0")
     interval = interval or cfg.interval_sec
     prof_name = profile if profile else "default"
     pid = os.getpid()
     p_path = _pid_path(profile)
-    try:
-        old_pid = int(p_path.read_text().strip())
-        os.kill(old_pid, 0)
-        print(f"[trader] Already running (PID {old_pid}); use --stop first.",
-              file=sys.stderr)
-        sys.exit(1)
-    except (ValueError, OSError):
-        pass  # no live previous instance
-    from rshelper.profile import atomic_write_text
-    atomic_write_text(p_path, str(pid))
+    # Claim the pid file with O_EXCL so two racing starts cannot both pass
+    # the liveness check; a stale file from a dead process is replaced.
+    for _ in range(2):
+        try:
+            fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w") as f:
+                f.write(str(pid))
+            break
+        except FileExistsError:
+            try:
+                old_pid = int(p_path.read_text().strip())
+                os.kill(old_pid, 0)
+            except (ValueError, OSError):
+                p_path.unlink(missing_ok=True)  # stale pid; retry the claim
+                continue
+            print(f"[trader] Already running (PID {old_pid}); use --stop first.",
+                  file=sys.stderr)
+            sys.exit(1)
     state = {"pid": pid, "started_iso": datetime.now(timezone.utc).isoformat(),
              "last_cycle_iso": None, "last_result": None,
              "realized_pnl": 0, "profile": prof_name, "running": True,
@@ -377,7 +446,7 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                 result = {"error": str(e)}
             print(f"[trader] cycle: {json.dumps(result)}", file=sys.stderr)
             state["cycles"] = state.get("cycles", 0) + 1
-            if result.get("closed_pnl"):
+            if result.get("closed_pnl") is not None:
                 state["realized_pnl"] = state.get("realized_pnl", 0) + result["closed_pnl"]
             for c in result.get("closed", []):
                 reason = c.get("reason", "unknown")
@@ -451,6 +520,17 @@ def trader_status(profile: str | None = None) -> dict | None:
     state = _read_state(profile)
     if state is None:
         return None
+    # The journal is the authoritative P&L ledger; the state counter resets
+    # on every daemon start, so expose the all-time auto P&L alongside it.
+    journal_pnl = None
+    journal_trades = None
+    try:
+        from rshelper.journal import list_trades
+        auto_trades = list_trades(profile=profile, strategy="auto")
+        journal_pnl = sum(t.profit for t in auto_trades)
+        journal_trades = len(auto_trades)
+    except Exception:
+        pass
     local_pid = None
     pid_file_present = False
     try:
@@ -467,11 +547,17 @@ def trader_status(profile: str | None = None) -> dict | None:
         except OSError:
             pass
         base = _status_base(state)
+        base["journal_realized_pnl"] = journal_pnl
+        base["journal_auto_trades"] = journal_trades
         return {"running": False, "local": True, "pid": None, **base}
     if local_pid is None:
         # No live process here: report the synced snapshot truthfully.
         base = _status_base(state)
+        base["journal_realized_pnl"] = journal_pnl
+        base["journal_auto_trades"] = journal_trades
         return {"running": bool(state.get("running")),
                 "local": False, "pid": None, **base}
     base = _status_base(state)
+    base["journal_realized_pnl"] = journal_pnl
+    base["journal_auto_trades"] = journal_trades
     return {"running": True, "local": True, "pid": local_pid, **base}

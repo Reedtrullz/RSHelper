@@ -27,9 +27,10 @@ class TestTuning(unittest.TestCase):
 
     def test_params_shape(self):
         p = tuning.params()
-        self.assertEqual(set(p), {"alch", "flip", "margin"})
+        self.assertEqual(set(p), {"alch", "flip", "margin", "trader"})
         self.assertIn("min_volume", p["flip"])
         self.assertIn("direction", p["margin"])
+        self.assertIn("spread_collapse_exit_minutes", p["trader"])
 
     def test_record_on_change(self):
         entry = tuning.record_if_changed()

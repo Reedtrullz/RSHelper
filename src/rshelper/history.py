@@ -1,5 +1,6 @@
 """Daily history for the dashboard Progression view."""
 import json
+import re
 from collections import defaultdict
 from datetime import date
 
@@ -23,6 +24,10 @@ def build_history(profile: str | None = None, paper_only: bool = True,
     snaps_by_day: dict[str, list] = defaultdict(list)
     for path in snapshot.list_snapshots(profile=profile):
         day = path.stem[-10:]
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+            # Malformed snapshot filename: skip instead of corrupting the
+            # daily buckets with a phantom key.
+            continue
         try:
             data = json.loads(path.read_text())
         except (json.JSONDecodeError, OSError):
@@ -61,12 +66,25 @@ def build_history(profile: str | None = None, paper_only: bool = True,
     eras = []
     for i, e in enumerate(entries):
         start = e["ts"][:10]
-        end = entries[i + 1]["ts"][:10] if i + 1 < len(entries) else last_day
-        if end <= start:
+        final_era = i + 1 == len(entries)
+        if final_era:
             end = last_day
-        era_trades = [t for t in trades
-                      if start <= t.timestamp[:10] < end] if end > start else \
-                     [t for t in trades if t.timestamp[:10] >= start]
+            # The last era runs through the most recent traded day inclusive;
+            # a strict '<' would silently drop today's trades from all
+            # performance summaries whenever the config did not change today.
+            era_trades = [t for t in trades
+                          if start <= t.timestamp[:10] <= last_day]
+        else:
+            end = entries[i + 1]["ts"][:10]
+            if end <= start:
+                # Two entries on the same day: day-level buckets cannot split
+                # the day, so the earlier era is empty. The later entry owns
+                # the whole day, matching the "last entry on or before the
+                # trade day wins" rule used by config_at.
+                era_trades = []
+            else:
+                era_trades = [t for t in trades
+                              if start <= t.timestamp[:10] < end]
         cost = sum(t.buy_price * t.qty for t in era_trades)
         profit = sum(t.profit for t in era_trades)
         wins = sum(1 for t in era_trades if t.profit > 0)

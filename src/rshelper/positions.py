@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
-from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 POSITIONS_PATH = Path.home() / ".config" / "rshelper" / "positions.json"
 _LOCK = threading.Lock()
@@ -31,6 +31,7 @@ class Position:
     opened_at: str
     note: str = ""
     entry_sell: int | None = None  # sell quote (low) when the position opened
+    entry_offer: int | None = None  # offer quote (high) when the position opened
 
 
 def _positions_path(profile: str | None = None) -> Path:
@@ -44,7 +45,9 @@ def _load(profile: str | None = None) -> list[dict]:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         if path.exists():
-            return json.loads(path.read_text()).get("positions", [])
+            rows = json.loads(path.read_text()).get("positions", [])
+            return [filter_fields(Position, r) for r in rows
+                    if isinstance(r, dict)]
     except (json.JSONDecodeError, OSError):
         pass
     return []
@@ -63,6 +66,7 @@ def _next_id(positions: list[dict]) -> int:
 def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   direction: str = "arbitrage", note: str = "",
                   entry_sell: int | None = None,
+                  entry_offer: int | None = None,
                   profile: str | None = None) -> Position:
     """Open a hold position at buy_price. Returns the Position."""
     if qty <= 0:
@@ -77,7 +81,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
             "id": _next_id(positions), "item_id": item_id, "name": name,
             "qty": qty, "buy_price": buy_price, "direction": direction,
             "opened_at": datetime.now(timezone.utc).isoformat(), "note": note,
-            "entry_sell": entry_sell,
+            "entry_sell": entry_sell, "entry_offer": entry_offer,
         }
         positions.append(position)
         _save(positions, profile)
@@ -86,13 +90,16 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
 
 def list_positions(profile: str | None = None) -> list[Position]:
     """Return open positions, oldest first."""
-    positions = [Position(**p) for p in _load(profile)]
+    with _LOCK:
+        positions = [Position(**p) for p in _load(profile)]
     positions.sort(key=lambda p: p.opened_at)
     return positions
 
 
 def open_qty(item_id: int, profile: str | None = None) -> int:
     """Total units currently open for an item."""
+    # list_positions acquires _LOCK itself; nesting the lock here would
+    # deadlock (threading.Lock is not reentrant).
     return sum(p.qty for p in list_positions(profile) if p.item_id == item_id)
 
 
@@ -112,8 +119,10 @@ def close_positions(item_id: int, qty: int, sell_price: int,
         positions = _load(profile)
         lots = []
         remaining = qty
+        kept = []
         for p in sorted(positions, key=lambda x: x["id"]):
             if p["item_id"] != item_id or remaining <= 0:
+                kept.append(p)
                 continue
             take = min(remaining, p["qty"])
             tax = ge_tax(sell_price)
@@ -123,11 +132,13 @@ def close_positions(item_id: int, qty: int, sell_price: int,
                 "tax_paid": tax * take,
                 "profit": (sell_price - p["buy_price"]) * take - tax * take,
             })
-            p["qty"] -= take
             remaining -= take
+            if p["qty"] - take > 0:
+                # Copy, never mutate the loaded dict: if _save raises, the
+                # caller's in-memory state must stay untouched.
+                kept.append({**p, "qty": p["qty"] - take})
         if remaining > 0:
             raise ValueError(
                 f"only {qty - remaining} of {qty} units open for item {item_id}")
-        kept = [p for p in positions if p["qty"] > 0]
         _save(kept, profile)
     return lots

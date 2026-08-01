@@ -237,6 +237,33 @@ def test_strategy_filter():
     print("  PASSED test_strategy_filter")
 
 
+def test_entry_spread_pct_roundtrip():
+    _clean()
+    t = log_trade(1, "A", 10, 100, 105, "paper", strategy="auto",
+                  exit_reason="take_profit", entry_spread_pct=5.0)
+    assert t.entry_spread_pct == 5.0
+    loaded = list_trades()[0]
+    assert loaded.entry_spread_pct == 5.0
+    print("  PASSED test_entry_spread_pct_roundtrip")
+
+
+def test_unknown_fields_tolerated():
+    """Trades with unknown fields (newer schema) load with defaults."""
+    _clean()
+    TRADES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    TRADES_PATH.write_text(json.dumps({"trades": [
+        {"id": 1, "item_id": 2, "name": "Old", "qty": 1, "buy_price": 10,
+         "sell_price": 12, "tax_paid": 0, "profit": 2,
+         "timestamp": "2026-01-01T00:00:00Z", "note": "paper",
+         "future_field": True}
+    ]}))
+    loaded = list_trades()
+    assert len(loaded) == 1
+    assert loaded[0].strategy == ""
+    assert loaded[0].entry_spread_pct is None
+    print("  PASSED test_unknown_fields_tolerated")
+
+
 def test_cli_trade_log_parse():
     import subprocess
     import tempfile
@@ -297,6 +324,8 @@ if __name__ == "__main__":
     test_pnl_by_item_breakdown()
     test_pnl_note_filter()
     test_strategy_filter()
+    test_entry_spread_pct_roundtrip()
+    test_unknown_fields_tolerated()
     test_cli_trade_log_parse()
     test_concurrent_log_trade_no_lost_updates()
     print("\nAll journal tests passed.")
