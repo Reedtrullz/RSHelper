@@ -24,14 +24,14 @@
     },
     {
       "id": 4,
-      "item_id": 564,
-      "name": "Cosmic rune",
-      "qty": 2049,
-      "buy_price": 122,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 1543,
+      "buy_price": 162,
       "direction": "traditional",
-      "opened_at": "2026-08-01T13:23:36.024317+00:00",
+      "opened_at": "2026-08-01T13:28:36.169605+00:00",
       "note": "auto",
-      "entry_sell": 122
+      "entry_sell": 162
     }
   ]
 }
