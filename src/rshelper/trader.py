@@ -30,6 +30,10 @@ TRADER_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = TRADER_DIR / "trader.pid"
 STATE_PATH = TRADER_DIR / "trader_state.json"
 
+# A status snapshot older than 3x the default poll interval is stale: the
+# trader may have stopped, or the sync to the live site is behind.
+STALE_AFTER_SEC = 900
+
 # ponytail: price freshness windows. The wiki /latest endpoint publishes on
 # a rolling ~2-3 minute cycle even for 100k-volume items (measured), so
 # entries accept data up to 5 minutes old; exits are stricter.
@@ -77,6 +81,34 @@ def _fresh(price: dict, max_age: int, now: float) -> bool:
         if now - ts > max_age:
             return False
     return True
+
+
+def _last_cycle_age(state: dict, now: float | None = None) -> float | None:
+    """Seconds since the last trader cycle, or None when unknown."""
+    iso = state.get("last_cycle_iso")
+    if not iso:
+        return None
+    try:
+        last = datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+    except (ValueError, TypeError):
+        return None
+    return max(0.0, (now if now is not None else time.time()) - last)
+
+
+def _status_base(state: dict) -> dict:
+    age = _last_cycle_age(state)
+    return {
+        "profile": state.get("profile", "default"),
+        "started_iso": state.get("started_iso"),
+        "last_cycle_iso": state.get("last_cycle_iso"),
+        "last_cycle_age_sec": age,
+        "stale": age is not None and age > STALE_AFTER_SEC,
+        "last_result": state.get("last_result"),
+        "realized_pnl": state.get("realized_pnl", 0),
+        "cycles": state.get("cycles", 0),
+        "errors": state.get("errors", 0),
+        "exits_by_reason": state.get("exits_by_reason", {}),
+    }
 
 
 def select_candidates(items, latest: dict, vol_5m: dict, cfg,
@@ -402,37 +434,12 @@ def trader_status(profile: str | None = None) -> dict | None:
             p_path.unlink(missing_ok=True)
         except OSError:
             pass
-        return {
-            "running": False, "local": True, "pid": None,
-            "profile": state.get("profile", "default"),
-            "started_iso": state.get("started_iso"),
-            "last_cycle_iso": state.get("last_cycle_iso"),
-            "last_result": state.get("last_result"),
-            "realized_pnl": state.get("realized_pnl", 0),
-            "cycles": state.get("cycles", 0),
-            "errors": state.get("errors", 0),
-            "exits_by_reason": state.get("exits_by_reason", {}),
-        }
+        base = _status_base(state)
+        return {"running": False, "local": True, "pid": None, **base}
     if local_pid is None:
         # No live process here: report the synced snapshot truthfully.
-        return {
-            "running": bool(state.get("running")),
-            "local": False, "pid": None,
-            "profile": state.get("profile", "default"),
-            "started_iso": state.get("started_iso"),
-            "last_cycle_iso": state.get("last_cycle_iso"),
-            "last_result": state.get("last_result"),
-            "realized_pnl": state.get("realized_pnl", 0),
-            "cycles": state.get("cycles", 0),
-            "errors": state.get("errors", 0),
-            "exits_by_reason": state.get("exits_by_reason", {}),
-        }
-    return {"running": True, "local": True, "pid": local_pid,
-            "profile": state.get("profile", "default"),
-            "started_iso": state.get("started_iso"),
-            "last_cycle_iso": state.get("last_cycle_iso"),
-            "last_result": state.get("last_result"),
-            "realized_pnl": state.get("realized_pnl", 0),
-            "cycles": state.get("cycles", 0),
-            "errors": state.get("errors", 0),
-            "exits_by_reason": state.get("exits_by_reason", {})}
+        base = _status_base(state)
+        return {"running": bool(state.get("running")),
+                "local": False, "pid": None, **base}
+    base = _status_base(state)
+    return {"running": True, "local": True, "pid": local_pid, **base}

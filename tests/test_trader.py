@@ -310,6 +310,55 @@ def test_trader_config_validation():
     print("  PASSED test_trader_config_validation")
 
 
+def test_status_staleness():
+    """Status snapshots expose age and a stale flag."""
+    import json
+    old_pid, old_state = tmod.PID_PATH, tmod.STATE_PATH
+    with tempfile.TemporaryDirectory() as tmp:
+        tmod.PID_PATH = Path(tmp) / "trader.pid"
+        tmod.STATE_PATH = Path(tmp) / "trader_state.json"
+        try:
+            now = time.time()
+            fresh = {"running": True, "last_cycle_iso":
+                     datetime.fromtimestamp(now - 60, timezone.utc).isoformat()}
+            stale = {"running": True, "last_cycle_iso":
+                     datetime.fromtimestamp(now - 3600, timezone.utc).isoformat()}
+            base_fresh = tmod._status_base(fresh)
+            base_stale = tmod._status_base(stale)
+            assert base_fresh["stale"] is False, base_fresh
+            assert 55 <= base_fresh["last_cycle_age_sec"] <= 65
+            assert base_stale["stale"] is True, base_stale
+            assert base_stale["last_cycle_age_sec"] > 3500
+            # no cycle timestamp -> age None, not stale
+            base_none = tmod._status_base({"running": True})
+            assert base_none["last_cycle_age_sec"] is None
+            assert base_none["stale"] is False
+        finally:
+            tmod.PID_PATH, tmod.STATE_PATH = old_pid, old_state
+    print("  PASSED test_status_staleness")
+
+
+def test_sync_script_changed_detection():
+    """Sync helper only stages files whose content changed."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "sync_state", Path(__file__).resolve().parent.parent /
+        "scripts" / "sync-and-push-state.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "src"
+        dst = Path(tmp) / "dst"
+        src.mkdir(); dst.mkdir()
+        (src / "trades.json").write_text('{"trades": []}')
+        (dst / "trades.json").write_text('{"trades": []}')
+        assert mod._files_differ(src, dst, "trades.json") is False
+        (src / "trades.json").write_text('{"trades": [1]}')
+        assert mod._files_differ(src, dst, "trades.json") is True
+        assert mod._files_differ(src, dst, "missing.json") is False
+    print("  PASSED test_sync_script_changed_detection")
+
+
 if __name__ == "__main__":
     test_select_candidates_filters()
     test_exit_reason()
@@ -321,4 +370,6 @@ if __name__ == "__main__":
     test_trader_daemon_guards_and_pnl()
     test_max_hold_flat_close()
     test_trader_config_validation()
+    test_status_staleness()
+    test_sync_script_changed_detection()
     print("\nAll tests passed.")

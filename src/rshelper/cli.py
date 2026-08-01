@@ -568,7 +568,12 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         if status.get("pid"):
             print(f"  PID: {status['pid']}")
         print(f"  Started: {status.get('started_iso', '-')}")
-        print(f"  Last cycle: {status.get('last_cycle_iso', '-')}")
+        age = status.get("last_cycle_age_sec")
+        age_s = f"{age:.0f}s ago" if age is not None else "-"
+        print(f"  Last cycle: {status.get('last_cycle_iso', '-')} ({age_s})")
+        if status.get("stale"):
+            print("  WARNING: last cycle is stale (>15 min); the trader may "
+                  "have stopped or the synced state is behind.", file=sys.stderr)
         print(f"  Realized P&L: {status.get('realized_pnl', 0):+,} gp")
         print(f"  Cycles: {status.get('cycles', 0)}  "
               f"Errors: {status.get('errors', 0)}")

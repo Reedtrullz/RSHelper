@@ -688,9 +688,13 @@ function traderNoticeHtml(trader){
   const tpnl=trader.realized_pnl||0;
   const cycles=trader.cycles||0;
   const errors=trader.errors||0;
-  const where=trader.local?'this machine':'Mac (synced state)';
+  const where=trader.local?'this machine':'the Mac';
+  const age=trader.last_cycle_age_sec;
+  const ageTxt=age!=null?fmtAge(age):'unknown';
+  const stale=trader.stale?' <span class="neg">(stale — '+ageTxt+' old; sync may be behind)</span>':'';
   let html='<div class="notice">Auto-trader running on '+where;
   html+='<div class="dim" style="margin-top:4px">Last cycle: '+escHtml(String(trader.last_cycle_iso||'-').slice(0,16))+
+    ' ('+ageTxt+' ago)'+stale+
     ' — cycles '+format(cycles)+', errors '+format(errors)+
     ', realized P&L '+format(tpnl)+' gp'+
     (last.opened&&last.opened.length?' — opened '+last.opened.length+' this cycle':'')+
@@ -698,6 +702,12 @@ function traderNoticeHtml(trader){
     (last.error?' — last error: '+escHtml(String(last.error).slice(0,120)):'')+
     '</div></div>';
   return html;
+}
+
+function fmtAge(sec){
+  if(sec<60)return Math.round(sec)+'s';
+  if(sec<3600)return Math.round(sec/60)+'m';
+  return (sec/3600).toFixed(1)+'h';
 }
 
 function traderPerfHtml(trader,trades){
