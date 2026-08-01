@@ -20,6 +20,11 @@ VENV_PY="$REPO_DIR/.venv/bin/python"
 SYNC_SCRIPT="$HOME/.config/rshelper/bin/sync-and-push-state.py"
 SYNC_INTERVAL="${SYNC_INTERVAL:-900}"  # 15 min default
 
+if ! [[ "$SYNC_INTERVAL" =~ ^[1-9][0-9]*$ ]]; then
+  echo "error: SYNC_INTERVAL must be a positive integer, got '$SYNC_INTERVAL'" >&2
+  exit 1
+fi
+
 if [ ! -x "$VENV_PY" ]; then
   echo "error: venv python not found at $VENV_PY" >&2
   exit 1

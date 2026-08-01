@@ -7,10 +7,10 @@ Run under launchd. macOS TCC blocks bash from opening scripts inside
 this is driven by python; it shells out to git only for the actual repo
 operations.
 """
-import shutil
 import subprocess
 import sys
 import os
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -29,20 +29,38 @@ def _files_differ(src_dir: Path, dst_dir: Path, name: str) -> bool:
     return not dst.exists() or dst.read_bytes() != src.read_bytes()
 
 
+def _copy_atomic(src: Path, dst: Path) -> None:
+    """Copy with a trailing newline, atomically (temp file + rename)."""
+    data = src.read_bytes()
+    if not data.endswith(b"\n"):
+        data += b"\n"
+    fd, tmp = tempfile.mkstemp(dir=str(dst.parent), prefix=dst.name + ".")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.replace(tmp, dst)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def main() -> int:
     DEST.mkdir(parents=True, exist_ok=True)
     (DEST / "snapshots").mkdir(exist_ok=True)
     changed = False
     for name in FILES:
         if _files_differ(SRC, DEST, name):
-            shutil.copy2(SRC / name, DEST / name)
+            _copy_atomic(SRC / name, DEST / name)
             changed = True
     snaps = SRC / "snapshots"
     if snaps.is_dir() and any(snaps.iterdir()):
         for p in snaps.iterdir():
             dst = DEST / "snapshots" / p.name
             if not dst.exists() or dst.read_bytes() != p.read_bytes():
-                shutil.copy2(p, dst)
+                _copy_atomic(p, dst)
                 changed = True
 
     def git(*args: str) -> subprocess.CompletedProcess:
