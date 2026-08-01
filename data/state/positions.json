@@ -12,17 +12,6 @@
       "entry_sell": 414
     },
     {
-      "id": 8,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 219,
-      "buy_price": 477,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T07:00:54.735960+00:00",
-      "note": "auto",
-      "entry_sell": 477
-    },
-    {
       "id": 9,
       "item_id": 11936,
       "name": "Dark crab",
@@ -32,6 +21,17 @@
       "opened_at": "2026-08-01T07:35:55.530275+00:00",
       "note": "auto",
       "entry_sell": 1350
+    },
+    {
+      "id": 10,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 803,
+      "buy_price": 59,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T07:50:55.803464+00:00",
+      "note": "auto",
+      "entry_sell": 59
     }
   ]
 }
