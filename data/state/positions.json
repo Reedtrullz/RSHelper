@@ -13,28 +13,16 @@
       "entry_offer": 1097
     },
     {
-      "id": 6,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 273,
-      "buy_price": 321,
+      "id": 5,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 418,
+      "buy_price": 109,
       "direction": "traditional",
-      "opened_at": "2026-08-01T18:49:05.106556+00:00",
+      "opened_at": "2026-08-01T19:19:05.451941+00:00",
       "note": "auto",
-      "entry_sell": 321,
-      "entry_offer": 336
-    },
-    {
-      "id": 7,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 261,
-      "buy_price": 224,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T19:04:05.258686+00:00",
-      "note": "auto",
-      "entry_sell": 224,
-      "entry_offer": 232
+      "entry_sell": 109,
+      "entry_offer": 113
     }
   ]
 }
