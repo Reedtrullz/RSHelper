@@ -1,1 +1,1 @@
-{"trades": []}
+{"trades": [{"id": 1, "item_id": 2, "name": "Steel cannonball", "qty": 100, "buy_price": 259, "sell_price": 256, "tax_paid": 500, "profit": -800, "timestamp": "2026-08-01T01:04:57.693210+00:00", "note": "paper"}, {"id": 2, "item_id": 31912, "name": "Adamant cannonball", "qty": 100, "buy_price": 213, "sell_price": 210, "tax_paid": 400, "profit": -700, "timestamp": "2026-08-01T01:08:44.441407+00:00", "note": "paper"}]}

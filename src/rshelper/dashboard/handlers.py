@@ -35,7 +35,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  watchlist_fn: Callable[[], dict] | None = None,
                  watchlist_update_fn: Callable[[str, int], dict] | None = None,
                  timeseries_fn: Callable[[int], dict] | None = None,
-                 positions_fn: Callable[[], dict] | None = None) -> type:
+                 positions_fn: Callable[[], dict] | None = None,
+                 paper_trade_fn: Callable[[str, str, int], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -48,6 +49,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
     watchlist_update_fn: Optional callable(action, item_id) -> {items: [...]}
     timeseries_fn: Optional callable(item_id) -> {points: [...]}
     positions_fn: Optional callable() -> {positions, open_qty, unrealized}
+    paper_trade_fn: Optional callable(action, item, qty) -> {ok, ...}
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -93,6 +95,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._handle_log_trade()
             elif path == "/api/watchlist":
                 self._handle_watchlist()
+            elif path == "/api/paper":
+                self._handle_paper_trade()
             else:
                 self.send_error(404)
 
@@ -210,6 +214,25 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_positions(self):
             self._serve_json(positions_fn() if positions_fn else
                              {"positions": [], "open_qty": 0, "unrealized": 0})
+
+        def _handle_paper_trade(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                action = body.get("action", "")
+                item = body.get("item", "")
+                qty = int(body.get("qty", 0))
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if paper_trade_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(paper_trade_fn(action, item, qty))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] paper trade error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
 
         def _handle_watchlist(self):
             try:

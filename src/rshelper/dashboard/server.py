@@ -35,6 +35,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
     except SystemExit:
         print("[dashboard] WARNING: initial OSRS Wiki fetch failed; starting with cached/empty data.",
               file=sys.stderr)
+        _mapping = []
         items = []
         _latest = {}
         _vol_5m = {}
@@ -50,7 +51,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
 
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     # Add configurable --refresh N flag when needed.
-    cache = {"items": items, "vol": _vol_5m, "latest": _latest,
+    cache = {"mapping": _mapping, "items": items, "vol": _vol_5m, "latest": _latest,
              "source": _source(_latest), "last_fetch": time.time()}
 
     def refresh():
@@ -59,6 +60,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
             print("[dashboard] Re-fetching GE data...", file=sys.stderr)
             try:
                 _m, _l, _v, fresh = _fetch_bootstrap()
+                cache["mapping"] = _m
                 cache["items"] = fresh
                 cache["vol"] = _v
                 cache["latest"] = _l
@@ -195,12 +197,54 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                 "open_qty": sum(r["qty"] for r in rows),
                 "unrealized": sum(r.get("unrealized", 0) for r in rows)}
 
+    def paper_trade(action: str, query: str, qty: int) -> dict:
+        """Log a paper trade (instant round-trip) or open a hold position.
+
+        Both use the current guarded prices from the TTL cache, so the
+        dashboard can trade any mapped item without a CLI round trip.
+        """
+        refresh()
+        mapping = cache["mapping"] or []
+        q = query.strip().lower()
+        entry = next((e for e in mapping
+                      if (e.get("name") or "").lower() == q), None)
+        if entry is None:
+            matches = [e for e in mapping if q in (e.get("name") or "").lower()]
+            if len(matches) == 1:
+                entry = matches[0]
+            elif len(matches) > 1:
+                names = ", ".join(e.get("name", "?") for e in matches[:8])
+                raise ValueError(f"multiple items match '{query}': {names}")
+            else:
+                raise ValueError(f"no item found matching '{query}'")
+        price = (cache["latest"] or {}).get(str(entry["id"]))
+        issue = price_issue(price) if isinstance(price, dict) else "no data"
+        if issue:
+            raise ValueError(f"no reliable live price for {entry.get('name')} ({issue})")
+        high = int(price.get("high", 0) or 0)
+        low = int(price.get("low", 0) or 0)
+        if high <= 0 or low <= 0:
+            raise ValueError(f"no live price data for {entry.get('name')}")
+        from dataclasses import asdict
+        from rshelper.positions import open_position
+        from rshelper.journal import log_trade
+        if action == "open":
+            pos = open_position(entry["id"], entry["name"], qty, high,
+                                direction="arbitrage")
+            return {"ok": True, "position": asdict(pos)}
+        if action == "instant":
+            trade = log_trade(entry["id"], entry["name"], qty, high, low,
+                              note="paper")
+            return {"ok": True, "trade": asdict(trade)}
+        raise ValueError(f"unknown action '{action}'")
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
                            watchlist_update_fn=update_watchlist,
                            timeseries_fn=get_timeseries,
-                           positions_fn=get_positions)
+                           positions_fn=get_positions,
+                           paper_trade_fn=paper_trade)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

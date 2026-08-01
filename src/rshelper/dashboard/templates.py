@@ -71,6 +71,16 @@ button{font-family:var(--font)}
   border-radius:12px;color:var(--text-dim);font-size:12px;cursor:pointer
 }
 .chip.active,.toggle-btn.active{background:var(--surface2);border-color:var(--gold);color:var(--gold)}
+.viewbar input,.viewbar select{
+  padding:4px 8px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);font-size:12px;outline:none
+}
+.viewbar input:focus,.viewbar select:focus{border-color:var(--gold-dim)}
+.viewbar .act-btn{
+  padding:4px 12px;background:var(--gold-dim);border:1px solid var(--gold);
+  border-radius:var(--radius);color:#0a0e17;font-size:12px;font-weight:700;cursor:pointer
+}
+.viewbar .act-btn:hover{background:var(--gold)}
 .list-body{flex:1;overflow-y:auto;padding:8px 20px 20px}
 .list-body table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
 .list-body th{
@@ -286,6 +296,29 @@ function setPaperOnly(v){
   renderPaper();
 }
 
+async function paperTrade(){
+  const item=document.getElementById('ptItem').value.trim();
+  const qty=parseInt(document.getElementById('ptQty').value,10);
+  const action=document.getElementById('ptAction').value;
+  if(!item||!qty||qty<=0){
+    document.getElementById('statusText').textContent='Enter an item and a positive quantity';
+    document.getElementById('statusDot').className='dot err';
+    return;
+  }
+  try{
+    const r=await fetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action,item,qty})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    document.getElementById('statusText').textContent=action==='open'?'Position opened':'Paper trade logged';
+    document.getElementById('statusDot').className='dot live';
+    fetchData();
+  }catch(e){
+    document.getElementById('statusText').textContent='Error: '+e.message;
+    document.getElementById('statusDot').className='dot err';
+  }
+}
+
 async function fetchData(){
   document.getElementById('statusText').textContent='Fetching...';
   document.getElementById('statusDot').className='dot';
@@ -380,7 +413,12 @@ function viewbarHtml(){
   if(view==='paper'){
     return '<div class="viewbar"><span class="title">Paper trading</span>'+
       '<button class="toggle-btn'+(paperOnly?'':' active')+'" data-scope="paper" onclick="setPaperOnly(false)">All trades</button>'+
-      '<button class="toggle-btn'+(paperOnly?' active':'')+'" data-scope="paper" onclick="setPaperOnly(true)">Paper only</button></div>';
+      '<button class="toggle-btn'+(paperOnly?' active':'')+'" data-scope="paper" onclick="setPaperOnly(true)">Paper only</button>'+
+      '<input id="ptItem" list="ptItems" placeholder="Item name" aria-label="Item name" style="width:150px">'+
+      '<datalist id="ptItems">'+allItems.map(i=>'<option value="'+escHtml(i.name)+'">').join('')+'</datalist>'+
+      '<input id="ptQty" type="number" min="1" placeholder="Qty" aria-label="Quantity" style="width:64px">'+
+      '<select id="ptAction" aria-label="Trade action"><option value="open">Open position</option><option value="instant">Instant trade</option></select>'+
+      '<button class="act-btn" onclick="paperTrade()">Trade</button></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
 }

@@ -228,6 +228,26 @@ class TestHandlerRouting(unittest.TestCase):
         h.do_POST()
         self.assertEqual(calls, [("add", 5)])
 
+    def test_api_paper_trade(self):
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            paper_trade_fn=lambda a, i, q: calls.append((a, i, q)) or {"ok": True})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/paper"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"action": "open", "item": "nature rune", "qty": 5}).encode()
+        h.headers = {"Content-Length": str(len(payload)), "Host": "127.0.0.1:5555"}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_POST()
+        self.assertEqual(calls, [("open", "nature rune", 5)])
+
     def test_api_timeseries(self):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(

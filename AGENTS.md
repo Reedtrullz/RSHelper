@@ -21,7 +21,7 @@ served at https://rs.reidar.tech. Current version: `1.9.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 205 tests across 17 files, all passing.
+  Expected: 206 tests across 17 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
