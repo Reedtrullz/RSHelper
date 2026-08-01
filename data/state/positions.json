@@ -24,14 +24,14 @@
     },
     {
       "id": 8,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 460,
-      "buy_price": 270,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1506,
+      "buy_price": 166,
       "direction": "traditional",
-      "opened_at": "2026-08-01T05:53:39.682608+00:00",
+      "opened_at": "2026-08-01T06:40:54.468732+00:00",
       "note": "auto",
-      "entry_sell": 270
+      "entry_sell": 166
     }
   ]
 }
