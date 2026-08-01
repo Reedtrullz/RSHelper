@@ -715,7 +715,7 @@ function traderPerfHtml(trader,trades){
   if(!autoTrades.length)return '';
   let html='<h3 class="chart-title">Auto-trader performance</h3>';
   const byReason={};
-  let wins=0,holdSum=0,holdN=0,slippageSum=0,slippageN=0;
+  let wins=0,holdSum=0,holdN=0,slippageSum=0,slippageN=0,capSum=0,capN=0;
   autoTrades.forEach(t=>{
     const r=byReason[t.exit_reason||'other']||(byReason[t.exit_reason||'other']={count:0,profit:0,wins:0});
     r.count++;r.profit+=t.profit||0;
@@ -725,14 +725,33 @@ function traderPerfHtml(trader,trades){
     if(typeof t.quote_sell==='number'&&typeof t.sell_price==='number'&&t.quote_sell>t.sell_price){
       slippageSum+=t.quote_sell-t.sell_price;slippageN++;
     }
+    const cost=(t.buy_price||0)*(t.qty||0);
+    const hold=t.hold_minutes||0;
+    if(cost>0&&hold>0){capSum+=(t.profit||0)/cost/hold;capN++;}
   });
   const total=autoTrades.length;
   html+='<div class="metric-grid">'+
     metric('Auto Trades',format(total),'')+
     metric('Auto Win Rate',(wins/total*100).toFixed(1)+'%','gold')+
     metric('Avg Hold',holdN?(holdSum/holdN).toFixed(0)+' min':'-','')+
+    metric('Capital Eff. (bps/min)',capN?(capSum/capN*10000).toFixed(1):'-','')+
     metric('Avg Stop Slippage',slippageN?format(Math.round(slippageSum/slippageN))+' gp':'-','')+
     '</div>';
+  // Win rate by hold bucket: fast wins = spread capture, slow wins = hold edge.
+  const buckets={quick:{n:0,w:0},medium:{n:0,w:0},long:{n:0,w:0}};
+  autoTrades.forEach(t=>{
+    const h=t.hold_minutes||0;
+    const b=h<=5?buckets.quick:h<=60?buckets.medium:buckets.long;
+    b.n++;if(t.profit>0)b.w++;
+  });
+  html+='<table><thead><tr><th>Hold</th><th>#</th><th>Win%</th></tr></thead><tbody>'+
+    '<tr><td>&le;5 min (spread capture)</td><td>'+format(buckets.quick.n)+'</td><td>'+
+      (buckets.quick.n?(buckets.quick.w/buckets.quick.n*100).toFixed(0):'0')+'%</td></tr>'+
+    '<tr><td>5-60 min</td><td>'+format(buckets.medium.n)+'</td><td>'+
+      (buckets.medium.n?(buckets.medium.w/buckets.medium.n*100).toFixed(0):'0')+'%</td></tr>'+
+    '<tr><td>&gt;60 min</td><td>'+format(buckets.long.n)+'</td><td>'+
+      (buckets.long.n?(buckets.long.w/buckets.long.n*100).toFixed(0):'0')+'%</td></tr>'+
+    '</tbody></table>';
   html+='<table><thead><tr><th>Exit</th><th>#</th><th>P&L</th><th>Win%</th></tr></thead><tbody>';
   Object.keys(byReason).sort().forEach(r=>{
     const row=byReason[r];

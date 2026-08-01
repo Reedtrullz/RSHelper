@@ -44,7 +44,8 @@ MAX_VOLUME_FRACTION = 0.10  # never size above 10% of the last 5m volume
 
 # ponytail: in-memory only; a daemon restart forgets recent exits, which is
 # fine (worst case one early re-entry per restart).
-_RECENT_EXITS: dict[int, float] = {}
+# Maps item_id -> (exit_ts, reason) so stop-losses get a longer cooldown.
+_RECENT_EXITS: dict[int, tuple[float, str]] = {}
 
 
 def _pid_path(profile: str | None = None) -> Path:
@@ -117,7 +118,10 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
     now = now if now is not None else time.time()
     out = []
     for item in items:
-        if item.sell_price < 10:
+        if item.sell_price < cfg.min_price:
+            # One 1gp tick is >= 4% at sub-25gp prices, so a 2% stop is
+            # sub-tick: the first integer quote below it rounds the loss up
+            # several ticks. Skip cheap items entirely.
             continue
         if item.volume < cfg.min_volume:
             continue
@@ -143,7 +147,10 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
             continue  # not dipped enough below the 5m average
         if dip_pct > cfg.max_dip_pct:
             continue  # falling too hard; not a dip, a freefall
-        if now - _RECENT_EXITS.get(item.id, 0) < cfg.reentry_minutes * 60:
+        last_ts, last_reason = _RECENT_EXITS.get(item.id, (0, ""))
+        cooldown = (cfg.stop_reentry_minutes if last_reason == "stop_loss"
+                    else cfg.reentry_minutes) * 60
+        if now - last_ts < cooldown:
             continue
         out.append(item)
     out.sort(key=lambda i: i.volume, reverse=True)
@@ -269,7 +276,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                        "reason": reason, "sell_price": sell,
                        "quote_sell": quote_sell, "hold_minutes": hold_minutes,
                        "profit": sum(l["profit"] for l in lots)})
-        _RECENT_EXITS[p.item_id] = now
+        _RECENT_EXITS[p.item_id] = (now, reason)
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))
@@ -306,6 +313,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("trade_capital_frac must be in (0, 1]")
     if cfg.max_positions <= 0:
         raise ValueError("max_positions must be > 0")
+    if cfg.min_price < 10:
+        raise ValueError("min_price must be >= 10")
     if cfg.take_profit_pct <= 0:
         raise ValueError("take_profit_pct must be > 0")
     if cfg.stop_loss_pct >= 0:

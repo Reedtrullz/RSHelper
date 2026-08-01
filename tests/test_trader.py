@@ -35,10 +35,10 @@ def _clean():
 
 def _cfg(**kw):
     defaults = dict(capital=1_000_000, trade_capital_frac=0.25, max_positions=3,
-                    min_volume=800, max_spread_ratio=5.0, dip_depth_pct=2.0,
-                    max_dip_pct=10.0, min_spread_pct=3.0,
+                    min_volume=800, min_price=25, max_spread_ratio=5.0,
+                    dip_depth_pct=2.0, max_dip_pct=10.0, min_spread_pct=3.0,
                     max_entry_spread_pct=5.0,
-                    reentry_minutes=30,
+                    reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=2.0, stop_loss_pct=-2.0,
                     max_hold_minutes=180, interval_sec=300)
     defaults.update(kw)
@@ -73,6 +73,7 @@ def test_select_candidates_filters():
         _item(6, "WideGap", 106, 90, 1000),    # 17.8% high/low gap
         _item(7, "Freefall", 100, 80, 1000),   # 20% below average
         _item(8, "ThinSpread", 101, 100, 1000),  # 1% spread < min spread
+        _item(10, "TooCheap", 26, 24, 1000),   # bid below min_price 25
     ]
     latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (106, 97),
                              "9": (103, 99), "5": (100, 97)})
@@ -80,7 +81,8 @@ def test_select_candidates_filters():
     vol_5m = {"1": {"avgLowPrice": 100}, "2": {"avgLowPrice": 100},
               "3": {"avgLowPrice": 100}, "4": {"avgLowPrice": 100},
               "9": {"avgLowPrice": 100}, "6": {"avgLowPrice": 100},
-              "7": {"avgLowPrice": 100}, "8": {"avgLowPrice": 100}}
+              "7": {"avgLowPrice": 100}, "8": {"avgLowPrice": 100},
+              "10": {"avgLowPrice": 30}}
     cfg = _cfg()
     candidates = select_candidates(items, latest, vol_5m, cfg, now=now)
     assert [c.id for c in candidates] == [1], \
@@ -235,6 +237,54 @@ def test_reentry_cooldown():
     print("  PASSED test_reentry_cooldown")
 
 
+def test_stop_loss_cooldown_is_longer():
+    """A stop-loss exit blocks re-entry for stop_reentry_minutes, not 30."""
+    _clean()
+    now = int(time.time())
+    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    latest = _latest(now, **{"1": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100}}
+    cfg = _cfg()
+    from unittest import mock
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, items)):
+        run_cycle(cfg)  # opens position 1
+    # bid falls 2% below entry -> stop loss
+    latest_sl = _latest(now, **{"1": (100, 94)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest_sl, vol_5m, items)):
+        result = run_cycle(cfg)
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "stop_loss"
+    # Use select_candidates with an explicit clock: 40 min after the stop,
+    # the normal 30m cooldown has expired but the 90m stop cooldown has not.
+    t40 = now + 40 * 60
+    latest_ok = _latest(t40, **{"1": (100, 97)})
+    assert select_candidates(items, latest_ok, vol_5m, cfg, now=t40) == [], \
+        "stop-loss cooldown must block re-entry at 40 min"
+    # At 100 min both cooldowns have expired, so the item is eligible again.
+    t100 = now + 100 * 60
+    latest_ok2 = _latest(t100, **{"1": (100, 97)})
+    assert [c.id for c in select_candidates(items, latest_ok2, vol_5m, cfg,
+                                            now=t100)] == [1], \
+        "item must become eligible after the stop cooldown expires"
+    # For contrast, a take-profit exit is eligible again after 40 min.
+    _clean()
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, items)):
+        run_cycle(cfg)  # opens position 1
+    latest_tp = _latest(now, **{"1": (103, 97)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest_tp, vol_5m, items)):
+        result_tp = run_cycle(cfg)
+    assert result_tp["closed"][0]["reason"] == "take_profit"
+    t40b = now + 40 * 60
+    assert [c.id for c in select_candidates(items, _latest(t40b, **{"1": (100, 97)}),
+                                            vol_5m, cfg, now=t40b)] == [1], \
+        "take-profit cooldown (30m) must expire by 40 min"
+    print("  PASSED test_stop_loss_cooldown_is_longer")
+
+
 def test_trader_daemon_guards_and_pnl():
     import json
     import os
@@ -367,6 +417,7 @@ if __name__ == "__main__":
     test_spread_does_not_insta_stop_and_stop_records_slippage()
     test_stop_loss_legacy_position_uses_buy_mark()
     test_reentry_cooldown()
+    test_stop_loss_cooldown_is_longer()
     test_trader_daemon_guards_and_pnl()
     test_max_hold_flat_close()
     test_trader_config_validation()
