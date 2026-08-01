@@ -56,11 +56,11 @@ jobs:
       - name: Push state to VPS with merge
         run: |
           set -euo pipefail
-          scp -r -o BatchMode=yes -o StrictHostKeyChecking=yes \
+          scp -r -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
             data/state deploy@198.23.137.16:/tmp/rshelper-state-${{ github.sha }}
-          scp -o BatchMode=yes -o StrictHostKeyChecking=yes \
+          scp -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
             deploy/merge_state.py deploy@198.23.137.16:/tmp/rshelper-merge-state.py
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
             "sudo python3 /tmp/rshelper-merge-state.py /tmp/rshelper-state-${{ github.sha }} /opt/apps/rshelper/data/.config/rshelper --chown 1000:1000 \
              && sudo rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state.py"
 
