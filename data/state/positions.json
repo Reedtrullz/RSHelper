@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 447,
-      "name": "Mithril ore",
-      "qty": 651,
-      "buy_price": 145,
+      "id": 1,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 420,
+      "buy_price": 518,
       "direction": "traditional",
-      "opened_at": "2026-08-01T19:24:05.466811+00:00",
+      "opened_at": "2026-08-01T20:04:05.918127+00:00",
       "note": "auto",
-      "entry_sell": 145,
-      "entry_offer": 150
+      "entry_sell": 518,
+      "entry_offer": 534
     },
     {
-      "id": 8,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 129,
-      "buy_price": 1688,
+      "id": 2,
+      "item_id": 31235,
+      "name": "Gryphon feather",
+      "qty": 398,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-01T19:39:05.772324+00:00",
+      "opened_at": "2026-08-01T20:04:05.918344+00:00",
       "note": "auto",
-      "entry_sell": 1688,
-      "entry_offer": 1758
+      "entry_sell": 26,
+      "entry_offer": 27
     },
     {
-      "id": 9,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 320,
-      "buy_price": 305,
+      "id": 3,
+      "item_id": 442,
+      "name": "Silver ore",
+      "qty": 602,
+      "buy_price": 63,
       "direction": "traditional",
-      "opened_at": "2026-08-01T19:49:05.859061+00:00",
+      "opened_at": "2026-08-01T20:04:05.918587+00:00",
       "note": "auto",
-      "entry_sell": 305,
-      "entry_offer": 319
+      "entry_sell": 63,
+      "entry_offer": 65
     }
   ]
 }
