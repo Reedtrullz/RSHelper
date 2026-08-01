@@ -1,17 +1,6 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 28924,
-      "name": "Sunfire splinters",
-      "qty": 603,
-      "buy_price": 414,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T05:43:39.546605+00:00",
-      "note": "auto",
-      "entry_sell": 414
-    },
-    {
       "id": 9,
       "item_id": 11936,
       "name": "Dark crab",
@@ -24,14 +13,14 @@
     },
     {
       "id": 10,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 803,
-      "buy_price": 59,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 1712,
+      "buy_price": 146,
       "direction": "traditional",
-      "opened_at": "2026-08-01T07:50:55.803464+00:00",
+      "opened_at": "2026-08-01T08:30:56.229837+00:00",
       "note": "auto",
-      "entry_sell": 59
+      "entry_sell": 146
     }
   ]
 }
