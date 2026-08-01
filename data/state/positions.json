@@ -1,28 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 385,
-      "name": "Shark",
-      "qty": 237,
-      "buy_price": 1054,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T03:47:04.485526+00:00",
-      "note": "auto",
-      "entry_sell": 1054
-    },
-    {
-      "id": 2,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 466,
-      "buy_price": 536,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T03:47:04.485744+00:00",
-      "note": "auto",
-      "entry_sell": 536
-    },
-    {
       "id": 3,
       "item_id": 371,
       "name": "Raw swordfish",
@@ -32,6 +10,28 @@
       "opened_at": "2026-08-01T03:47:04.485971+00:00",
       "note": "auto",
       "entry_sell": 186
+    },
+    {
+      "id": 4,
+      "item_id": 1519,
+      "name": "Willow logs",
+      "qty": 411,
+      "buy_price": 21,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T04:07:04.729191+00:00",
+      "note": "auto",
+      "entry_sell": 21
+    },
+    {
+      "id": 5,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 2988,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T04:14:10.810095+00:00",
+      "note": "auto",
+      "entry_sell": 45
     }
   ]
 }
