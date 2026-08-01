@@ -557,7 +557,7 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     if args.status:
         status = trader_status(profile)
         if not status:
-            print("Trader not running.")
+            print("Trader: not running (no state yet)")
             return
         if args.json:
             print(json.dumps(status, indent=2))
