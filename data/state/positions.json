@@ -12,26 +12,26 @@
       "entry_sell": 105
     },
     {
-      "id": 2,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 1572,
-      "buy_price": 122,
+      "id": 3,
+      "item_id": 19669,
+      "name": "Redwood logs",
+      "qty": 385,
+      "buy_price": 648,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:51:00.220250+00:00",
+      "opened_at": "2026-08-01T13:01:00.396780+00:00",
       "note": "auto",
-      "entry_sell": 122
+      "entry_sell": 648
     },
     {
-      "id": 3,
-      "item_id": 6016,
-      "name": "Cactus spine",
-      "qty": 141,
-      "buy_price": 1439,
+      "id": 4,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 1700,
+      "buy_price": 147,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:51:00.220798+00:00",
+      "opened_at": "2026-08-01T13:06:00.549868+00:00",
       "note": "auto",
-      "entry_sell": 1439
+      "entry_sell": 147
     }
   ]
 }
