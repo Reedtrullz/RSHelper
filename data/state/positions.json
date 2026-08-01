@@ -21,6 +21,17 @@
       "opened_at": "2026-08-01T08:30:56.229837+00:00",
       "note": "auto",
       "entry_sell": 146
+    },
+    {
+      "id": 11,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 1533,
+      "buy_price": 163,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T08:55:56.758446+00:00",
+      "note": "auto",
+      "entry_sell": 163
     }
   ]
 }
