@@ -13,18 +13,6 @@
       "entry_offer": 275
     },
     {
-      "id": 12,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 3075,
-      "buy_price": 62,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T22:54:08.035134+00:00",
-      "note": "auto",
-      "entry_sell": 62,
-      "entry_offer": 65
-    },
-    {
       "id": 13,
       "item_id": 215,
       "name": "Grimy cadantine",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 2100,
       "entry_offer": 2173
+    },
+    {
+      "id": 14,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2136,
+      "buy_price": 117,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T23:09:08.153878+00:00",
+      "note": "auto",
+      "entry_sell": 117,
+      "entry_offer": 122
     }
   ]
 }
