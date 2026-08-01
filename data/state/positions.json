@@ -26,15 +26,15 @@
     },
     {
       "id": 4,
-      "item_id": 21932,
-      "name": "Opal dragon bolts (e)",
-      "qty": 83,
-      "buy_price": 2857,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 465,
+      "buy_price": 118,
       "direction": "traditional",
-      "opened_at": "2026-08-01T20:34:06.339850+00:00",
+      "opened_at": "2026-08-01T20:39:06.363321+00:00",
       "note": "auto",
-      "entry_sell": 2857,
-      "entry_offer": 2998
+      "entry_sell": 118,
+      "entry_offer": 123
     }
   ]
 }
