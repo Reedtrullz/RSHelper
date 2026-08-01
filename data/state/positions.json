@@ -12,26 +12,26 @@
       "entry_sell": 761
     },
     {
-      "id": 7,
-      "item_id": 28991,
-      "name": "Atlatl dart",
-      "qty": 2052,
-      "buy_price": 100,
+      "id": 9,
+      "item_id": 4822,
+      "name": "Mithril nails",
+      "qty": 1208,
+      "buy_price": 78,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:48:38.511405+00:00",
+      "opened_at": "2026-08-01T05:13:38.760358+00:00",
       "note": "auto",
-      "entry_sell": 100
+      "entry_sell": 78
     },
     {
-      "id": 8,
-      "item_id": 13439,
-      "name": "Raw anglerfish",
-      "qty": 123,
-      "buy_price": 2027,
+      "id": 10,
+      "item_id": 562,
+      "name": "Chaos rune",
+      "qty": 2500,
+      "buy_price": 100,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:53:38.494700+00:00",
+      "opened_at": "2026-08-01T05:18:39.025922+00:00",
       "note": "auto",
-      "entry_sell": 2027
+      "entry_sell": 100
     }
   ]
 }
