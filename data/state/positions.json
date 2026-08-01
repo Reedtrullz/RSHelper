@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 388,
-      "buy_price": 644,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T20:24:06.304665+00:00",
-      "note": "auto",
-      "entry_sell": 644,
-      "entry_offer": 669
-    },
-    {
       "id": 3,
       "item_id": 33595,
       "name": "Seeking dragon arrow",
@@ -26,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 526,
-      "name": "Bones",
-      "qty": 599,
-      "buy_price": 30,
+      "item_id": 21946,
+      "name": "Diamond dragon bolts (e)",
+      "qty": 88,
+      "buy_price": 2833,
       "direction": "traditional",
-      "opened_at": "2026-08-01T21:04:06.787996+00:00",
+      "opened_at": "2026-08-01T21:14:07.068237+00:00",
       "note": "auto",
-      "entry_sell": 30,
-      "entry_offer": 31
+      "entry_sell": 2833,
+      "entry_offer": 2936
+    },
+    {
+      "id": 5,
+      "item_id": 32907,
+      "name": "Ironwood logs",
+      "qty": 1267,
+      "buy_price": 93,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T21:24:07.274626+00:00",
+      "note": "auto",
+      "entry_sell": 93,
+      "entry_offer": 96
     }
   ]
 }
