@@ -1,28 +1,6 @@
 {
   "positions": [
     {
-      "id": 9,
-      "item_id": 11936,
-      "name": "Dark crab",
-      "qty": 185,
-      "buy_price": 1350,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T07:35:55.530275+00:00",
-      "note": "auto",
-      "entry_sell": 1350
-    },
-    {
-      "id": 10,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 1712,
-      "buy_price": 146,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T08:30:56.229837+00:00",
-      "note": "auto",
-      "entry_sell": 146
-    },
-    {
       "id": 11,
       "item_id": 561,
       "name": "Nature rune",
@@ -32,6 +10,28 @@
       "opened_at": "2026-08-01T08:55:56.758446+00:00",
       "note": "auto",
       "entry_sell": 163
+    },
+    {
+      "id": 14,
+      "item_id": 1955,
+      "name": "Cooking apple",
+      "qty": 2619,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T11:05:59.341203+00:00",
+      "note": "auto",
+      "entry_sell": 27
+    },
+    {
+      "id": 15,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 5319,
+      "buy_price": 47,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T11:20:59.554072+00:00",
+      "note": "auto",
+      "entry_sell": 47
     }
   ]
 }
