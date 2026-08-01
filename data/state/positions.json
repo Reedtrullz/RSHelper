@@ -13,18 +13,6 @@
       "entry_offer": 1097
     },
     {
-      "id": 5,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 109,
-      "buy_price": 648,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T18:49:05.106306+00:00",
-      "note": "auto",
-      "entry_sell": 648,
-      "entry_offer": 678
-    },
-    {
       "id": 6,
       "item_id": 11260,
       "name": "Impling jar",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 321,
       "entry_offer": 336
+    },
+    {
+      "id": 7,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 261,
+      "buy_price": 224,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T19:04:05.258686+00:00",
+      "note": "auto",
+      "entry_sell": 224,
+      "entry_offer": 232
     }
   ]
 }
