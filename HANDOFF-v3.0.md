@@ -18,7 +18,7 @@ VPS-hosted public dashboard deployed by CI.
                  config, watchlist, snapshot, journal, positions, trader,
                  monitor, profile, history, tuning, cli,
                  dashboard/{__init__, handlers, server, templates}
-18 test files, 220 tests, all passing:
+18 test files, 222 tests, all passing:
   test_analysis (16)        test_cli (23)         test_dashboard (40)
   test_ge_tracker_fallback (10) test_history (5)  test_integration (4)
   test_journal (20)         test_market (4)       test_monitor (8)
@@ -178,6 +178,20 @@ and honors `config.toml`. Flip output includes `roi` and
   high, sonnet, grok) agreed on the direction change; grok's backtest
   artifact warning (avg-based fills) was addressed with the next-bar fill
   validation and conservative parameters.
+- Staleness honesty + automatic sync (commit `9afcbdd`): the live site's
+  "synced state" snapshot could sit hours behind the Mac trader because it
+  only updated on manual sync+deploy. `/api/trader` and `--status` now
+  expose `last_cycle_age_sec` and `stale` (threshold 15 min); the Paper
+  page notice shows the age and an explicit stale warning. A second
+  LaunchAgent (`com.reidar.rshelper-state-sync`) runs
+  `scripts/sync-and-push-state.py` every 15 min (SYNC_INTERVAL env), which
+  copies changed state files into `data/state` and commits/pushes only on
+  actual change, so the live site tracks the trader within ~15 min. macOS
+  TCC blocks launchd bash from opening scripts under `~/Documents`, so the
+  sync agent runs via the project venv python (which already has folder
+  access) with a staged copy outside the protected tree. Verified: the
+  agent pushed and CI deployed automatically (`6eda04f`), live site showed
+  `stale: False` with a 7-min-old cycle. 222 tests across 18 files.
 - v2.1: paper-trader observability and persistence.
   - Journal trades carry `strategy` (`auto`/`manual`), `exit_reason`,
     `hold_minutes`, and `quote_sell` (pre-slippage quote) metadata; journal,
