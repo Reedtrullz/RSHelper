@@ -2,36 +2,25 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2000,
-      "buy_price": 125,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 113,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:20:59.896647+00:00",
+      "opened_at": "2026-08-01T12:30:59.990209+00:00",
       "note": "auto",
-      "entry_sell": 125
+      "entry_sell": 105
     },
     {
       "id": 2,
-      "item_id": 573,
-      "name": "Air orb",
-      "qty": 125,
-      "buy_price": 1993,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 162,
+      "buy_price": 522,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:20:59.896932+00:00",
+      "opened_at": "2026-08-01T12:36:00.044955+00:00",
       "note": "auto",
-      "entry_sell": 1993
-    },
-    {
-      "id": 3,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 322,
-      "buy_price": 119,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T12:20:59.897180+00:00",
-      "note": "auto",
-      "entry_sell": 119
+      "entry_sell": 522
     }
   ]
 }
