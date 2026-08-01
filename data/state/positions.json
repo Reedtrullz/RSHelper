@@ -13,28 +13,28 @@
       "entry_offer": 2173
     },
     {
-      "id": 14,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2136,
-      "buy_price": 117,
+      "id": 15,
+      "item_id": 447,
+      "name": "Mithril ore",
+      "qty": 1364,
+      "buy_price": 145,
       "direction": "traditional",
-      "opened_at": "2026-08-01T23:09:08.153878+00:00",
+      "opened_at": "2026-08-01T23:29:08.275805+00:00",
       "note": "auto",
-      "entry_sell": 117,
-      "entry_offer": 122
+      "entry_sell": 145,
+      "entry_offer": 150
     },
     {
-      "id": 15,
-      "item_id": 203,
-      "name": "Grimy tarromin",
-      "qty": 84,
-      "buy_price": 112,
+      "id": 16,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 174,
+      "buy_price": 108,
       "direction": "traditional",
-      "opened_at": "2026-08-01T23:19:08.194046+00:00",
+      "opened_at": "2026-08-01T23:34:08.337121+00:00",
       "note": "auto",
-      "entry_sell": 112,
-      "entry_offer": 117
+      "entry_sell": 108,
+      "entry_offer": 112
     }
   ]
 }
