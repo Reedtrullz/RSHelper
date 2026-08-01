@@ -24,14 +24,14 @@
     },
     {
       "id": 8,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1506,
-      "buy_price": 166,
+      "item_id": 31111,
+      "name": "Demon tear",
+      "qty": 871,
+      "buy_price": 287,
       "direction": "traditional",
-      "opened_at": "2026-08-01T06:40:54.468732+00:00",
+      "opened_at": "2026-08-01T06:50:54.702528+00:00",
       "note": "auto",
-      "entry_sell": 166
+      "entry_sell": 287
     }
   ]
 }
