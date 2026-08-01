@@ -1,17 +1,6 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 618,
-      "buy_price": 404,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T15:23:37.839890+00:00",
-      "note": "auto",
-      "entry_sell": 404
-    },
-    {
       "id": 6,
       "item_id": 6685,
       "name": "Saradomin brew(4)",
@@ -32,6 +21,17 @@
       "opened_at": "2026-08-01T16:08:38.435670+00:00",
       "note": "auto",
       "entry_sell": 2860
+    },
+    {
+      "id": 8,
+      "item_id": 21820,
+      "name": "Revenant ether",
+      "qty": 1479,
+      "buy_price": 169,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T18:23:38.734320+00:00",
+      "note": "auto",
+      "entry_sell": 169
     }
   ]
 }
