@@ -35,19 +35,21 @@ def _clean():
 
 def _cfg(**kw):
     defaults = dict(capital=1_000_000, trade_capital_frac=0.25, max_positions=3,
-                    min_volume=500, max_spread_ratio=5.0, dip_depth_pct=2.0,
-                    max_dip_pct=10.0, max_entry_spread_pct=5.0,
+                    min_volume=800, max_spread_ratio=5.0, dip_depth_pct=2.0,
+                    max_dip_pct=10.0, min_spread_pct=3.0,
+                    max_entry_spread_pct=5.0,
                     reentry_minutes=30,
-                    take_profit_pct=1.5, stop_loss_pct=-1.5,
-                    max_hold_minutes=240, interval_sec=300)
+                    take_profit_pct=2.0, stop_loss_pct=-2.0,
+                    max_hold_minutes=180, interval_sec=300)
     defaults.update(kw)
     return TraderConfig(**defaults)
 
 
-def _item(iid, name, buy, sell, volume, limit=10000):
-    profit = sell - buy - 1
+def _item(iid, name, high, low, volume, limit=10000):
+    """high = offer (instant buy), low = bid (instant sell)."""
+    profit = high - low - 1
     return Item(id=iid, name=name, members=False, buy_limit=limit, alch_value=0,
-                buy_price=buy, sell_price=sell, volume=volume, profit=profit,
+                buy_price=high, sell_price=low, volume=volume, profit=profit,
                 gp_per_hour=profit * min(limit / 4, volume * 12))
 
 
@@ -62,20 +64,23 @@ def _latest(now, **prices):
 def test_select_candidates_filters():
     now = int(time.time())
     items = [
-        _item(1, "Dipped", 100, 97, 1000),     # 3% below 5m avg, small gap
+        _item(1, "Dipped", 100, 97, 1000),     # 3% spread, 3% below avg
         _item(2, "Thin", 100, 97, 50),         # too little volume
-        _item(3, "Shallow", 100, 99, 1000),    # only 1% below average
+        _item(3, "WideSpread", 106, 97, 1000), # 9.3% spread: spread cap
+        _item(9, "NoDip", 103, 99, 1000),      # 4% spread, 1% dip: dip guard
         _item(4, "Stale", 100, 97, 1000),      # old timestamp
         _item(5, "NoBaseline", 100, 97, 1000), # no avgLowPrice
         _item(6, "WideGap", 106, 90, 1000),    # 17.8% high/low gap
         _item(7, "Freefall", 100, 80, 1000),   # 20% below average
+        _item(8, "ThinSpread", 101, 100, 1000),  # 1% spread < min spread
     ]
-    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (100, 99),
-                             "5": (100, 97)})
+    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (106, 97),
+                             "9": (103, 99), "5": (100, 97)})
     latest["4"] = {"high": 100, "low": 97, "highTime": now - 400, "lowTime": now - 400}
     vol_5m = {"1": {"avgLowPrice": 100}, "2": {"avgLowPrice": 100},
               "3": {"avgLowPrice": 100}, "4": {"avgLowPrice": 100},
-              "6": {"avgLowPrice": 100}, "7": {"avgLowPrice": 100}}
+              "9": {"avgLowPrice": 100}, "6": {"avgLowPrice": 100},
+              "7": {"avgLowPrice": 100}, "8": {"avgLowPrice": 100}}
     cfg = _cfg()
     candidates = select_candidates(items, latest, vol_5m, cfg, now=now)
     assert [c.id for c in candidates] == [1], \
@@ -87,23 +92,23 @@ def test_exit_reason():
     now = time.time()
     cfg = _cfg()
     from rshelper.positions import Position
-    p = Position(id=1, item_id=1, name="X", qty=10, buy_price=100,
-                 direction="arbitrage",
+    p = Position(id=1, item_id=1, name="X", qty=10, buy_price=97,
+                 direction="traditional",
                  opened_at=(datetime.now(timezone.utc)).isoformat())
-    # take profit: low 104 -> (104-100-2)/100 = +2%
-    assert exit_reason(p, _latest(now, **{"1": (100, 104)}), cfg, now=now) == "take_profit"
-    # stop loss: low 95 -> (95-100-1)/100 = -6%
-    assert exit_reason(p, _latest(now, **{"1": (100, 95)}), cfg, now=now) == "stop_loss"
-    # hold: low 101 -> (101-100-2)/100 = -1%
-    assert exit_reason(p, _latest(now, **{"1": (100, 101)}), cfg, now=now) is None
+    # take profit: offer 102 -> (102-97-2)/97 = +3.1% >= +2%
+    assert exit_reason(p, _latest(now, **{"1": (102, 97)}), cfg, now=now) == "take_profit"
+    # hold: offer 100 -> (100-97-2)/97 = +1.0% < +2%; bid == entry bid
+    assert exit_reason(p, _latest(now, **{"1": (100, 97)}), cfg, now=now) is None
+    # stop loss: bid 94 -> -3.1% from entry bid 97
+    assert exit_reason(p, _latest(now, **{"1": (100, 94)}), cfg, now=now) == "stop_loss"
     # stale price -> hold
-    stale = {"1": {"high": 100, "low": 104, "highTime": now - 500, "lowTime": now - 500}}
+    stale = {"1": {"high": 102, "low": 97, "highTime": now - 500, "lowTime": now - 500}}
     assert exit_reason(p, stale, cfg, now=now) is None
     # max hold
-    old = Position(id=2, item_id=1, name="X", qty=10, buy_price=100,
-                   direction="arbitrage",
+    old = Position(id=2, item_id=1, name="X", qty=10, buy_price=97,
+                   direction="traditional",
                    opened_at=(datetime.now(timezone.utc) - timedelta(hours=5)).isoformat())
-    assert exit_reason(old, _latest(now, **{"1": (100, 101)}), cfg, now=now) == "max_hold"
+    assert exit_reason(old, _latest(now, **{"1": (102, 97)}), cfg, now=now) == "max_hold"
     # max hold fires even without any price data (dead item)
     assert exit_reason(old, {}, cfg, now=now) == "max_hold"
     print("  PASSED test_exit_reason")
@@ -111,12 +116,12 @@ def test_exit_reason():
 
 def test_size_position_caps():
     cfg = _cfg(capital=1_000_000, trade_capital_frac=0.25)  # 250k per trade
-    entry = _item(1, "X", 1000, 1050, 10000, limit=200)
+    entry = _item(1, "X", 1050, 1000, 10000, limit=200)
     assert size_position(cfg, 0, entry) == 200  # buy limit binds
-    entry2 = _item(2, "X", 1000, 1050, 10000, limit=100000)
+    entry2 = _item(2, "X", 1050, 1000, 10000, limit=100000)
     assert size_position(cfg, 0, entry2) == 250  # budget binds (250k // 1000)
-    entry3 = _item(3, "X", 1000, 1050, 100, limit=100000)  # thin market
-    assert size_position(cfg, 0, entry3) == 25  # 25% of volume binds
+    entry3 = _item(3, "X", 1050, 1000, 100, limit=100000)  # thin market
+    assert size_position(cfg, 0, entry3) == 10  # 10% of volume binds
     # bankroll already used up
     assert size_position(cfg, 1_000_000, entry2) == 0
     print("  PASSED test_size_position_caps")
@@ -136,8 +141,10 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     assert len(result["opened"]) == 1, result
     positions = pmod.list_positions()
     assert len(positions) == 1 and positions[0].note == "auto"
-    # next cycle: price hit take profit (low 104 -> +2%) -> closed into journal
-    latest2 = _latest(now, **{"1": (100, 104)})
+    assert positions[0].direction == "traditional"
+    assert positions[0].buy_price == 97  # entered at the bid
+    # next cycle: offer 103 -> (103-97-2)/97 = +4.1% -> take profit at offer
+    latest2 = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest2, vol_5m, items)):
         result2 = run_cycle(cfg)
@@ -148,7 +155,8 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     assert trade.strategy == "auto"
     assert trade.exit_reason == "take_profit"
     assert isinstance(trade.hold_minutes, float)
-    assert trade.quote_sell == 104  # raw low before any slippage
+    assert trade.sell_price == 103  # sold at the offer
+    assert trade.quote_sell == 103
     assert pmod.list_positions() == []
     print("  PASSED test_run_cycle_opens_and_closes")
 
@@ -158,18 +166,17 @@ def test_spread_does_not_insta_stop_and_stop_records_slippage():
     from unittest import mock
     from rshelper.positions import open_position
     now = int(time.time())
-    # Buy at 100 (high), entry sell quote 97 (low): 3% spread. A stop priced
-    # against the buy price would fire instantly at ~-3.9% unrealized; it
-    # must instead be measured from the entry mark (97), so a flat quote
-    # holds the position.
-    open_position(1, "Dipped", 100, 100, note="auto", entry_sell=97)
-    latest = _latest(now, **{"1": (100, 97)})  # unchanged quote -> hold
+    # Bought at the bid 97; a flat quote (bid still 97) must hold the
+    # position instead of stopping out on the entry spread.
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    latest = _latest(now, **{"1": (100, 97)})  # unchanged -> hold
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
         result = run_cycle(_cfg())
     assert result["closed"] == [], "flat quote after entry must hold"
-    # A real 4% drop from the entry mark (97 -> 93) triggers the stop.
-    latest = _latest(now, **{"1": (100, 93)})
+    # A real 2%+ drop of the bid below the entry bid (97 -> 94) triggers it.
+    latest = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
         result = run_cycle(_cfg())
@@ -177,18 +184,18 @@ def test_spread_does_not_insta_stop_and_stop_records_slippage():
     assert result["closed"][0]["reason"] == "stop_loss"
     trade = jmod.list_trades()[0]
     assert trade.exit_reason == "stop_loss"
-    assert trade.quote_sell == 93
-    assert trade.sell_price == int(93 * 0.97)  # slippage modeled
+    assert trade.quote_sell == 94
+    assert trade.sell_price == int(94 * tmod.STOP_SLIPPAGE)  # slippage
     print("  PASSED test_spread_does_not_insta_stop_and_stop_records_slippage")
 
 
 def test_stop_loss_legacy_position_uses_buy_mark():
-    """Positions without entry_sell fall back to the buy price as the mark."""
+    """Legacy arbitrage positions stop from the entry mark (buy fallback)."""
     _clean()
     from unittest import mock
     from rshelper.positions import open_position
     now = int(time.time())
-    open_position(1, "Legacy", 100, 100, note="auto")  # no entry_sell
+    open_position(1, "Legacy", 100, 100, note="auto")  # arbitrage (default)
     latest = _latest(now, **{"1": (100, 98)})  # -2% from buy -> stop
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
@@ -198,7 +205,7 @@ def test_stop_loss_legacy_position_uses_buy_mark():
     trade = jmod.list_trades()[0]
     assert trade.exit_reason == "stop_loss"
     assert trade.quote_sell == 98
-    assert trade.sell_price == int(98 * 0.97)  # slippage modeled
+    assert trade.sell_price == int(98 * tmod.STOP_SLIPPAGE)
     print("  PASSED test_stop_loss_legacy_position_uses_buy_mark")
 
 
@@ -214,7 +221,7 @@ def test_reentry_cooldown():
                     return_value=([], latest, vol_5m, items)):
         run_cycle(cfg)  # opens position 1
     # price hits take profit -> closes and starts the cooldown
-    latest2 = _latest(now, **{"1": (100, 104)})
+    latest2 = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest2, vol_5m, items)):
         result = run_cycle(cfg)
@@ -267,7 +274,7 @@ def test_max_hold_flat_close():
     from unittest import mock
     from rshelper.positions import open_position
     from datetime import timedelta
-    open_position(1, "Dead item", 10, 100, note="auto")
+    open_position(1, "Dead item", 10, 97, note="auto", direction="traditional")
     pos = pmod._load()
     pos[0]["opened_at"] = (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
     pmod._save(pos)
@@ -278,7 +285,7 @@ def test_max_hold_flat_close():
     assert result["closed"][0]["reason"] == "max_hold"
     trades = jmod.list_trades()
     assert len(trades) == 1
-    assert trades[0].sell_price == 100  # flat close at the buy price
+    assert trades[0].sell_price == 97  # flat close at the buy price
     assert trades[0].quote_sell is None  # no fresh quote on expiry
     assert trades[0].strategy == "auto"
     assert pmod.list_positions() == []

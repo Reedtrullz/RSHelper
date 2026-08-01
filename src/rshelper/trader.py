@@ -1,10 +1,18 @@
 """Autonomous paper trader: finds candidates and executes paper trades.
 
 Paper-only by design — there is no live GE integration, so nothing here
-touches real GP. A poll loop opens positions on liquid, sane-spread,
-upward-momentum items and closes them at take-profit / stop-loss /
-max-hold, logging realized trades into the journal like any other paper
-trade. Only positions it opened (note="auto") are managed.
+touches real GP. A poll loop opens positions on liquid, sane-spread items
+that are dipped below their 5-minute average and closes them at
+take-profit / stop-loss / max-hold, logging realized trades into the
+journal like any other paper trade. Only positions it opened (note="auto")
+are managed.
+
+Execution model is standard GE flipping ("traditional" convention): buy at
+the bid (`low`), sell at the offer (`high`) on take-profit, sell at the bid
+on stop/max-hold. Buying the ask and selling the bid is structurally
+negative (verified by a 30-day backtest on real 5m candles: -4.9%/trade),
+because every entry pays the spread and tax; flipping captures the spread
+instead, which is why entries require spread > the 2% tax.
 """
 
 import json
@@ -28,7 +36,7 @@ STATE_PATH = TRADER_DIR / "trader_state.json"
 ENTRY_MAX_AGE = 300
 EXIT_MAX_AGE = 300
 STOP_SLIPPAGE = 0.97  # model worse fills when stopping out
-MAX_VOLUME_FRACTION = 0.25  # never size above 25% of the last 5m volume
+MAX_VOLUME_FRACTION = 0.10  # never size above 10% of the last 5m volume
 
 # ponytail: in-memory only; a daemon restart forgets recent exits, which is
 # fine (worst case one early re-entry per restart).
@@ -73,19 +81,24 @@ def _fresh(price: dict, max_age: int, now: float) -> bool:
 
 def select_candidates(items, latest: dict, vol_5m: dict, cfg,
                       now: float | None = None) -> list:
-    """Filter items to liquid, sane, freshly-dipped buy-the-dip candidates."""
+    """Filter items to liquid, sane, freshly-dipped buy-the-bid candidates."""
     now = now if now is not None else time.time()
     out = []
     for item in items:
-        if item.buy_price < 10:
+        if item.sell_price < 10:
             continue
         if item.volume < cfg.min_volume:
             continue
         lo, hi = min(item.buy_price, item.sell_price), max(item.buy_price, item.sell_price)
         if hi > cfg.max_spread_ratio * lo:
             continue
-        spread_pct = (item.buy_price - item.sell_price) / item.sell_price * 100
-        if abs(spread_pct) > cfg.max_entry_spread_pct:
+        spread_pct = (hi - lo) / lo * 100
+        if spread_pct > cfg.max_entry_spread_pct:
+            continue
+        if spread_pct < cfg.min_spread_pct:
+            # The 2% GE sell tax eats the flip unless the spread exceeds it.
+            # Requiring spread > tax + buffer keeps the edge on the spread
+            # itself, not on a hoped-for rally.
             continue
         price = latest.get(str(item.id))
         if not isinstance(price, dict) or not _fresh(price, ENTRY_MAX_AGE, now):
@@ -115,7 +128,12 @@ def unrealized_pct(buy: int, sell: int, qty: int) -> float:
 
 
 def exit_reason(position, latest: dict, cfg, now: float | None = None):
-    """Return 'take_profit' | 'stop_loss' | 'max_hold' | None."""
+    """Return 'take_profit' | 'stop_loss' | 'max_hold' | None.
+
+    Positions are opened at the bid (low). Take-profit sells at the offer
+    (high) when it nets the target after tax; the stop sells at the bid
+    (low) when the bid falls below the entry bid by the stop distance.
+    """
     now = now if now is not None else time.time()
     # max_hold first: it must fire even when no fresh price is available,
     # otherwise a position on a dead item could sit open forever.
@@ -129,20 +147,27 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None):
     price = latest.get(str(position.item_id))
     if not isinstance(price, dict) or price_issue(price) or not _fresh(price, EXIT_MAX_AGE, now):
         return None  # no usable price this cycle; hold
-    sell = int(price.get("low", 0) or 0)
-    if sell <= 0:
-        return None
-    pct = unrealized_pct(position.buy_price, sell, position.qty)
-    if pct >= cfg.take_profit_pct:
-        return "take_profit"
-    # Stop is measured from the sell quote when the position opened, not from
-    # the buy price: the buy/sell spread (and GE tax) is a standing entry
-    # cost, so pricing the stop against it would stop out every position the
-    # moment it opens on any item with a spread >= the stop distance.
-    mark = position.entry_sell if position.entry_sell is not None else position.buy_price
-    move_pct = (sell - mark) / mark * 100
-    if move_pct <= cfg.stop_loss_pct:
-        return "stop_loss"
+    offer = int(price.get("high", 0) or 0)
+    bid = int(price.get("low", 0) or 0)
+    if position.direction == "traditional":
+        if offer > 0 and unrealized_pct(position.buy_price, offer,
+                                        position.qty) >= cfg.take_profit_pct:
+            return "take_profit"
+        if bid > 0:
+            move_pct = (bid - position.buy_price) / position.buy_price * 100
+            if move_pct <= cfg.stop_loss_pct:
+                return "stop_loss"
+    else:
+        # Legacy arbitrage positions (bought at the ask): TP/SL on the bid.
+        if bid <= 0:
+            return None
+        if unrealized_pct(position.buy_price, bid,
+                          position.qty) >= cfg.take_profit_pct:
+            return "take_profit"
+        mark = position.entry_sell if position.entry_sell is not None else position.buy_price
+        move_pct = (bid - mark) / mark * 100
+        if move_pct <= cfg.stop_loss_pct:
+            return "stop_loss"
     return None
 
 
@@ -150,10 +175,11 @@ def size_position(cfg, capital_used: int, entry) -> int:
     """Units to open, capped by budget, bankroll, GE limit, and market share."""
     per_trade = int(cfg.capital * cfg.trade_capital_frac)
     budget = min(per_trade, max(0, cfg.capital - capital_used))
-    if entry.buy_price <= 0:
+    bid = entry.sell_price  # flips enter at the bid
+    if bid <= 0:
         return 0
     by_market = int(entry.volume * MAX_VOLUME_FRACTION)
-    return min(entry.buy_limit, by_market, budget // entry.buy_price)
+    return min(entry.buy_limit, by_market, budget // bid)
 
 
 def run_cycle(cfg, profile: str | None = None) -> dict:
@@ -182,8 +208,12 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         if reason == "max_hold" and not usable:
             sell = p.buy_price  # expired; close flat without a fresh quote
         elif usable:
-            quote_sell = int(price.get("low", 0) or 0)
-            sell = quote_sell
+            if p.direction == "traditional" and reason == "take_profit":
+                quote_sell = int(price.get("high", 0) or 0)  # sell at the offer
+                sell = quote_sell
+            else:
+                quote_sell = int(price.get("low", 0) or 0)  # sell at the bid
+                sell = quote_sell
             if reason == "stop_loss":
                 sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
         else:
@@ -221,13 +251,13 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         qty = size_position(cfg, capital_used, cand)
         if qty <= 0:
             continue
-        open_position(cand.id, cand.name, qty, cand.buy_price,
-                      direction="arbitrage", note="auto", profile=profile,
+        open_position(cand.id, cand.name, qty, cand.sell_price,
+                      direction="traditional", note="auto", profile=profile,
                       entry_sell=cand.sell_price)
-        capital_used += qty * cand.buy_price
+        capital_used += qty * cand.sell_price
         slots -= 1
         opened.append({"item_id": cand.id, "name": cand.name,
-                       "qty": qty, "buy_price": cand.buy_price})
+                       "qty": qty, "buy_price": cand.sell_price})
     return {"candidates": len(candidates), "opened": opened, "closed": closed,
             "closed_pnl": sum(c["profit"] for c in closed)}
 

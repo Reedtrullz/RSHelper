@@ -38,15 +38,16 @@ top = 20
 capital = 1000000        # paper bankroll for sizing auto-trades
 trade_capital_frac = 0.25  # fraction of bankroll per position
 max_positions = 3        # concurrent auto positions
-min_volume = 500         # 5m executed volume floor
+min_volume = 800         # 5m executed volume floor (fill plausibility)
 max_spread_ratio = 5.0   # max buy/sell gap for entries
 dip_depth_pct = 2.0      # buy when sell is >=2% below the 5m average
 max_dip_pct = 10.0       # don't catch deeper freefalls than this
+min_spread_pct = 3.0     # spread must exceed the 2% GE tax + buffer
 max_entry_spread_pct = 5.0  # high/low gap cap so entries don't overpay
 reentry_minutes = 30     # wait before re-entering an item after an auto close
-take_profit_pct = 1.5    # close when unrealized >= this %
-stop_loss_pct = -1.5     # close when unrealized <= this %
-max_hold_minutes = 240   # force-close after this long
+take_profit_pct = 2.0    # close when net (after tax) >= this %
+stop_loss_pct = -2.0     # close when the bid falls this % below entry bid
+max_hold_minutes = 180   # force-close after this long
 interval_sec = 300       # poll cycle
 """
 
@@ -83,15 +84,16 @@ class TraderConfig:
     capital: int = 1_000_000
     trade_capital_frac: float = 0.25
     max_positions: int = 3
-    min_volume: int = 500
+    min_volume: int = 800
     max_spread_ratio: float = 5.0
     dip_depth_pct: float = 2.0
     max_dip_pct: float = 10.0
+    min_spread_pct: float = 3.0
     max_entry_spread_pct: float = 5.0
     reentry_minutes: int = 30
-    take_profit_pct: float = 1.5
-    stop_loss_pct: float = -1.5
-    max_hold_minutes: int = 240
+    take_profit_pct: float = 2.0
+    stop_loss_pct: float = -2.0
+    max_hold_minutes: int = 180
     interval_sec: int = 300
 
 
@@ -150,15 +152,16 @@ def load_config(profile: str | None = None) -> Config:
             capital=trader_raw.get("capital", 1_000_000),
             trade_capital_frac=trader_raw.get("trade_capital_frac", 0.25),
             max_positions=trader_raw.get("max_positions", 3),
-            min_volume=trader_raw.get("min_volume", 500),
+            min_volume=trader_raw.get("min_volume", 800),
             max_spread_ratio=trader_raw.get("max_spread_ratio", 5.0),
             dip_depth_pct=trader_raw.get("dip_depth_pct", 2.0),
             max_dip_pct=trader_raw.get("max_dip_pct", 10.0),
+            min_spread_pct=trader_raw.get("min_spread_pct", 3.0),
             max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.0),
             reentry_minutes=trader_raw.get("reentry_minutes", 30),
-            take_profit_pct=trader_raw.get("take_profit_pct", 1.5),
-            stop_loss_pct=trader_raw.get("stop_loss_pct", -1.5),
-            max_hold_minutes=trader_raw.get("max_hold_minutes", 240),
+            take_profit_pct=trader_raw.get("take_profit_pct", 2.0),
+            stop_loss_pct=trader_raw.get("stop_loss_pct", -2.0),
+            max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
             interval_sec=trader_raw.get("interval_sec", 300),
         ),
     )

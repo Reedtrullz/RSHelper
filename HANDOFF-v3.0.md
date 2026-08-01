@@ -1,4 +1,4 @@
-# RSHelper Handoff v3.0: Current State (v2.1.0)
+# RSHelper Handoff v3.0: Current State (v2.2.0)
 
 You are taking over RSHelper at `/Users/reidar/Documents/RSHelper`, a Python
 CLI plus local web dashboard for OSRS Grand Exchange trading, with a
@@ -74,7 +74,7 @@ rshelper config        show | path
 rshelper dashboard     [--bind BIND] [--port PORT]
 ```
 
-Global flags: `--profile NAME`, `--quiet`, `--version` (prints `2.1.0`).
+Global flags: `--profile NAME`, `--quiet`, `--version` (prints `2.2.0`).
 
 ## Architecture Decisions — DO NOT REGRESS
 
@@ -159,7 +159,26 @@ and honors `config.toml`. Flip output includes `roi` and
 
 ## What Each Version Built (history, not regress list)
 
-- v2.1 (this round): paper-trader observability and persistence.
+- v2.2 (this round): fixed the structurally-losing trader execution model.
+  Root cause (proven three ways): the trader bought at the ask (`high`)
+  and sold at the bid (`low`), so every entry was immediately 3-6.7%
+  underwater; +1.5% net take-profit required a 5-9% rally while the stop
+  fired on noise. Live result: 6 stop-losses vs 2 take-profits. A 30-day
+  backtest on real 5m candles confirmed the current model loses -4.9% per
+  trade (25% win rate) while the flip model (buy bid, sell offer, spread
+  > 2% tax) wins +3.8-4.0% per trade at 93% win rate, even with a
+  conservative next-bar fill rule. The trader now opens "traditional"
+  direction positions (buy at bid/low, sell at offer/high on take-profit,
+  sell at bid on stop/max-hold), requires `min_spread_pct=3.0` (spread
+  must exceed the 2% tax + buffer), `min_volume=800`, caps position size
+  at 10% of 5m volume, TP +2.0% net, SL -2.0% from the entry bid, max
+  hold 180min. Broken-model auto trades and stale ask-priced positions
+  were cleaned (same category as the earlier test-pollution cleanup) so
+  the new model starts from a clean baseline. Three $anti lanes (flash-
+  high, sonnet, grok) agreed on the direction change; grok's backtest
+  artifact warning (avg-based fills) was addressed with the next-bar fill
+  validation and conservative parameters.
+- v2.1: paper-trader observability and persistence.
   - Journal trades carry `strategy` (`auto`/`manual`), `exit_reason`,
     `hold_minutes`, and `quote_sell` (pre-slippage quote) metadata; journal,
     CLI, and dashboard APIs all filter by strategy.

@@ -4,7 +4,7 @@ RSHelper is a stdlib-only Python CLI and local web dashboard for Old School
 RuneScape Grand Exchange trading: alch-profit scanning, flip/margin analysis,
 market signals, a daemon monitor, a trade journal, and multi-account profiles.
 It also ships a production deployment (Docker on a Racknerd VPS behind Caddy)
-served at https://rs.reidar.tech. Current version: `2.1.0`
+served at https://rs.reidar.tech. Current version: `2.2.0`
 (`rshelper --version`). Latest handoff: `HANDOFF-v3.0.md`.
 
 ## Environment
