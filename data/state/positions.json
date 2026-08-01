@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 11,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 204,
-      "buy_price": 266,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T22:49:07.941314+00:00",
-      "note": "auto",
-      "entry_sell": 266,
-      "entry_offer": 275
-    },
-    {
       "id": 13,
       "item_id": 215,
       "name": "Grimy cadantine",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 117,
       "entry_offer": 122
+    },
+    {
+      "id": 15,
+      "item_id": 203,
+      "name": "Grimy tarromin",
+      "qty": 84,
+      "buy_price": 112,
+      "direction": "traditional",
+      "opened_at": "2026-08-01T23:19:08.194046+00:00",
+      "note": "auto",
+      "entry_sell": 112,
+      "entry_offer": 117
     }
   ]
 }
