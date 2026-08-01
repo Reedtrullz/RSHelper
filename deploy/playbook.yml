@@ -161,14 +161,28 @@
           become: false
           tags: [deploy]
 
-        - name: Seed RSHelper state volume from tracked state
+        - name: Stage tracked state for merge
           ansible.builtin.copy:
             src: "{{ playbook_dir }}/../data/state/"
-            dest: "{{ app_dir }}/data/.config/rshelper/"
+            dest: "{{ app_dir }}/state-stage/"
             owner: '1000'
             group: '1000'
             mode: preserve
             directory_mode: '0755'
+          when: tracked_state.stat.exists | bool
+          tags: [deploy]
+
+        - name: Merge staged state over the live volume (site writes win by id)
+          ansible.builtin.script: >-
+            merge_state.py {{ app_dir }}/state-stage
+            {{ app_dir }}/data/.config/rshelper --chown 1000:1000
+          when: tracked_state.stat.exists | bool
+          tags: [deploy]
+
+        - name: Remove state staging directory
+          ansible.builtin.file:
+            path: "{{ app_dir }}/state-stage"
+            state: absent
           when: tracked_state.stat.exists | bool
           tags: [deploy]
 

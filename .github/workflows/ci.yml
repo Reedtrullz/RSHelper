@@ -4,9 +4,13 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'data/state/**'
   push:
     branches:
       - main
+    paths-ignore:
+      - 'data/state/**'
   workflow_dispatch:
 
 permissions:

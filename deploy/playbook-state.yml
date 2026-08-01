@@ -1,0 +1,39 @@
+---
+# Sync RSHelper tracked state to the VPS without an image deploy.
+#
+# Used by .github/workflows/state-sync.yml for state-only pushes, so a
+# 15-minute trading-state update no longer rebuilds the image, restarts the
+# container, or re-runs the whole production deploy. The merge step keeps
+# site-side journal/position/watchlist writes (same merge rules as the full
+# deploy playbook).
+#
+# Usage:
+#   ansible-playbook -i deploy/inventory/hosts.yml deploy/playbook-state.yml
+
+- name: Sync RSHelper tracked state to VPS
+  hosts: rshelper
+  become: true
+  gather_facts: false
+
+  vars:
+    app_dir: /opt/apps/rshelper
+
+  tasks:
+    - name: Stage tracked state for merge
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../data/state/"
+        dest: "{{ app_dir }}/state-stage/"
+        owner: '1000'
+        group: '1000'
+        mode: preserve
+        directory_mode: '0755'
+
+    - name: Merge staged state over the live volume (site writes win by id)
+      ansible.builtin.script: >-
+        merge_state.py {{ app_dir }}/state-stage
+        {{ app_dir }}/data/.config/rshelper --chown 1000:1000
+
+    - name: Remove state staging directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}/state-stage"
+        state: absent

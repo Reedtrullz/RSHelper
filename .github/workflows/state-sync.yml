@@ -1,0 +1,70 @@
+name: State Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/state/**'
+
+permissions:
+  contents: read
+
+jobs:
+  sync-state:
+    name: Sync state to VPS (no deploy)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Configure SSH key
+        env:
+          VPS_SSH_HOST_KEY: ${{ vars.VPS_SSH_HOST_KEY || secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_racknerd
+          chmod 600 ~/.ssh/id_rsa_racknerd
+
+          normalize_host_keys() {
+            sed -e 's/\r$//' -e '/^[[:space:]]*$/d' -e '/^[[:space:]]*#/d' | sort -u
+          }
+
+          expected_host_key="$(printf '%s\n' "${VPS_SSH_HOST_KEY:-}" | normalize_host_keys)"
+          if [[ -z "$expected_host_key" ]]; then
+            echo "VPS_SSH_HOST_KEY repository variable or secret must be set before state sync." >&2
+            exit 1
+          fi
+
+          scanned_host_key="$(ssh-keyscan -T 10 -t ed25519 198.23.137.16 2>/dev/null | normalize_host_keys)"
+          if [[ -z "$scanned_host_key" ]]; then
+            echo "Unable to scan VPS SSH host key." >&2
+            exit 1
+          fi
+
+          if [[ "$scanned_host_key" != "$expected_host_key" ]]; then
+            echo "VPS SSH host key mismatch; refusing to update known_hosts." >&2
+            exit 1
+          fi
+
+          printf '%s\n' "$expected_host_key" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
+
+      - name: Push state to VPS with merge
+        run: |
+          set -euo pipefail
+          scp -r -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            data/state deploy@198.23.137.16:/tmp/rshelper-state-${{ github.sha }}
+          scp -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            deploy/merge_state.py deploy@198.23.137.16:/tmp/rshelper-merge-state.py
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+            "sudo python3 /tmp/rshelper-merge-state.py /tmp/rshelper-state-${{ github.sha }} /opt/apps/rshelper/data/.config/rshelper --chown 1000:1000 \
+             && sudo rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state.py"
+
+      - name: Verify live state endpoint reflects the sync
+        run: |
+          curl --fail -s https://rs.reidar.tech/api/trades \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print('live /api/trades count:', d.get('count'))"
