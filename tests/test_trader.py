@@ -439,6 +439,35 @@ def test_sync_script_changed_detection():
     print("  PASSED test_sync_script_changed_detection")
 
 
+def test_sync_script_reports_commit_failure():
+    """A failed state commit must surface as an error, not fake success."""
+    import contextlib
+    import importlib.util
+    import io
+    from unittest import mock
+    spec = importlib.util.spec_from_file_location(
+        "sync_state_commit_fail", Path(__file__).resolve().parent.parent /
+        "scripts" / "sync-and-push-state.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.SRC = Path(_tmpdir.name) / "sync_src"
+    mod.DEST = Path(_tmpdir.name) / "sync_dst"
+    mod.SRC.mkdir(exist_ok=True)
+    mod.DEST.mkdir(exist_ok=True)
+    (mod.SRC / "trades.json").write_text('{"trades": [2]}')
+    fake = mock.Mock(side_effect=[
+        mock.Mock(returncode=0),  # git add
+        mock.Mock(returncode=1, stderr="signing failed"),  # git commit
+    ])
+    with mock.patch.object(mod.subprocess, "run", fake), \
+            contextlib.redirect_stderr(io.StringIO()) as err:
+        rc = mod.main()
+    assert rc == 1
+    assert "commit failed: signing failed" in err.getvalue()
+    assert fake.call_count == 2  # push must not run after a failed commit
+    print("  PASSED test_sync_script_reports_commit_failure")
+
+
 if __name__ == "__main__":
     test_select_candidates_filters()
     test_exit_reason()
@@ -454,4 +483,5 @@ if __name__ == "__main__":
     test_trader_config_validation()
     test_status_staleness()
     test_sync_script_changed_detection()
+    test_sync_script_reports_commit_failure()
     print("\nAll tests passed.")

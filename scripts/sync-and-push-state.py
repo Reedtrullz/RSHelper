@@ -71,7 +71,10 @@ def main() -> int:
         print(f"[sync] no state change at {datetime.now(timezone.utc):%H:%M:%S}Z")
         return 0
     git("add", "data/state")
-    git("commit", "-m", "state: sync trading history")
+    commit = git("commit", "-m", "state: sync trading history")
+    if commit.returncode != 0:
+        print(f"[sync] commit failed: {commit.stderr.strip()}", file=sys.stderr)
+        return 1
     push = git("push", "origin", "main")
     if push.returncode != 0:
         print(f"[sync] push failed: {push.stderr.strip()}", file=sys.stderr)
