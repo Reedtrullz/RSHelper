@@ -13,25 +13,25 @@
     },
     {
       "id": 7,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 2439,
-      "buy_price": 24,
+      "item_id": 28924,
+      "name": "Sunfire splinters",
+      "qty": 603,
+      "buy_price": 414,
       "direction": "traditional",
-      "opened_at": "2026-08-01T05:28:39.207863+00:00",
+      "opened_at": "2026-08-01T05:43:39.546605+00:00",
       "note": "auto",
-      "entry_sell": 24
+      "entry_sell": 414
     },
     {
       "id": 8,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 2574,
-      "buy_price": 86,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 460,
+      "buy_price": 270,
       "direction": "traditional",
-      "opened_at": "2026-08-01T05:38:39.440417+00:00",
+      "opened_at": "2026-08-01T05:53:39.682608+00:00",
       "note": "auto",
-      "entry_sell": 86
+      "entry_sell": 270
     }
   ]
 }
