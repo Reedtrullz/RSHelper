@@ -1,37 +1,37 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 113,
-      "buy_price": 105,
+      "id": 5,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 618,
+      "buy_price": 404,
       "direction": "traditional",
-      "opened_at": "2026-08-01T12:30:59.990209+00:00",
+      "opened_at": "2026-08-01T15:23:37.839890+00:00",
       "note": "auto",
-      "entry_sell": 105
+      "entry_sell": 404
     },
     {
-      "id": 3,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 385,
-      "buy_price": 648,
+      "id": 6,
+      "item_id": 6685,
+      "name": "Saradomin brew(4)",
+      "qty": 36,
+      "buy_price": 6793,
       "direction": "traditional",
-      "opened_at": "2026-08-01T13:01:00.396780+00:00",
+      "opened_at": "2026-08-01T15:48:38.203615+00:00",
       "note": "auto",
-      "entry_sell": 648
+      "entry_sell": 6793
     },
     {
-      "id": 4,
-      "item_id": 561,
-      "name": "Nature rune",
-      "qty": 1543,
-      "buy_price": 162,
+      "id": 7,
+      "item_id": 21946,
+      "name": "Diamond dragon bolts (e)",
+      "qty": 87,
+      "buy_price": 2860,
       "direction": "traditional",
-      "opened_at": "2026-08-01T13:28:36.169605+00:00",
+      "opened_at": "2026-08-01T16:08:38.435670+00:00",
       "note": "auto",
-      "entry_sell": 162
+      "entry_sell": 2860
     }
   ]
 }
