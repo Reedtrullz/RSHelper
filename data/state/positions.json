@@ -12,26 +12,26 @@
       "entry_sell": 186
     },
     {
-      "id": 4,
-      "item_id": 1519,
-      "name": "Willow logs",
-      "qty": 411,
-      "buy_price": 21,
+      "id": 5,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 688,
+      "buy_price": 363,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:07:04.729191+00:00",
+      "opened_at": "2026-08-01T04:16:58.853381+00:00",
       "note": "auto",
-      "entry_sell": 21
+      "entry_sell": 363
     },
     {
-      "id": 5,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2988,
-      "buy_price": 45,
+      "id": 6,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 644,
+      "buy_price": 127,
       "direction": "traditional",
-      "opened_at": "2026-08-01T04:14:10.810095+00:00",
+      "opened_at": "2026-08-01T04:17:28.333348+00:00",
       "note": "auto",
-      "entry_sell": 45
+      "entry_sell": 127
     }
   ]
 }
