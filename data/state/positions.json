@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 19,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 149,
-      "buy_price": 1676,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T20:49:25.972148+00:00",
-      "note": "auto",
-      "entry_sell": 1676,
-      "entry_offer": 1743
-    },
-    {
       "id": 20,
       "item_id": 569,
       "name": "Fire orb",
@@ -26,15 +14,27 @@
     },
     {
       "id": 21,
-      "item_id": 24613,
-      "name": "Blighted entangle sack",
-      "qty": 305,
-      "buy_price": 46,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 2551,
+      "buy_price": 80,
       "direction": "traditional",
-      "opened_at": "2026-08-02T21:34:26.264377+00:00",
+      "opened_at": "2026-08-02T21:44:26.268629+00:00",
       "note": "auto",
-      "entry_sell": 46,
-      "entry_offer": 44
+      "entry_sell": 80,
+      "entry_offer": 84
+    },
+    {
+      "id": 22,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2016,
+      "buy_price": 124,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T21:49:26.469581+00:00",
+      "note": "auto",
+      "entry_sell": 124,
+      "entry_offer": 130
     }
   ]
 }
