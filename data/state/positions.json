@@ -13,28 +13,28 @@
       "entry_offer": 1900
     },
     {
-      "id": 18,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 946,
-      "buy_price": 264,
+      "id": 17,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1591,
+      "buy_price": 73,
       "direction": "traditional",
-      "opened_at": "2026-08-02T00:34:09.125336+00:00",
+      "opened_at": "2026-08-02T00:49:09.322922+00:00",
       "note": "auto",
-      "entry_sell": 264,
-      "entry_offer": 272
+      "entry_sell": 73,
+      "entry_offer": 76
     },
     {
-      "id": 19,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 650,
-      "buy_price": 133,
+      "id": 18,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 315,
+      "buy_price": 63,
       "direction": "traditional",
-      "opened_at": "2026-08-02T00:39:09.035585+00:00",
+      "opened_at": "2026-08-02T00:49:09.323318+00:00",
       "note": "auto",
-      "entry_sell": 133,
-      "entry_offer": 139
+      "entry_sell": 63,
+      "entry_offer": 65
     }
   ]
 }
