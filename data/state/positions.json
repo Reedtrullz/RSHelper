@@ -13,28 +13,28 @@
       "entry_offer": 170
     },
     {
-      "id": 6,
-      "item_id": 4695,
-      "name": "Mist rune",
-      "qty": 1294,
-      "buy_price": 87,
+      "id": 5,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 474,
+      "buy_price": 527,
       "direction": "traditional",
-      "opened_at": "2026-08-02T23:19:28.020287+00:00",
+      "opened_at": "2026-08-02T23:54:28.257240+00:00",
       "note": "auto",
-      "entry_sell": 87,
-      "entry_offer": 91
+      "entry_sell": 527,
+      "entry_offer": 551
     },
     {
-      "id": 7,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 96,
-      "buy_price": 2601,
+      "id": 6,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2000,
+      "buy_price": 125,
       "direction": "traditional",
-      "opened_at": "2026-08-02T23:29:28.274039+00:00",
+      "opened_at": "2026-08-02T23:54:28.257647+00:00",
       "note": "auto",
-      "entry_sell": 2601,
-      "entry_offer": 2707
+      "entry_sell": 125,
+      "entry_offer": 131
     }
   ]
 }
