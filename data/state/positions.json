@@ -13,28 +13,28 @@
       "entry_offer": 150
     },
     {
-      "id": 17,
-      "item_id": 377,
-      "name": "Raw lobster",
-      "qty": 545,
-      "buy_price": 103,
+      "id": 16,
+      "item_id": 1643,
+      "name": "Diamond ring",
+      "qty": 137,
+      "buy_price": 1820,
       "direction": "traditional",
-      "opened_at": "2026-08-01T23:59:08.613016+00:00",
+      "opened_at": "2026-08-02T00:24:08.957941+00:00",
       "note": "auto",
-      "entry_sell": 103,
-      "entry_offer": 108
+      "entry_sell": 1820,
+      "entry_offer": 1900
     },
     {
-      "id": 18,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 2760,
-      "buy_price": 28,
+      "id": 17,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 384,
+      "buy_price": 650,
       "direction": "traditional",
-      "opened_at": "2026-08-02T00:09:08.770647+00:00",
+      "opened_at": "2026-08-02T00:24:08.958174+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 650,
+      "entry_offer": 678
     }
   ]
 }
