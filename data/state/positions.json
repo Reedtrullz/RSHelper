@@ -14,27 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 1162,
-      "buy_price": 73,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 1533,
+      "buy_price": 163,
       "direction": "traditional",
-      "opened_at": "2026-08-02T22:34:27.608335+00:00",
+      "opened_at": "2026-08-02T23:09:27.940267+00:00",
       "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 76
+      "entry_sell": 163,
+      "entry_offer": 170
     },
     {
       "id": 5,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 1838,
-      "buy_price": 136,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 93,
+      "buy_price": 230,
       "direction": "traditional",
-      "opened_at": "2026-08-02T22:34:27.608818+00:00",
+      "opened_at": "2026-08-02T23:09:27.940686+00:00",
       "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 142
+      "entry_sell": 230,
+      "entry_offer": 238
     }
   ]
 }
