@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 19,
-      "item_id": 5998,
-      "name": "Yanillian hops",
-      "qty": 102,
-      "buy_price": 835,
+      "id": 23,
+      "item_id": 6034,
+      "name": "Supercompost",
+      "qty": 1670,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-02T01:09:09.623454+00:00",
+      "opened_at": "2026-08-02T01:49:10.107554+00:00",
       "note": "auto",
-      "entry_sell": 835,
-      "entry_offer": 876
+      "entry_sell": 27,
+      "entry_offer": 28
     },
     {
-      "id": 20,
-      "item_id": 9381,
-      "name": "Runite bolts (unf)",
-      "qty": 628,
-      "buy_price": 106,
+      "id": 24,
+      "item_id": 217,
+      "name": "Grimy dwarf weed",
+      "qty": 190,
+      "buy_price": 1311,
       "direction": "traditional",
-      "opened_at": "2026-08-02T01:14:09.657615+00:00",
+      "opened_at": "2026-08-02T01:54:10.102817+00:00",
       "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 111
-    },
-    {
-      "id": 21,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 216,
-      "buy_price": 1155,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T01:14:09.657875+00:00",
-      "note": "auto",
-      "entry_sell": 1155,
-      "entry_offer": 1200
+      "entry_sell": 1311,
+      "entry_offer": 1358
     }
   ]
 }
