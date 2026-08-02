@@ -14,15 +14,27 @@
     },
     {
       "id": 26,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 319,
-      "buy_price": 151,
+      "item_id": 211,
+      "name": "Grimy avantoe",
+      "qty": 193,
+      "buy_price": 1291,
       "direction": "traditional",
-      "opened_at": "2026-08-02T16:19:23.321647+00:00",
+      "opened_at": "2026-08-02T16:24:23.366875+00:00",
       "note": "auto",
-      "entry_sell": 151,
-      "entry_offer": 158
+      "entry_sell": 1291,
+      "entry_offer": 1340
+    },
+    {
+      "id": 27,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 142,
+      "buy_price": 1753,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T16:24:23.367263+00:00",
+      "note": "auto",
+      "entry_sell": 1753,
+      "entry_offer": 1809
     }
   ]
 }
