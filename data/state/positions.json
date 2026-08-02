@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 25,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 86,
-      "buy_price": 2882,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T15:49:23.138427+00:00",
-      "note": "auto",
-      "entry_sell": 2882,
-      "entry_offer": 2995
-    },
-    {
       "id": 27,
       "item_id": 213,
       "name": "Grimy kwuarm",
@@ -26,15 +14,27 @@
     },
     {
       "id": 28,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 207,
-      "buy_price": 1202,
+      "item_id": 3138,
+      "name": "Potato cactus",
+      "qty": 179,
+      "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-02T16:44:23.448772+00:00",
+      "opened_at": "2026-08-02T16:59:23.648106+00:00",
       "note": "auto",
-      "entry_sell": 1202,
-      "entry_offer": 1250
+      "entry_sell": 65,
+      "entry_offer": 68
+    },
+    {
+      "id": 29,
+      "item_id": 391,
+      "name": "Manta ray",
+      "qty": 183,
+      "buy_price": 1365,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T17:04:23.773672+00:00",
+      "note": "auto",
+      "entry_sell": 1365,
+      "entry_offer": 1430
     }
   ]
 }
