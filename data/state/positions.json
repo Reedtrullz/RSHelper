@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 30,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 608,
-      "buy_price": 185,
+      "id": 1,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 90,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-02T17:34:23.960178+00:00",
+      "opened_at": "2026-08-02T18:04:24.224614+00:00",
       "note": "auto",
-      "entry_sell": 185,
-      "entry_offer": 194
+      "entry_sell": 25,
+      "entry_offer": 26
     },
     {
-      "id": 31,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 131,
-      "buy_price": 1900,
+      "id": 2,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 536,
+      "buy_price": 466,
       "direction": "traditional",
-      "opened_at": "2026-08-02T17:49:24.075470+00:00",
+      "opened_at": "2026-08-02T18:04:24.225040+00:00",
       "note": "auto",
-      "entry_sell": 1900,
-      "entry_offer": 1970
+      "entry_sell": 466,
+      "entry_offer": 486
     },
     {
-      "id": 32,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 426,
-      "buy_price": 94,
+      "id": 3,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 309,
+      "buy_price": 76,
       "direction": "traditional",
-      "opened_at": "2026-08-02T17:49:24.076093+00:00",
+      "opened_at": "2026-08-02T18:04:24.225518+00:00",
       "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 98
+      "entry_sell": 76,
+      "entry_offer": 79
     }
   ]
 }
