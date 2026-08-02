@@ -13,18 +13,6 @@
       "entry_offer": 2995
     },
     {
-      "id": 26,
-      "item_id": 211,
-      "name": "Grimy avantoe",
-      "qty": 193,
-      "buy_price": 1291,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T16:24:23.366875+00:00",
-      "note": "auto",
-      "entry_sell": 1291,
-      "entry_offer": 1340
-    },
-    {
       "id": 27,
       "item_id": 213,
       "name": "Grimy kwuarm",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 1753,
       "entry_offer": 1809
+    },
+    {
+      "id": 28,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 207,
+      "buy_price": 1202,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T16:44:23.448772+00:00",
+      "note": "auto",
+      "entry_sell": 1202,
+      "entry_offer": 1250
     }
   ]
 }
