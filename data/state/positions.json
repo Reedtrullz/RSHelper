@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 362,
-      "buy_price": 689,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T22:19:27.287907+00:00",
-      "note": "auto",
-      "entry_sell": 689,
-      "entry_offer": 710
-    },
-    {
       "id": 4,
       "item_id": 13573,
       "name": "Dynamite",
@@ -26,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 93,
-      "buy_price": 230,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 215,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-02T23:09:27.940686+00:00",
+      "opened_at": "2026-08-02T23:19:28.019995+00:00",
       "note": "auto",
-      "entry_sell": 230,
-      "entry_offer": 238
+      "entry_sell": 96,
+      "entry_offer": 100
+    },
+    {
+      "id": 6,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 1294,
+      "buy_price": 87,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T23:19:28.020287+00:00",
+      "note": "auto",
+      "entry_sell": 87,
+      "entry_offer": 91
     }
   ]
 }
