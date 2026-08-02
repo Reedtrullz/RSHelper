@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 15,
-      "item_id": 447,
-      "name": "Mithril ore",
-      "qty": 1364,
-      "buy_price": 145,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T23:29:08.275805+00:00",
-      "note": "auto",
-      "entry_sell": 145,
-      "entry_offer": 150
-    },
-    {
       "id": 16,
       "item_id": 1643,
       "name": "Diamond ring",
@@ -25,16 +13,28 @@
       "entry_offer": 1900
     },
     {
-      "id": 17,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 384,
-      "buy_price": 650,
+      "id": 18,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 946,
+      "buy_price": 264,
       "direction": "traditional",
-      "opened_at": "2026-08-02T00:24:08.958174+00:00",
+      "opened_at": "2026-08-02T00:34:09.125336+00:00",
       "note": "auto",
-      "entry_sell": 650,
-      "entry_offer": 678
+      "entry_sell": 264,
+      "entry_offer": 272
+    },
+    {
+      "id": 19,
+      "item_id": 2351,
+      "name": "Iron bar",
+      "qty": 650,
+      "buy_price": 133,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T00:39:09.035585+00:00",
+      "note": "auto",
+      "entry_sell": 133,
+      "entry_offer": 139
     }
   ]
 }
