@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 23,
-      "item_id": 6034,
-      "name": "Supercompost",
-      "qty": 1670,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T01:49:10.107554+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
       "id": 24,
       "item_id": 217,
       "name": "Grimy dwarf weed",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1311,
       "entry_offer": 1358
+    },
+    {
+      "id": 26,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 1313,
+      "buy_price": 91,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T01:59:10.175240+00:00",
+      "note": "auto",
+      "entry_sell": 91,
+      "entry_offer": 95
+    },
+    {
+      "id": 27,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 910,
+      "buy_price": 225,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T02:04:10.172543+00:00",
+      "note": "auto",
+      "entry_sell": 225,
+      "entry_offer": 234
     }
   ]
 }
