@@ -13,28 +13,28 @@
       "entry_offer": 486
     },
     {
-      "id": 4,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 206,
-      "buy_price": 1212,
+      "id": 6,
+      "item_id": 2436,
+      "name": "Super attack(4)",
+      "qty": 127,
+      "buy_price": 1968,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:09:24.206704+00:00",
+      "opened_at": "2026-08-02T18:29:24.523485+00:00",
       "note": "auto",
-      "entry_sell": 1212,
-      "entry_offer": 1263
+      "entry_sell": 1968,
+      "entry_offer": 2047
     },
     {
-      "id": 5,
-      "item_id": 5998,
-      "name": "Yanillian hops",
-      "qty": 304,
-      "buy_price": 821,
+      "id": 7,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 5344,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:14:24.312037+00:00",
+      "opened_at": "2026-08-02T18:34:24.639617+00:00",
       "note": "auto",
-      "entry_sell": 821,
-      "entry_offer": 857
+      "entry_sell": 45,
+      "entry_offer": 47
     }
   ]
 }
