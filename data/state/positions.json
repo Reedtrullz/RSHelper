@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 90,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T18:04:24.224614+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
       "id": 2,
       "item_id": 1621,
       "name": "Uncut emerald",
@@ -25,16 +13,28 @@
       "entry_offer": 486
     },
     {
-      "id": 3,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 309,
-      "buy_price": 76,
+      "id": 4,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 206,
+      "buy_price": 1212,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:04:24.225518+00:00",
+      "opened_at": "2026-08-02T18:09:24.206704+00:00",
       "note": "auto",
-      "entry_sell": 76,
-      "entry_offer": 79
+      "entry_sell": 1212,
+      "entry_offer": 1263
+    },
+    {
+      "id": 5,
+      "item_id": 5998,
+      "name": "Yanillian hops",
+      "qty": 304,
+      "buy_price": 821,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T18:14:24.312037+00:00",
+      "note": "auto",
+      "entry_sell": 821,
+      "entry_offer": 857
     }
   ]
 }
