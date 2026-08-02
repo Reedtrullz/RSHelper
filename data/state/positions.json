@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 13,
-      "item_id": 2485,
-      "name": "Grimy lantadyme",
-      "qty": 208,
-      "buy_price": 1201,
+      "id": 16,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 467,
+      "buy_price": 535,
       "direction": "traditional",
-      "opened_at": "2026-08-02T12:44:20.949118+00:00",
+      "opened_at": "2026-08-02T13:59:22.078044+00:00",
       "note": "auto",
-      "entry_sell": 1201,
-      "entry_offer": 1250
+      "entry_sell": 535,
+      "entry_offer": 557
     },
     {
-      "id": 14,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 1032,
-      "buy_price": 94,
+      "id": 17,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 94,
+      "buy_price": 99,
       "direction": "traditional",
-      "opened_at": "2026-08-02T13:39:21.868995+00:00",
+      "opened_at": "2026-08-02T13:59:22.078390+00:00",
       "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 98
+      "entry_sell": 99,
+      "entry_offer": 103
     },
     {
-      "id": 15,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 206,
-      "buy_price": 1212,
+      "id": 18,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 137,
+      "buy_price": 1817,
       "direction": "traditional",
-      "opened_at": "2026-08-02T13:49:22.163783+00:00",
+      "opened_at": "2026-08-02T14:04:22.139954+00:00",
       "note": "auto",
-      "entry_sell": 1212,
-      "entry_offer": 1269
+      "entry_sell": 1817,
+      "entry_offer": 1899
     }
   ]
 }
