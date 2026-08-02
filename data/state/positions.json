@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 2436,
-      "name": "Super attack(4)",
-      "qty": 127,
-      "buy_price": 1968,
+      "id": 9,
+      "item_id": 391,
+      "name": "Manta ray",
+      "qty": 94,
+      "buy_price": 1417,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:29:24.523485+00:00",
+      "opened_at": "2026-08-02T19:09:24.845635+00:00",
       "note": "auto",
-      "entry_sell": 1968,
-      "entry_offer": 2047
+      "entry_sell": 1417,
+      "entry_offer": 1487
     },
     {
-      "id": 7,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 667,
-      "buy_price": 179,
+      "id": 11,
+      "item_id": 2509,
+      "name": "Black dragon leather",
+      "qty": 73,
+      "buy_price": 3392,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:59:24.860869+00:00",
+      "opened_at": "2026-08-02T19:14:24.986171+00:00",
       "note": "auto",
-      "entry_sell": 179,
-      "entry_offer": 185
+      "entry_sell": 3392,
+      "entry_offer": 3545
     },
     {
-      "id": 8,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 314,
-      "buy_price": 25,
+      "id": 12,
+      "item_id": 1637,
+      "name": "Sapphire ring",
+      "qty": 192,
+      "buy_price": 400,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:04:24.826911+00:00",
+      "opened_at": "2026-08-02T19:19:24.994223+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 400,
+      "entry_offer": 419
     }
   ]
 }
