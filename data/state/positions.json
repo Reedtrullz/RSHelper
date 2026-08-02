@@ -14,27 +14,27 @@
     },
     {
       "id": 28,
-      "item_id": 3138,
-      "name": "Potato cactus",
-      "qty": 179,
-      "buy_price": 65,
+      "item_id": 1963,
+      "name": "Banana",
+      "qty": 106,
+      "buy_price": 51,
       "direction": "traditional",
-      "opened_at": "2026-08-02T16:59:23.648106+00:00",
+      "opened_at": "2026-08-02T17:14:23.768090+00:00",
       "note": "auto",
-      "entry_sell": 65,
-      "entry_offer": 68
+      "entry_sell": 51,
+      "entry_offer": 53
     },
     {
       "id": 29,
-      "item_id": 391,
-      "name": "Manta ray",
-      "qty": 183,
-      "buy_price": 1365,
+      "item_id": 10033,
+      "name": "Chinchompa",
+      "qty": 94,
+      "buy_price": 904,
       "direction": "traditional",
-      "opened_at": "2026-08-02T17:04:23.773672+00:00",
+      "opened_at": "2026-08-02T17:14:23.768417+00:00",
       "note": "auto",
-      "entry_sell": 1365,
-      "entry_offer": 1430
+      "entry_sell": 904,
+      "entry_offer": 940
     }
   ]
 }
