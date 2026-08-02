@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 14,
-      "item_id": 21316,
-      "name": "Amethyst broad bolts",
-      "qty": 710,
-      "buy_price": 162,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T19:44:25.258134+00:00",
-      "note": "auto",
-      "entry_sell": 162,
-      "entry_offer": 170
-    },
-    {
-      "id": 16,
-      "item_id": 571,
-      "name": "Water orb",
-      "qty": 153,
-      "buy_price": 1625,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T20:14:25.585163+00:00",
-      "note": "auto",
-      "entry_sell": 1625,
-      "entry_offer": 1691
-    },
-    {
       "id": 17,
       "item_id": 4699,
       "name": "Lava rune",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 28,
       "entry_offer": 29
+    },
+    {
+      "id": 18,
+      "item_id": 821,
+      "name": "Steel dart tip",
+      "qty": 268,
+      "buy_price": 81,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T20:34:25.821253+00:00",
+      "note": "auto",
+      "entry_sell": 81,
+      "entry_offer": 85
+    },
+    {
+      "id": 19,
+      "item_id": 5295,
+      "name": "Ranarr seed",
+      "qty": 9,
+      "buy_price": 26856,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T20:34:25.821701+00:00",
+      "note": "auto",
+      "entry_sell": 26856,
+      "entry_offer": 28198
     }
   ]
 }
