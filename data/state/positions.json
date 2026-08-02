@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 21,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 2551,
-      "buy_price": 80,
+      "id": 1,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 938,
+      "buy_price": 250,
       "direction": "traditional",
-      "opened_at": "2026-08-02T21:44:26.268629+00:00",
+      "opened_at": "2026-08-02T22:19:27.286922+00:00",
       "note": "auto",
-      "entry_sell": 80,
-      "entry_offer": 84
+      "entry_sell": 250,
+      "entry_offer": 258
     },
     {
-      "id": 22,
-      "item_id": 335,
-      "name": "Raw trout",
-      "qty": 3009,
-      "buy_price": 30,
+      "id": 2,
+      "item_id": 567,
+      "name": "Unpowered orb",
+      "qty": 784,
+      "buy_price": 58,
       "direction": "traditional",
-      "opened_at": "2026-08-02T22:04:26.824121+00:00",
+      "opened_at": "2026-08-02T22:19:27.287357+00:00",
       "note": "auto",
-      "entry_sell": 30,
-      "entry_offer": 31
+      "entry_sell": 58,
+      "entry_offer": 60
     },
     {
-      "id": 23,
-      "item_id": 12695,
-      "name": "Super combat potion(4)",
-      "qty": 22,
-      "buy_price": 11189,
+      "id": 3,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 362,
+      "buy_price": 689,
       "direction": "traditional",
-      "opened_at": "2026-08-02T22:04:26.824438+00:00",
+      "opened_at": "2026-08-02T22:19:27.287907+00:00",
       "note": "auto",
-      "entry_sell": 11189,
-      "entry_offer": 11590
+      "entry_sell": 689,
+      "entry_offer": 710
     }
   ]
 }
