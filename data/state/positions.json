@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 20,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 131,
-      "buy_price": 1902,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T20:49:25.972634+00:00",
-      "note": "auto",
-      "entry_sell": 1902,
-      "entry_offer": 1970
-    },
-    {
       "id": 21,
       "item_id": 2357,
       "name": "Gold bar",
@@ -26,15 +14,27 @@
     },
     {
       "id": 22,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2016,
-      "buy_price": 124,
+      "item_id": 335,
+      "name": "Raw trout",
+      "qty": 3009,
+      "buy_price": 30,
       "direction": "traditional",
-      "opened_at": "2026-08-02T21:49:26.469581+00:00",
+      "opened_at": "2026-08-02T22:04:26.824121+00:00",
       "note": "auto",
-      "entry_sell": 124,
-      "entry_offer": 130
+      "entry_sell": 30,
+      "entry_offer": 31
+    },
+    {
+      "id": 23,
+      "item_id": 12695,
+      "name": "Super combat potion(4)",
+      "qty": 22,
+      "buy_price": 11189,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T22:04:26.824438+00:00",
+      "note": "auto",
+      "entry_sell": 11189,
+      "entry_offer": 11590
     }
   ]
 }
