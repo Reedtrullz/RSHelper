@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 27,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 142,
-      "buy_price": 1753,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T16:24:23.367263+00:00",
-      "note": "auto",
-      "entry_sell": 1753,
-      "entry_offer": 1809
-    },
-    {
       "id": 28,
       "item_id": 1963,
       "name": "Banana",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 904,
       "entry_offer": 940
+    },
+    {
+      "id": 30,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 608,
+      "buy_price": 185,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T17:34:23.960178+00:00",
+      "note": "auto",
+      "entry_sell": 185,
+      "entry_offer": 194
     }
   ]
 }
