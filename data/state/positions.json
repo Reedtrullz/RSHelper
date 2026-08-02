@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 17,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 8928,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T20:19:25.592297+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
-    },
-    {
       "id": 18,
       "item_id": 821,
       "name": "Steel dart tip",
@@ -26,15 +14,27 @@
     },
     {
       "id": 19,
-      "item_id": 5295,
-      "name": "Ranarr seed",
-      "qty": 9,
-      "buy_price": 26856,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 149,
+      "buy_price": 1676,
       "direction": "traditional",
-      "opened_at": "2026-08-02T20:34:25.821701+00:00",
+      "opened_at": "2026-08-02T20:49:25.972148+00:00",
       "note": "auto",
-      "entry_sell": 26856,
-      "entry_offer": 28198
+      "entry_sell": 1676,
+      "entry_offer": 1743
+    },
+    {
+      "id": 20,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 131,
+      "buy_price": 1902,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T20:49:25.972634+00:00",
+      "note": "auto",
+      "entry_sell": 1902,
+      "entry_offer": 1970
     }
   ]
 }
