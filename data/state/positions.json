@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 11,
-      "item_id": 2509,
-      "name": "Black dragon leather",
-      "qty": 73,
-      "buy_price": 3392,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T19:14:24.986171+00:00",
-      "note": "auto",
-      "entry_sell": 3392,
-      "entry_offer": 3545
-    },
-    {
       "id": 14,
       "item_id": 21316,
       "name": "Amethyst broad bolts",
@@ -25,16 +13,28 @@
       "entry_offer": 170
     },
     {
-      "id": 15,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 174,
-      "buy_price": 343,
+      "id": 16,
+      "item_id": 571,
+      "name": "Water orb",
+      "qty": 153,
+      "buy_price": 1625,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:59:25.412756+00:00",
+      "opened_at": "2026-08-02T20:14:25.585163+00:00",
       "note": "auto",
-      "entry_sell": 343,
-      "entry_offer": 360
+      "entry_sell": 1625,
+      "entry_offer": 1691
+    },
+    {
+      "id": 17,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 8928,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T20:19:25.592297+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
