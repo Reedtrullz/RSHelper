@@ -26,15 +26,15 @@
     },
     {
       "id": 24,
-      "item_id": 853,
-      "name": "Maple shortbow",
-      "qty": 192,
-      "buy_price": 191,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 1344,
+      "buy_price": 186,
       "direction": "traditional",
-      "opened_at": "2026-08-02T15:19:22.910232+00:00",
+      "opened_at": "2026-08-02T15:34:22.937517+00:00",
       "note": "auto",
-      "entry_sell": 191,
-      "entry_offer": 200
+      "entry_sell": 186,
+      "entry_offer": 194
     }
   ]
 }
