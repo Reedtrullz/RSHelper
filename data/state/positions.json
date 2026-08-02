@@ -26,15 +26,15 @@
     },
     {
       "id": 21,
-      "item_id": 8792,
-      "name": "Clockwork",
-      "qty": 233,
-      "buy_price": 1072,
+      "item_id": 24613,
+      "name": "Blighted entangle sack",
+      "qty": 305,
+      "buy_price": 46,
       "direction": "traditional",
-      "opened_at": "2026-08-02T21:19:26.126264+00:00",
+      "opened_at": "2026-08-02T21:34:26.264377+00:00",
       "note": "auto",
-      "entry_sell": 1072,
-      "entry_offer": 1125
+      "entry_sell": 46,
+      "entry_offer": 44
     }
   ]
 }
