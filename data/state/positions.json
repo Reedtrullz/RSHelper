@@ -13,18 +13,6 @@
       "entry_offer": 170
     },
     {
-      "id": 5,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 215,
-      "buy_price": 96,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T23:19:28.019995+00:00",
-      "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
-    },
-    {
       "id": 6,
       "item_id": 4695,
       "name": "Mist rune",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 87,
       "entry_offer": 91
+    },
+    {
+      "id": 7,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 96,
+      "buy_price": 2601,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T23:29:28.274039+00:00",
+      "note": "auto",
+      "entry_sell": 2601,
+      "entry_offer": 2707
     }
   ]
 }
