@@ -26,15 +26,15 @@
     },
     {
       "id": 15,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 401,
-      "buy_price": 476,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 174,
+      "buy_price": 343,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:49:25.291510+00:00",
+      "opened_at": "2026-08-02T19:59:25.412756+00:00",
       "note": "auto",
-      "entry_sell": 476,
-      "entry_offer": 498
+      "entry_sell": 343,
+      "entry_offer": 360
     }
   ]
 }
