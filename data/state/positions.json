@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 536,
-      "buy_price": 466,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T18:04:24.225040+00:00",
-      "note": "auto",
-      "entry_sell": 466,
-      "entry_offer": 486
-    },
-    {
       "id": 6,
       "item_id": 2436,
       "name": "Super attack(4)",
@@ -26,15 +14,27 @@
     },
     {
       "id": 7,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 5344,
-      "buy_price": 45,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 667,
+      "buy_price": 179,
       "direction": "traditional",
-      "opened_at": "2026-08-02T18:34:24.639617+00:00",
+      "opened_at": "2026-08-02T18:59:24.860869+00:00",
       "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 179,
+      "entry_offer": 185
+    },
+    {
+      "id": 8,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 314,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T19:04:24.826911+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
