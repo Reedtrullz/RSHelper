@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 22,
-      "item_id": 12640,
-      "name": "Amylase crystal",
-      "qty": 272,
-      "buy_price": 542,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T14:39:23.593440+00:00",
-      "note": "auto",
-      "entry_sell": 542,
-      "entry_offer": 567
-    },
-    {
       "id": 23,
       "item_id": 449,
       "name": "Adamantite ore",
@@ -26,15 +14,27 @@
     },
     {
       "id": 24,
-      "item_id": 823,
-      "name": "Adamant dart tip",
-      "qty": 1344,
-      "buy_price": 186,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 1069,
+      "buy_price": 87,
       "direction": "traditional",
-      "opened_at": "2026-08-02T15:34:22.937517+00:00",
+      "opened_at": "2026-08-02T15:49:23.138163+00:00",
       "note": "auto",
-      "entry_sell": 186,
-      "entry_offer": 194
+      "entry_sell": 87,
+      "entry_offer": 91
+    },
+    {
+      "id": 25,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 86,
+      "buy_price": 2882,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T15:49:23.138427+00:00",
+      "note": "auto",
+      "entry_sell": 2882,
+      "entry_offer": 2995
     }
   ]
 }
