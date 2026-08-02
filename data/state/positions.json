@@ -13,18 +13,6 @@
       "entry_offer": 1900
     },
     {
-      "id": 17,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 1591,
-      "buy_price": 73,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T00:49:09.322922+00:00",
-      "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 76
-    },
-    {
       "id": 18,
       "item_id": 1987,
       "name": "Grapes",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 63,
       "entry_offer": 65
+    },
+    {
+      "id": 19,
+      "item_id": 5998,
+      "name": "Yanillian hops",
+      "qty": 102,
+      "buy_price": 835,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T01:09:09.623454+00:00",
+      "note": "auto",
+      "entry_sell": 835,
+      "entry_offer": 876
     }
   ]
 }
