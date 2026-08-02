@@ -13,18 +13,6 @@
       "entry_offer": 103
     },
     {
-      "id": 18,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 2091,
-      "buy_price": 95,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T14:19:22.303967+00:00",
-      "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 98
-    },
-    {
       "id": 19,
       "item_id": 21347,
       "name": "Amethyst",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 2747,
       "entry_offer": 2850
+    },
+    {
+      "id": 20,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 383,
+      "buy_price": 359,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T14:29:22.405362+00:00",
+      "note": "auto",
+      "entry_sell": 359,
+      "entry_offer": 371
     }
   ]
 }
