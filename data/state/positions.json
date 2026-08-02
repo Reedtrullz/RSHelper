@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 16,
-      "item_id": 1643,
-      "name": "Diamond ring",
-      "qty": 137,
-      "buy_price": 1820,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T00:24:08.957941+00:00",
-      "note": "auto",
-      "entry_sell": 1820,
-      "entry_offer": 1900
-    },
-    {
-      "id": 18,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 315,
-      "buy_price": 63,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T00:49:09.323318+00:00",
-      "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 65
-    },
-    {
       "id": 19,
       "item_id": 5998,
       "name": "Yanillian hops",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 835,
       "entry_offer": 876
+    },
+    {
+      "id": 20,
+      "item_id": 9381,
+      "name": "Runite bolts (unf)",
+      "qty": 628,
+      "buy_price": 106,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T01:14:09.657615+00:00",
+      "note": "auto",
+      "entry_sell": 106,
+      "entry_offer": 111
+    },
+    {
+      "id": 21,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 216,
+      "buy_price": 1155,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T01:14:09.657875+00:00",
+      "note": "auto",
+      "entry_sell": 1155,
+      "entry_offer": 1200
     }
   ]
 }
