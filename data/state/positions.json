@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 16,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 467,
-      "buy_price": 535,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T13:59:22.078044+00:00",
-      "note": "auto",
-      "entry_sell": 535,
-      "entry_offer": 557
-    },
-    {
       "id": 17,
       "item_id": 9191,
       "name": "Ruby bolt tips",
@@ -26,15 +14,27 @@
     },
     {
       "id": 18,
-      "item_id": 3049,
-      "name": "Grimy toadflax",
-      "qty": 137,
-      "buy_price": 1817,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 2091,
+      "buy_price": 95,
       "direction": "traditional",
-      "opened_at": "2026-08-02T14:04:22.139954+00:00",
+      "opened_at": "2026-08-02T14:19:22.303967+00:00",
       "note": "auto",
-      "entry_sell": 1817,
-      "entry_offer": 1899
+      "entry_sell": 95,
+      "entry_offer": 98
+    },
+    {
+      "id": 19,
+      "item_id": 21347,
+      "name": "Amethyst",
+      "qty": 91,
+      "buy_price": 2747,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T14:19:22.304188+00:00",
+      "note": "auto",
+      "entry_sell": 2747,
+      "entry_offer": 2850
     }
   ]
 }
