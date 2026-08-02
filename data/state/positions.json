@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 17,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 94,
-      "buy_price": 99,
+      "id": 21,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 430,
+      "buy_price": 44,
       "direction": "traditional",
-      "opened_at": "2026-08-02T13:59:22.078390+00:00",
+      "opened_at": "2026-08-02T14:39:23.593196+00:00",
       "note": "auto",
-      "entry_sell": 99,
-      "entry_offer": 103
+      "entry_sell": 44,
+      "entry_offer": 46
     },
     {
-      "id": 19,
-      "item_id": 21347,
-      "name": "Amethyst",
-      "qty": 91,
-      "buy_price": 2747,
+      "id": 22,
+      "item_id": 12640,
+      "name": "Amylase crystal",
+      "qty": 272,
+      "buy_price": 542,
       "direction": "traditional",
-      "opened_at": "2026-08-02T14:19:22.304188+00:00",
+      "opened_at": "2026-08-02T14:39:23.593440+00:00",
       "note": "auto",
-      "entry_sell": 2747,
-      "entry_offer": 2850
+      "entry_sell": 542,
+      "entry_offer": 567
     },
     {
-      "id": 20,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 383,
-      "buy_price": 359,
+      "id": 23,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 148,
+      "buy_price": 1689,
       "direction": "traditional",
-      "opened_at": "2026-08-02T14:29:22.405362+00:00",
+      "opened_at": "2026-08-02T14:49:22.627096+00:00",
       "note": "auto",
-      "entry_sell": 359,
-      "entry_offer": 371
+      "entry_sell": 1689,
+      "entry_offer": 1767
     }
   ]
 }
