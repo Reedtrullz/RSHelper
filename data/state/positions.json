@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 23,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 468,
-      "buy_price": 534,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T14:59:22.752799+00:00",
-      "note": "auto",
-      "entry_sell": 534,
-      "entry_offer": 555
-    },
-    {
-      "id": 24,
-      "item_id": 4695,
-      "name": "Mist rune",
-      "qty": 1069,
-      "buy_price": 87,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T15:49:23.138163+00:00",
-      "note": "auto",
-      "entry_sell": 87,
-      "entry_offer": 91
-    },
-    {
       "id": 25,
       "item_id": 24598,
       "name": "Blighted super restore(4)",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2882,
       "entry_offer": 2995
+    },
+    {
+      "id": 27,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 270,
+      "buy_price": 231,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T15:59:23.186665+00:00",
+      "note": "auto",
+      "entry_sell": 231,
+      "entry_offer": 238
+    },
+    {
+      "id": 28,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 529,
+      "buy_price": 472,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T16:04:23.149198+00:00",
+      "note": "auto",
+      "entry_sell": 472,
+      "entry_offer": 493
     }
   ]
 }
