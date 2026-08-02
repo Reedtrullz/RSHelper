@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 938,
-      "buy_price": 250,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T22:19:27.286922+00:00",
-      "note": "auto",
-      "entry_sell": 250,
-      "entry_offer": 258
-    },
-    {
-      "id": 2,
-      "item_id": 567,
-      "name": "Unpowered orb",
-      "qty": 784,
-      "buy_price": 58,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T22:19:27.287357+00:00",
-      "note": "auto",
-      "entry_sell": 58,
-      "entry_offer": 60
-    },
-    {
       "id": 3,
       "item_id": 19582,
       "name": "Dragon javelin tips",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 689,
       "entry_offer": 710
+    },
+    {
+      "id": 4,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1162,
+      "buy_price": 73,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T22:34:27.608335+00:00",
+      "note": "auto",
+      "entry_sell": 73,
+      "entry_offer": 76
+    },
+    {
+      "id": 5,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 1838,
+      "buy_price": 136,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T22:34:27.608818+00:00",
+      "note": "auto",
+      "entry_sell": 136,
+      "entry_offer": 142
     }
   ]
 }
