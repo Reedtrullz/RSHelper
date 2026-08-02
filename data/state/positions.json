@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 9,
-      "item_id": 391,
-      "name": "Manta ray",
-      "qty": 94,
-      "buy_price": 1417,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T19:09:24.845635+00:00",
-      "note": "auto",
-      "entry_sell": 1417,
-      "entry_offer": 1487
-    },
-    {
       "id": 11,
       "item_id": 2509,
       "name": "Black dragon leather",
@@ -26,15 +14,27 @@
     },
     {
       "id": 12,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 192,
-      "buy_price": 400,
+      "item_id": 389,
+      "name": "Raw manta ray",
+      "qty": 154,
+      "buy_price": 941,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:19:24.994223+00:00",
+      "opened_at": "2026-08-02T19:29:25.061721+00:00",
       "note": "auto",
-      "entry_sell": 400,
-      "entry_offer": 419
+      "entry_sell": 941,
+      "entry_offer": 973
+    },
+    {
+      "id": 13,
+      "item_id": 6685,
+      "name": "Saradomin brew(4)",
+      "qty": 37,
+      "buy_price": 6710,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T19:34:25.289924+00:00",
+      "note": "auto",
+      "entry_sell": 6710,
+      "entry_offer": 6994
     }
   ]
 }
