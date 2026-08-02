@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 13,
-      "item_id": 215,
-      "name": "Grimy cadantine",
-      "qty": 119,
-      "buy_price": 2100,
-      "direction": "traditional",
-      "opened_at": "2026-08-01T22:54:08.035384+00:00",
-      "note": "auto",
-      "entry_sell": 2100,
-      "entry_offer": 2173
-    },
-    {
       "id": 15,
       "item_id": 447,
       "name": "Mithril ore",
@@ -25,16 +13,28 @@
       "entry_offer": 150
     },
     {
-      "id": 16,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 174,
-      "buy_price": 108,
+      "id": 17,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 545,
+      "buy_price": 103,
       "direction": "traditional",
-      "opened_at": "2026-08-01T23:34:08.337121+00:00",
+      "opened_at": "2026-08-01T23:59:08.613016+00:00",
       "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 112
+      "entry_sell": 103,
+      "entry_offer": 108
+    },
+    {
+      "id": 18,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 2760,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T00:09:08.770647+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
