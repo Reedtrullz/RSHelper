@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 28,
-      "item_id": 1963,
-      "name": "Banana",
-      "qty": 106,
-      "buy_price": 51,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T17:14:23.768090+00:00",
-      "note": "auto",
-      "entry_sell": 51,
-      "entry_offer": 53
-    },
-    {
-      "id": 29,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 94,
-      "buy_price": 904,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T17:14:23.768417+00:00",
-      "note": "auto",
-      "entry_sell": 904,
-      "entry_offer": 940
-    },
-    {
       "id": 30,
       "item_id": 31912,
       "name": "Adamant cannonball",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 185,
       "entry_offer": 194
+    },
+    {
+      "id": 31,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 131,
+      "buy_price": 1900,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T17:49:24.075470+00:00",
+      "note": "auto",
+      "entry_sell": 1900,
+      "entry_offer": 1970
+    },
+    {
+      "id": 32,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 426,
+      "buy_price": 94,
+      "direction": "traditional",
+      "opened_at": "2026-08-02T17:49:24.076093+00:00",
+      "note": "auto",
+      "entry_sell": 94,
+      "entry_offer": 98
     }
   ]
 }
