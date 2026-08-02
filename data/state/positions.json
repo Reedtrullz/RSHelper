@@ -13,28 +13,28 @@
       "entry_offer": 3545
     },
     {
-      "id": 12,
-      "item_id": 389,
-      "name": "Raw manta ray",
-      "qty": 154,
-      "buy_price": 941,
+      "id": 14,
+      "item_id": 21316,
+      "name": "Amethyst broad bolts",
+      "qty": 710,
+      "buy_price": 162,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:29:25.061721+00:00",
+      "opened_at": "2026-08-02T19:44:25.258134+00:00",
       "note": "auto",
-      "entry_sell": 941,
-      "entry_offer": 973
+      "entry_sell": 162,
+      "entry_offer": 170
     },
     {
-      "id": 13,
-      "item_id": 6685,
-      "name": "Saradomin brew(4)",
-      "qty": 37,
-      "buy_price": 6710,
+      "id": 15,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 401,
+      "buy_price": 476,
       "direction": "traditional",
-      "opened_at": "2026-08-02T19:34:25.289924+00:00",
+      "opened_at": "2026-08-02T19:49:25.291510+00:00",
       "note": "auto",
-      "entry_sell": 6710,
-      "entry_offer": 6994
+      "entry_sell": 476,
+      "entry_offer": 498
     }
   ]
 }
