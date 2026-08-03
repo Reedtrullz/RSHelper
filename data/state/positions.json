@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 150,
-      "buy_price": 1659,
+      "id": 1,
+      "item_id": 8780,
+      "name": "Teak plank",
+      "qty": 279,
+      "buy_price": 724,
       "direction": "traditional",
-      "opened_at": "2026-08-03T22:13:27.981260+00:00",
+      "opened_at": "2026-08-03T22:53:19.033999+00:00",
       "note": "auto",
-      "entry_sell": 1659,
-      "entry_offer": 1712
-    },
-    {
-      "id": 3,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 548,
-      "buy_price": 397,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T22:17:28.061838+00:00",
-      "note": "auto",
-      "entry_sell": 397,
-      "entry_offer": 410
-    },
-    {
-      "id": 4,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 86,
-      "buy_price": 2896,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T22:37:23.030043+00:00",
-      "note": "auto",
-      "entry_sell": 2896,
-      "entry_offer": 3030
+      "entry_sell": 724,
+      "entry_offer": 746
     }
   ]
 }
