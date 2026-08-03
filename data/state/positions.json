@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 17,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 1119,
-      "buy_price": 62,
+      "id": 2,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 2604,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-03T03:16:56.646742+00:00",
+      "opened_at": "2026-08-03T03:40:58.425641+00:00",
       "note": "auto",
-      "entry_sell": 62,
-      "entry_offer": 64
-    },
-    {
-      "id": 18,
-      "item_id": 571,
-      "name": "Water orb",
-      "qty": 154,
-      "buy_price": 1620,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T03:28:58.157910+00:00",
-      "note": "auto",
-      "entry_sell": 1620,
-      "entry_offer": 1700
-    },
-    {
-      "id": 19,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 531,
-      "buy_price": 373,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T03:28:58.158299+00:00",
-      "note": "auto",
-      "entry_sell": 373,
-      "entry_offer": 390
+      "entry_sell": 96,
+      "entry_offer": 100
     }
   ]
 }
