@@ -54,7 +54,11 @@ PYTHONPATH=src .venv/bin/python -m rshelper flip-scan --top 20 --json | jq
    best/worst, and GP/hr. `trade pnl --by-item` shows the per-item breakdown
    so you can see which items to keep flipping.
 4. `dashboard` shows the flip table plus a Trades view with P&L and a
-   Progression view (cumulative P&L, win rate, tuning eras).
+   Progression view (cumulative P&L, win rate, tuning eras). The dashboard
+   also has a **Grand Exchange** tab (8-slot offer grid with simulated fill
+   progress and Collect) and a **Bank** tab (holdings grid with quantity
+   overlays, hover tooltips, and unrealized P&L), backed by the `/api/ge`,
+   `/api/ge/collect`, and `/api/bank` endpoints.
 
 GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
 29 May 2025 and is applied everywhere.
@@ -62,7 +66,7 @@ GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
 ## Development
 
 ```bash
-for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 252 tests, 19 files
+for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 281 tests, 20 files
 ```
 
 See `AGENTS.md` for invariants (tax, margin convention, stdout/stderr,

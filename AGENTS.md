@@ -4,7 +4,7 @@ RSHelper is a stdlib-only Python CLI and local web dashboard for Old School
 RuneScape Grand Exchange trading: alch-profit scanning, flip/margin analysis,
 market signals, a daemon monitor, a trade journal, and multi-account profiles.
 It also ships a production deployment (Docker on a Racknerd VPS behind Caddy)
-served at https://rs.reidar.tech. Current version: `2.5.0`
+served at https://rs.reidar.tech. Current version: `2.6.0`
 (`rshelper --version`). Latest handoff: `HANDOFF-v3.0.md`.
 
 ## Environment
@@ -21,7 +21,7 @@ served at https://rs.reidar.tech. Current version: `2.5.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 252 tests across 19 files, all passing.
+  Expected: 281 tests across 20 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -101,6 +101,24 @@ Before committing a round:
 - `.github/workflows/probe-sources.yml` is a manual (dispatch-only) diagnostic
   that curls candidate GE data sources from the VPS host; it does not touch
   the deployed app.
+
+## Operations (local macOS)
+
+The dashboard runs locally as a launchd service so it starts at login and
+survives crashes:
+
+- `~/Library/LaunchAgents/com.reidar.rshelper-trader.plist` — runs
+  `.venv/bin/python -m rshelper auto-trade` (the paper-trader loop), pointing
+  at this repo's venv.
+- `~/Library/LaunchAgents/com.reidar.rshelper-state-sync.plist` — runs
+  `~/.config/rshelper/bin/sync-and-push-state.py` every 15 min, committing
+  trading state (`data/state/*.json`) to `main` as "state: sync trading
+  history". It commits with `commit.gpgsign=true` (SSH signing via 1Password),
+  so it only pushes while 1Password is unlocked; if sync stalls, unlock
+  1Password (or check `launchctl list | grep rshelper-state-sync`).
+
+Do not edit `~/.config/rshelper/` trading state by hand — it is written by
+the CLI and synced to the repo by the state-sync agent.
 
 ## Disk Hygiene
 
