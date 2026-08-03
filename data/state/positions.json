@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 41,
-      "item_id": 24607,
-      "name": "Blighted ancient ice sack",
-      "qty": 718,
-      "buy_price": 348,
+      "id": 1,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 103,
+      "buy_price": 152,
       "direction": "traditional",
-      "opened_at": "2026-08-03T21:03:41.337213+00:00",
+      "opened_at": "2026-08-03T22:13:27.980272+00:00",
       "note": "auto",
-      "entry_sell": 348,
-      "entry_offer": 360
+      "entry_sell": 152,
+      "entry_offer": 159
     },
     {
-      "id": 43,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 646,
-      "buy_price": 220,
+      "id": 2,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 150,
+      "buy_price": 1659,
       "direction": "traditional",
-      "opened_at": "2026-08-03T21:07:41.389332+00:00",
+      "opened_at": "2026-08-03T22:13:27.981260+00:00",
       "note": "auto",
-      "entry_sell": 220,
-      "entry_offer": 228
+      "entry_sell": 1659,
+      "entry_offer": 1712
     }
   ]
 }
