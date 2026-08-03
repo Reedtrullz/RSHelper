@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 12,
-      "item_id": 1615,
-      "name": "Dragonstone",
-      "qty": 23,
-      "buy_price": 10600,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T01:19:06.864732+00:00",
-      "note": "auto",
-      "entry_sell": 10600,
-      "entry_offer": 10934
-    },
-    {
       "id": 13,
       "item_id": 31973,
       "name": "Mahogany repair kit",
@@ -26,15 +14,27 @@
     },
     {
       "id": 14,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 7668,
-      "buy_price": 31,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1327,
+      "buy_price": 152,
       "direction": "traditional",
-      "opened_at": "2026-08-03T02:08:54.826647+00:00",
+      "opened_at": "2026-08-03T02:22:56.357481+00:00",
       "note": "auto",
-      "entry_sell": 31,
-      "entry_offer": 32
+      "entry_sell": 152,
+      "entry_offer": 157
+    },
+    {
+      "id": 15,
+      "item_id": 1662,
+      "name": "Diamond necklace",
+      "qty": 92,
+      "buy_price": 1921,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T02:24:55.142954+00:00",
+      "note": "auto",
+      "entry_sell": 1921,
+      "entry_offer": 1995
     }
   ]
 }
