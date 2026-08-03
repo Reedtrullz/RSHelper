@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 9,
-      "item_id": 105,
-      "name": "Kwuarm potion (unf)",
-      "qty": 112,
-      "buy_price": 2203,
+      "id": 12,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 249,
+      "buy_price": 400,
       "direction": "traditional",
-      "opened_at": "2026-08-03T04:53:00.723606+00:00",
+      "opened_at": "2026-08-03T06:33:04.391509+00:00",
       "note": "auto",
-      "entry_sell": 2203,
-      "entry_offer": 2279
+      "entry_sell": 400,
+      "entry_offer": 420
     },
     {
-      "id": 10,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 295,
-      "buy_price": 373,
+      "id": 13,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 241,
+      "buy_price": 1035,
       "direction": "traditional",
-      "opened_at": "2026-08-03T06:01:03.906746+00:00",
+      "opened_at": "2026-08-03T07:21:08.275071+00:00",
       "note": "auto",
-      "entry_sell": 373,
-      "entry_offer": 388
+      "entry_sell": 1035,
+      "entry_offer": 1084
     },
     {
-      "id": 11,
-      "item_id": 3049,
-      "name": "Grimy toadflax",
-      "qty": 134,
-      "buy_price": 1852,
+      "id": 14,
+      "item_id": 203,
+      "name": "Grimy tarromin",
+      "qty": 102,
+      "buy_price": 116,
       "direction": "traditional",
-      "opened_at": "2026-08-03T06:01:03.907191+00:00",
+      "opened_at": "2026-08-03T07:21:08.275355+00:00",
       "note": "auto",
-      "entry_sell": 1852,
-      "entry_offer": 1914
+      "entry_sell": 116,
+      "entry_offer": 120
     }
   ]
 }
