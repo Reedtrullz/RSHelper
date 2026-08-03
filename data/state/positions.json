@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 9,
-      "item_id": 20718,
-      "name": "Burnt page",
-      "qty": 44,
-      "buy_price": 5670,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T00:39:28.699016+00:00",
-      "note": "auto",
-      "entry_sell": 5670,
-      "entry_offer": 5914
-    },
-    {
       "id": 11,
       "item_id": 385,
       "name": "Shark",
@@ -26,15 +14,27 @@
     },
     {
       "id": 12,
-      "item_id": 9192,
-      "name": "Diamond bolt tips",
-      "qty": 237,
-      "buy_price": 157,
+      "item_id": 1615,
+      "name": "Dragonstone",
+      "qty": 23,
+      "buy_price": 10600,
       "direction": "traditional",
-      "opened_at": "2026-08-03T01:11:06.625602+00:00",
+      "opened_at": "2026-08-03T01:19:06.864732+00:00",
       "note": "auto",
-      "entry_sell": 157,
-      "entry_offer": 164
+      "entry_sell": 10600,
+      "entry_offer": 10934
+    },
+    {
+      "id": 13,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 1671,
+      "buy_price": 84,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T01:25:06.964655+00:00",
+      "note": "auto",
+      "entry_sell": 84,
+      "entry_offer": 88
     }
   ]
 }
