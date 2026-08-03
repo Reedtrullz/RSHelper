@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 8,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 232,
-      "buy_price": 73,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T00:24:28.815671+00:00",
-      "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 76
-    },
-    {
       "id": 9,
       "item_id": 20718,
       "name": "Burnt page",
@@ -26,15 +14,27 @@
     },
     {
       "id": 10,
-      "item_id": 562,
-      "name": "Chaos rune",
-      "qty": 2380,
-      "buy_price": 105,
+      "item_id": 43,
+      "name": "Adamant arrowtips",
+      "qty": 1364,
+      "buy_price": 79,
       "direction": "traditional",
-      "opened_at": "2026-08-03T00:39:28.699485+00:00",
+      "opened_at": "2026-08-03T00:44:27.638528+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
+      "entry_sell": 79,
+      "entry_offer": 82
+    },
+    {
+      "id": 11,
+      "item_id": 385,
+      "name": "Shark",
+      "qty": 242,
+      "buy_price": 1030,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T00:44:27.638867+00:00",
+      "note": "auto",
+      "entry_sell": 1030,
+      "entry_offer": 1061
     }
   ]
 }
