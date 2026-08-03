@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 1619,
-      "name": "Uncut ruby",
-      "qty": 234,
-      "buy_price": 1066,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T03:56:59.046785+00:00",
-      "note": "auto",
-      "entry_sell": 1066,
-      "entry_offer": 1105
-    },
-    {
-      "id": 7,
-      "item_id": 526,
-      "name": "Bones",
-      "qty": 170,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T04:45:00.484211+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
-    },
-    {
       "id": 8,
       "item_id": 245,
       "name": "Wine of zamorak",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 993,
       "entry_offer": 1029
+    },
+    {
+      "id": 9,
+      "item_id": 105,
+      "name": "Kwuarm potion (unf)",
+      "qty": 112,
+      "buy_price": 2203,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T04:53:00.723606+00:00",
+      "note": "auto",
+      "entry_sell": 2203,
+      "entry_offer": 2279
+    },
+    {
+      "id": 10,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 364,
+      "buy_price": 686,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T04:57:01.029108+00:00",
+      "note": "auto",
+      "entry_sell": 686,
+      "entry_offer": 710
     }
   ]
 }
