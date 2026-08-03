@@ -26,15 +26,15 @@
     },
     {
       "id": 44,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 659,
-      "buy_price": 379,
+      "item_id": 562,
+      "name": "Chaos rune",
+      "qty": 2358,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-03T21:27:41.792563+00:00",
+      "opened_at": "2026-08-03T21:41:27.217203+00:00",
       "note": "auto",
-      "entry_sell": 379,
-      "entry_offer": 396
+      "entry_sell": 106,
+      "entry_offer": 110
     }
   ]
 }
