@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 10,
-      "item_id": 1617,
-      "name": "Uncut diamond",
-      "qty": 103,
-      "buy_price": 2405,
+      "id": 41,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 718,
+      "buy_price": 348,
       "direction": "traditional",
-      "opened_at": "2026-08-03T11:39:19.059195+00:00",
+      "opened_at": "2026-08-03T21:03:41.337213+00:00",
       "note": "auto",
-      "entry_sell": 2405,
-      "entry_offer": 2493
+      "entry_sell": 348,
+      "entry_offer": 360
     },
     {
-      "id": 11,
-      "item_id": 21944,
-      "name": "Ruby dragon bolts (e)",
-      "qty": 86,
-      "buy_price": 2881,
+      "id": 43,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 646,
+      "buy_price": 220,
       "direction": "traditional",
-      "opened_at": "2026-08-03T11:43:19.141120+00:00",
+      "opened_at": "2026-08-03T21:07:41.389332+00:00",
       "note": "auto",
-      "entry_sell": 2881,
-      "entry_offer": 2985
+      "entry_sell": 220,
+      "entry_offer": 228
     },
     {
-      "id": 12,
-      "item_id": 9194,
-      "name": "Onyx bolt tips",
-      "qty": 32,
-      "buy_price": 7782,
+      "id": 44,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 659,
+      "buy_price": 379,
       "direction": "traditional",
-      "opened_at": "2026-08-03T12:07:19.640546+00:00",
+      "opened_at": "2026-08-03T21:27:41.792563+00:00",
       "note": "auto",
-      "entry_sell": 7782,
-      "entry_offer": 8080
+      "entry_sell": 379,
+      "entry_offer": 396
     }
   ]
 }
