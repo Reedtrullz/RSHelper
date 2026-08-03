@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 14,
-      "item_id": 203,
-      "name": "Grimy tarromin",
-      "qty": 102,
-      "buy_price": 116,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T07:21:08.275355+00:00",
-      "note": "auto",
-      "entry_sell": 116,
-      "entry_offer": 120
-    },
-    {
       "id": 15,
       "item_id": 1751,
       "name": "Blue dragonhide",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 226,
       "entry_offer": 233
+    },
+    {
+      "id": 17,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 2610,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T08:37:11.494044+00:00",
+      "note": "auto",
+      "entry_sell": 45,
+      "entry_offer": 47
     }
   ]
 }
