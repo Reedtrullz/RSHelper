@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 103,
-      "buy_price": 152,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T22:13:27.980272+00:00",
-      "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
-    },
-    {
       "id": 2,
       "item_id": 575,
       "name": "Earth orb",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1659,
       "entry_offer": 1712
+    },
+    {
+      "id": 3,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 548,
+      "buy_price": 397,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T22:17:28.061838+00:00",
+      "note": "auto",
+      "entry_sell": 397,
+      "entry_offer": 410
+    },
+    {
+      "id": 4,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 134,
+      "buy_price": 675,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T22:29:27.394171+00:00",
+      "note": "auto",
+      "entry_sell": 675,
+      "entry_offer": 700
     }
   ]
 }
