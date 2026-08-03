@@ -862,6 +862,43 @@ def test_sync_script_reports_commit_failure():
     print("  PASSED test_sync_script_reports_commit_failure")
 
 
+def test_sync_script_falls_back_unsigned_on_1password():
+    """A 1Password signing failure must not block the state sync (fall back
+    to an unsigned commit so the live site doesn't go stale)."""
+    import contextlib
+    import importlib.util
+    import io
+    from unittest import mock
+    spec = importlib.util.spec_from_file_location(
+        "sync_state_1p_fallback", Path(__file__).resolve().parent.parent /
+        "scripts" / "sync-and-push-state.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.SRC = Path(_tmpdir.name) / "sync_src_1p"
+    mod.DEST = Path(_tmpdir.name) / "sync_dst_1p"
+    mod.SRC.mkdir(exist_ok=True)
+    mod.DEST.mkdir(exist_ok=True)
+    (mod.SRC / "trades.json").write_text('{"trades": [3]}')
+    fake = mock.Mock(side_effect=[
+        mock.Mock(returncode=0),  # git add
+        mock.Mock(returncode=1, stderr="1Password: failed to fill whole buffer"),
+        mock.Mock(returncode=0),  # git commit --no-gpg-sign
+        mock.Mock(returncode=0),  # git push
+    ])
+    with mock.patch.object(mod.subprocess, "run", fake), \
+            contextlib.redirect_stderr(io.StringIO()) as err:
+        rc = mod.main()
+    assert rc == 0, f"sync should succeed via unsigned fallback, rc={rc}"
+    assert "retrying unsigned" in err.getvalue()
+    assert "1Password" in err.getvalue()
+    # git add + signed commit + unsigned commit + push
+    assert fake.call_count == 4
+    # the unsigned commit must pass --no-gpg-sign
+    commit_calls = [c for c in fake.call_args_list if "commit" in c.args[0]]
+    assert any("--no-gpg-sign" in c.args[0] for c in commit_calls)
+    print("  PASSED test_sync_script_falls_back_unsigned_on_1password")
+
+
 def test_sync_script_ignores_snapshot_subdirs():
     """A subdirectory inside snapshots must not abort the state sync."""
     import importlib.util
@@ -905,6 +942,7 @@ if __name__ == "__main__":
     test_status_staleness()
     test_sync_script_changed_detection()
     test_sync_script_reports_commit_failure()
+    test_sync_script_falls_back_unsigned_on_1password()
     test_sync_script_ignores_snapshot_subdirs()
     test_candidate_edge_ranking()
     test_spread_collapse_exit()

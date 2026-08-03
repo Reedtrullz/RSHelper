@@ -78,8 +78,19 @@ def main() -> int:
     git("add", "data/state")
     commit = git("commit", "-m", "state: sync trading history")
     if commit.returncode != 0:
-        print(f"[sync] commit failed: {commit.stderr.strip()}", file=sys.stderr)
-        return 1
+        # The repo is configured with commit.gpgsign=true (SSH signing via
+        # 1Password). When 1Password is locked/unavailable the signed commit
+        # fails with "1Password: failed to fill whole buffer". Fall back to
+        # an unsigned commit so trading state still reaches the repo/live
+        # site — a stale live site is worse than an unsigned history entry.
+        if "1Password" in commit.stderr or "gpg" in commit.stderr.lower():
+            print(f"[sync] signed commit failed ({commit.stderr.strip()}); "
+                  f"retrying unsigned", file=sys.stderr)
+            commit = git("commit", "--no-gpg-sign",
+                         "-m", "state: sync trading history")
+        if commit.returncode != 0:
+            print(f"[sync] commit failed: {commit.stderr.strip()}", file=sys.stderr)
+            return 1
     push = git("push", "origin", "main")
     if push.returncode != 0:
         print(f"[sync] push failed: {push.stderr.strip()}", file=sys.stderr)
