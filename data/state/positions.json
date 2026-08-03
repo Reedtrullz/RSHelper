@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 11,
-      "item_id": 385,
-      "name": "Shark",
-      "qty": 242,
-      "buy_price": 1030,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T00:44:27.638867+00:00",
-      "note": "auto",
-      "entry_sell": 1030,
-      "entry_offer": 1061
-    },
-    {
       "id": 12,
       "item_id": 1615,
       "name": "Dragonstone",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 1079,
       "entry_offer": 1116
+    },
+    {
+      "id": 14,
+      "item_id": 5311,
+      "name": "Wildblood seed",
+      "qty": 250,
+      "buy_price": 71,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T01:54:55.585856+00:00",
+      "note": "auto",
+      "entry_sell": 71,
+      "entry_offer": 74
     }
   ]
 }
