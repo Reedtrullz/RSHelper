@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 8780,
-      "name": "Teak plank",
-      "qty": 279,
-      "buy_price": 724,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T22:53:19.033999+00:00",
-      "note": "auto",
-      "entry_sell": 724,
-      "entry_offer": 746
-    }
-  ]
+  "positions": []
 }
