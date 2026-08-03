@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 2604,
-      "buy_price": 96,
+      "id": 4,
+      "item_id": 1603,
+      "name": "Ruby",
+      "qty": 303,
+      "buy_price": 824,
       "direction": "traditional",
-      "opened_at": "2026-08-03T03:40:58.425641+00:00",
+      "opened_at": "2026-08-03T03:46:57.563523+00:00",
       "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
+      "entry_sell": 824,
+      "entry_offer": 849
+    },
+    {
+      "id": 5,
+      "item_id": 12934,
+      "name": "Zulrah's scales",
+      "qty": 1592,
+      "buy_price": 157,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T03:56:59.045863+00:00",
+      "note": "auto",
+      "entry_sell": 157,
+      "entry_offer": 163
+    },
+    {
+      "id": 6,
+      "item_id": 1619,
+      "name": "Uncut ruby",
+      "qty": 234,
+      "buy_price": 1066,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T03:56:59.046785+00:00",
+      "note": "auto",
+      "entry_sell": 1066,
+      "entry_offer": 1105
     }
   ]
 }
