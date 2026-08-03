@@ -13,28 +13,28 @@
       "entry_offer": 1908
     },
     {
-      "id": 9,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 118,
-      "buy_price": 85,
+      "id": 10,
+      "item_id": 1617,
+      "name": "Uncut diamond",
+      "qty": 103,
+      "buy_price": 2405,
       "direction": "traditional",
-      "opened_at": "2026-08-03T11:29:18.817639+00:00",
+      "opened_at": "2026-08-03T11:39:19.059195+00:00",
       "note": "auto",
-      "entry_sell": 85,
-      "entry_offer": 89
+      "entry_sell": 2405,
+      "entry_offer": 2493
     },
     {
-      "id": 10,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 5102,
-      "buy_price": 49,
+      "id": 11,
+      "item_id": 21944,
+      "name": "Ruby dragon bolts (e)",
+      "qty": 86,
+      "buy_price": 2881,
       "direction": "traditional",
-      "opened_at": "2026-08-03T11:29:18.817976+00:00",
+      "opened_at": "2026-08-03T11:43:19.141120+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 2881,
+      "entry_offer": 2985
     }
   ]
 }
