@@ -26,15 +26,15 @@
     },
     {
       "id": 13,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 1671,
-      "buy_price": 84,
+      "item_id": 31973,
+      "name": "Mahogany repair kit",
+      "qty": 112,
+      "buy_price": 1079,
       "direction": "traditional",
-      "opened_at": "2026-08-03T01:25:06.964655+00:00",
+      "opened_at": "2026-08-03T01:29:07.083124+00:00",
       "note": "auto",
-      "entry_sell": 84,
-      "entry_offer": 88
+      "entry_sell": 1079,
+      "entry_offer": 1116
     }
   ]
 }
