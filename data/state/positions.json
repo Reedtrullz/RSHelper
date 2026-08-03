@@ -26,15 +26,15 @@
     },
     {
       "id": 4,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 134,
-      "buy_price": 675,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 86,
+      "buy_price": 2896,
       "direction": "traditional",
-      "opened_at": "2026-08-03T22:29:27.394171+00:00",
+      "opened_at": "2026-08-03T22:37:23.030043+00:00",
       "note": "auto",
-      "entry_sell": 675,
-      "entry_offer": 700
+      "entry_sell": 2896,
+      "entry_offer": 3030
     }
   ]
 }
