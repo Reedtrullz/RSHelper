@@ -13,18 +13,6 @@
       "entry_offer": 415
     },
     {
-      "id": 7,
-      "item_id": 22786,
-      "name": "Hydra bones",
-      "qty": 34,
-      "buy_price": 7300,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T10:33:16.555840+00:00",
-      "note": "auto",
-      "entry_sell": 7300,
-      "entry_offer": 7593
-    },
-    {
       "id": 8,
       "item_id": 1745,
       "name": "Green dragon leather",
