@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1601,
-      "name": "Diamond",
-      "qty": 154,
-      "buy_price": 1614,
+      "id": 6,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 623,
+      "buy_price": 401,
       "direction": "traditional",
-      "opened_at": "2026-08-03T08:51:10.815050+00:00",
+      "opened_at": "2026-08-03T10:29:16.252600+00:00",
       "note": "auto",
-      "entry_sell": 1614,
-      "entry_offer": 1668
+      "entry_sell": 401,
+      "entry_offer": 415
     },
     {
-      "id": 2,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 430,
-      "buy_price": 141,
+      "id": 7,
+      "item_id": 22786,
+      "name": "Hydra bones",
+      "qty": 34,
+      "buy_price": 7300,
       "direction": "traditional",
-      "opened_at": "2026-08-03T09:05:12.577798+00:00",
+      "opened_at": "2026-08-03T10:33:16.555840+00:00",
       "note": "auto",
-      "entry_sell": 141,
-      "entry_offer": 148
+      "entry_sell": 7300,
+      "entry_offer": 7593
+    },
+    {
+      "id": 8,
+      "item_id": 1745,
+      "name": "Green dragon leather",
+      "qty": 135,
+      "buy_price": 1850,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T10:57:17.823009+00:00",
+      "note": "auto",
+      "entry_sell": 1850,
+      "entry_offer": 1908
     }
   ]
 }
