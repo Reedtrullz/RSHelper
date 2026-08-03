@@ -26,15 +26,15 @@
     },
     {
       "id": 16,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 1177,
-      "buy_price": 32,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 955,
+      "buy_price": 226,
       "direction": "traditional",
-      "opened_at": "2026-08-03T07:35:08.937659+00:00",
+      "opened_at": "2026-08-03T07:51:09.374675+00:00",
       "note": "auto",
-      "entry_sell": 32,
-      "entry_offer": 33
+      "entry_sell": 226,
+      "entry_offer": 233
     }
   ]
 }
