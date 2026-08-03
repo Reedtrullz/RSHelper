@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 13,
-      "item_id": 31973,
-      "name": "Mahogany repair kit",
-      "qty": 112,
-      "buy_price": 1079,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T01:29:07.083124+00:00",
-      "note": "auto",
-      "entry_sell": 1079,
-      "entry_offer": 1116
-    },
-    {
-      "id": 14,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1327,
-      "buy_price": 152,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T02:22:56.357481+00:00",
-      "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 157
-    },
-    {
       "id": 15,
       "item_id": 1662,
       "name": "Diamond necklace",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1921,
       "entry_offer": 1995
+    },
+    {
+      "id": 16,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 131,
+      "buy_price": 1901,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T02:32:55.355858+00:00",
+      "note": "auto",
+      "entry_sell": 1901,
+      "entry_offer": 1970
+    },
+    {
+      "id": 17,
+      "item_id": 560,
+      "name": "Death rune",
+      "qty": 1358,
+      "buy_price": 184,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T02:40:55.762750+00:00",
+      "note": "auto",
+      "entry_sell": 184,
+      "entry_offer": 192
     }
   ]
 }
