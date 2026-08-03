@@ -297,7 +297,9 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     After spread_collapse_exit_minutes, a position whose net spread (after
     tax) has collapsed below min_exit_spread_pct exits at the bid: the
     spread-capture edge it was opened for is gone, so holding only waits for
-    a rally that may never come.
+    a rally that may never come. A simulated GE fill completion is NOT
+    returned here — run_cycle checks it separately so a filled offer closes
+    at the offer (ge_fill) only when no TP/SL/collapse/max-hold fires first.
     """
     now = now if now is not None else time.time()
     opened = _opened_ts(position)
@@ -351,6 +353,19 @@ def size_position(cfg, capital_used: int, entry) -> int:
     return min(entry.buy_limit, by_market, budget // bid)
 
 
+def _ge_fill_pct(position, vol_5m: dict, now: float) -> float:
+    """0.0-1.0 simulated GE buy-fill progress for a position.
+
+    Reuses the dashboard's fill curve (ge_offers.compute_fill_pct) so the
+    auto-trader closes a position at the offer the moment the dashboard
+    would show it as "filled" — no manual Collect click for auto trades.
+    """
+    from rshelper.ge_offers import compute_fill_pct, _item_volume_5m
+    return compute_fill_pct(position.qty,
+                            _item_volume_5m(vol_5m.get(str(position.item_id))),
+                            position.opened_at, now)
+
+
 def run_cycle(cfg, profile: str | None = None) -> dict:
     """One poll cycle: manage auto positions (exits) then open new ones."""
     from rshelper.cli import _fetch_bootstrap
@@ -371,6 +386,12 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         vol = vol_5m.get(str(p.item_id))
         avg_low = vol.get("avgLowPrice") if isinstance(vol, dict) else None
         reason = exit_reason(p, latest, cfg, now=now, avg_low=avg_low)
+        if reason is None:
+            # No TP/SL/collapse/hold exit this cycle: if the simulated GE
+            # buy-fill has completed, close at the offer (the spread-capture
+            # take-profit) exactly like the dashboard's Collect would.
+            if _ge_fill_pct(p, vol_5m, now) >= 1.0:
+                reason = "ge_fill"
         if reason is None:
             continue
         price = latest.get(str(p.item_id))
@@ -394,7 +415,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             else:
                 sell = p.buy_price  # expired; close flat without any quote
         elif fresh:
-            if p.direction == "traditional" and reason == "take_profit":
+            if p.direction == "traditional" and reason in ("take_profit", "ge_fill"):
                 quote_sell = int(price.get("high", 0) or 0)  # sell at the offer
                 sell = quote_sell
             else:

@@ -127,6 +127,7 @@ def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
             "opened_at": p.opened_at,
             "age_minutes": round(_elapsed_minutes(p.opened_at, now), 1),
             "can_collect": fill >= 1.0,
+            "auto": p.note == "auto",  # auto-trader closes these itself
         })
     return {
         "slots": slots,

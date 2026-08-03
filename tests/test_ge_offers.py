@@ -194,6 +194,19 @@ def test_stale_price_slots():
     print("  PASSED test_stale_price_slots")
 
 
+def test_slot_auto_flag():
+    """Slots expose whether the position is auto-managed (no manual collect)."""
+    _clean()
+    now = 1_000_000.0
+    open_position(561, "Nature rune", 10, 100, note="auto")
+    open_position(562, "Fire rune", 1, 10, note="paper")
+    slots = build_ge_slots(now=now)["slots"]
+    auto = {s["item_id"]: s["auto"] for s in slots}
+    assert auto[561] is True
+    assert auto[562] is False
+    print("  PASSED test_slot_auto_flag")
+
+
 def test_collect_closes_and_logs():
     _clean()
     p = open_position(561, "Nature rune", 10, 100, direction="traditional")
@@ -243,6 +256,7 @@ if __name__ == "__main__":
     test_offer_type_mapping()
     test_max_eight_slots()
     test_stale_price_slots()
+    test_slot_auto_flag()
     test_collect_closes_and_logs()
     test_collect_unknown_id()
     test_collect_no_price_fallback()

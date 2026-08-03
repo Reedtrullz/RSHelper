@@ -703,13 +703,21 @@ function geSlotHtml(slot){
   const pct=Math.max(0,Math.min(100,Math.round((slot.fill_pct||0)*100)));
   const buy=slot.offer_type==='buy';
   const filled=pct>=100;
+  // Auto-trader positions close themselves (ge_fill) — show status, no
+  // manual Collect button. Manual paper positions keep the Collect button.
+  let action='';
+  if(filled){
+    action=slot.auto
+      ?'<div class="ge-collect-btn visible" style="background:#2a4a2a;border-color:#4ecca3;color:#4ecca3;cursor:default">Auto</div>'
+      :'<button class="ge-collect-btn visible" onclick="collectOffer('+slot.position_id+',event)">Collect</button>';
+  }
   return '<div class="ge-slot" onclick="geSlotClick('+slot.position_id+')">'+
     '<div class="ge-offer-type '+(buy?'buy':'sell')+'">'+(buy?'Buy':'Sell')+'</div>'+
     '<img class="ge-slot-icon" src="'+escHtml(slot.icon_url_detail||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
     '<div class="ge-slot-name" title="'+escHtml(slot.name)+'">'+escHtml(slot.name)+'</div>'+
     '<div class="ge-fill-track"><div class="ge-fill-bar '+(buy?'buy':'sell')+(filled?' filled':'')+'" style="width:'+pct+'%"></div></div>'+
     '<div class="ge-slot-price">'+format(slot.price)+' coins</div>'+
-    (slot.can_collect?'<button class="ge-collect-btn visible" onclick="collectOffer('+slot.position_id+',event)">Collect</button>':'')+
+    action+
     '</div>';
 }
 function geEmptySlotHtml(){

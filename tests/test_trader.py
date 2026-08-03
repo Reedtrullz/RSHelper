@@ -473,6 +473,60 @@ def test_candidate_confidence_tiebreaker():
     print("  PASSED test_candidate_confidence_tiebreaker")
 
 
+def test_auto_ge_fill_closes_at_offer():
+    """A filled auto buy-offer closes itself at the offer (no manual click)."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    # Position opened 10 min ago on a liquid item: fill completes fast.
+    open_position(1, "Dipped", 100, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=10)).isoformat()
+    pmod._save(pos)
+    # No TP/SL/collapse/max_hold: offer 100 (net +1.0% < +3.0% TP), bid ==
+    # entry bid 97 (no stop). But the simulated GE fill is complete (1000
+    # units/min for qty 100 over 10 min), so the trader closes it at the offer.
+    latest = _latest(now, **{"1": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
+                    "lowPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1, result
+    assert result["closed"][0]["reason"] == "ge_fill"
+    assert result["closed"][0]["sell_price"] == 100  # sold at the offer
+    trade = jmod.list_trades()[0]
+    assert trade.exit_reason == "ge_fill"
+    assert trade.sell_price == 100
+    assert pmod.list_positions() == []
+    print("  PASSED test_auto_ge_fill_closes_at_offer")
+
+
+def test_manual_position_not_auto_closed_by_ge_fill():
+    """Manual paper positions are not closed by the trader's ge_fill path."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Manual", 100, 97, note="paper", direction="traditional")
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=10)).isoformat()
+    pmod._save(pos)
+    latest = _latest(now, **{"1": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
+                    "lowPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert result["closed"] == [], result  # manual positions untouched
+    assert len(pmod.list_positions()) == 1
+    print("  PASSED test_manual_position_not_auto_closed_by_ge_fill")
+
+
 def test_reentry_cooldown():
     _clean()
     from unittest import mock
@@ -866,4 +920,6 @@ if __name__ == "__main__":
     test_stop_mark_blend_zero_is_legacy()
     test_stop_slippage_configurable()
     test_candidate_confidence_tiebreaker()
+    test_auto_ge_fill_closes_at_offer()
+    test_manual_position_not_auto_closed_by_ge_fill()
     print("\nAll tests passed.")
