@@ -53,6 +53,10 @@ class PnLSummary:
     worst_trade: Trade | None = None
     active_gp_per_hour: float = 0.0
     items_traded: int = 0
+    gross_profit: int = 0      # sum of winning trades
+    gross_loss: int = 0        # absolute sum of losing trades
+    profit_factor: float = 0.0 # gross_profit / gross_loss (inf when no losses)
+    max_drawdown: int = 0      # worst peak-to-trough of cumulative P&L
 
 
 def _load(profile: str | None = None) -> list[dict]:
@@ -173,6 +177,18 @@ def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
     best = max(trades_list, key=lambda t: t.profit)
     worst = min(trades_list, key=lambda t: t.profit)
     unique_items = len(set(t.item_id for t in trades_list))
+    gross_profit = sum(t.profit for t in winners)
+    gross_loss = abs(sum(t.profit for t in losers))
+
+    # Max drawdown: worst peak-to-trough of cumulative P&L over time.
+    # list_trades returns newest-first, so walk reversed for chronological order.
+    max_drawdown = 0
+    peak = 0
+    cumulative = 0
+    for t in reversed(trades_list):
+        cumulative += t.profit
+        peak = max(peak, cumulative)
+        max_drawdown = max(max_drawdown, peak - cumulative)
 
     timestamps = sorted(t.timestamp for t in trades_list)
     active_gp_per_hour = 0.0
@@ -196,6 +212,10 @@ def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
         best_trade=best, worst_trade=worst,
         active_gp_per_hour=round(active_gp_per_hour),
         items_traded=unique_items,
+        gross_profit=gross_profit, gross_loss=gross_loss,
+        profit_factor=(gross_profit / gross_loss if gross_loss > 0
+                       else float("inf") if gross_profit > 0 else 0.0),
+        max_drawdown=max_drawdown,
     )
 
 

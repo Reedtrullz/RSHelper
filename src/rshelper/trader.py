@@ -196,9 +196,16 @@ def _status_base(state: dict) -> dict:
 
 
 def select_candidates(items, latest: dict, vol_5m: dict, cfg,
-                      now: float | None = None) -> list:
-    """Filter items to liquid, sane, freshly-dipped buy-the-bid candidates."""
+                      now: float | None = None,
+                      confidence: dict[int, float] | None = None) -> list:
+    """Filter items to liquid, sane, freshly-dipped buy-the-bid candidates.
+
+    confidence: optional {item_id: 0..1} map (e.g. from MarginAnalysis) used
+    only to break ranking ties — the proven dip x net-spread `edge` stays
+    the primary sort key so we never regress the mean-reversion edge.
+    """
     now = now if now is not None else time.time()
+    confidence = confidence or {}
     out = []
     ranked = []
     for item in items:
@@ -243,12 +250,15 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
         # Rank by expected edge, not raw volume: dip depth (mean-reversion
         # room) times net spread capture (spread minus the 2% sell tax — the
         # profit if the offer simply holds). Volume stays as the tiebreaker;
-        # fill risk is already capped by MAX_VOLUME_FRACTION.
+        # fill risk is already capped by MAX_VOLUME_FRACTION. When a caller
+        # supplies a confidence model (reliability x profitability), it
+        # breaks ties between equal edges instead of raw volume.
         net_capture = spread_pct - 2.0
         edge = dip_pct * max(0.0, net_capture)
-        ranked.append((edge, item.volume, item))
-    ranked.sort(key=lambda r: (r[0], r[1]), reverse=True)
-    out = [r[2] for r in ranked]
+        conf = confidence.get(item.id, 0.0)
+        ranked.append((edge, conf, item.volume, item))
+    ranked.sort(key=lambda r: (r[0], r[1], r[2]), reverse=True)
+    out = [r[3] for r in ranked]
     return out
 
 
@@ -261,7 +271,24 @@ def unrealized_pct(buy: int, sell: int, qty: int) -> float:
     return unreal / (buy * qty) * 100
 
 
-def exit_reason(position, latest: dict, cfg, now: float | None = None):
+def _stop_mark(entry_bid: int, avg_low: float | None, cfg) -> float:
+    """Reference price for the stop-loss, blended between entry bid and avg.
+
+    A dip entry can sit up to max_dip_pct below the 5m avgLowPrice, so a
+    stop measured purely from the entry bid can fire on the very dip the
+    strategy was designed to buy. stop_mark_blend in [0,1] moves the
+    reference toward the window average: 0.0 = legacy (entry bid), 1.0 =
+    the full avg_low at entry. When avg_low is unknown, fall back to the
+    entry bid so behavior is unchanged for fallback data.
+    """
+    if not avg_low or avg_low <= 0:
+        return float(entry_bid)
+    blend = max(0.0, min(1.0, float(getattr(cfg, "stop_mark_blend", 0.0))))
+    return entry_bid + blend * (avg_low - entry_bid)
+
+
+def exit_reason(position, latest: dict, cfg, now: float | None = None,
+                avg_low: float | None = None):
     """Return 'take_profit' | 'stop_loss' | 'spread_collapse' | 'max_hold' | None.
 
     Positions are opened at the bid (low). Take-profit sells at the offer
@@ -289,7 +316,8 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None):
                                         position.qty) >= cfg.take_profit_pct:
             return "take_profit"
         if bid > 0:
-            move_pct = (bid - position.buy_price) / position.buy_price * 100
+            mark = _stop_mark(position.buy_price, avg_low, cfg)
+            move_pct = (bid - mark) / mark * 100
             if move_pct <= cfg.stop_loss_pct:
                 return "stop_loss"
             if (age_min is not None
@@ -340,7 +368,9 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         if p.note != "auto":
             continue
         auto_open.add(p.item_id)
-        reason = exit_reason(p, latest, cfg, now=now)
+        vol = vol_5m.get(str(p.item_id))
+        avg_low = vol.get("avgLowPrice") if isinstance(vol, dict) else None
+        reason = exit_reason(p, latest, cfg, now=now, avg_low=avg_low)
         if reason is None:
             continue
         price = latest.get(str(p.item_id))
@@ -376,7 +406,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                     if guarded_fill is not None:
                         sell = guarded_fill  # print exit: fill at window avg
                     else:
-                        sell = int(sell * STOP_SLIPPAGE)  # model worse fills
+                        sell = int(sell * cfg.stop_slippage)  # model worse fills
         else:
             # Unreachable today: exit_reason returns None for TP/SL/collapse
             # without a fresh price (only max_hold can arrive here with a
@@ -466,6 +496,10 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("artifact_low_vol_frac must be in (0, 1]")
     if cfg.artifact_outlier_pct < 0:
         raise ValueError("artifact_outlier_pct must be >= 0")
+    if not (0 < cfg.stop_slippage <= 1):
+        raise ValueError("stop_slippage must be in (0, 1]")
+    if not (0 <= cfg.stop_mark_blend <= 1):
+        raise ValueError("stop_mark_blend must be in [0, 1]")
     interval = interval or cfg.interval_sec
     prof_name = profile if profile else "default"
     pid = os.getpid()

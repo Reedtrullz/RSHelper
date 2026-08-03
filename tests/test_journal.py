@@ -188,6 +188,40 @@ def test_pnl_cost_basis_and_roi():
     print("  PASSED test_pnl_cost_basis_and_roi")
 
 
+def test_pnl_profit_factor_and_drawdown():
+    """compute_pnl exposes gross profit/loss, profit factor, max drawdown."""
+    _clean()
+    from datetime import datetime, timezone, timedelta
+    # Sequence (after 2% tax): +96, -60, +77 -> cumulative 96, 36, 113;
+    # peak 96 at t1, trough 36 at t2 -> drawdown 60.
+    log_trade(1, "W1", 1, 100, 200)   # +96 (tax 4)
+    log_trade(2, "L", 1, 100, 40)     # -60
+    log_trade(3, "W2", 1, 100, 180)   # +77 (tax 3)
+    trades_data = json.loads(TRADES_PATH.read_text())
+    base = datetime.now(timezone.utc)
+    for i, t in enumerate(trades_data["trades"]):
+        t["timestamp"] = (base - timedelta(hours=3 - i)).isoformat()
+    TRADES_PATH.write_text(json.dumps(trades_data))
+    pnl = compute_pnl()
+    assert pnl.gross_profit == 96 + 77
+    assert pnl.gross_loss == 60
+    assert abs(pnl.profit_factor - (96 + 77) / 60) < 1e-9
+    assert pnl.max_drawdown == 60
+    print("  PASSED test_pnl_profit_factor_and_drawdown")
+
+
+def test_pnl_profit_factor_no_losses():
+    """All-win ledger has an infinite profit factor (no losses to divide)."""
+    _clean()
+    log_trade(1, "W1", 1, 100, 200)   # +100
+    log_trade(2, "W2", 1, 100, 150)   # +50
+    pnl = compute_pnl()
+    assert pnl.gross_loss == 0
+    assert pnl.profit_factor == float("inf")
+    assert pnl.max_drawdown == 0
+    print("  PASSED test_pnl_profit_factor_no_losses")
+
+
 def test_pnl_by_item_breakdown():
     _clean()
     log_trade(1, "Nature rune", 1000, 100, 110)  # profit +8,000
@@ -321,6 +355,8 @@ if __name__ == "__main__":
     test_pnl_empty_ledger()
     test_pnl_gp_per_hour()
     test_pnl_cost_basis_and_roi()
+    test_pnl_profit_factor_and_drawdown()
+    test_pnl_profit_factor_no_losses()
     test_pnl_by_item_breakdown()
     test_pnl_note_filter()
     test_strategy_filter()

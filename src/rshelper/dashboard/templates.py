@@ -1083,6 +1083,8 @@ async function renderPaper(){
       metric('Best','<span class="val green">'+format(pnl.best_trade||0)+'</span>','')+
       metric('Worst','<span class="val red">'+format(pnl.worst_trade||0)+'</span>','')+
       metric('Active GP/hr',format(pnl.active_gp_per_hour||0)+' gp','gold')+
+      metric('Profit Factor',pnl.profit_factor!=null?format(pnl.profit_factor):'-','gold')+
+      metric('Max Drawdown',format(pnl.max_drawdown||0)+' gp',(pnl.max_drawdown||0)>0?'red':'')+
       metric('Open Positions',format((pos.positions||[]).length),'')+
       metric('Unrealized',format(pos.unrealized||0)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
       '</div>';

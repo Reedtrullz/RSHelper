@@ -88,6 +88,9 @@ def build_history(profile: str | None = None, paper_only: bool = True,
         cost = sum(t.buy_price * t.qty for t in era_trades)
         profit = sum(t.profit for t in era_trades)
         wins = sum(1 for t in era_trades if t.profit > 0)
+        losses = sum(1 for t in era_trades if t.profit < 0)
+        gross_profit = sum(t.profit for t in era_trades if t.profit > 0)
+        gross_loss = abs(sum(t.profit for t in era_trades if t.profit < 0))
         active_days = len({t.timestamp[:10] for t in era_trades})
         eras.append({
             "start": start,
@@ -99,6 +102,10 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "win_rate": round(wins / len(era_trades) * 100, 1) if era_trades else None,
             "roi_pct": round(profit / cost * 100, 2) if cost else None,
             "trades_per_day": round(len(era_trades) / active_days, 1) if active_days else 0,
+            "profit_factor": (round(gross_profit / gross_loss, 2)
+                              if gross_loss > 0 else
+                              float("inf") if gross_profit > 0 else None),
+            "loss_trades": losses,
         })
 
     return {

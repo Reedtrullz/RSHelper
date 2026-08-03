@@ -22,7 +22,6 @@ SURGE_MULTIPLIER = 3.0  # 3x baseline volume = SURGE
 SURGE_VOLUME_MIN = 100  # ignore tiny-volume noise
 FLIP_SPREAD_MIN = 0.05  # 5% spread of buy price
 FLIP_VOLUME_MIN = 500   # minimum total volume for a FLIP signal
-STALE_MINUTES = 30      # data older than this = STALE
 DEFAULT_COOLDOWN = 15 * 60  # 15 minutes in seconds
 
 
@@ -253,10 +252,18 @@ def detect_signals(
     return signals
 
 
-def compute_rs_score_flip(item: Item, max_volume: int) -> float:
+def compute_rs_score_flip(item: Item, max_volume: int,
+                          latest: dict | None = None,
+                          now: float | None = None) -> float:
     """Compute RS Score (0-100) for a flip-scan Item.
 
     Volume (40%) + spread quality (30%) + market depth (20%) + freshness (10%).
+    Freshness is scored from the actual price timestamp age when `latest`
+    (the /latest price dict) is provided: prices <= 5 min old score full
+    10, scaling linearly down to 0 at 30 min. Without timestamps the bonus
+    is neutral (5), so callers that can't supply price data are not
+    penalized — and the old constant +10 (fake freshness for every item)
+    is gone.
     """
     # Volume score: relative to max in scan results
     vol_score = min(1.0, item.volume / max(1, max_volume)) if max_volume > 0 else 0.5
@@ -271,8 +278,19 @@ def compute_rs_score_flip(item: Item, max_volume: int) -> float:
     # Market depth: higher buy limits = more stable market
     depth_score = min(1.0, item.buy_limit / 10000)
 
-    # Freshness: constant 10% bonus (prices are live from API)
-    rs = vol_score * 40 + spread_score * 30 + depth_score * 20 + 10
+    # Freshness: score from real price age, not a constant
+    now = now if now is not None else time.time()
+    price = (latest or {}).get(str(item.id))
+    freshness = 5.0  # neutral when no timestamps available
+    if isinstance(price, dict):
+        ages = [now - ts for ts in (price.get("highTime"), price.get("lowTime"))
+                if isinstance(ts, (int, float))]
+        if ages:
+            age = max(ages)  # the older leg governs
+            # 10 pts at <=5 min, 0 at >=30 min, linear in between
+            freshness = max(0.0, min(10.0, 10.0 * (1.0 - max(0.0, age - 300) / 1500)))
+
+    rs = vol_score * 40 + spread_score * 30 + depth_score * 20 + freshness
     return max(0.0, min(100.0, rs))
 
 

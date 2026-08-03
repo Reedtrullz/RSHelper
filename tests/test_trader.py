@@ -42,9 +42,10 @@ def _cfg(**kw):
                     dip_depth_pct=2.0, max_dip_pct=10.0, min_spread_pct=3.0,
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
-                    take_profit_pct=2.0, stop_loss_pct=-2.0,
+                    take_profit_pct=3.0, stop_loss_pct=-1.5,
                     max_hold_minutes=180, spread_collapse_exit_minutes=60,
-                    min_exit_spread_pct=1.0, interval_sec=120)
+                    min_exit_spread_pct=1.0, interval_sec=120,
+                    stop_slippage=0.97, stop_mark_blend=0.0)
     defaults.update(kw)
     return TraderConfig(**defaults)
 
@@ -101,12 +102,14 @@ def test_exit_reason():
     p = Position(id=1, item_id=1, name="X", qty=10, buy_price=97,
                  direction="traditional",
                  opened_at=(datetime.now(timezone.utc)).isoformat())
-    # take profit: offer 102 -> (102-97-2)/97 = +3.1% >= +2%
+    # take profit: offer 102 -> (102-97-2)/97 = +3.1% >= +3.0%
     assert exit_reason(p, _latest(now, **{"1": (102, 97)}), cfg, now=now) == "take_profit"
-    # hold: offer 100 -> (100-97-2)/97 = +1.0% < +2%; bid == entry bid
+    # hold: offer 100 -> (100-97-2)/97 = +1.0% < +3.0%; bid == entry bid
     assert exit_reason(p, _latest(now, **{"1": (100, 97)}), cfg, now=now) is None
-    # stop loss: bid 94 -> -3.1% from entry bid 97
+    # stop loss: bid 94 -> -3.1% from entry bid 97; stop is -1.5%
     assert exit_reason(p, _latest(now, **{"1": (100, 94)}), cfg, now=now) == "stop_loss"
+    # bid 96 -> -1.0% from entry bid 97: within -1.5% stop -> hold
+    assert exit_reason(p, _latest(now, **{"1": (100, 96)}), cfg, now=now) is None
     # stale price -> hold
     stale = {"1": {"high": 102, "low": 97, "highTime": now - 500, "lowTime": now - 500}}
     assert exit_reason(p, stale, cfg, now=now) is None
@@ -384,6 +387,92 @@ def test_stop_loss_legacy_position_uses_buy_mark():
     print("  PASSED test_stop_loss_legacy_position_uses_buy_mark")
 
 
+def test_stop_mark_blend_gives_dip_allowance():
+    """stop_mark_blend moves the stop reference toward the 5m avg low."""
+    _clean()
+    from rshelper.positions import open_position
+    now = time.time()
+    # Entry bid 97, avg_low 100 (a ~3% dip). With stop_mark_blend=0.5 the
+    # stop mark is 98.5. Legacy (blend 0): bid 97.2 is -0.8% from entry bid
+    # 97 -> hold; blend 0.5: bid 97.2 is -1.32% from mark 98.5 -> also hold.
+    # The key difference: bid 96.8 is -0.2% from entry bid (legacy holds)
+    # but -1.73% from mark 98.5 (blend stops — the position has drifted
+    # meaningfully below the window average, not just the entry print).
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    # Legacy blend 0: bid 96.8 is -0.2% from entry bid -> hold
+    cfg0 = _cfg(stop_mark_blend=0.0, stop_loss_pct=-1.5)
+    assert exit_reason(pmod.list_positions()[0],
+                       _latest(now, **{"1": (100, 96)}), cfg0, now=now,
+                       avg_low=100) is None
+    # Blend 0.5: bid 96.8 is -1.73% from mark 98.5 -> stop
+    cfg = _cfg(stop_mark_blend=0.5, stop_loss_pct=-1.5)
+    assert exit_reason(pmod.list_positions()[0],
+                       _latest(now, **{"1": (100, 96)}), cfg, now=now,
+                       avg_low=100) == "stop_loss"
+    # Blend 0.5: bid 98 (above entry bid, below avg) -> +1.5% from mark -> hold
+    assert exit_reason(pmod.list_positions()[0],
+                       _latest(now, **{"1": (100, 98)}), cfg, now=now,
+                       avg_low=100) is None
+    print("  PASSED test_stop_mark_blend_gives_dip_allowance")
+
+
+def test_stop_mark_blend_zero_is_legacy():
+    """stop_mark_blend=0.0 keeps the legacy stop-from-entry-bid behavior."""
+    _clean()
+    from rshelper.positions import open_position
+    now = time.time()
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    cfg = _cfg(stop_mark_blend=0.0, stop_loss_pct=-1.5)
+    # bid 96 -> -1.0% from entry bid 97 -> within -1.5% -> hold
+    assert exit_reason(pmod.list_positions()[0],
+                       _latest(now, **{"1": (100, 96)}), cfg, now=now) is None
+    print("  PASSED test_stop_mark_blend_zero_is_legacy")
+
+
+def test_stop_slippage_configurable():
+    """stop_slippage config knob controls stop fill degradation."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    latest = _latest(now, **{"1": (100, 94)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg(stop_slippage=0.99))
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == int(94 * 0.99)
+    print("  PASSED test_stop_slippage_configurable")
+
+
+def test_candidate_confidence_tiebreaker():
+    """Confidence model breaks ties between equal edges."""
+    _clean()
+    now = int(time.time())
+    items = [
+        _item(1, "A", 100, 97, 5000),   # same dip/spread as B
+        _item(2, "B", 100, 97, 900),    # lower volume
+        _item(3, "C", 100, 97, 3000),   # same dip/spread as A, mid volume
+    ]
+    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 99}, "2": {"avgLowPrice": 99},
+              "3": {"avgLowPrice": 99}}
+    cfg = _cfg()
+    # Without confidence: volume breaks ties (A 5000 > C 3000 > B 900)
+    no_conf = select_candidates(items, latest, vol_5m, cfg, now=now)
+    assert [c.id for c in no_conf] == [1, 3, 2]
+    # With confidence: item 3 (mid volume) has the highest confidence and
+    # outranks item 1 despite lower volume.
+    conf = {1: 0.3, 2: 0.1, 3: 0.9}
+    with_conf = select_candidates(items, latest, vol_5m, cfg, now=now,
+                                  confidence=conf)
+    assert [c.id for c in with_conf] == [3, 1, 2]
+    print("  PASSED test_candidate_confidence_tiebreaker")
+
+
 def test_reentry_cooldown():
     _clean()
     from unittest import mock
@@ -628,7 +717,9 @@ def test_trader_config_validation():
                        {"artifact_min_low_vol": -1},
                        {"artifact_low_vol_frac": 0},
                        {"artifact_low_vol_frac": 1.5},
-                       {"artifact_outlier_pct": -1}):
+                       {"artifact_outlier_pct": -1},
+                       {"stop_slippage": 0}, {"stop_slippage": 1.5},
+                       {"stop_mark_blend": -0.1}, {"stop_mark_blend": 1.1}):
                 try:
                     tmod.run_trader(_cfg(**kw), once=True)
                     assert False, f"expected ValueError for {kw}"
@@ -771,4 +862,8 @@ if __name__ == "__main__":
     test_stop_on_thin_print_fills_at_window_avg()
     test_stop_on_real_crash_keeps_print_fill()
     test_stop_normal_decline_not_guarded()
+    test_stop_mark_blend_gives_dip_allowance()
+    test_stop_mark_blend_zero_is_legacy()
+    test_stop_slippage_configurable()
+    test_candidate_confidence_tiebreaker()
     print("\nAll tests passed.")

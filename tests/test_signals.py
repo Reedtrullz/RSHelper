@@ -2,6 +2,7 @@
 
 import sys
 import os
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -32,13 +33,35 @@ def test_rs_score_flip_basic():
 
 
 def test_rs_score_flip_zero_volume():
-    """Zero-volume item gets low volume component."""
+    """Zero-volume item gets low volume component and neutral freshness."""
     item = Item(id=1, name="Dead", members=False, buy_limit=100,
                 alch_value=0, buy_price=100, sell_price=90,
                 volume=0, profit=8, gp_per_hour=100)
     score = compute_rs_score_flip(item, max_volume=1000)
-    assert abs(score - 40.2) < 0.1, f"Zero vol item scored {score}, expected ~40.2"
+    # 0 vol + spread 8% -> 5/5 = 1.0*30 + depth 100/10000=0.01*20 + neutral 5
+    assert abs(score - 35.2) < 0.1, f"Zero vol item scored {score}, expected ~35.2"
     print("  PASSED test_rs_score_flip_zero_volume")
+
+
+def test_rs_score_flip_freshness_from_age():
+    """Freshness bonus is scored from real price age, not a constant."""
+    item = Item(id=1, name="Test", members=False, buy_limit=10000,
+                alch_value=0, buy_price=100, sell_price=90,
+                volume=500, profit=8, gp_per_hour=1000)
+    now = time.time()
+    fresh = {"1": {"high": 100, "low": 90, "highTime": now - 60,
+                   "lowTime": now - 60}}
+    stale = {"1": {"high": 100, "low": 90, "highTime": now - 3600,
+                   "lowTime": now - 3600}}
+    score_fresh = compute_rs_score_flip(item, max_volume=1000,
+                                        latest=fresh, now=now)
+    score_stale = compute_rs_score_flip(item, max_volume=1000,
+                                        latest=stale, now=now)
+    assert score_fresh > score_stale, \
+        f"fresh item ({score_fresh}) must score above stale ({score_stale})"
+    # Fresh (<=5 min) gets the full 10 freshness points
+    assert abs(score_fresh - (score_stale + 10)) < 1e-6
+    print("  PASSED test_rs_score_flip_freshness_from_age")
 
 
 def test_rs_score_alch_percentile():
@@ -360,6 +383,7 @@ def test_rs_score_in_margin_scanner():
 if __name__ == "__main__":
     test_rs_score_flip_basic()
     test_rs_score_flip_zero_volume()
+    test_rs_score_flip_freshness_from_age()
     test_rs_score_alch_percentile()
     test_rs_score_alch_sorts_unsorted_input()
     test_dump_detection()

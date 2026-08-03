@@ -190,7 +190,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  "roi_pct": round(pnl.roi_pct, 2),
                  "trade_count": pnl.trade_count, "winning_trades": pnl.winning_trades,
                  "losing_trades": pnl.losing_trades, "win_rate": round(pnl.win_rate, 1),
-                 "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded}
+                 "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded,
+                 "profit_factor": (round(pnl.profit_factor, 2)
+                                   if pnl.profit_factor != float("inf") else None),
+                 "max_drawdown": pnl.max_drawdown}
             if pnl.best_trade:
                 d["best_trade"] = pnl.best_trade.profit
             if pnl.worst_trade:

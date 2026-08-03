@@ -21,7 +21,7 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 281 tests across 20 files, all passing.
+  Expected: 295 tests across 21 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -60,6 +60,16 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
    `min_volume = 10` so untradeable items (vol <= 5) do not pollute results.
    `--members-only` is a `BooleanOptionalAction` whose default comes from
    `config.toml`.
+8. **Trader R:R is asymmetric by design**: take-profit `+3.0%` net (after
+   tax), stop-loss `-1.5%` from the stop mark. The stop mark blends the
+   entry bid with the 5m `avgLowPrice` via `stop_mark_blend` (0.0 = legacy
+   entry-bid mark) so a dip entry is not stopped by the very dip it bought.
+   `stop_slippage` (0.97) models worse stop fills. Always route tax through
+   `rshelper.market.ge_tax()`.
+9. **Candidate ranking**: `select_candidates` ranks by `edge = dip_pct *
+   (spread_pct - 2.0)` first, then an optional confidence model (reliability
+   x profitability) breaks ties, then volume. The scanner's `rs_score` is a
+   secondary signal, never the primary rank.
 
 ## Known Deliberate Simplifications (ponytail)
 

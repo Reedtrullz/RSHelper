@@ -46,8 +46,8 @@ min_spread_pct = 3.0     # spread must exceed the 2% GE tax + buffer
 max_entry_spread_pct = 5.0  # high/low gap cap so entries don't overpay
 reentry_minutes = 30     # wait before re-entering an item after an auto close
 stop_reentry_minutes = 90  # wait before re-entering an item after a stop-loss
-take_profit_pct = 2.0    # close when net (after tax) >= this %
-stop_loss_pct = -2.0     # close when the bid falls this % below entry bid
+take_profit_pct = 3.0    # close when net (after tax) >= this %
+stop_loss_pct = -1.5     # close when the bid falls this % below the stop mark
 max_hold_minutes = 180   # force-close after this long
 spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
 min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
@@ -55,6 +55,14 @@ interval_sec = 120       # poll cycle (seconds); fast stops limit crash gaps
 artifact_min_low_vol = 20  # below this, low-price volume is a thin print
 artifact_low_vol_frac = 0.10  # low-price volume must be >= this share of the window
 artifact_outlier_pct = 5.0  # bid more than this % below the 5m avg is an outlier
+stop_slippage = 0.97      # stop-loss fill degradation (1.0 = fill at the bid)
+# Stop-loss reference mark for dip entries. The entry bid can sit up to
+# max_dip_pct below the 5m avgLowPrice, so a stop measured purely from the
+# entry bid can fire on the very dip the strategy was designed to buy.
+# 0.0 = stop from the entry bid (legacy behavior); 1.0 = stop from the 5m
+# avgLowPrice at entry (full dip allowance). Values in between blend the
+# two: mark = entry_bid + stop_mark_blend * (avg_low - entry_bid).
+stop_mark_blend = 0.0    # 0.0 = legacy (stop from entry bid)
 """
 
 
@@ -99,8 +107,8 @@ class TraderConfig:
     max_entry_spread_pct: float = 5.0
     reentry_minutes: int = 30
     stop_reentry_minutes: int = 90
-    take_profit_pct: float = 2.0
-    stop_loss_pct: float = -2.0
+    take_profit_pct: float = 3.0
+    stop_loss_pct: float = -1.5
     max_hold_minutes: int = 180
     spread_collapse_exit_minutes: int = 60
     min_exit_spread_pct: float = 1.0
@@ -108,6 +116,8 @@ class TraderConfig:
     artifact_min_low_vol: int = 20
     artifact_low_vol_frac: float = 0.10
     artifact_outlier_pct: float = 5.0
+    stop_slippage: float = 0.97
+    stop_mark_blend: float = 0.0
 
 
 @dataclass
@@ -166,8 +176,8 @@ def load_config(profile: str | None = None) -> Config:
             max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.0),
             reentry_minutes=trader_raw.get("reentry_minutes", 30),
             stop_reentry_minutes=trader_raw.get("stop_reentry_minutes", 90),
-            take_profit_pct=trader_raw.get("take_profit_pct", 2.0),
-            stop_loss_pct=trader_raw.get("stop_loss_pct", -2.0),
+            take_profit_pct=trader_raw.get("take_profit_pct", 3.0),
+            stop_loss_pct=trader_raw.get("stop_loss_pct", -1.5),
             max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
             spread_collapse_exit_minutes=trader_raw.get(
                 "spread_collapse_exit_minutes", 60),
@@ -176,5 +186,7 @@ def load_config(profile: str | None = None) -> Config:
             artifact_min_low_vol=trader_raw.get("artifact_min_low_vol", 20),
             artifact_low_vol_frac=trader_raw.get("artifact_low_vol_frac", 0.10),
             artifact_outlier_pct=trader_raw.get("artifact_outlier_pct", 5.0),
+            stop_slippage=trader_raw.get("stop_slippage", 0.97),
+            stop_mark_blend=trader_raw.get("stop_mark_blend", 0.0),
         ),
     )

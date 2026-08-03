@@ -1686,7 +1686,9 @@ def main() -> None:
                          "roi_pct": round(pnl.roi_pct, 2),
                          "trade_count": pnl.trade_count, "winning_trades": pnl.winning_trades,
                          "losing_trades": pnl.losing_trades, "win_rate": round(pnl.win_rate, 1),
-                         "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded}
+                         "active_gp_per_hour": pnl.active_gp_per_hour, "items_traded": pnl.items_traded,
+                         "profit_factor": round(pnl.profit_factor, 2) if pnl.profit_factor != float("inf") else None,
+                         "max_drawdown": pnl.max_drawdown}
                     if pnl.best_trade:
                         d["best_trade"] = pnl.best_trade.profit
                     if pnl.worst_trade:
@@ -1707,6 +1709,8 @@ def main() -> None:
                         print(f"  Worst trade:       {pnl.worst_trade.name:<20} ({pnl.worst_trade.profit:>+12,} gp)")
                     print(f"  Items traded:      {pnl.items_traded:>15}")
                     print(f"  Active gp/hr:      {pnl.active_gp_per_hour:>15,}")
+                    print(f"  Profit factor:     {pnl.profit_factor if pnl.profit_factor == float('inf') else round(pnl.profit_factor, 2):>15}")
+                    print(f"  Max drawdown:      {pnl.max_drawdown:>15,} gp")
                     print()
         elif args.trade_action == "delete":
             from rshelper.journal import delete_trade
