@@ -154,6 +154,75 @@ button:focus-visible{border-color:var(--gold)}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:5px}
 ::-webkit-scrollbar-track{background:transparent}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.ge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:12px;
+  background:#3b3023;border:2px solid #5c4a32;border-radius:4px;
+  background-image:linear-gradient(135deg,rgba(92,74,50,.08) 25%,transparent 25%),
+    linear-gradient(225deg,rgba(92,74,50,.08) 25%,transparent 25%);
+  background-size:8px 8px}
+.ge-slot{background:#2a2215;border:1px solid #5c4a32;border-radius:3px;padding:8px;
+  min-height:120px;display:flex;flex-direction:column;position:relative;
+  cursor:pointer;transition:all .15s ease}
+.ge-slot:hover{border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.3)}
+.ge-slot.empty{opacity:.6;cursor:default;justify-content:center;align-items:center}
+.ge-slot.empty:hover{border-color:#5c4a32;box-shadow:none}
+.ge-offer-type{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:4px}
+.ge-offer-type.buy{color:#7cc950}.ge-offer-type.sell{color:#e8a230}
+.ge-slot-icon{width:40px;height:40px;image-rendering:pixelated;margin:4px auto;
+  object-fit:contain}
+.ge-slot-name{font-size:11px;color:var(--text);text-align:center;margin:2px 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ge-fill-track{width:100%;height:12px;background:#1a1208;border:1px solid #5c4a32;
+  border-radius:2px;overflow:hidden;margin:4px 0}
+.ge-fill-bar{height:100%;border-radius:2px;transition:width .5s ease-out}
+.ge-fill-bar.buy{background:linear-gradient(180deg,#4ade80,#16a34a)}
+.ge-fill-bar.sell{background:linear-gradient(180deg,#fbbf24,#d97706)}
+.ge-fill-bar.filled{animation:ge-pulse 1.5s ease-in-out infinite}
+@keyframes ge-pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.ge-slot-price{font-size:11px;color:var(--text-dim);text-align:center;
+  font-variant-numeric:tabular-nums}
+.ge-collect-btn{margin-top:auto;padding:4px 8px;background:var(--gold-dim);
+  border:1px solid var(--gold);border-radius:3px;color:#0a0e17;font-size:10px;
+  font-weight:700;cursor:pointer;transition:all .2s ease;text-align:center;
+  opacity:0;transform:scale(.9)}
+.ge-collect-btn.visible{opacity:1;transform:scale(1)}
+.ge-collect-btn:hover{background:var(--gold)}
+.ge-history-overlay{position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.7);z-index:100;display:flex;justify-content:center;
+  align-items:center}
+.ge-history-panel{background:#2a2215;border:2px solid #5c4a32;border-radius:6px;
+  width:600px;max-height:80vh;overflow-y:auto;padding:16px}
+.ge-history-panel table{width:100%;border-collapse:collapse;font-size:12px}
+.ge-history-panel th{color:var(--text-dim);text-align:right;padding:5px 6px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:1px solid #5c4a32}
+.ge-history-panel th:first-child,.ge-history-panel td:first-child{text-align:left}
+.ge-history-panel td{padding:5px 6px;text-align:right;color:var(--text);
+  font-variant-numeric:tabular-nums;border-bottom:1px solid #3d3525}
+.ge-history-panel .act-btn{padding:5px 12px;background:var(--gold-dim);
+  border:1px solid var(--gold);border-radius:var(--radius);color:#0a0e17;
+  font-size:12px;font-weight:700;cursor:pointer}
+.ge-history-panel .act-btn:hover{background:var(--gold)}
+.bank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));
+  gap:2px;padding:12px;background:#3b3023;border:2px solid #5c4a32;
+  border-radius:4px}
+.bank-slot{background:#2a2215;border:1px solid #3d3525;border-radius:2px;padding:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:72px;position:relative;cursor:pointer;transition:all .15s ease}
+.bank-slot:hover{border-color:var(--gold);transform:scale(1.05);z-index:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.bank-slot-icon{width:40px;height:40px;image-rendering:pixelated;object-fit:contain}
+.bank-slot-qty{position:absolute;top:2px;right:4px;font-size:11px;font-weight:700;
+  color:var(--gold);text-shadow:1px 1px 0 #000;font-variant-numeric:tabular-nums}
+.bank-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);background:#1a1208;border:1px solid #5c4a32;
+  border-radius:4px;padding:8px 10px;font-size:11px;white-space:nowrap;z-index:10;
+  pointer-events:none;opacity:0;transition:opacity .15s ease}
+.bank-slot:hover .bank-tooltip{opacity:1}
+.bank-footer{display:flex;justify-content:space-between;padding:8px 12px;
+  background:var(--surface);border-top:1px solid var(--border);font-size:12px;
+  color:var(--text-dim)}
+.gold{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -172,6 +241,8 @@ button:focus-visible{border-color:var(--gold)}
   <button class="nav-btn" id="btnPaper" role="tab" onclick="setView('paper')">Paper Trading <span class="badge" id="badgePaper">-</span></button>
   <button class="nav-btn" id="btnSignals" role="tab" onclick="setView('signals')">Signals <span class="badge" id="badgeSignals">-</span></button>
   <button class="nav-btn" id="btnWatchlist" role="tab" onclick="setView('watchlist')">Watchlist <span class="badge" id="badgeWatchlist">-</span></button>
+  <button class="nav-btn" id="btnGE" role="tab" onclick="setView('ge')">Grand Exchange <span class="badge" id="badgeGE">-</span></button>
+  <button class="nav-btn" id="btnBank" role="tab" onclick="setView('bank')">Bank <span class="badge" id="badgeBank">-</span></button>
 </div>
 <div class="main">
   <div class="list-panel">
@@ -195,6 +266,7 @@ let selectedId=null,view='market';
 let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
 let chip='all',density='normal',strategy='';
 let viewRows=[];
+let geData=null,bankData=null;
 let sparkSeq=0;
 let countdown=refreshSecs;
 
@@ -272,10 +344,14 @@ function setView(v){
   document.getElementById('btnPaper').classList.toggle('active',v==='paper');
   document.getElementById('btnSignals').classList.toggle('active',v==='signals');
   document.getElementById('btnWatchlist').classList.toggle('active',v==='watchlist');
+  document.getElementById('btnGE').classList.toggle('active',v==='ge');
+  document.getElementById('btnBank').classList.toggle('active',v==='bank');
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
   else if(v==='signals')renderSignals();
-  else renderWatchlist();
+  else if(v==='watchlist')renderWatchlist();
+  else if(v==='ge')renderGE();
+  else if(v==='bank')renderBank();
   if(v==='market'&&selectedId==null)renderContextEmpty();
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
@@ -338,7 +414,9 @@ async function fetchData(){
     if(view==='market')renderMarket();
     else if(view==='paper')renderPaper();
     else if(view==='signals')renderSignals();
-    else renderWatchlist();
+    else if(view==='watchlist')renderWatchlist();
+    else if(view==='ge')renderGE();
+    else if(view==='bank')renderBank();
     if(view==='market'&&selectedId!=null)renderDetail(selectedId);
     countdown=refreshSecs;
   }catch(e){
@@ -420,6 +498,13 @@ function viewbarHtml(){
       '<input id="ptQty" type="number" min="1" placeholder="Qty" aria-label="Quantity" style="width:64px">'+
       '<select id="ptAction" aria-label="Trade action"><option value="open">Open position</option><option value="instant">Instant trade</option></select>'+
       '<button class="act-btn" onclick="paperTrade()">Trade</button></div>';
+  }
+  if(view==='ge'){
+    return '<div class="viewbar"><span class="title">Grand Exchange</span>'+
+      '<button class="toggle-btn" onclick="showGEHistory()">History</button></div>';
+  }
+  if(view==='bank'){
+    return '<div class="viewbar"><span class="title">Bank of RuneScape</span></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
 }
@@ -578,6 +663,196 @@ async function renderWatchlist(){
   body.innerHTML=h;
   if(selectedId!=null)renderDetail(selectedId);
   else renderContextEmpty();
+}
+
+async function renderGE(){
+  const bar=document.getElementById('viewbar');
+  bar.innerHTML=viewbarHtml();
+  const body=document.getElementById('listBody');
+  const context=document.getElementById('contextPanel');
+  body.innerHTML='<div class="loading"><span class="spinner"></span>Loading Grand Exchange...</div>';
+  context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
+  try{
+    const r=await fetch('/api/ge');
+    if(!r.ok)throw new Error('GE API failed');
+    geData=await r.json();
+    document.getElementById('badgeGE').textContent=geData.slots.length||0;
+    const slots=geData.slots||[];
+    let h='<div class="ge-grid">';
+    slots.forEach(s=>{h+=geSlotHtml(s)});
+    for(let i=slots.length;i<8;i++)h+=geEmptySlotHtml();
+    h+='</div>';
+    if(!slots.length){
+      h+='<div class="loading">No active offers — open a position with <code>trade open &lt;item&gt;</code> or the Paper Trading tab.</div>';
+    }
+    body.innerHTML=h;
+    context.innerHTML='<div class="item-name" style="margin-bottom:12px">Grand Exchange</div>'+
+      '<div class="metric-grid">'+
+      metric('Active Offers',format(slots.length)+' / 8','gold')+
+      metric('Open Value',format(geData.total_value||0)+' coins','')+
+      metric('Empty Slots',format(geData.empty_count||0),'')+
+      '</div>'+
+      '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
+      'Fill progress is simulated from 5-minute trade volume — high-volume items fill faster. Click Collect when an offer reaches 100%.</div>';
+  }catch(e){
+    body.innerHTML='<div class="loading">Error loading Grand Exchange: '+escHtml(e.message)+'</div>';
+    context.innerHTML='';
+  }
+}
+function geSlotHtml(slot){
+  const pct=Math.max(0,Math.min(100,Math.round((slot.fill_pct||0)*100)));
+  const buy=slot.offer_type==='buy';
+  const filled=pct>=100;
+  return '<div class="ge-slot" onclick="geSlotClick('+slot.position_id+')">'+
+    '<div class="ge-offer-type '+(buy?'buy':'sell')+'">'+(buy?'Buy':'Sell')+'</div>'+
+    '<img class="ge-slot-icon" src="'+escHtml(slot.icon_url_detail||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
+    '<div class="ge-slot-name" title="'+escHtml(slot.name)+'">'+escHtml(slot.name)+'</div>'+
+    '<div class="ge-fill-track"><div class="ge-fill-bar '+(buy?'buy':'sell')+(filled?' filled':'')+'" style="width:'+pct+'%"></div></div>'+
+    '<div class="ge-slot-price">'+format(slot.price)+' coins</div>'+
+    (slot.can_collect?'<button class="ge-collect-btn visible" onclick="collectOffer('+slot.position_id+',event)">Collect</button>':'')+
+    '</div>';
+}
+function geEmptySlotHtml(){
+  return '<div class="ge-slot empty"><div style="font-size:26px">&#127892;</div><div class="dim" style="font-size:10px">Empty</div></div>';
+}
+async function collectOffer(positionId,ev){
+  if(ev)ev.stopPropagation();
+  const btn=ev&&ev.target;
+  if(btn)btn.textContent='Collecting...';
+  try{
+    const r=await fetch('/api/ge/collect',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({position_id:positionId})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    document.getElementById('statusText').textContent='Collected '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp';
+    document.getElementById('statusDot').className='dot live';
+    fetchData();
+  }catch(e){
+    document.getElementById('statusText').textContent='Error: '+e.message;
+    document.getElementById('statusDot').className='dot err';
+    if(btn)btn.textContent='Collect';
+  }
+}
+function geSlotClick(positionId){
+  const s=(geData&&geData.slots||[]).find(x=>x.position_id===positionId);
+  if(!s)return;
+  const pnl=s.unrealized;
+  const pnlHtml=pnl!=null&&pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">-</span>';
+  const curHtml=s.current_price!=null?format(s.current_price)+' gp':'<span class="dim">-</span>';
+  document.getElementById('contextPanel').innerHTML=
+    '<div class="item-name">'+escHtml(s.name)+'</div>'+
+    '<div class="metric-grid">'+
+    metric('Offer',s.offer_type==='buy'?'Buy':'Sell','')+
+    metric('Quantity',format(s.qty),'')+
+    metric('Buy Price',format(s.buy_price)+' gp','')+
+    metric('Fill',Math.round((s.fill_pct||0)*100)+'%','gold')+
+    metric('Total Value',format(s.price)+' coins','')+
+    metric('Current Price',curHtml,'')+
+    metric('Unrealized',pnlHtml,'')+
+    metric('Age',fmtAge((s.age_minutes||0)*60),'')+
+    metric('Status',escHtml(s.status||'pending'),'')+
+    '</div>';
+}
+async function showGEHistory(){
+  const overlay=document.createElement('div');
+  overlay.className='ge-history-overlay';
+  overlay.innerHTML='<div class="ge-history-panel"><div class="item-name" style="margin-bottom:12px">Grand Exchange History</div>'+
+    '<div class="loading"><span class="spinner"></span>Loading...</div></div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove()});
+  try{
+    const r=await fetch('/api/trades');
+    const d=await r.json();
+    const trades=(d.trades||[]).filter(t=>t.strategy==='auto'||t.strategy==='ge_collect').slice(0,20);
+    let h='<table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th></tr></thead><tbody>';
+    trades.forEach(t=>{
+      const p=t.profit||0;
+      h+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
+        '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+
+        '<td class="margin '+(p>0?'pos':p<0?'neg':'neutral')+'">'+format(p)+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    if(!trades.length)h='<div class="loading">No collected offers yet — fill an offer and click Collect.</div>';
+    h+='<div style="text-align:right;margin-top:12px"><button class="act-btn" onclick="closeGEHistory(this)">Close</button></div>';
+    overlay.querySelector('.ge-history-panel').innerHTML=
+      '<div class="item-name" style="margin-bottom:12px">Grand Exchange History</div>'+h;
+  }catch(e){
+    overlay.querySelector('.ge-history-panel').innerHTML=
+      '<div class="item-name" style="margin-bottom:12px">Grand Exchange History</div>'+
+      '<div class="loading">Error: '+escHtml(e.message)+'</div>';
+  }
+}
+function closeGEHistory(btn){
+  const ov=btn.closest('.ge-history-overlay');
+  if(ov)ov.remove();
+}
+async function renderBank(){
+  const bar=document.getElementById('viewbar');
+  bar.innerHTML=viewbarHtml();
+  const body=document.getElementById('listBody');
+  const context=document.getElementById('contextPanel');
+  body.innerHTML='<div class="loading"><span class="spinner"></span>Loading bank...</div>';
+  context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
+  try{
+    const r=await fetch('/api/bank');
+    if(!r.ok)throw new Error('Bank API failed');
+    bankData=await r.json();
+    document.getElementById('badgeBank').textContent=bankData.slot_count||0;
+    const items=bankData.items||[];
+    const pnl=bankData.unrealized_pnl||0;
+    const pnlHtml=pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">0 gp</span>';
+    let h='<div class="bank-grid">';
+    items.forEach(it=>{h+=bankSlotHtml(it)});
+    h+='</div>';
+    if(!items.length){
+      h='<div class="loading">The bank is empty — open positions with <code>trade open &lt;item&gt;</code> or the Paper Trading tab.</div>';
+    }
+    h+='<div class="bank-footer"><span>Total holdings: <span class="gold">'+format(bankData.total_value||0)+' gp</span></span>'+
+      '<span>Unrealized P&amp;L: <span class="'+(pnl>0?'pos':pnl<0?'neg':'dim')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span></span>'+
+      '<span>'+format(bankData.slot_count||0)+' item stacks</span></div>';
+    body.innerHTML=h;
+    context.innerHTML='<div class="item-name" style="margin-bottom:12px">Bank of RuneScape</div>'+
+      '<div class="metric-grid">'+
+      metric('Total Holdings',format(bankData.total_value||0)+' gp','gold')+
+      metric('Unrealized P&L',pnlHtml,'')+
+      metric('Cost Basis',format(bankData.cost_basis||0)+' gp','')+
+      metric('Item Stacks',format(bankData.slot_count||0),'')+
+      '</div>';
+  }catch(e){
+    body.innerHTML='<div class="loading">Error loading bank: '+escHtml(e.message)+'</div>';
+    context.innerHTML='';
+  }
+}
+function bankSlotHtml(it){
+  const qtyTxt=it.total_qty>=10000?gp(it.total_qty):format(it.total_qty);
+  const pnl=it.unrealized_pnl;
+  const pnlTxt=pnl!=null&&pnl!==0?'<span class="'+(pnl>0?'pos':'neg')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="dim">-</span>';
+  return '<div class="bank-slot" onclick="bankSlotClick('+it.item_id+')">'+
+    '<img class="bank-slot-icon" src="'+escHtml(it.icon_url||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
+    '<div class="bank-slot-qty">'+qtyTxt+'</div>'+
+    '<div class="bank-tooltip"><b>'+escHtml(it.name)+'</b><br>Qty: '+format(it.total_qty)+
+    '<br>Avg buy: '+format(it.avg_buy_price)+' gp'+
+    '<br>Current: '+(it.current_price!=null?format(it.current_price)+' gp':'<span class="dim">-</span>')+
+    '<br>P&amp;L: '+pnlTxt+'</div></div>';
+}
+function bankSlotClick(itemId){
+  const it=(bankData&&bankData.items||[]).find(x=>x.item_id===itemId);
+  if(!it)return;
+  const pnl=it.unrealized_pnl;
+  const pnlHtml=pnl!=null&&pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">-</span>';
+  const pctHtml=it.unrealized_pct!=null?(it.unrealized_pct>0?'+':'')+it.unrealized_pct.toFixed(2)+'%':'-';
+  document.getElementById('contextPanel').innerHTML=
+    '<div class="item-name">'+escHtml(it.name)+'</div>'+
+    '<div class="metric-grid">'+
+    metric('Quantity',format(it.total_qty),'')+
+    metric('Avg Buy Price',format(it.avg_buy_price)+' gp','')+
+    metric('Current Price',it.current_price!=null?format(it.current_price)+' gp':'<span class="dim">-</span>','')+
+    metric('Total Value',format(it.total_value)+' gp','gold')+
+    metric('Cost Basis',format(it.cost_basis)+' gp','')+
+    metric('Unrealized',pnlHtml,'')+
+    metric('Unrealized %',pctHtml,pnl!=null&&pnl>0?'green':pnl!=null&&pnl<0?'red':'')+
+    metric('Positions',format(it.position_count),'')+
+    '</div>';
 }
 
 function renderContextEmpty(){

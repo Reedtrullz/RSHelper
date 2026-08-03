@@ -244,6 +244,20 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         status = trader_status()
         return status if status else {"running": False}
 
+    def get_ge():
+        refresh()
+        from rshelper.ge_offers import build_ge_slots
+        return build_ge_slots(latest=cache["latest"], vol_5m=cache["vol"])
+
+    def collect_ge(position_id: int):
+        from rshelper.ge_offers import collect_offer
+        return collect_offer(position_id, latest=cache["latest"])
+
+    def get_bank():
+        refresh()
+        from rshelper.bank import build_bank_items
+        return build_bank_items(latest=cache["latest"])
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -251,7 +265,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                            timeseries_fn=get_timeseries,
                            positions_fn=get_positions,
                            paper_trade_fn=paper_trade,
-                           trader_fn=get_trader_status)
+                           trader_fn=get_trader_status,
+                           ge_fn=get_ge, ge_collect_fn=collect_ge,
+                           bank_fn=get_bank)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

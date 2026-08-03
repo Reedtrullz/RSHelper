@@ -37,7 +37,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  timeseries_fn: Callable[[int], dict] | None = None,
                  positions_fn: Callable[[], dict] | None = None,
                  paper_trade_fn: Callable[[str, str, int], dict] | None = None,
-                 trader_fn: Callable[[], dict] | None = None) -> type:
+                 trader_fn: Callable[[], dict] | None = None,
+                 ge_fn: Callable[[], dict] | None = None,
+                 ge_collect_fn: Callable[[int], dict] | None = None,
+                 bank_fn: Callable[[], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -52,6 +55,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
     positions_fn: Optional callable() -> {positions, open_qty, unrealized}
     paper_trade_fn: Optional callable(action, item, qty) -> {ok, ...}
     trader_fn: Optional callable() -> trader status dict
+    ge_fn: Optional callable() -> GE slots dict for /api/ge
+    ge_collect_fn: Optional callable(position_id) -> collect result for /api/ge/collect
+    bank_fn: Optional callable() -> bank holdings dict for /api/bank
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -87,6 +93,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_positions()
             elif path == "/api/trader":
                 self._serve_trader()
+            elif path == "/api/ge":
+                self._serve_ge()
+            elif path == "/api/bank":
+                self._serve_bank()
             else:
                 self.send_error(404)
 
@@ -101,6 +111,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._handle_watchlist()
             elif path == "/api/paper":
                 self._handle_paper_trade()
+            elif path == "/api/ge/collect":
+                self._handle_ge_collect()
             else:
                 self.send_error(404)
 
@@ -227,6 +239,42 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _serve_trader(self):
             self._serve_json(trader_fn() if trader_fn else {"running": False})
+
+        def _serve_ge(self):
+            try:
+                self._serve_json(ge_fn() if ge_fn else
+                                 {"slots": [], "empty_count": 8,
+                                  "total_value": 0})
+            except Exception as e:
+                print(f"[dashboard] GE data error: {e}", file=sys.stderr)
+                self.send_error(500, "GE data failed")
+
+        def _serve_bank(self):
+            try:
+                self._serve_json(bank_fn() if bank_fn else
+                                 {"items": [], "total_value": 0,
+                                  "unrealized_pnl": 0, "cost_basis": 0,
+                                  "slot_count": 0})
+            except Exception as e:
+                print(f"[dashboard] bank data error: {e}", file=sys.stderr)
+                self.send_error(500, "Bank data failed")
+
+        def _handle_ge_collect(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                position_id = int(body.get("position_id", 0))
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if ge_collect_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(ge_collect_fn(position_id))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] GE collect error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
 
         def _handle_paper_trade(self):
             try:
