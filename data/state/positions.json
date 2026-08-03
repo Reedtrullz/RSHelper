@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1603,
-      "name": "Ruby",
-      "qty": 303,
-      "buy_price": 824,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T03:46:57.563523+00:00",
-      "note": "auto",
-      "entry_sell": 824,
-      "entry_offer": 849
-    },
-    {
-      "id": 5,
-      "item_id": 12934,
-      "name": "Zulrah's scales",
-      "qty": 1592,
-      "buy_price": 157,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T03:56:59.045863+00:00",
-      "note": "auto",
-      "entry_sell": 157,
-      "entry_offer": 163
-    },
-    {
       "id": 6,
       "item_id": 1619,
       "name": "Uncut ruby",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1066,
       "entry_offer": 1105
+    },
+    {
+      "id": 7,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 170,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T04:45:00.484211+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 8,
+      "item_id": 245,
+      "name": "Wine of zamorak",
+      "qty": 167,
+      "buy_price": 993,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T04:45:00.484541+00:00",
+      "note": "auto",
+      "entry_sell": 993,
+      "entry_offer": 1029
     }
   ]
 }
