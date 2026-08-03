@@ -51,7 +51,7 @@ stop_loss_pct = -2.0     # close when the bid falls this % below entry bid
 max_hold_minutes = 180   # force-close after this long
 spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
 min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
-interval_sec = 300       # poll cycle
+interval_sec = 120       # poll cycle (seconds); fast stops limit crash gaps
 """
 
 
@@ -101,7 +101,7 @@ class TraderConfig:
     max_hold_minutes: int = 180
     spread_collapse_exit_minutes: int = 60
     min_exit_spread_pct: float = 1.0
-    interval_sec: int = 300
+    interval_sec: int = 120
 
 
 @dataclass
@@ -166,6 +166,6 @@ def load_config(profile: str | None = None) -> Config:
             spread_collapse_exit_minutes=trader_raw.get(
                 "spread_collapse_exit_minutes", 60),
             min_exit_spread_pct=trader_raw.get("min_exit_spread_pct", 1.0),
-            interval_sec=trader_raw.get("interval_sec", 300),
+            interval_sec=trader_raw.get("interval_sec", 120),
         ),
     )

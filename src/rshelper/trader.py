@@ -30,8 +30,8 @@ TRADER_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = TRADER_DIR / "trader.pid"
 STATE_PATH = TRADER_DIR / "trader_state.json"
 
-# A status snapshot older than 3x the default poll interval is stale: the
-# trader may have stopped, or the sync to the live site is behind.
+# A status snapshot older than 15 minutes is stale: the trader may have
+# stopped, or the 15-minute state sync to the live site is behind.
 STALE_AFTER_SEC = 900
 
 # ponytail: price freshness windows. The wiki /latest endpoint publishes on

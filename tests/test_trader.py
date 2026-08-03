@@ -44,7 +44,7 @@ def _cfg(**kw):
                     reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=2.0, stop_loss_pct=-2.0,
                     max_hold_minutes=180, spread_collapse_exit_minutes=60,
-                    min_exit_spread_pct=1.0, interval_sec=300)
+                    min_exit_spread_pct=1.0, interval_sec=120)
     defaults.update(kw)
     return TraderConfig(**defaults)
 

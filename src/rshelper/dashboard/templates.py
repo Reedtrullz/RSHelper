@@ -718,6 +718,7 @@ function traderPerfHtml(trader,trades){
   let html='<h3 class="chart-title">Auto-trader performance</h3>';
   const byReason={};
   let wins=0,holdSum=0,holdN=0,slippageSum=0,slippageN=0,capSum=0,capN=0;
+  let gapSum=0,gapN=0;
   autoTrades.forEach(t=>{
     const r=byReason[t.exit_reason||'other']||(byReason[t.exit_reason||'other']={count:0,profit:0,wins:0});
     r.count++;r.profit+=t.profit||0;
@@ -726,6 +727,13 @@ function traderPerfHtml(trader,trades){
     if(typeof t.hold_minutes==='number'){holdSum+=t.hold_minutes;holdN++;}
     if(typeof t.quote_sell==='number'&&typeof t.sell_price==='number'&&t.quote_sell>t.sell_price){
       slippageSum+=t.quote_sell-t.sell_price;slippageN++;
+    }
+    // Stop-loss damage beyond the designed exit (stop -2% x 0.97 fill slip):
+    // the excess is cycle-latency gap on crash trades and should trend down
+    // as the poll interval shrinks.
+    if(t.exit_reason==='stop_loss'&&typeof t.sell_price==='number'){
+      const design=(t.buy_price||0)*0.98*0.97;
+      if(t.sell_price<design){gapSum+=(design-t.sell_price)/(t.buy_price||1)*100;gapN++;}
     }
     const cost=(t.buy_price||0)*(t.qty||0);
     const hold=t.hold_minutes||0;
@@ -738,6 +746,7 @@ function traderPerfHtml(trader,trades){
     metric('Avg Hold',holdN?(holdSum/holdN).toFixed(0)+' min':'-','')+
     metric('Capital Eff. (bps/min)',capN?(capSum/capN*10000).toFixed(1):'-','')+
     metric('Avg Stop Slippage',slippageN?format(Math.round(slippageSum/slippageN))+' gp':'-','')+
+    metric('Avg Stop Gap',gapN?(gapSum/gapN).toFixed(1)+'%':'-','')+
     '</div>';
   // Win rate by hold bucket: fast wins = spread capture, slow wins = hold edge.
   const buckets={quick:{n:0,w:0},medium:{n:0,w:0},long:{n:0,w:0}};
