@@ -13,18 +13,6 @@
       "entry_offer": 5914
     },
     {
-      "id": 10,
-      "item_id": 43,
-      "name": "Adamant arrowtips",
-      "qty": 1364,
-      "buy_price": 79,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T00:44:27.638528+00:00",
-      "note": "auto",
-      "entry_sell": 79,
-      "entry_offer": 82
-    },
-    {
       "id": 11,
       "item_id": 385,
       "name": "Shark",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 1030,
       "entry_offer": 1061
+    },
+    {
+      "id": 12,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 237,
+      "buy_price": 157,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T01:11:06.625602+00:00",
+      "note": "auto",
+      "entry_sell": 157,
+      "entry_offer": 164
     }
   ]
 }
