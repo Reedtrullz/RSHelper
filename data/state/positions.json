@@ -13,28 +13,28 @@
       "entry_offer": 170
     },
     {
-      "id": 5,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 474,
-      "buy_price": 527,
+      "id": 6,
+      "item_id": 820,
+      "name": "Iron dart tip",
+      "qty": 579,
+      "buy_price": 46,
       "direction": "traditional",
-      "opened_at": "2026-08-02T23:54:28.257240+00:00",
+      "opened_at": "2026-08-02T23:59:28.335696+00:00",
       "note": "auto",
-      "entry_sell": 527,
-      "entry_offer": 551
+      "entry_sell": 46,
+      "entry_offer": 48
     },
     {
-      "id": 6,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2000,
-      "buy_price": 125,
+      "id": 7,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 1760,
+      "buy_price": 142,
       "direction": "traditional",
-      "opened_at": "2026-08-02T23:54:28.257647+00:00",
+      "opened_at": "2026-08-03T00:09:28.369427+00:00",
       "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 131
+      "entry_sell": 142,
+      "entry_offer": 149
     }
   ]
 }
