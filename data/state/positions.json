@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 8,
-      "item_id": 245,
-      "name": "Wine of zamorak",
-      "qty": 167,
-      "buy_price": 993,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T04:45:00.484541+00:00",
-      "note": "auto",
-      "entry_sell": 993,
-      "entry_offer": 1029
-    },
-    {
       "id": 9,
       "item_id": 105,
       "name": "Kwuarm potion (unf)",
@@ -26,15 +14,27 @@
     },
     {
       "id": 10,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 364,
-      "buy_price": 686,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 295,
+      "buy_price": 373,
       "direction": "traditional",
-      "opened_at": "2026-08-03T04:57:01.029108+00:00",
+      "opened_at": "2026-08-03T06:01:03.906746+00:00",
       "note": "auto",
-      "entry_sell": 686,
-      "entry_offer": 710
+      "entry_sell": 373,
+      "entry_offer": 388
+    },
+    {
+      "id": 11,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 134,
+      "buy_price": 1852,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T06:01:03.907191+00:00",
+      "note": "auto",
+      "entry_sell": 1852,
+      "entry_offer": 1914
     }
   ]
 }
