@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 8,
-      "item_id": 1745,
-      "name": "Green dragon leather",
-      "qty": 135,
-      "buy_price": 1850,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T10:57:17.823009+00:00",
-      "note": "auto",
-      "entry_sell": 1850,
-      "entry_offer": 1908
-    },
-    {
       "id": 10,
       "item_id": 1617,
       "name": "Uncut diamond",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 2881,
       "entry_offer": 2985
+    },
+    {
+      "id": 12,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 793,
+      "buy_price": 95,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T11:59:19.504617+00:00",
+      "note": "auto",
+      "entry_sell": 95,
+      "entry_offer": 99
     }
   ]
 }
