@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 623,
-      "buy_price": 401,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T10:29:16.252600+00:00",
-      "note": "auto",
-      "entry_sell": 401,
-      "entry_offer": 415
-    },
-    {
       "id": 8,
       "item_id": 1745,
       "name": "Green dragon leather",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1850,
       "entry_offer": 1908
+    },
+    {
+      "id": 9,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 118,
+      "buy_price": 85,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T11:29:18.817639+00:00",
+      "note": "auto",
+      "entry_sell": 85,
+      "entry_offer": 89
+    },
+    {
+      "id": 10,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 5102,
+      "buy_price": 49,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T11:29:18.817976+00:00",
+      "note": "auto",
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
