@@ -62,7 +62,7 @@ GE tax is 2% on sells (capped at 5M per item) — the rate has been 2% since
 ## Development
 
 ```bash
-for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 248 tests, 19 files
+for f in tests/test_*.py; do .venv/bin/python "$f"; done   # 252 tests, 19 files
 ```
 
 See `AGENTS.md` for invariants (tax, margin convention, stdout/stderr,

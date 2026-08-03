@@ -129,6 +129,44 @@ def _opened_ts(position) -> float | None:
         return None
 
 
+def _low_is_thin(vol: dict | None, cfg) -> bool:
+    """True when the window's low-price volume cannot support a real fill.
+
+    The wiki 5m window reports volume traded at the low and high prices. A
+    dip or crash carried by a few units (a print) is not executable at
+    depth: a real sell order walks to the window average instead. Missing
+    volume data never blocks (fallback sources have no such field).
+    """
+    if not isinstance(vol, dict):
+        return False
+    low_vol = vol.get("lowPriceVolume")
+    high_vol = vol.get("highPriceVolume")
+    if not isinstance(low_vol, (int, float)) or not isinstance(high_vol, (int, float)):
+        return False
+    total = low_vol + high_vol
+    return low_vol < max(cfg.artifact_min_low_vol,
+                         cfg.artifact_low_vol_frac * total)
+
+
+def _artifact_exit_fill(bid: int, vol: dict | None, entry_bid: int,
+                        cfg) -> int | None:
+    """Fill price when the exit bid is an unsupported outlier, else None.
+
+    A stop that fires on a thin print far below the 5m window average
+    cannot sell at that price; the realistic fill is the window average.
+    Capped at the entry bid so a stop never books a paper profit. Real
+    crashes carry volume at the low and keep the print fill.
+    """
+    if not _low_is_thin(vol, cfg):
+        return None
+    avg_low = vol.get("avgLowPrice") if isinstance(vol, dict) else None
+    if not isinstance(avg_low, (int, float)) or avg_low <= 0:
+        return None
+    if bid >= avg_low * (1 - cfg.artifact_outlier_pct / 100):
+        return None  # not an outlier: normal stop
+    return max(1, min(int(avg_low), entry_bid))
+
+
 def _last_cycle_age(state: dict, now: float | None = None) -> float | None:
     """Seconds since the last trader cycle, or None when unknown."""
     iso = state.get("last_cycle_iso")
@@ -188,6 +226,10 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
         avg_low = (vol_5m.get(str(item.id)) or {}).get("avgLowPrice")
         if not avg_low or avg_low <= 0:
             continue  # no dip baseline (e.g. fallback data)
+        if _low_is_thin(vol_5m.get(str(item.id)), cfg):
+            # The dip is a few low-price trades, not an executable bid:
+            # entering at the print would be free lunch no real buyer gets.
+            continue
         dip_pct = (avg_low - item.sell_price) / avg_low * 100
         if dip_pct < cfg.dip_depth_pct:
             continue  # not dipped enough below the 5m average
@@ -305,6 +347,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         valid = isinstance(price, dict) and price_issue(price) is None
         fresh = valid and _fresh(price, EXIT_MAX_AGE, now)
         quote_sell = None
+        guarded_fill = None
         if reason == "max_hold":
             if valid:
                 # Mark to market at the last known bid (fresh or stale): a
@@ -313,6 +356,11 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                 # do we close flat at the entry.
                 quote_sell = int(price.get("low", 0) or 0)
                 sell = quote_sell if quote_sell > 0 else p.buy_price
+                if quote_sell > 0:
+                    guarded_fill = _artifact_exit_fill(
+                        quote_sell, vol_5m.get(str(p.item_id)), p.buy_price, cfg)
+                    if guarded_fill is not None:
+                        sell = guarded_fill
             else:
                 sell = p.buy_price  # expired; close flat without any quote
         elif fresh:
@@ -322,8 +370,13 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             else:
                 quote_sell = int(price.get("low", 0) or 0)  # sell at the bid
                 sell = quote_sell
-            if reason == "stop_loss":
-                sell = int(sell * STOP_SLIPPAGE)  # model worse fills on stops
+                if reason == "stop_loss":
+                    guarded_fill = _artifact_exit_fill(
+                        sell, vol_5m.get(str(p.item_id)), p.buy_price, cfg)
+                    if guarded_fill is not None:
+                        sell = guarded_fill  # print exit: fill at window avg
+                    else:
+                        sell = int(sell * STOP_SLIPPAGE)  # model worse fills
         else:
             # Unreachable today: exit_reason returns None for TP/SL/collapse
             # without a fresh price (only max_hold can arrive here with a
@@ -348,11 +401,13 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
                       sell, note="paper", profile=profile, strategy="auto",
                       exit_reason=reason, hold_minutes=hold_minutes,
-                      quote_sell=quote_sell, entry_spread_pct=entry_spread_pct)
+                      quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
+                      fill_guard=guarded_fill is not None)
         closed.append({"item_id": p.item_id, "name": p.name, "qty": p.qty,
                        "reason": reason, "sell_price": sell,
                        "quote_sell": quote_sell, "hold_minutes": hold_minutes,
-                       "profit": sum(l["profit"] for l in lots)})
+                       "profit": sum(l["profit"] for l in lots),
+                       "fill_guard": guarded_fill is not None})
         _RECENT_EXITS[p.item_id] = (now, reason)
         _persist_recent_exits()
 
@@ -405,6 +460,12 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("spread_collapse_exit_minutes must be >= 0")
     if cfg.min_exit_spread_pct < 0:
         raise ValueError("min_exit_spread_pct must be >= 0")
+    if cfg.artifact_min_low_vol < 0:
+        raise ValueError("artifact_min_low_vol must be >= 0")
+    if not (0 < cfg.artifact_low_vol_frac <= 1):
+        raise ValueError("artifact_low_vol_frac must be in (0, 1]")
+    if cfg.artifact_outlier_pct < 0:
+        raise ValueError("artifact_outlier_pct must be >= 0")
     interval = interval or cfg.interval_sec
     prof_name = profile if profile else "default"
     pid = os.getpid()

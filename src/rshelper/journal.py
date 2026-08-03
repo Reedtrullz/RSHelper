@@ -36,6 +36,7 @@ class Trade:
     hold_minutes: float | None = None
     quote_sell: int | None = None  # raw low quote before stop-loss slippage
     entry_spread_pct: float | None = None  # (offer - bid) / bid at entry
+    fill_guard: bool = False  # exit filled at the 5m avg, not a thin print
 
 
 @dataclass
@@ -81,7 +82,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
               strategy: str = "", exit_reason: str = "",
               hold_minutes: float | None = None,
               quote_sell: int | None = None,
-              entry_spread_pct: float | None = None) -> Trade:
+              entry_spread_pct: float | None = None,
+              fill_guard: bool = False) -> Trade:
     """Log a completed trade. Returns the Trade object.
 
     Tax is per-item (OSRS GE tax is per item, capped at 5M per item).
@@ -108,6 +110,7 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
             "hold_minutes": hold_minutes,
             "quote_sell": quote_sell,
             "entry_spread_pct": entry_spread_pct,
+            "fill_guard": fill_guard,
         }
         trades.append(trade)
         _save(trades, profile)

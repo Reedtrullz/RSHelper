@@ -137,6 +137,98 @@ def test_candidate_edge_ranking():
     print("  PASSED test_candidate_edge_ranking")
 
 
+def test_thin_dip_skipped_volume_backed_accepted():
+    """Dip entries need low-price volume support (no print-only bids)."""
+    now = int(time.time())
+    items = [
+        _item(1, "RealDip", 100, 97, 1000),    # dip, volume-backed
+        _item(2, "PrintDip", 100, 97, 1000),   # dip, thin low print
+        _item(3, "NoVolData", 100, 97, 1000),  # fallback: no volume fields
+    ]
+    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (100, 97)})
+    vol_5m = {
+        "1": {"avgLowPrice": 100, "lowPriceVolume": 500, "highPriceVolume": 500},
+        "2": {"avgLowPrice": 100, "lowPriceVolume": 10, "highPriceVolume": 1000},
+        "3": {"avgLowPrice": 100},
+    }
+    cfg = _cfg()
+    candidates = select_candidates(items, latest, vol_5m, cfg, now=now)
+    assert sorted(c.id for c in candidates) == [1, 3], \
+        f"thin print must be skipped, got {[c.id for c in candidates]}"
+    # 10 low-volume units is still thin even when the absolute floor is low.
+    cfg2 = _cfg(artifact_min_low_vol=1)
+    candidates2 = select_candidates(items, latest, vol_5m, cfg2, now=now)
+    assert 2 not in [c.id for c in candidates2]  # 10 < 10% of 1010
+    print("  PASSED test_thin_dip_skipped_volume_backed_accepted")
+
+
+def test_stop_on_thin_print_fills_at_window_avg():
+    """A stop fired by a thin crash print fills at the 5m window average."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    latest = _latest(now, **{"1": (100, 80)})  # -17% print
+    vol_5m = {"1": {"avgLowPrice": 100, "lowPriceVolume": 5,
+                    "highPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "stop_loss"
+    assert result["closed"][0]["fill_guard"] is True
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == 97, "fill must cap at the entry bid"
+    assert trade.quote_sell == 80, "the raw print is still reported"
+    assert trade.fill_guard is True
+    print("  PASSED test_stop_on_thin_print_fills_at_window_avg")
+
+
+def test_stop_on_real_crash_keeps_print_fill():
+    """A crash with volume at the low keeps the print fill with slippage."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    latest = _latest(now, **{"1": (100, 80)})
+    vol_5m = {"1": {"avgLowPrice": 82, "lowPriceVolume": 2000,
+                    "highPriceVolume": 3000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["fill_guard"] is False
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == int(80 * tmod.STOP_SLIPPAGE)
+    assert trade.fill_guard is False
+    print("  PASSED test_stop_on_real_crash_keeps_print_fill")
+
+
+def test_stop_normal_decline_not_guarded():
+    """A normal -2% stop is not an outlier: slippage fill as before."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    latest = _latest(now, **{"1": (100, 94)})  # -3.1%: normal stop
+    vol_5m = {"1": {"avgLowPrice": 95, "lowPriceVolume": 5,
+                    "highPriceVolume": 5000}}  # thin but not an outlier
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["fill_guard"] is False
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == int(94 * tmod.STOP_SLIPPAGE)
+    print("  PASSED test_stop_normal_decline_not_guarded")
+
+
 def test_spread_collapse_exit():
     """After the collapse window, a gone edge exits at the bid; TP/SL first."""
     _clean()
@@ -532,7 +624,11 @@ def test_trader_config_validation():
         tmod.STATE_PATH = Path(tmp) / "trader_state.json"
         try:
             for kw in ({"stop_loss_pct": 0}, {"take_profit_pct": 0},
-                       {"capital": 0}, {"max_positions": 0}):
+                       {"capital": 0}, {"max_positions": 0},
+                       {"artifact_min_low_vol": -1},
+                       {"artifact_low_vol_frac": 0},
+                       {"artifact_low_vol_frac": 1.5},
+                       {"artifact_outlier_pct": -1}):
                 try:
                     tmod.run_trader(_cfg(**kw), once=True)
                     assert False, f"expected ValueError for {kw}"
@@ -671,4 +767,8 @@ if __name__ == "__main__":
     test_max_hold_stale_bid_close()
     test_recent_exits_pruned()
     test_status_journal_pnl()
+    test_thin_dip_skipped_volume_backed_accepted()
+    test_stop_on_thin_print_fills_at_window_avg()
+    test_stop_on_real_crash_keeps_print_fill()
+    test_stop_normal_decline_not_guarded()
     print("\nAll tests passed.")
