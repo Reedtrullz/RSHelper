@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 12,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 249,
-      "buy_price": 400,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T06:33:04.391509+00:00",
-      "note": "auto",
-      "entry_sell": 400,
-      "entry_offer": 420
-    },
-    {
-      "id": 13,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 241,
-      "buy_price": 1035,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T07:21:08.275071+00:00",
-      "note": "auto",
-      "entry_sell": 1035,
-      "entry_offer": 1084
-    },
-    {
       "id": 14,
       "item_id": 203,
       "name": "Grimy tarromin",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 116,
       "entry_offer": 120
+    },
+    {
+      "id": 15,
+      "item_id": 1751,
+      "name": "Blue dragonhide",
+      "qty": 142,
+      "buy_price": 1755,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T07:23:07.377674+00:00",
+      "note": "auto",
+      "entry_sell": 1755,
+      "entry_offer": 1824
+    },
+    {
+      "id": 16,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 1177,
+      "buy_price": 32,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T07:35:08.937659+00:00",
+      "note": "auto",
+      "entry_sell": 32,
+      "entry_offer": 33
     }
   ]
 }
