@@ -26,15 +26,15 @@
     },
     {
       "id": 17,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 212,
-      "buy_price": 625,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 351,
+      "buy_price": 220,
       "direction": "traditional",
-      "opened_at": "2026-08-03T02:56:56.339674+00:00",
+      "opened_at": "2026-08-03T03:06:57.662497+00:00",
       "note": "auto",
-      "entry_sell": 625,
-      "entry_offer": 645
+      "entry_sell": 220,
+      "entry_offer": 229
     }
   ]
 }
