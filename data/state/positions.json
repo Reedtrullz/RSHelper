@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 6812,
+      "name": "Wyvern bones",
+      "qty": 79,
+      "buy_price": 3158,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T23:57:20.800179+00:00",
+      "note": "auto",
+      "entry_sell": 3158,
+      "entry_offer": 3310
+    },
+    {
+      "id": 3,
+      "item_id": 3051,
+      "name": "Grimy snapdragon",
+      "qty": 34,
+      "buy_price": 7351,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T23:59:19.888662+00:00",
+      "note": "auto",
+      "entry_sell": 7351,
+      "entry_offer": 7598
+    },
+    {
+      "id": 4,
+      "item_id": 12695,
+      "name": "Super combat potion(4)",
+      "qty": 22,
+      "buy_price": 11206,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T23:59:19.890631+00:00",
+      "note": "auto",
+      "entry_sell": 11206,
+      "entry_offer": 11571
+    }
+  ]
 }
