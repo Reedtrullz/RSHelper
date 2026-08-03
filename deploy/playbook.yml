@@ -137,6 +137,20 @@
 
     - name: Deploy candidate image and verify exact public version
       block:
+        - name: Authenticate to GHCR for the image pull
+          ansible.builtin.command:
+            argv:
+              - docker
+              - login
+              - ghcr.io
+              - -u
+              - "{{ lookup('env', 'GHCR_USERNAME', default='') }}"
+              - --password-stdin
+            stdin: "{{ lookup('env', 'GHCR_TOKEN', default='') }}"
+          when: lookup('env', 'GHCR_TOKEN', default='') | length > 0
+          changed_when: true
+          tags: [deploy]
+
         - name: Pull requested GHCR image
           community.docker.docker_image:
             name: "{{ docker_image }}"

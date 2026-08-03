@@ -114,6 +114,9 @@ jobs:
   deploy:
     name: Deploy to VPS with Ansible
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
     needs:
       - checks
       - build-and-push
@@ -176,6 +179,8 @@ jobs:
         env:
           APP_VERSION: ${{ github.sha }}
           ANSIBLE_CONFIG: deploy/ansible.cfg
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ansible-playbook \
             -i deploy/inventory/hosts.yml \
