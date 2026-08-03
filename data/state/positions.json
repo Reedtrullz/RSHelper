@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 13573,
-      "name": "Dynamite",
-      "qty": 1533,
-      "buy_price": 163,
-      "direction": "traditional",
-      "opened_at": "2026-08-02T23:09:27.940267+00:00",
-      "note": "auto",
-      "entry_sell": 163,
-      "entry_offer": 170
-    },
-    {
       "id": 6,
       "item_id": 820,
       "name": "Iron dart tip",
@@ -26,15 +14,27 @@
     },
     {
       "id": 7,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 1760,
-      "buy_price": 142,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 485,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-03T00:09:28.369427+00:00",
+      "opened_at": "2026-08-03T00:19:28.510020+00:00",
       "note": "auto",
-      "entry_sell": 142,
-      "entry_offer": 149
+      "entry_sell": 29,
+      "entry_offer": 30
+    },
+    {
+      "id": 8,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 232,
+      "buy_price": 73,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T00:24:28.815671+00:00",
+      "note": "auto",
+      "entry_sell": 73,
+      "entry_offer": 76
     }
   ]
 }
