@@ -5,10 +5,15 @@ The deployed site can write its own journal/positions/watchlist entries
 (POST endpoints), so a naive seed overwrites those site-side writes on every
 deploy. This script merges the staged repo copy with the volume copy:
 
-  - trades.json / positions.json : union by numeric id (repo row wins ties)
-  - watchlist.json              : union by item key (repo entry wins ties)
-  - snapshots/ and other files  : repo/staged version wins outright
-  - files only in the volume    : kept
+  - trades.json               : union by numeric id (repo row wins ties)
+  - positions.json            : repo/staged version wins outright — the
+                                trader is the sole writer of open positions,
+                                so volume rows for already-closed positions
+                                are stale ghosts that must be pruned, not
+                                unioned back in
+  - watchlist.json            : union by item key (repo entry wins ties)
+  - snapshots/ and other files: repo/staged version wins outright
+  - files only in the volume  : kept
 
 Usage: merge_state.py STAGE_DIR VOLUME_DIR [--chown UID:GID]
 """
@@ -21,11 +26,14 @@ import tempfile
 
 LIST_FILES = {
     "trades.json": ("trades", "id"),
-    "positions.json": ("positions", "id"),
 }
 DICT_FILES = {
     "watchlist.json": "items",
 }
+# Files where the repo/staged copy is the source of truth and the volume
+# copy must be replaced wholesale (no union) — positions are trader-owned,
+# so a volume row for a closed position is a ghost that must disappear.
+REPLACE_FILES = {"positions.json"}
 
 
 def _read_list(path: str, key: str) -> list[dict]:
@@ -84,6 +92,10 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
                 rows[row.get(id_key)] = row  # repo wins on id ties
             ordered = sorted(rows, key=lambda k: (k is None, k))
             _write_json(dst, {key: [rows[k] for k in ordered]})
+        elif name in REPLACE_FILES:
+            # The staged copy is the source of truth: replace the volume
+            # file wholesale so closed positions are pruned (no ghosts).
+            shutil.copy2(src, dst)
         elif name in DICT_FILES:
             key = DICT_FILES[name]
             merged = _read_dict(dst, key)

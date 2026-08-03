@@ -61,6 +61,56 @@ def test_snapshot_subdir_recursion():
     print("  PASSED test_snapshot_subdir_recursion")
 
 
+def test_positions_pruned_not_unioned():
+    """Closed positions must be pruned from the volume, not unioned back in.
+
+    The trader is the sole writer of open positions, so a volume row for a
+    position the trader already closed is a stale ghost. The staged (repo)
+    file is the source of truth and replaces the volume wholesale.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / "stage"
+        vol = Path(tmp) / "vol"
+        stage.mkdir()
+        vol.mkdir()
+        # Volume has 2 stale open positions (already closed by the trader).
+        (vol / "positions.json").write_text(json.dumps({"positions": [
+            {"id": 19, "item_id": 9244, "name": "Dragonstone bolts (e)",
+             "qty": 531, "buy_price": 373},
+            {"id": 20, "item_id": 12934, "name": "Zulrah's scales",
+             "qty": 1592, "buy_price": 153},
+        ]}))
+        # Staged repo file is empty — the trader closed everything.
+        (stage / "positions.json").write_text(json.dumps({"positions": []}))
+        merge_state.merge_dir(str(stage), str(vol), None)
+        merged = json.loads((vol / "positions.json").read_text())["positions"]
+        assert merged == [], f"closed positions must be pruned, got {merged}"
+    print("  PASSED test_positions_pruned_not_unioned")
+
+
+def test_positions_stage_wins_on_conflict():
+    """A live position present in both copies: staged (trader) row wins."""
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / "stage"
+        vol = Path(tmp) / "vol"
+        stage.mkdir()
+        vol.mkdir()
+        (vol / "positions.json").write_text(json.dumps({"positions": [
+            {"id": 5, "item_id": 8780, "name": "Teak plank", "qty": 279,
+             "buy_price": 724, "site_mutated": True},
+        ]}))
+        (stage / "positions.json").write_text(json.dumps({"positions": [
+            {"id": 5, "item_id": 8780, "name": "Teak plank", "qty": 250,
+             "buy_price": 724},
+        ]}))
+        merge_state.merge_dir(str(stage), str(vol), None)
+        merged = json.loads((vol / "positions.json").read_text())["positions"]
+        assert len(merged) == 1
+        assert merged[0]["qty"] == 250  # trader's row replaces the site's
+        assert "site_mutated" not in merged[0]
+    print("  PASSED test_positions_stage_wins_on_conflict")
+
+
 def test_main_requires_args():
     assert merge_state.main([]) == 2
     assert merge_state.main(["missing-dir", "/tmp"]) == 2
@@ -71,5 +121,7 @@ if __name__ == "__main__":
     test_list_union_repo_wins_volume_only_kept()
     test_watchlist_union_and_plain_file_wins()
     test_snapshot_subdir_recursion()
+    test_positions_pruned_not_unioned()
+    test_positions_stage_wins_on_conflict()
     test_main_requires_args()
     print("\nAll merge_state tests passed.")
