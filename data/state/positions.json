@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 15,
-      "item_id": 1662,
-      "name": "Diamond necklace",
-      "qty": 92,
-      "buy_price": 1921,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T02:24:55.142954+00:00",
-      "note": "auto",
-      "entry_sell": 1921,
-      "entry_offer": 1995
-    },
-    {
-      "id": 16,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 131,
-      "buy_price": 1901,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T02:32:55.355858+00:00",
-      "note": "auto",
-      "entry_sell": 1901,
-      "entry_offer": 1970
-    },
-    {
       "id": 17,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 351,
-      "buy_price": 220,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 1119,
+      "buy_price": 62,
       "direction": "traditional",
-      "opened_at": "2026-08-03T03:06:57.662497+00:00",
+      "opened_at": "2026-08-03T03:16:56.646742+00:00",
       "note": "auto",
-      "entry_sell": 220,
-      "entry_offer": 229
+      "entry_sell": 62,
+      "entry_offer": 64
+    },
+    {
+      "id": 18,
+      "item_id": 571,
+      "name": "Water orb",
+      "qty": 154,
+      "buy_price": 1620,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T03:28:58.157910+00:00",
+      "note": "auto",
+      "entry_sell": 1620,
+      "entry_offer": 1700
+    },
+    {
+      "id": 19,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 531,
+      "buy_price": 373,
+      "direction": "traditional",
+      "opened_at": "2026-08-03T03:28:58.158299+00:00",
+      "note": "auto",
+      "entry_sell": 373,
+      "entry_offer": 390
     }
   ]
 }
