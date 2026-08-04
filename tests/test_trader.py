@@ -39,11 +39,11 @@ def _clean():
 def _cfg(**kw):
     defaults = dict(capital=1_000_000, trade_capital_frac=0.25, max_positions=3,
                     min_volume=800, min_price=25, max_spread_ratio=5.0,
-                    dip_depth_pct=2.0, max_dip_pct=10.0, min_spread_pct=4.0,
+                    dip_depth_pct=3.0, max_dip_pct=10.0, min_spread_pct=4.0,
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
-                    take_profit_pct=3.0, stop_loss_pct=-1.5,
-                    stop_grace_minutes=10,
+                    take_profit_pct=3.0, stop_loss_pct=-2.0,
+                    stop_grace_minutes=20,
                     max_hold_minutes=180, spread_collapse_exit_minutes=60,
                     min_exit_spread_pct=1.0, interval_sec=120,
                     stop_slippage=0.97, stop_mark_blend=0.0)
@@ -681,18 +681,18 @@ def test_stop_grace_period_blocks_early_stop():
     now = int(time.time())
     open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
                   direction="traditional")
-    # Fresh position (age 0), bid crashed to 94 (-3.1% < -1.5% stop): with
-    # the 10-min grace the stop must NOT fire.
+    # Fresh position (age 0), bid crashed to 94 (-3.1% < -2.0% stop): with
+    # the 20-min grace the stop must NOT fire.
     latest = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
         result = run_cycle(_cfg())
     assert result["closed"] == [], result
     assert len(pmod.list_positions()) == 1
-    # Age the position past the grace: the stop now fires.
+    # Age the position past the grace (25 min > 20): the stop now fires.
     pos = pmod._load()
     pos[0]["opened_at"] = (datetime.now(timezone.utc) -
-                           timedelta(minutes=15)).isoformat()
+                           timedelta(minutes=25)).isoformat()
     pmod._save(pos)
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):

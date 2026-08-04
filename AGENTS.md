@@ -61,7 +61,7 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
    `--members-only` is a `BooleanOptionalAction` whose default comes from
    `config.toml`.
 8. **Trader R:R is asymmetric by design**: take-profit `+3.0%` net (after
-   tax), stop-loss `-1.5%` from the stop mark. The stop mark blends the
+   tax), stop-loss `-2.0%` from the stop mark. The stop mark blends the
    entry bid with the 5m `avgLowPrice` via `stop_mark_blend` (0.0 = legacy
    entry-bid mark) so a dip entry is not stopped by the very dip it bought.
    `stop_slippage` (0.97) models worse stop fills. Always route tax through
@@ -70,6 +70,13 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
    (spread_pct - 2.0)` first, then an optional confidence model (reliability
    x profitability) breaks ties, then volume. The scanner's `rs_score` is a
    secondary signal, never the primary rank.
+10. **Replay-validated defaults** (`scripts/replay.py` + `scripts/sweep.py`):
+   the trader defaults were tuned against 30 real items' 5m candles — dip
+   `>= 3.0%` (2% bought falling knives), stop `-2.0%` (wider than -1.5%,
+   fewer noise stops), grace `20 min` (let the dip revert), time-exit at
+   `60 min` (no idling to max_hold). Sweep: dip3+stop2+grace20 → ROI 4.62%
+   vs 3.11% baseline on the replay set. Re-run `sweep.py` after collecting
+   more live trades before changing these again.
 
 ## Known Deliberate Simplifications (ponytail)
 

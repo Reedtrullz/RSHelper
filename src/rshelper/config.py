@@ -40,17 +40,17 @@ max_positions = 3        # concurrent auto positions
 min_volume = 800         # 5m executed volume floor (fill plausibility)
 min_price = 25           # skip sub-25gp items: 1gp tick > 2% stop distance
 max_spread_ratio = 5.0   # max buy/sell gap for entries
-dip_depth_pct = 2.0      # buy when sell is >=2% below the 5m average
+dip_depth_pct = 3.0      # buy when sell is >=3% below the 5m average (replay: 2% buys too early)
 max_dip_pct = 10.0       # don't catch deeper freefalls than this
 min_spread_pct = 4.0     # spread must exceed the 2% GE tax + buffer (data: entries >=4% win 93% vs 77% below)
 max_entry_spread_pct = 5.0  # high/low gap cap so entries don't overpay
 reentry_minutes = 30     # wait before re-entering an item after an auto close
 stop_reentry_minutes = 90  # wait before re-entering an item after a stop-loss
 take_profit_pct = 3.0    # close when net (after tax) >= this %
-stop_loss_pct = -1.5     # close when the bid falls this % below the stop mark
-stop_grace_minutes = 10  # stop-loss grace period after entry: a buy-the-dip
+stop_loss_pct = -2.0     # close when the bid falls this % below the stop mark (replay: -1.5% stops too early)
+stop_grace_minutes = 20  # stop-loss grace period after entry: a buy-the-dip
                          # entry needs time to revert before the stop arms
-                         # (data: 51% of stops fire within 10 min of entry)
+                         # (replay: grace=20 is the ROI sweet spot)
 max_hold_minutes = 180   # force-close after this long
 spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
 min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
@@ -104,15 +104,15 @@ class TraderConfig:
     min_volume: int = 800
     min_price: int = 25
     max_spread_ratio: float = 5.0
-    dip_depth_pct: float = 2.0
+    dip_depth_pct: float = 3.0
     max_dip_pct: float = 10.0
     min_spread_pct: float = 4.0
     max_entry_spread_pct: float = 5.0
     reentry_minutes: int = 30
     stop_reentry_minutes: int = 90
     take_profit_pct: float = 3.0
-    stop_loss_pct: float = -1.5
-    stop_grace_minutes: int = 10
+    stop_loss_pct: float = -2.0
+    stop_grace_minutes: int = 20
     max_hold_minutes: int = 180
     spread_collapse_exit_minutes: int = 60
     min_exit_spread_pct: float = 1.0
@@ -174,15 +174,15 @@ def load_config(profile: str | None = None) -> Config:
             min_volume=trader_raw.get("min_volume", 800),
             min_price=trader_raw.get("min_price", 25),
             max_spread_ratio=trader_raw.get("max_spread_ratio", 5.0),
-            dip_depth_pct=trader_raw.get("dip_depth_pct", 2.0),
+            dip_depth_pct=trader_raw.get("dip_depth_pct", 3.0),
             max_dip_pct=trader_raw.get("max_dip_pct", 10.0),
             min_spread_pct=trader_raw.get("min_spread_pct", 4.0),
             max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.0),
             reentry_minutes=trader_raw.get("reentry_minutes", 30),
             stop_reentry_minutes=trader_raw.get("stop_reentry_minutes", 90),
             take_profit_pct=trader_raw.get("take_profit_pct", 3.0),
-            stop_loss_pct=trader_raw.get("stop_loss_pct", -1.5),
-            stop_grace_minutes=trader_raw.get("stop_grace_minutes", 10),
+            stop_loss_pct=trader_raw.get("stop_loss_pct", -2.0),
+            stop_grace_minutes=trader_raw.get("stop_grace_minutes", 20),
             max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
             spread_collapse_exit_minutes=trader_raw.get(
                 "spread_collapse_exit_minutes", 60),
