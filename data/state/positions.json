@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2114,
-      "name": "Pineapple",
-      "qty": 208,
-      "buy_price": 201,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T00:33:22.218794+00:00",
-      "note": "auto",
-      "entry_sell": 201,
-      "entry_offer": 210
-    },
-    {
       "id": 3,
       "item_id": 1446,
       "name": "Body talisman",
@@ -26,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 204,
-      "buy_price": 1220,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1470,
+      "buy_price": 170,
       "direction": "traditional",
-      "opened_at": "2026-08-04T00:43:21.587003+00:00",
+      "opened_at": "2026-08-04T00:57:22.988458+00:00",
       "note": "auto",
-      "entry_sell": 1220,
-      "entry_offer": 1258
+      "entry_sell": 170,
+      "entry_offer": 178
+    },
+    {
+      "id": 5,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 239,
+      "buy_price": 1045,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T00:57:22.989136+00:00",
+      "note": "auto",
+      "entry_sell": 1045,
+      "entry_offer": 1088
     }
   ]
 }
