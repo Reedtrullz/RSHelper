@@ -14,27 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 3051,
-      "name": "Grimy snapdragon",
-      "qty": 34,
-      "buy_price": 7351,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2052,
+      "buy_price": 95,
       "direction": "traditional",
-      "opened_at": "2026-08-03T23:59:19.888662+00:00",
+      "opened_at": "2026-08-04T00:13:21.512510+00:00",
       "note": "auto",
-      "entry_sell": 7351,
-      "entry_offer": 7598
-    },
-    {
-      "id": 4,
-      "item_id": 12695,
-      "name": "Super combat potion(4)",
-      "qty": 22,
-      "buy_price": 11206,
-      "direction": "traditional",
-      "opened_at": "2026-08-03T23:59:19.890631+00:00",
-      "note": "auto",
-      "entry_sell": 11206,
-      "entry_offer": 11571
+      "entry_sell": 95,
+      "entry_offer": 99
     }
   ]
 }
