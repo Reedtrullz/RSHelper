@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 641,
-      "buy_price": 390,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 166,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-04T08:20:33.560204+00:00",
+      "opened_at": "2026-08-04T08:36:34.448954+00:00",
       "note": "auto",
-      "entry_sell": 390,
-      "entry_offer": 408
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
