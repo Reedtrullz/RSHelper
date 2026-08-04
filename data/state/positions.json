@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 21948,
-      "name": "Dragonstone dragon bolts (e)",
-      "qty": 143,
-      "buy_price": 2795,
+      "id": 1,
+      "item_id": 245,
+      "name": "Wine of zamorak",
+      "qty": 199,
+      "buy_price": 1000,
       "direction": "traditional",
-      "opened_at": "2026-08-04T19:10:16.801497+00:00",
+      "opened_at": "2026-08-04T19:40:18.671605+00:00",
       "note": "auto",
-      "entry_sell": 2795,
-      "entry_offer": 2921
-    },
-    {
-      "id": 3,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 313,
-      "buy_price": 236,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T19:24:18.351630+00:00",
-      "note": "auto",
-      "entry_sell": 236,
-      "entry_offer": 246
+      "entry_sell": 1000,
+      "entry_offer": 1037
     }
   ]
 }
