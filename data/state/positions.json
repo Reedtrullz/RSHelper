@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 92,
+      "buy_price": 529,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T10:52:39.711851+00:00",
+      "note": "auto",
+      "entry_sell": 529,
+      "entry_offer": 551
+    },
+    {
+      "id": 2,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 298,
+      "buy_price": 237,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T10:52:39.713505+00:00",
+      "note": "auto",
+      "entry_sell": 237,
+      "entry_offer": 247
+    }
+  ]
 }
