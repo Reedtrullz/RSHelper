@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 388,
-      "buy_price": 62,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 467,
+      "buy_price": 205,
       "direction": "traditional",
-      "opened_at": "2026-08-04T07:16:30.356819+00:00",
+      "opened_at": "2026-08-04T07:32:31.899646+00:00",
       "note": "auto",
-      "entry_sell": 62,
-      "entry_offer": 65
+      "entry_sell": 205,
+      "entry_offer": 214
     }
   ]
 }
