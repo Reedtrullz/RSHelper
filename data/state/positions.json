@@ -1,37 +1,25 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 225,
-      "buy_price": 679,
+      "id": 1,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 231,
+      "buy_price": 1080,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:35:27.160440+00:00",
+      "opened_at": "2026-08-04T03:15:25.678029+00:00",
       "note": "auto",
-      "entry_sell": 679,
-      "entry_offer": 708
+      "entry_sell": 1080,
+      "entry_offer": 1122
     },
     {
-      "id": 6,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 936,
-      "buy_price": 267,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T02:59:23.799661+00:00",
-      "note": "auto",
-      "entry_sell": 267,
-      "entry_offer": 277
-    },
-    {
-      "id": 7,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2845,
+      "id": 2,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 128,
       "buy_price": 30,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:59:23.799999+00:00",
+      "opened_at": "2026-08-04T03:15:25.678423+00:00",
       "note": "auto",
       "entry_sell": 30,
       "entry_offer": 31
