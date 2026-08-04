@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 19580,
-      "name": "Rune javelin tips",
-      "qty": 666,
-      "buy_price": 375,
+      "id": 5,
+      "item_id": 19669,
+      "name": "Redwood logs",
+      "qty": 225,
+      "buy_price": 679,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:27:26.860836+00:00",
+      "opened_at": "2026-08-04T02:35:27.160440+00:00",
       "note": "auto",
-      "entry_sell": 375,
-      "entry_offer": 391
+      "entry_sell": 679,
+      "entry_offer": 708
     },
     {
-      "id": 3,
-      "item_id": 4740,
-      "name": "Bolt rack",
-      "qty": 688,
-      "buy_price": 88,
+      "id": 6,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 636,
+      "buy_price": 393,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:27:26.862380+00:00",
+      "opened_at": "2026-08-04T02:43:27.407188+00:00",
       "note": "auto",
-      "entry_sell": 88,
-      "entry_offer": 91
-    },
-    {
-      "id": 4,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 305,
-      "buy_price": 332,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T02:29:25.748081+00:00",
-      "note": "auto",
-      "entry_sell": 332,
-      "entry_offer": 345
+      "entry_sell": 393,
+      "entry_offer": 411
     }
   ]
 }
