@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 520,
-      "buy_price": 25,
+      "item_id": 820,
+      "name": "Iron dart tip",
+      "qty": 176,
+      "buy_price": 50,
       "direction": "traditional",
-      "opened_at": "2026-08-04T12:36:44.912320+00:00",
+      "opened_at": "2026-08-04T12:44:44.975443+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 50,
+      "entry_offer": 48
+    },
+    {
+      "id": 2,
+      "item_id": 215,
+      "name": "Grimy cadantine",
+      "qty": 117,
+      "buy_price": 2128,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T12:52:45.310557+00:00",
+      "note": "auto",
+      "entry_sell": 2128,
+      "entry_offer": 2222
     }
   ]
 }
