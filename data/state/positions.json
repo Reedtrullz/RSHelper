@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 618,
-      "buy_price": 647,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 1074,
+      "buy_price": 82,
       "direction": "traditional",
-      "opened_at": "2026-08-04T18:21:41.265687+00:00",
+      "opened_at": "2026-08-04T18:40:15.014483+00:00",
       "note": "auto",
-      "entry_sell": 647,
-      "entry_offer": 674
+      "entry_sell": 82,
+      "entry_offer": 85
+    },
+    {
+      "id": 2,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 90,
+      "buy_price": 102,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T18:40:15.015264+00:00",
+      "note": "auto",
+      "entry_sell": 102,
+      "entry_offer": 107
     }
   ]
 }
