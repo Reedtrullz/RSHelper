@@ -13,18 +13,6 @@
       "entry_offer": 168
     },
     {
-      "id": 4,
-      "item_id": 11237,
-      "name": "Dragon arrowtips",
-      "qty": 222,
-      "buy_price": 1800,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T22:50:26.609634+00:00",
-      "note": "auto",
-      "entry_sell": 1800,
-      "entry_offer": 1879
-    },
-    {
       "id": 5,
       "item_id": 3008,
       "name": "Energy potion(4)",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 190,
       "entry_offer": 197
+    },
+    {
+      "id": 6,
+      "item_id": 371,
+      "name": "Raw swordfish",
+      "qty": 196,
+      "buy_price": 191,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T23:36:27.361836+00:00",
+      "note": "auto",
+      "entry_sell": 191,
+      "entry_offer": 198
     }
   ]
 }
