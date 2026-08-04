@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 10034,
-      "name": "Red chinchompa",
-      "qty": 174,
-      "buy_price": 1430,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 139,
+      "buy_price": 391,
       "direction": "traditional",
-      "opened_at": "2026-08-04T09:44:37.262337+00:00",
+      "opened_at": "2026-08-04T10:12:38.340780+00:00",
       "note": "auto",
-      "entry_sell": 1430,
-      "entry_offer": 1499
+      "entry_sell": 391,
+      "entry_offer": 409
     },
     {
       "id": 2,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 653,
-      "buy_price": 111,
+      "item_id": 564,
+      "name": "Cosmic rune",
+      "qty": 851,
+      "buy_price": 121,
       "direction": "traditional",
-      "opened_at": "2026-08-04T09:56:37.894433+00:00",
+      "opened_at": "2026-08-04T10:12:38.341686+00:00",
       "note": "auto",
-      "entry_sell": 111,
-      "entry_offer": 116
+      "entry_sell": 121,
+      "entry_offer": 126
     }
   ]
 }
