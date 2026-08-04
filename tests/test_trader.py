@@ -555,6 +555,62 @@ def test_ge_fill_skips_when_offer_collapsed():
     print("  PASSED test_ge_fill_skips_when_offer_collapsed")
 
 
+def test_spread_collapse_filled_offer_sells_at_offer():
+    """A filled GE buy-offer on spread-collapse exits at the offer, not the
+    bid — the spread-capture model sells what it bought at the offer."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    open_position(1, "X", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=90)).isoformat()
+    pmod._save(pos)
+    now = int(time.time())
+    # Net spread collapsed (98-97-1)/97 = 0% < 1%, and the buy-fill is
+    # complete (1000 units/min over 90 min >> qty 10).
+    latest = _latest(now, **{"1": (98, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
+                    "lowPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "spread_collapse"
+    assert result["closed"][0]["sell_price"] == 98  # sold at the offer
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == 98
+    print("  PASSED test_spread_collapse_filled_offer_sells_at_offer")
+
+
+def test_spread_collapse_unfilled_sells_at_bid():
+    """An unfilled position on spread-collapse still exits at the bid."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    open_position(1, "X", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=90)).isoformat()
+    pmod._save(pos)
+    now = int(time.time())
+    # Net spread collapsed, but there is NO 5m volume data — the fill is
+    # unconfirmed (the no-volume slow-default is not evidence), so it exits
+    # at the bid.
+    latest = _latest(now, **{"1": (98, 97)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "spread_collapse"
+    assert result["closed"][0]["sell_price"] == 97  # sold at the bid
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == 97
+    print("  PASSED test_spread_collapse_unfilled_sells_at_bid")
+
+
 def test_reentry_cooldown():
     _clean()
     from unittest import mock
@@ -989,4 +1045,6 @@ if __name__ == "__main__":
     test_auto_ge_fill_closes_at_offer()
     test_manual_position_not_auto_closed_by_ge_fill()
     test_ge_fill_skips_when_offer_collapsed()
+    test_spread_collapse_filled_offer_sells_at_offer()
+    test_spread_collapse_unfilled_sells_at_bid()
     print("\nAll tests passed.")
