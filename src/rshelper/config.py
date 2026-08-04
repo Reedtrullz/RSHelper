@@ -53,7 +53,6 @@ stop_grace_minutes = 20  # stop-loss grace period after entry: a buy-the-dip
                          # (replay: grace=20 is the ROI sweet spot)
 max_hold_minutes = 180   # force-close after this long
 spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
-min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
 interval_sec = 120       # poll cycle (seconds); fast stops limit crash gaps
 artifact_min_low_vol = 20  # below this, low-price volume is a thin print
 artifact_low_vol_frac = 0.10  # low-price volume must be >= this share of the window
@@ -115,7 +114,6 @@ class TraderConfig:
     stop_grace_minutes: int = 20
     max_hold_minutes: int = 180
     spread_collapse_exit_minutes: int = 60
-    min_exit_spread_pct: float = 1.0
     interval_sec: int = 120
     artifact_min_low_vol: int = 20
     artifact_low_vol_frac: float = 0.10
@@ -186,7 +184,6 @@ def load_config(profile: str | None = None) -> Config:
             max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
             spread_collapse_exit_minutes=trader_raw.get(
                 "spread_collapse_exit_minutes", 60),
-            min_exit_spread_pct=trader_raw.get("min_exit_spread_pct", 1.0),
             interval_sec=trader_raw.get("interval_sec", 120),
             artifact_min_low_vol=trader_raw.get("artifact_min_low_vol", 20),
             artifact_low_vol_frac=trader_raw.get("artifact_low_vol_frac", 0.10),

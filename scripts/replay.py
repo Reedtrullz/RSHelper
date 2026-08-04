@@ -48,6 +48,8 @@ class ReplayConfig:
     time_exit_minutes: int = 60
     max_hold_minutes: int = 180
     stop_slippage: float = 0.97
+    capital_frac: float = 0.25   # fraction of bankroll per position
+    max_volume_frac: float = 0.10  # max position = this fraction of 5m volume
 
 
 @dataclass
@@ -87,11 +89,21 @@ def _volume(candle: dict) -> int:
             + safe_int(candle.get("lowPriceVolume")))
 
 
-def _dip_pct(candle: dict) -> float:
-    """How far the candle low is below the trailing avgLow (mean reversion)."""
-    lo = safe_int(candle.get("avgLowPrice"))
-    # Rolling 12-candle (1h) average low as the baseline
-    return 0.0
+def _ge_fill_pct(pos: Position, candle: dict) -> float:
+    """0-1 simulated GE buy-fill, same curve as the live trader: rate =
+    volume/5 per minute, ease-out, capped at 1.0."""
+    qty = pos.qty
+    vol = _volume(candle)
+    opened_idx = pos.opened_at_idx
+    now_iso = _candle_iso(candle.get("timestamp", 0))
+    opened_iso = _candle_iso(pos.candles[opened_idx].get("timestamp", 0))
+    elapsed = _elapsed_minutes(opened_iso, now_iso)
+    if qty <= 0:
+        return 0.0
+    if vol <= 0:
+        return min(1.0, elapsed * (1.0 / qty))
+    raw = min(1.0, elapsed * (vol / 5.0) / qty)
+    return 1.0 - (1.0 - raw) ** 2
 
 
 def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
@@ -125,7 +137,8 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                 if (lo >= 25 and vol >= cfg.min_volume
                         and cfg.min_spread_pct <= spread <= 5.0
                         and cfg.dip_depth_pct <= dip <= cfg.max_dip_pct):
-                    qty = min(20000, int(capital * 0.25) // lo, vol // 10)
+                    qty = min(20000, int(capital * cfg.capital_frac) // lo,
+                              int(vol * cfg.max_volume_frac))
                     if qty > 0:
                         positions.append(Position(iid, qty, lo, idx, hi, candles))
             # --- Exits (evaluate the same position list, oldest first) ---
@@ -144,6 +157,13 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                     sell = lo if lo > 0 else pos.buy
                 elif hi > 0 and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 >= cfg.take_profit_pct:
                     reason = "take_profit"
+                    sell = hi
+                elif hi > 0 and _ge_fill_pct(pos, cur) >= 1.0 \
+                        and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 > 0:
+                    # ge_fill: the simulated GE buy-fill completed and the
+                    # offer still nets a profit — auto-collect at the offer
+                    # (the live trader's spread-capture close).
+                    reason = "ge_fill"
                     sell = hi
                 elif lo > 0:
                     move = (lo - pos.buy) / pos.buy * 100

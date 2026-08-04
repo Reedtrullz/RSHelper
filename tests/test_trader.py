@@ -45,7 +45,7 @@ def _cfg(**kw):
                     take_profit_pct=3.0, stop_loss_pct=-2.0,
                     stop_grace_minutes=20,
                     max_hold_minutes=180, spread_collapse_exit_minutes=60,
-                    min_exit_spread_pct=1.0, interval_sec=120,
+                    interval_sec=120,
                     stop_slippage=0.97, stop_mark_blend=0.0)
     defaults.update(kw)
     return TraderConfig(**defaults)
@@ -238,7 +238,7 @@ def test_spread_collapse_exit():
     take precedence."""
     _clean()
     from rshelper.positions import open_position
-    cfg = _cfg(spread_collapse_exit_minutes=60, min_exit_spread_pct=1.0)
+    cfg = _cfg(spread_collapse_exit_minutes=60)
     now = time.time()
     open_position(1, "X", 10, 97, note="auto", direction="traditional",
                   entry_sell=97, entry_offer=100)

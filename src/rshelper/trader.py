@@ -294,10 +294,10 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     Positions are opened at the bid (low). Take-profit sells at the offer
     (high) when it nets the target after tax; the stop sells at the bid
     (low) when the bid falls below the entry bid by the stop distance.
-    After spread_collapse_exit_minutes, a position whose net spread (after
-    tax) has collapsed below min_exit_spread_pct exits at the bid: the
-    spread-capture edge it was opened for is gone, so holding only waits for
-    a rally that may never come. A simulated GE fill completion is NOT
+    After spread_collapse_exit_minutes, a position that hasn't hit TP or
+    the stop exits at the better of offer vs bid — the spread-capture edge
+    it was opened for is gone or idling, so holding only waits for a rally
+    that may never come. A simulated GE fill completion is NOT
     returned here — run_cycle checks it separately so a filled offer closes
     at the offer (ge_fill) only when no TP/SL/collapse/max-hold fires first.
     """
@@ -548,8 +548,6 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("max_hold_minutes must be > 0")
     if cfg.spread_collapse_exit_minutes < 0:
         raise ValueError("spread_collapse_exit_minutes must be >= 0")
-    if cfg.min_exit_spread_pct < 0:
-        raise ValueError("min_exit_spread_pct must be >= 0")
     if cfg.artifact_min_low_vol < 0:
         raise ValueError("artifact_min_low_vol must be >= 0")
     if not (0 < cfg.artifact_low_vol_frac <= 1):
