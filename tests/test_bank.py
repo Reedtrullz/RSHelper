@@ -154,6 +154,38 @@ def test_tax_uses_ge_tax():
     print("  PASSED test_tax_uses_ge_tax")
 
 
+def test_mixed_direction_valued_per_lot():
+    """A stack with mixed directions marks each lot to its own exit leg:
+    traditional sells at the offer (high), arbitrage at the bid (low)."""
+    _clean()
+    now = 1_000_000.0
+    open_position(561, "Nature rune", 10, 100, direction="traditional")
+    open_position(561, "Nature rune", 5, 100, direction="arbitrage")
+    it = build_bank_items(latest={"561": _fresh_price(130, 90, now)},
+                          now=now)["items"][0]
+    assert it["total_qty"] == 15
+    assert it["position_count"] == 2
+    # 10 trad at offer 130 + 5 arb at bid 90 = 1300 + 450 = 1750
+    assert it["total_value"] == 1750
+    tax = ge_tax(130) * 10 + ge_tax(90) * 5
+    assert it["unrealized_pnl"] == 1750 - 1500 - tax
+    assert it["current_price"] == 130  # majority leg drives the display
+    print("  PASSED test_mixed_direction_valued_per_lot")
+
+
+def test_mixed_direction_arb_majority():
+    """When arbitrage qty dominates, the display leg is the bid."""
+    _clean()
+    now = 1_000_000.0
+    open_position(561, "Nature rune", 2, 100, direction="traditional")
+    open_position(561, "Nature rune", 10, 100, direction="arbitrage")
+    it = build_bank_items(latest={"561": _fresh_price(130, 90, now)},
+                          now=now)["items"][0]
+    assert it["current_price"] == 90  # arb qty 10 > trad qty 2
+    assert it["total_value"] == 130 * 2 + 90 * 10
+    print("  PASSED test_mixed_direction_arb_majority")
+
+
 if __name__ == "__main__":
     test_empty_bank()
     test_aggregates_positions()
@@ -166,4 +198,6 @@ if __name__ == "__main__":
     test_icon_urls()
     test_stale_price_no_mark()
     test_tax_uses_ge_tax()
+    test_mixed_direction_valued_per_lot()
+    test_mixed_direction_arb_majority()
     print("\nAll tests passed.")

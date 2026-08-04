@@ -404,14 +404,17 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             # No TP/SL/collapse/hold exit this cycle: if the simulated GE
             # buy-fill has completed, close at the offer (the spread-capture
             # take-profit) exactly like the dashboard's Collect would. Only
-            # when the offer still nets a profit over the entry bid — if the
-            # spread has collapsed, the spread-collapse/stop logic owns it
-            # and a "filled" close at the offer would lock in a loss.
+            # when the offer still nets a profit AFTER the 2% sell tax — if
+            # the spread has collapsed below tax, the spread-collapse/stop
+            # logic owns it and a "filled" close at the offer would lock in
+            # a net loss.
             if _ge_fill_pct(p, vol_5m, now) >= 1.0:
                 price_now = latest.get(str(p.item_id))
                 if isinstance(price_now, dict):
                     offer_now = int(price_now.get("high", 0) or 0)
-                    if offer_now > p.buy_price:
+                    if (offer_now > 0 and p.buy_price > 0
+                            and unrealized_pct(p.buy_price, offer_now,
+                                               p.qty) > 0):
                         reason = "ge_fill"
         if reason is None:
             continue
@@ -496,11 +499,16 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
     slots = max(0, cfg.max_positions - len(remaining))
     capital_used = sum(p.buy_price * p.qty for p in remaining)
     opened = []
+    # One position per item, auto OR manual: stacking an auto position on
+    # top of a hand-managed position splits the GE slot and the bank stack
+    # into two rows for the same item, and the auto leg could close under
+    # the manual one. Skip any candidate that already has any open position.
+    all_open_items = set(p.item_id for p in list_positions(profile))
     for cand in candidates:
         if slots <= 0:
             break
-        if cand.id in auto_open:
-            continue  # one auto position per item at a time
+        if cand.id in auto_open or cand.id in all_open_items:
+            continue  # one position per item at a time (auto or manual)
         qty = size_position(cfg, capital_used, cand)
         if qty <= 0:
             print(f"[trader] skipped {cand.name}: size 0 "

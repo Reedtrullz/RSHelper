@@ -555,6 +555,63 @@ def test_ge_fill_skips_when_offer_collapsed():
     print("  PASSED test_ge_fill_skips_when_offer_collapsed")
 
 
+def test_ge_fill_requires_net_profit_after_tax():
+    """ge_fill must require net profit AFTER the 2% sell tax, not just a
+    gross offer above the entry bid. Offer 98 vs buy 97 is gross +1% but
+    net -1% (tax 1.96 -> 1), so it must NOT auto-collect."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=10)).isoformat()
+    pmod._save(pos)
+    # Offer 98 > bid 97 (gross +1%) but net of 2% tax it's a loss; bid 97
+    # is flat vs entry (no stop). ge_fill must NOT fire.
+    latest = _latest(now, **{"1": (98, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
+                    "lowPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert result["closed"] == [], result
+    assert len(pmod.list_positions()) == 1
+    # Offer 100: net (100 - 97 - 2)/97 = +1.03% > 0 -> ge_fill fires.
+    latest_ok = _latest(now, **{"1": (100, 97)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest_ok, vol_5m, [])):
+        result_ok = run_cycle(_cfg())
+    assert len(result_ok["closed"]) == 1
+    assert result_ok["closed"][0]["reason"] == "ge_fill"
+    print("  PASSED test_ge_fill_requires_net_profit_after_tax")
+
+
+def test_no_auto_open_on_item_with_manual_position():
+    """The trader must not open an auto position on an item that already has
+    a manual position — stacking splits the GE slot and bank stack."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    # A manual position exists for item 1.
+    open_position(1, "Dipped", 50, 97, note="paper", direction="traditional")
+    # Item 1 is also a valid dip candidate.
+    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    latest = _latest(now, **{"1": (100, 97)})
+    vol_5m = {"1": {"avgLowPrice": 100}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, items)):
+        result = run_cycle(_cfg())
+    assert result["opened"] == [], result  # must NOT stack auto on manual
+    positions = pmod.list_positions()
+    assert len(positions) == 1
+    assert positions[0].note == "paper"  # the manual one survives untouched
+    print("  PASSED test_no_auto_open_on_item_with_manual_position")
+
+
 def test_spread_collapse_filled_offer_sells_at_offer():
     """A filled GE buy-offer on spread-collapse exits at the offer, not the
     bid — the spread-capture model sells what it bought at the offer."""
@@ -1045,6 +1102,8 @@ if __name__ == "__main__":
     test_auto_ge_fill_closes_at_offer()
     test_manual_position_not_auto_closed_by_ge_fill()
     test_ge_fill_skips_when_offer_collapsed()
+    test_ge_fill_requires_net_profit_after_tax()
+    test_no_auto_open_on_item_with_manual_position()
     test_spread_collapse_filled_offer_sells_at_offer()
     test_spread_collapse_unfilled_sells_at_bid()
     print("\nAll tests passed.")

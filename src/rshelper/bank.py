@@ -27,11 +27,14 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
     for p in list_positions(profile):
         g = groups.setdefault(p.item_id, {
             "item_id": p.item_id, "name": p.name, "total_qty": 0,
-            "cost_basis": 0, "position_count": 0, "direction": p.direction,
+            "cost_basis": 0, "position_count": 0,
+            "qty_by_direction": {"traditional": 0, "arbitrage": 0},
         })
         g["total_qty"] += p.qty
         g["cost_basis"] += p.buy_price * p.qty
         g["position_count"] += 1
+        g["qty_by_direction"][p.direction] = (
+            g["qty_by_direction"].get(p.direction, 0) + p.qty)
     items = []
     for item_id, g in groups.items():
         total_qty = g["total_qty"]
@@ -43,15 +46,21 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
         unrealized = 0
         unrealized_pct = None
         if issue is None:
-            current_price = (int(price.get("high", 0) or 0)
-                             if g["direction"] == "traditional"
-                             else int(price.get("low", 0) or 0))
-            tax = ge_tax(current_price)
-            total_value = current_price * total_qty
-            unrealized = total_value - g["cost_basis"] - tax * total_qty
+            # Mark each lot to its own exit leg: traditional sells at the
+            # offer (high), arbitrage at the bid (low). A stack with mixed
+            # directions is valued per-lot, not with the first lot's leg.
+            offer = int(price.get("high", 0) or 0)
+            bid = int(price.get("low", 0) or 0)
+            trad_qty = g["qty_by_direction"].get("traditional", 0)
+            arb_qty = g["qty_by_direction"].get("arbitrage", 0)
+            current_price = offer if trad_qty >= arb_qty else bid
+            total_value = offer * trad_qty + bid * arb_qty
+            # Tax on the exit leg each lot sells at.
+            tax = (ge_tax(offer) * trad_qty + ge_tax(bid) * arb_qty)
+            unrealized = total_value - g["cost_basis"] - tax
             unrealized_pct = (round(
-                (current_price - avg_buy - tax) / avg_buy * 100, 2)
-                if avg_buy > 0 else 0.0)
+                (total_value - g["cost_basis"] - tax) / g["cost_basis"] * 100, 2)
+                if g["cost_basis"] > 0 else 0.0)
         items.append({
             "item_id": item_id,
             "name": g["name"],
