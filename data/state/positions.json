@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 2500,
-      "buy_price": 100,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 666,
+      "buy_price": 375,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:15:26.394940+00:00",
+      "opened_at": "2026-08-04T02:27:26.860836+00:00",
       "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 105
+      "entry_sell": 375,
+      "entry_offer": 391
     },
     {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1833,
-      "buy_price": 28,
+      "id": 3,
+      "item_id": 4740,
+      "name": "Bolt rack",
+      "qty": 688,
+      "buy_price": 88,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:15:26.395967+00:00",
+      "opened_at": "2026-08-04T02:27:26.862380+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 88,
+      "entry_offer": 91
+    },
+    {
+      "id": 4,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 305,
+      "buy_price": 332,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T02:29:25.748081+00:00",
+      "note": "auto",
+      "entry_sell": 332,
+      "entry_offer": 345
     }
   ]
 }
