@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1619,
-      "name": "Uncut ruby",
-      "qty": 361,
-      "buy_price": 1105,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T19:02:17.273508+00:00",
-      "note": "auto",
-      "entry_sell": 1105,
-      "entry_offer": 1152
-    },
-    {
       "id": 2,
       "item_id": 21948,
       "name": "Dragonstone dragon bolts (e)",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 2795,
       "entry_offer": 2921
+    },
+    {
+      "id": 3,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 313,
+      "buy_price": 236,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T19:24:18.351630+00:00",
+      "note": "auto",
+      "entry_sell": 236,
+      "entry_offer": 246
     }
   ]
 }
