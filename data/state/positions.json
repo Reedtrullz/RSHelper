@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 8780,
-      "name": "Teak plank",
-      "qty": 343,
-      "buy_price": 728,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T13:48:47.996675+00:00",
-      "note": "auto",
-      "entry_sell": 728,
-      "entry_offer": 759
-    },
-    {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 706,
-      "buy_price": 201,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T13:52:48.162382+00:00",
-      "note": "auto",
-      "entry_sell": 201,
-      "entry_offer": 210
-    }
-  ]
+  "positions": []
 }
