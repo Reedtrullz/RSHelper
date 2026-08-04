@@ -51,6 +51,7 @@ class ReplayConfig:
     capital_frac: float = 0.25   # fraction of bankroll per position
     max_volume_frac: float = 0.10  # max position = this fraction of 5m volume
     trailing_tp_pct: float = 0.0  # exit when the offer pulls back this % from its peak (0 = fixed TP)
+    dip_reversal: bool = False  # require the low to tick UP (recovery started) before entering
 
 
 @dataclass
@@ -220,7 +221,9 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                 dip = (avg_low - lo) / avg_low * 100 if avg_low > 0 else 0
                 if (lo >= 25 and vol >= cfg.min_volume
                         and cfg.min_spread_pct <= spread <= 5.0
-                        and cfg.dip_depth_pct <= dip <= cfg.max_dip_pct):
+                        and cfg.dip_depth_pct <= dip <= cfg.max_dip_pct
+                        and (not cfg.dip_reversal or idx == 0
+                             or lo >= safe_int(cs[idx - 1].get("avgLowPrice")))):
                     # edge = dip * (spread - 2%) like the live trader
                     edge = dip * max(0.0, spread - 2.0)
                     qty = min(20000, int(capital * cfg.capital_frac) // lo,
@@ -298,6 +301,7 @@ def main() -> int:
     ap.add_argument("--time-exit", type=int, default=60)
     ap.add_argument("--hold", type=int, default=180)
     ap.add_argument("--trailing-tp", type=float, default=0.0)
+    ap.add_argument("--dip-reversal", action="store_true")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -314,7 +318,7 @@ def main() -> int:
         max_dip_pct=args.max_dip, stop_loss_pct=args.stop,
         take_profit_pct=args.tp, stop_grace_minutes=args.grace,
         time_exit_minutes=args.time_exit, max_hold_minutes=args.hold,
-        trailing_tp_pct=args.trailing_tp,
+        trailing_tp_pct=args.trailing_tp, dip_reversal=args.dip_reversal,
     )
     result = simulate(data, cfg)
     if args.json:
