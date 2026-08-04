@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 198,
+      "buy_price": 1259,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T03:46:24.823262+00:00",
+      "note": "auto",
+      "entry_sell": 1259,
+      "entry_offer": 1320
+    },
+    {
+      "id": 2,
+      "item_id": 2301,
+      "name": "Pineapple pizza",
+      "qty": 241,
+      "buy_price": 675,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T03:58:25.792169+00:00",
+      "note": "auto",
+      "entry_sell": 675,
+      "entry_offer": 705
+    }
+  ]
 }
