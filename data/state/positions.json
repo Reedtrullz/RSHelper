@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 882,
-      "buy_price": 61,
+      "item_id": 5998,
+      "name": "Yanillian hops",
+      "qty": 160,
+      "buy_price": 857,
       "direction": "traditional",
-      "opened_at": "2026-08-04T16:52:56.005161+00:00",
+      "opened_at": "2026-08-04T17:08:56.512437+00:00",
       "note": "auto",
-      "entry_sell": 61,
-      "entry_offer": 64
-    },
-    {
-      "id": 2,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 107,
-      "buy_price": 97,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T16:52:56.005782+00:00",
-      "note": "auto",
-      "entry_sell": 97,
-      "entry_offer": 101
+      "entry_sell": 857,
+      "entry_offer": 898
     }
   ]
 }
