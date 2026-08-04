@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1446,
-      "name": "Body talisman",
-      "qty": 136,
-      "buy_price": 1690,
+      "id": 2,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 2144,
+      "buy_price": 89,
       "direction": "traditional",
-      "opened_at": "2026-08-04T00:39:21.356028+00:00",
+      "opened_at": "2026-08-04T01:23:24.297920+00:00",
       "note": "auto",
-      "entry_sell": 1690,
-      "entry_offer": 1750
+      "entry_sell": 89,
+      "entry_offer": 92
     }
   ]
 }
