@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 1690,
       "entry_offer": 1750
-    },
-    {
-      "id": 4,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1470,
-      "buy_price": 170,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T00:57:22.988458+00:00",
-      "note": "auto",
-      "entry_sell": 170,
-      "entry_offer": 178
-    },
-    {
-      "id": 5,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 239,
-      "buy_price": 1045,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T00:57:22.989136+00:00",
-      "note": "auto",
-      "entry_sell": 1045,
-      "entry_offer": 1088
     }
   ]
 }
