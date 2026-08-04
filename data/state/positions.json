@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 1816,
-      "buy_price": 30,
+      "item_id": 11230,
+      "name": "Dragon dart",
+      "qty": 223,
+      "buy_price": 1117,
       "direction": "traditional",
-      "opened_at": "2026-08-04T01:43:25.170170+00:00",
+      "opened_at": "2026-08-04T01:59:25.883912+00:00",
       "note": "auto",
-      "entry_sell": 30,
-      "entry_offer": 31
+      "entry_sell": 1117,
+      "entry_offer": 1155
     }
   ]
 }
