@@ -207,6 +207,19 @@ def test_slot_auto_flag():
     print("  PASSED test_slot_auto_flag")
 
 
+def test_slot_entry_fields():
+    """Slots expose entry bid/offer and entry spread for the detail panel."""
+    _clean()
+    now = 1_000_000.0
+    open_position(561, "Nature rune", 10, 100, direction="traditional",
+                  entry_sell=100, entry_offer=104)
+    s = build_ge_slots(now=now)["slots"][0]
+    assert s["entry_sell"] == 100
+    assert s["entry_offer"] == 104
+    assert s["spread_pct"] == 4.0  # (104 - 100) / 100
+    print("  PASSED test_slot_entry_fields")
+
+
 def test_collect_closes_and_logs():
     _clean()
     p = open_position(561, "Nature rune", 10, 100, direction="traditional")
@@ -257,6 +270,7 @@ if __name__ == "__main__":
     test_max_eight_slots()
     test_stale_price_slots()
     test_slot_auto_flag()
+    test_slot_entry_fields()
     test_collect_closes_and_logs()
     test_collect_unknown_id()
     test_collect_no_price_fallback()

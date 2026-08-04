@@ -527,6 +527,34 @@ def test_manual_position_not_auto_closed_by_ge_fill():
     print("  PASSED test_manual_position_not_auto_closed_by_ge_fill")
 
 
+def test_ge_fill_skips_when_offer_collapsed():
+    """ge_fill must not fire when the offer no longer nets profit over the
+    entry bid — a filled close at a collapsed offer would lock in a loss."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=10)).isoformat()
+    pmod._save(pos)
+    # Fill is complete, but the offer has collapsed to 96 (< entry bid 97)
+    # while the bid 96.5 stays within the -1.5% stop (mark 97 -> -0.5%):
+    # ge_fill must NOT close (would sell below entry) and neither does the
+    # stop — the position holds for the spread-collapse logic.
+    latest = _latest(now, **{"1": (96, 96.5)})
+    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
+                    "lowPriceVolume": 5000}}
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, vol_5m, [])):
+        result = run_cycle(_cfg())
+    assert result["closed"] == [], result
+    assert len(pmod.list_positions()) == 1
+    print("  PASSED test_ge_fill_skips_when_offer_collapsed")
+
+
 def test_reentry_cooldown():
     _clean()
     from unittest import mock
@@ -960,4 +988,5 @@ if __name__ == "__main__":
     test_candidate_confidence_tiebreaker()
     test_auto_ge_fill_closes_at_offer()
     test_manual_position_not_auto_closed_by_ge_fill()
+    test_ge_fill_skips_when_offer_collapsed()
     print("\nAll tests passed.")

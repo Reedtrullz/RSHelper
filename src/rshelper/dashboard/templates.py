@@ -747,6 +747,9 @@ function geSlotClick(positionId){
   const pnl=s.unrealized;
   const pnlHtml=pnl!=null&&pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">-</span>';
   const curHtml=s.current_price!=null?format(s.current_price)+' gp':'<span class="dim">-</span>';
+  const spreadHtml=s.spread_pct!=null?s.spread_pct.toFixed(2)+'%':'<span class="dim">-</span>';
+  const entryOfferHtml=s.entry_offer!=null?format(s.entry_offer)+' gp':'<span class="dim">-</span>';
+  const entrySellHtml=s.entry_sell!=null?format(s.entry_sell)+' gp':'<span class="dim">-</span>';
   document.getElementById('contextPanel').innerHTML=
     '<div class="item-name">'+escHtml(s.name)+'</div>'+
     '<div class="metric-grid">'+
@@ -759,6 +762,10 @@ function geSlotClick(positionId){
     metric('Unrealized',pnlHtml,'')+
     metric('Age',fmtAge((s.age_minutes||0)*60),'')+
     metric('Status',escHtml(s.status||'pending'),'')+
+    metric('Entry Bid',entrySellHtml,'')+
+    metric('Entry Offer',entryOfferHtml,'')+
+    metric('Entry Spread',spreadHtml,'')+
+    (s.auto?metric('Managed','Auto (trader)','gold'):'')+
     '</div>';
 }
 async function showGEHistory(){

@@ -389,9 +389,16 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         if reason is None:
             # No TP/SL/collapse/hold exit this cycle: if the simulated GE
             # buy-fill has completed, close at the offer (the spread-capture
-            # take-profit) exactly like the dashboard's Collect would.
+            # take-profit) exactly like the dashboard's Collect would. Only
+            # when the offer still nets a profit over the entry bid — if the
+            # spread has collapsed, the spread-collapse/stop logic owns it
+            # and a "filled" close at the offer would lock in a loss.
             if _ge_fill_pct(p, vol_5m, now) >= 1.0:
-                reason = "ge_fill"
+                price_now = latest.get(str(p.item_id))
+                if isinstance(price_now, dict):
+                    offer_now = int(price_now.get("high", 0) or 0)
+                    if offer_now > p.buy_price:
+                        reason = "ge_fill"
         if reason is None:
             continue
         price = latest.get(str(p.item_id))

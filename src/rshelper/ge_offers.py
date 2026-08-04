@@ -128,6 +128,11 @@ def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
             "age_minutes": round(_elapsed_minutes(p.opened_at, now), 1),
             "can_collect": fill >= 1.0,
             "auto": p.note == "auto",  # auto-trader closes these itself
+            "entry_sell": p.entry_sell,
+            "entry_offer": p.entry_offer,
+            "spread_pct": (round((p.entry_offer - p.buy_price) / p.buy_price * 100, 2)
+                           if p.entry_offer and p.buy_price > 0 else None),
+            "exit_reason": "ge_fill" if (p.note == "auto" and fill >= 1.0) else None,
         })
     return {
         "slots": slots,
