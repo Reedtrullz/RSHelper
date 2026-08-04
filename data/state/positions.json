@@ -13,16 +13,28 @@
       "entry_offer": 168
     },
     {
-      "id": 3,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 328,
-      "buy_price": 1218,
+      "id": 4,
+      "item_id": 11237,
+      "name": "Dragon arrowtips",
+      "qty": 222,
+      "buy_price": 1800,
       "direction": "traditional",
-      "opened_at": "2026-08-04T22:38:26.375348+00:00",
+      "opened_at": "2026-08-04T22:50:26.609634+00:00",
       "note": "auto",
-      "entry_sell": 1218,
-      "entry_offer": 1275
+      "entry_sell": 1800,
+      "entry_offer": 1879
+    },
+    {
+      "id": 5,
+      "item_id": 3008,
+      "name": "Energy potion(4)",
+      "qty": 128,
+      "buy_price": 190,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T22:54:26.824792+00:00",
+      "note": "auto",
+      "entry_sell": 190,
+      "entry_offer": 197
     }
   ]
 }
