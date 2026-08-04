@@ -50,6 +50,7 @@ class ReplayConfig:
     stop_slippage: float = 0.97
     capital_frac: float = 0.25   # fraction of bankroll per position
     max_volume_frac: float = 0.10  # max position = this fraction of 5m volume
+    trailing_tp_pct: float = 0.0  # exit when the offer pulls back this % from its peak (0 = fixed TP)
 
 
 @dataclass
@@ -60,6 +61,7 @@ class Position:
     opened_at_idx: int
     entry_offer: int
     candles: list  # the item's candle list (for avgLow reference)
+    peak_offer: int = 0  # highest offer seen since entry (for trailing TP)
 
 
 def _elapsed_minutes(opened_at_iso: str, now_iso: str) -> float:
@@ -140,7 +142,7 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                     qty = min(20000, int(capital * cfg.capital_frac) // lo,
                               int(vol * cfg.max_volume_frac))
                     if qty > 0:
-                        positions.append(Position(iid, qty, lo, idx, hi, candles))
+                        positions.append(Position(iid, qty, lo, idx, hi, candles, peak_offer=hi))
             # --- Exits (evaluate the same position list, oldest first) ---
             still_open = []
             for pos in positions:
@@ -150,12 +152,19 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                 cur = candle
                 hi = safe_int(cur.get("avgHighPrice"))
                 lo = safe_int(cur.get("avgLowPrice"))
+                if hi > pos.peak_offer:
+                    pos.peak_offer = hi  # track the peak for trailing TP
                 reason = None
                 sell = None
                 if age_min >= cfg.max_hold_minutes:
                     reason = "max_hold"
                     sell = lo if lo > 0 else pos.buy
                 elif hi > 0 and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 >= cfg.take_profit_pct:
+                    reason = "take_profit"
+                    sell = hi
+                elif (cfg.trailing_tp_pct > 0 and pos.peak_offer > pos.buy
+                        and (pos.peak_offer - hi) / pos.peak_offer * 100 >= cfg.trailing_tp_pct):
+                    # Trailing TP: the offer pulled back from its peak.
                     reason = "take_profit"
                     sell = hi
                 elif hi > 0 and _ge_fill_pct(pos, cur) >= 1.0 \
@@ -246,6 +255,7 @@ def main() -> int:
     ap.add_argument("--grace", type=int, default=10)
     ap.add_argument("--time-exit", type=int, default=60)
     ap.add_argument("--hold", type=int, default=180)
+    ap.add_argument("--trailing-tp", type=float, default=0.0)
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -262,6 +272,7 @@ def main() -> int:
         max_dip_pct=args.max_dip, stop_loss_pct=args.stop,
         take_profit_pct=args.tp, stop_grace_minutes=args.grace,
         time_exit_minutes=args.time_exit, max_hold_minutes=args.hold,
+        trailing_tp_pct=args.trailing_tp,
     )
     result = simulate(data, cfg)
     if args.json:
