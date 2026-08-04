@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2444,
-      "name": "Ranging potion(4)",
-      "qty": 125,
-      "buy_price": 1992,
+      "item_id": 29174,
+      "name": "Moonlight antelope fur",
+      "qty": 228,
+      "buy_price": 521,
       "direction": "traditional",
-      "opened_at": "2026-08-04T05:44:27.703827+00:00",
+      "opened_at": "2026-08-04T05:52:27.942880+00:00",
       "note": "auto",
-      "entry_sell": 1992,
-      "entry_offer": 2091
+      "entry_sell": 521,
+      "entry_offer": 542
     }
   ]
 }
