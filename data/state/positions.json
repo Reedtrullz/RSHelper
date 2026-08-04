@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 661,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T21:42:23.842419+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 26
+    }
+  ]
 }
