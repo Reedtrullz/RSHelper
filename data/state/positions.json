@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 618,
+      "buy_price": 647,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T18:21:41.265687+00:00",
+      "note": "auto",
+      "entry_sell": 647,
+      "entry_offer": 674
+    }
+  ]
 }
