@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 547,
-      "buy_price": 70,
+      "item_id": 2114,
+      "name": "Pineapple",
+      "qty": 208,
+      "buy_price": 201,
       "direction": "traditional",
-      "opened_at": "2026-08-04T00:29:22.195883+00:00",
+      "opened_at": "2026-08-04T00:33:22.218794+00:00",
       "note": "auto",
-      "entry_sell": 70,
-      "entry_offer": 73
+      "entry_sell": 201,
+      "entry_offer": 210
+    },
+    {
+      "id": 3,
+      "item_id": 1446,
+      "name": "Body talisman",
+      "qty": 136,
+      "buy_price": 1690,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T00:39:21.356028+00:00",
+      "note": "auto",
+      "entry_sell": 1690,
+      "entry_offer": 1750
+    },
+    {
+      "id": 4,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 204,
+      "buy_price": 1220,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T00:43:21.587003+00:00",
+      "note": "auto",
+      "entry_sell": 1220,
+      "entry_offer": 1258
     }
   ]
 }
