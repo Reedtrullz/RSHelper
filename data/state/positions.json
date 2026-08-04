@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 395,
+      "buy_price": 83,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T12:02:43.121617+00:00",
+      "note": "auto",
+      "entry_sell": 83,
+      "entry_offer": 87
+    }
+  ]
 }
