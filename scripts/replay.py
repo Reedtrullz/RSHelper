@@ -110,7 +110,13 @@ def _ge_fill_pct(pos: Position, candle: dict) -> float:
 
 def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
              capital: int = 1_000_000, max_positions: int = 3) -> dict:
-    """Walk candles; open positions on dip+spread, exit on TP/SL/time/hold."""
+    """Walk a global 5-min clock; open the top-edge candidates into the
+    global slot budget (one position per item), exit on TP/SL/time/hold.
+
+    This matches the live trader's run_cycle: at each step it (1) exits
+    open positions, then (2) fills free slots with the highest-edge
+    candidates not already held. capital caps total deployed gp.
+    """
     # Group candles by item, each sorted by timestamp
     items = {}
     for iid, candles in timeseries.items():
@@ -118,82 +124,119 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
     if not items:
         return {"error": "no timeseries data"}
 
-    # Determine the global candle index range (union of timestamps is uneven
-    # across items; walk each item independently on its own timeline).
+    # Align all items to a global step list: the union of their timestamps.
+    # Each item advances its own candle index as the clock reaches it.
+    all_ts = sorted({c.get("timestamp", 0) for cs in items.values() for c in cs})
+    # Map each item's candle index for a given timestamp.
+    idx_map = {}
+    for iid, cs in items.items():
+        idx_map[iid] = {c.get("timestamp", 0): i for i, c in enumerate(cs)}
+
     trades = []
-    for iid, candles in items.items():
-        positions: list[Position] = []
-        # trailing average-low window for dip baseline
-        for idx, candle in enumerate(candles):
-            now_iso = _candle_iso(candle.get("timestamp", 0))
-            # --- Entries ---
-            if len(positions) < max_positions:
+    positions: list[Position] = []  # global open positions (max max_positions)
+    open_items: set[int] = set()
+    capital_used = 0
+
+    def _exit_pos(pos: Position, reason: str, sell: int, now_iso: str,
+                  idx: int, candle: dict) -> None:
+        nonlocal capital_used
+        tax = ge_tax(sell) * pos.qty
+        profit = (sell - pos.buy) * pos.qty - tax
+        trades.append({
+            "item_id": pos.item_id, "qty": pos.qty, "buy": pos.buy,
+            "sell": sell, "profit": profit, "reason": reason,
+            "hold_minutes": round(_elapsed_minutes(
+                _candle_iso(pos.candles[pos.opened_at_idx].get("timestamp", 0)),
+                now_iso), 1),
+            "spread_pct": round(_entry_spread(pos.candles[pos.opened_at_idx]), 2),
+        })
+        capital_used -= pos.buy * pos.qty
+
+    for ts in all_ts:
+        now_iso = _candle_iso(ts)
+        # --- Exits first (evaluate each open position at its current candle) ---
+        still_open = []
+        for pos in positions:
+            iid = pos.item_id
+            idx = idx_map[iid].get(ts)
+            if idx is None:
+                still_open.append(pos)  # no candle this step; hold
+                continue
+            candle = items[iid][idx]
+            hi = safe_int(candle.get("avgHighPrice"))
+            lo = safe_int(candle.get("avgLowPrice"))
+            if hi > pos.peak_offer:
+                pos.peak_offer = hi
+            age_min = _elapsed_minutes(
+                _candle_iso(pos.candles[pos.opened_at_idx].get("timestamp", 0)),
+                now_iso)
+            reason = None
+            sell = None
+            if age_min >= cfg.max_hold_minutes:
+                reason = "max_hold"
+                sell = lo if lo > 0 else pos.buy
+            elif hi > 0 and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 >= cfg.take_profit_pct:
+                reason = "take_profit"
+                sell = hi
+            elif (cfg.trailing_tp_pct > 0 and pos.peak_offer > pos.buy
+                    and (pos.peak_offer - hi) / pos.peak_offer * 100 >= cfg.trailing_tp_pct):
+                reason = "take_profit"
+                sell = hi
+            elif hi > 0 and _ge_fill_pct(pos, candle) >= 1.0 \
+                    and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 > 0:
+                reason = "ge_fill"
+                sell = hi
+            elif lo > 0:
+                move = (lo - pos.buy) / pos.buy * 100
+                if move <= cfg.stop_loss_pct and age_min >= cfg.stop_grace_minutes:
+                    reason = "stop_loss"
+                    sell = int(lo * cfg.stop_slippage)
+                elif age_min >= cfg.time_exit_minutes:
+                    reason = "spread_collapse"
+                    sell = hi if hi > lo else lo
+            if reason and sell and sell > 0:
+                _exit_pos(pos, reason, sell, now_iso, idx, candle)
+                open_items.discard(iid)
+            else:
+                still_open.append(pos)
+        positions = still_open
+
+        # --- Entries: rank all candidates this step by edge, fill free slots ---
+        if len(positions) < max_positions:
+            candidates = []
+            for iid, cs in items.items():
+                if iid in open_items:
+                    continue  # one position per item
+                idx = idx_map[iid].get(ts)
+                if idx is None:
+                    continue
+                candle = cs[idx]
                 lo = safe_int(candle.get("avgLowPrice"))
                 hi = safe_int(candle.get("avgHighPrice"))
                 vol = _volume(candle)
                 spread = _entry_spread(candle)
-                # trailing 1h avg low (12 candles)
-                window = candles[max(0, idx - 11):idx + 1]
+                window = cs[max(0, idx - 11):idx + 1]
                 avg_low = sum(safe_int(c.get("avgLowPrice")) for c in window) / max(1, len(window))
                 dip = (avg_low - lo) / avg_low * 100 if avg_low > 0 else 0
                 if (lo >= 25 and vol >= cfg.min_volume
                         and cfg.min_spread_pct <= spread <= 5.0
                         and cfg.dip_depth_pct <= dip <= cfg.max_dip_pct):
+                    # edge = dip * (spread - 2%) like the live trader
+                    edge = dip * max(0.0, spread - 2.0)
                     qty = min(20000, int(capital * cfg.capital_frac) // lo,
                               int(vol * cfg.max_volume_frac))
-                    if qty > 0:
-                        positions.append(Position(iid, qty, lo, idx, hi, candles, peak_offer=hi))
-            # --- Exits (evaluate the same position list, oldest first) ---
-            still_open = []
-            for pos in positions:
-                age_min = _elapsed_minutes(
-                    _candle_iso(pos.candles[pos.opened_at_idx].get("timestamp", 0)),
-                    now_iso)
-                cur = candle
-                hi = safe_int(cur.get("avgHighPrice"))
-                lo = safe_int(cur.get("avgLowPrice"))
-                if hi > pos.peak_offer:
-                    pos.peak_offer = hi  # track the peak for trailing TP
-                reason = None
-                sell = None
-                if age_min >= cfg.max_hold_minutes:
-                    reason = "max_hold"
-                    sell = lo if lo > 0 else pos.buy
-                elif hi > 0 and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 >= cfg.take_profit_pct:
-                    reason = "take_profit"
-                    sell = hi
-                elif (cfg.trailing_tp_pct > 0 and pos.peak_offer > pos.buy
-                        and (pos.peak_offer - hi) / pos.peak_offer * 100 >= cfg.trailing_tp_pct):
-                    # Trailing TP: the offer pulled back from its peak.
-                    reason = "take_profit"
-                    sell = hi
-                elif hi > 0 and _ge_fill_pct(pos, cur) >= 1.0 \
-                        and (hi - pos.buy - ge_tax(hi)) / pos.buy * 100 > 0:
-                    # ge_fill: the simulated GE buy-fill completed and the
-                    # offer still nets a profit — auto-collect at the offer
-                    # (the live trader's spread-capture close).
-                    reason = "ge_fill"
-                    sell = hi
-                elif lo > 0:
-                    move = (lo - pos.buy) / pos.buy * 100
-                    if move <= cfg.stop_loss_pct and age_min >= cfg.stop_grace_minutes:
-                        reason = "stop_loss"
-                        sell = int(lo * cfg.stop_slippage)
-                    elif age_min >= cfg.time_exit_minutes:
-                        reason = "spread_collapse"
-                        sell = hi if hi > lo else lo
-                if reason and sell and sell > 0:
-                    tax = ge_tax(sell) * pos.qty
-                    profit = (sell - pos.buy) * pos.qty - tax
-                    trades.append({
-                        "item_id": iid, "qty": pos.qty, "buy": pos.buy,
-                        "sell": sell, "profit": profit, "reason": reason,
-                        "hold_minutes": round(age_min, 1),
-                        "spread_pct": round(_entry_spread(pos.candles[pos.opened_at_idx]), 2),
-                    })
-                else:
-                    still_open.append(pos)
-            positions = still_open
+                    if qty > 0 and capital_used + lo * qty <= capital:
+                        candidates.append((edge, vol, iid, lo, hi, qty, idx))
+            candidates.sort(key=lambda c: (c[0], c[1]), reverse=True)
+            for edge, vol, iid, lo, hi, qty, idx in candidates:
+                if len(positions) >= max_positions:
+                    break
+                if iid in open_items:
+                    continue
+                positions.append(Position(iid, qty, lo, idx, hi, items[iid],
+                                          peak_offer=hi))
+                open_items.add(iid)
+                capital_used += lo * qty
 
     if not trades:
         return {"error": "no trades generated"}
@@ -202,7 +245,6 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
     wins = [t for t in trades if t["profit"] > 0]
     losses = [t for t in trades if t["profit"] < 0]
     cost_basis = sum(t["buy"] * t["qty"] for t in trades)
-    # max drawdown of cumulative profit over time (by trade order)
     peak = 0
     cum = 0
     max_dd = 0
