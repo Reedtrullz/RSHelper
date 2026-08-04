@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 231,
-      "buy_price": 1080,
+      "item_id": 560,
+      "name": "Death rune",
+      "qty": 1336,
+      "buy_price": 187,
       "direction": "traditional",
-      "opened_at": "2026-08-04T03:15:25.678029+00:00",
+      "opened_at": "2026-08-04T03:30:24.304411+00:00",
       "note": "auto",
-      "entry_sell": 1080,
-      "entry_offer": 1122
-    },
-    {
-      "id": 2,
-      "item_id": 526,
-      "name": "Bones",
-      "qty": 128,
-      "buy_price": 30,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T03:15:25.678423+00:00",
-      "note": "auto",
-      "entry_sell": 30,
-      "entry_offer": 31
+      "entry_sell": 187,
+      "entry_offer": 196
     }
   ]
 }
