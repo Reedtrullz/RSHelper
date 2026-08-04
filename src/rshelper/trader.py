@@ -366,20 +366,6 @@ def _ge_fill_pct(position, vol_5m: dict, now: float) -> float:
                             position.opened_at, now)
 
 
-def _ge_fill_confirmed(position, vol_5m: dict, now: float) -> bool:
-    """True when the GE buy-fill is complete AND backed by real volume data.
-
-    The no-volume slow-default fill (elapsed * 1/qty) is not evidence of an
-    actual fill — only a 5m volume figure confirms the buy side traded, so
-    a spread-collapse exit of an "unconfirmed" offer still uses the bid.
-    """
-    entry = vol_5m.get(str(position.item_id))
-    from rshelper.ge_offers import _item_volume_5m
-    if _item_volume_5m(entry) <= 0:
-        return False
-    return _ge_fill_pct(position, vol_5m, now) >= 1.0
-
-
 def run_cycle(cfg, profile: str | None = None) -> dict:
     """One poll cycle: manage auto positions (exits) then open new ones."""
     from rshelper.cli import _fetch_bootstrap
@@ -442,14 +428,15 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             if p.direction == "traditional" and reason in ("take_profit", "ge_fill"):
                 quote_sell = int(price.get("high", 0) or 0)  # sell at the offer
                 sell = quote_sell
-            elif reason == "spread_collapse" and _ge_fill_confirmed(p, vol_5m, now):
-                # A volume-confirmed GE buy-offer exits at the offer (that's
-                # the spread-capture model: bought at the bid, sold at the
-                # offer). Exiting at the bid would book the spread as a
-                # loss even though the buy side already filled. Only when
-                # there is real 5m volume data — the no-volume slow-default
-                # fill is not evidence of an actual fill.
-                quote_sell = int(price.get("high", 0) or 0)
+            elif reason == "spread_collapse":
+                # Data: 49 of 67 spread-collapse exits sold ABOVE the buy
+                # price but still booked a loss — tax on a thin bid margin
+                # ate the "win". The realistic exit for a traditional
+                # (buy-at-bid) position is the offer; sell at the better of
+                # offer vs bid so a collapse never throws away the spread.
+                offer_now = int(price.get("high", 0) or 0)
+                bid_now = int(price.get("low", 0) or 0)
+                quote_sell = offer_now if offer_now > bid_now else bid_now
                 sell = quote_sell
             else:
                 quote_sell = int(price.get("low", 0) or 0)  # sell at the bid

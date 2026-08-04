@@ -39,7 +39,7 @@ def _clean():
 def _cfg(**kw):
     defaults = dict(capital=1_000_000, trade_capital_frac=0.25, max_positions=3,
                     min_volume=800, min_price=25, max_spread_ratio=5.0,
-                    dip_depth_pct=2.0, max_dip_pct=10.0, min_spread_pct=3.0,
+                    dip_depth_pct=2.0, max_dip_pct=10.0, min_spread_pct=4.0,
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=3.0, stop_loss_pct=-1.5,
@@ -69,20 +69,20 @@ def _latest(now, **prices):
 def test_select_candidates_filters():
     now = int(time.time())
     items = [
-        _item(1, "Dipped", 100, 97, 1000),     # 3% spread, 3% below avg
-        _item(2, "Thin", 100, 97, 50),         # too little volume
-        _item(3, "WideSpread", 106, 97, 1000), # 9.3% spread: spread cap
+        _item(1, "Dipped", 100, 96, 1000),     # 4.2% spread, 4% below avg
+        _item(2, "Thin", 100, 96, 50),         # too little volume
+        _item(3, "WideSpread", 106, 96, 1000), # 10.4% spread: spread cap
         _item(9, "NoDip", 103, 99, 1000),      # 4% spread, 1% dip: dip guard
-        _item(4, "Stale", 100, 97, 1000),      # old timestamp
-        _item(5, "NoBaseline", 100, 97, 1000), # no avgLowPrice
+        _item(4, "Stale", 100, 96, 1000),      # old timestamp
+        _item(5, "NoBaseline", 100, 96, 1000), # no avgLowPrice
         _item(6, "WideGap", 106, 90, 1000),    # 17.8% high/low gap
         _item(7, "Freefall", 100, 80, 1000),   # 20% below average
         _item(8, "ThinSpread", 101, 100, 1000),  # 1% spread < min spread
         _item(10, "TooCheap", 26, 24, 1000),   # bid below min_price 25
     ]
-    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (106, 97),
-                             "9": (103, 99), "5": (100, 97)})
-    latest["4"] = {"high": 100, "low": 97, "highTime": now - 400, "lowTime": now - 400}
+    latest = _latest(now, **{"1": (100, 96), "2": (100, 96), "3": (106, 96),
+                             "9": (103, 99), "5": (100, 96)})
+    latest["4"] = {"high": 100, "low": 96, "highTime": now - 400, "lowTime": now - 400}
     vol_5m = {"1": {"avgLowPrice": 100}, "2": {"avgLowPrice": 100},
               "3": {"avgLowPrice": 100}, "4": {"avgLowPrice": 100},
               "9": {"avgLowPrice": 100}, "6": {"avgLowPrice": 100},
@@ -128,10 +128,10 @@ def test_candidate_edge_ranking():
     _clean()
     now = int(time.time())
     items = [
-        _item(1, "BigShallow", 100, 97, 5000),  # dip ~2.1%
-        _item(2, "SmallDeep", 100, 97, 900),    # dip ~9.0%
+        _item(1, "BigShallow", 100, 96, 5000),  # dip ~4%
+        _item(2, "SmallDeep", 100, 96, 900),    # dip ~9.9%
     ]
-    latest = _latest(now, **{"1": (100, 97), "2": (100, 97)})
+    latest = _latest(now, **{"1": (100, 96), "2": (100, 96)})
     vol_5m = {"1": {"avgLowPrice": 99.1}, "2": {"avgLowPrice": 106.6}}
     cfg = _cfg()
     cands = select_candidates(items, latest, vol_5m, cfg, now=now)
@@ -144,11 +144,11 @@ def test_thin_dip_skipped_volume_backed_accepted():
     """Dip entries need low-price volume support (no print-only bids)."""
     now = int(time.time())
     items = [
-        _item(1, "RealDip", 100, 97, 1000),    # dip, volume-backed
-        _item(2, "PrintDip", 100, 97, 1000),   # dip, thin low print
-        _item(3, "NoVolData", 100, 97, 1000),  # fallback: no volume fields
+        _item(1, "RealDip", 100, 96, 1000),    # dip, volume-backed
+        _item(2, "PrintDip", 100, 96, 1000),   # dip, thin low print
+        _item(3, "NoVolData", 100, 96, 1000),  # fallback: no volume fields
     ]
-    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (100, 97)})
+    latest = _latest(now, **{"1": (100, 96), "2": (100, 96), "3": (100, 96)})
     vol_5m = {
         "1": {"avgLowPrice": 100, "lowPriceVolume": 500, "highPriceVolume": 500},
         "2": {"avgLowPrice": 100, "lowPriceVolume": 10, "highPriceVolume": 1000},
@@ -279,15 +279,17 @@ def test_run_cycle_spread_collapse_closes_at_bid():
                            timedelta(minutes=90)).isoformat()
     pmod._save(pos)
     now = int(time.time())
+    # Spread collapsed; the offer (98) is the better fill than the bid (97).
     latest = _latest(now, **{"1": (98, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
         result = run_cycle(_cfg())
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "spread_collapse"
-    assert result["closed"][0]["sell_price"] == 97  # sold at the bid, no slip
+    assert result["closed"][0]["sell_price"] == 98  # sold at the offer (better)
     trade = jmod.list_trades()[0]
     assert trade.exit_reason == "spread_collapse"
+    assert trade.sell_price == 98
     assert trade.entry_spread_pct == round((100 - 97) / 97 * 100, 2)
     print("  PASSED test_run_cycle_spread_collapse_closes_at_bid")
 
@@ -309,7 +311,7 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     _clean()
     from unittest import mock
     now = int(time.time())
-    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
@@ -320,7 +322,7 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     positions = pmod.list_positions()
     assert len(positions) == 1 and positions[0].note == "auto"
     assert positions[0].direction == "traditional"
-    assert positions[0].buy_price == 97  # entered at the bid
+    assert positions[0].buy_price == 96  # entered at the bid
     # next cycle: offer 103 -> (103-97-2)/97 = +4.1% -> take profit at offer
     latest2 = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
@@ -453,11 +455,11 @@ def test_candidate_confidence_tiebreaker():
     _clean()
     now = int(time.time())
     items = [
-        _item(1, "A", 100, 97, 5000),   # same dip/spread as B
-        _item(2, "B", 100, 97, 900),    # lower volume
-        _item(3, "C", 100, 97, 3000),   # same dip/spread as A, mid volume
+        _item(1, "A", 100, 96, 5000),   # same dip/spread as B
+        _item(2, "B", 100, 96, 900),    # lower volume
+        _item(3, "C", 100, 96, 3000),   # same dip/spread as A, mid volume
     ]
-    latest = _latest(now, **{"1": (100, 97), "2": (100, 97), "3": (100, 97)})
+    latest = _latest(now, **{"1": (100, 96), "2": (100, 96), "3": (100, 96)})
     vol_5m = {"1": {"avgLowPrice": 99}, "2": {"avgLowPrice": 99},
               "3": {"avgLowPrice": 99}}
     cfg = _cfg()
@@ -599,7 +601,7 @@ def test_no_auto_open_on_item_with_manual_position():
     # A manual position exists for item 1.
     open_position(1, "Dipped", 50, 97, note="paper", direction="traditional")
     # Item 1 is also a valid dip candidate.
-    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
@@ -612,37 +614,9 @@ def test_no_auto_open_on_item_with_manual_position():
     print("  PASSED test_no_auto_open_on_item_with_manual_position")
 
 
-def test_spread_collapse_filled_offer_sells_at_offer():
-    """A filled GE buy-offer on spread-collapse exits at the offer, not the
-    bid — the spread-capture model sells what it bought at the offer."""
-    _clean()
-    from unittest import mock
-    from rshelper.positions import open_position
-    open_position(1, "X", 10, 97, note="auto", direction="traditional",
-                  entry_sell=97, entry_offer=100)
-    pos = pmod._load()
-    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
-                           timedelta(minutes=90)).isoformat()
-    pmod._save(pos)
-    now = int(time.time())
-    # Net spread collapsed (98-97-1)/97 = 0% < 1%, and the buy-fill is
-    # complete (1000 units/min over 90 min >> qty 10).
-    latest = _latest(now, **{"1": (98, 97)})
-    vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
-                    "lowPriceVolume": 5000}}
-    with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
-        result = run_cycle(_cfg())
-    assert len(result["closed"]) == 1
-    assert result["closed"][0]["reason"] == "spread_collapse"
-    assert result["closed"][0]["sell_price"] == 98  # sold at the offer
-    trade = jmod.list_trades()[0]
-    assert trade.sell_price == 98
-    print("  PASSED test_spread_collapse_filled_offer_sells_at_offer")
-
-
 def test_spread_collapse_unfilled_sells_at_bid():
-    """An unfilled position on spread-collapse still exits at the bid."""
+    """A spread-collapse exit sells at the better of offer vs bid — never
+    throws away the spread by dumping at the bid."""
     _clean()
     from unittest import mock
     from rshelper.positions import open_position
@@ -653,18 +627,16 @@ def test_spread_collapse_unfilled_sells_at_bid():
                            timedelta(minutes=90)).isoformat()
     pmod._save(pos)
     now = int(time.time())
-    # Net spread collapsed, but there is NO 5m volume data — the fill is
-    # unconfirmed (the no-volume slow-default is not evidence), so it exits
-    # at the bid.
+    # Offer 98 (better than bid 97) -> sell at 98.
     latest = _latest(now, **{"1": (98, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
         result = run_cycle(_cfg())
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "spread_collapse"
-    assert result["closed"][0]["sell_price"] == 97  # sold at the bid
+    assert result["closed"][0]["sell_price"] == 98  # sold at the offer
     trade = jmod.list_trades()[0]
-    assert trade.sell_price == 97
+    assert trade.sell_price == 98
     print("  PASSED test_spread_collapse_unfilled_sells_at_bid")
 
 
@@ -672,7 +644,7 @@ def test_reentry_cooldown():
     _clean()
     from unittest import mock
     now = int(time.time())
-    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
@@ -698,7 +670,7 @@ def test_stop_loss_cooldown_is_longer():
     """A stop-loss exit blocks re-entry for stop_reentry_minutes, not 30."""
     _clean()
     now = int(time.time())
-    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
@@ -747,7 +719,7 @@ def test_stop_cooldown_survives_restart():
     _clean()
     from unittest import mock
     now = int(time.time())
-    items = [_item(1, "Dipped", 100, 97, 10000, limit=5000)]
+    items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
@@ -1104,6 +1076,5 @@ if __name__ == "__main__":
     test_ge_fill_skips_when_offer_collapsed()
     test_ge_fill_requires_net_profit_after_tax()
     test_no_auto_open_on_item_with_manual_position()
-    test_spread_collapse_filled_offer_sells_at_offer()
     test_spread_collapse_unfilled_sells_at_bid()
     print("\nAll tests passed.")
