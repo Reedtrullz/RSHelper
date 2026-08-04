@@ -234,7 +234,8 @@ def test_stop_normal_decline_not_guarded():
 
 
 def test_spread_collapse_exit():
-    """After the collapse window, a gone edge exits at the bid; TP/SL first."""
+    """After the collapse window, an idling position exits; TP/SL/max_hold
+    take precedence."""
     _clean()
     from rshelper.positions import open_position
     cfg = _cfg(spread_collapse_exit_minutes=60, min_exit_spread_pct=1.0)
@@ -246,12 +247,13 @@ def test_spread_collapse_exit():
                            timedelta(minutes=90)).isoformat()
     pmod._save(pos)
     p = pmod.list_positions()[0]
-    # net spread still >= 1% (1.03%): hold
-    assert exit_reason(p, _latest(now, **{"1": (100, 97)}), cfg, now=now) is None
-    # net spread collapsed to 0%: exit at the bid
-    assert exit_reason(p, _latest(now, **{"1": (98, 97)}), cfg, now=now) == \
+    # Time-based exit: 90 min old (>= 60m window) exits even with a healthy
+    # spread — idling positions sell at the better of offer/bid instead of
+    # riding to max_hold and booking the tax.
+    assert exit_reason(p, _latest(now, **{"1": (100, 97)}), cfg, now=now) == \
         "spread_collapse"
-    # young position with the same collapsed spread: hold (edge may re-widen)
+    # young position (< 60m): holds even with a collapsed spread (edge may
+    # re-widen, and the stop/TP own the extremes)
     open_position(2, "Y", 10, 97, note="auto", direction="traditional",
                   entry_sell=97, entry_offer=100)
     p2 = [pp for pp in pmod.list_positions() if pp.item_id == 2][0]
@@ -639,6 +641,34 @@ def test_spread_collapse_unfilled_sells_at_bid():
     trade = jmod.list_trades()[0]
     assert trade.sell_price == 98
     print("  PASSED test_spread_collapse_unfilled_sells_at_bid")
+
+
+def test_time_exit_sells_at_offer_when_net_positive():
+    """A 60m+ idling position exits at the offer when it nets a profit —
+    converts 'ride to max_hold and book tax' into a small win."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    open_position(1, "X", 10, 97, note="auto", direction="traditional",
+                  entry_sell=97, entry_offer=100)
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=90)).isoformat()
+    pmod._save(pos)
+    now = int(time.time())
+    # Offer 100 nets +1.03% (> 0), bid 97 (flat): the time exit sells at
+    # the offer, not the bid.
+    latest = _latest(now, **{"1": (100, 97)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert len(result["closed"]) == 1
+    assert result["closed"][0]["reason"] == "spread_collapse"
+    assert result["closed"][0]["sell_price"] == 100  # sold at the offer
+    trade = jmod.list_trades()[0]
+    assert trade.sell_price == 100
+    assert trade.profit > 0
+    print("  PASSED test_time_exit_sells_at_offer_when_net_positive")
 
 
 def test_stop_grace_period_blocks_early_stop():
@@ -1109,5 +1139,6 @@ if __name__ == "__main__":
     test_ge_fill_requires_net_profit_after_tax()
     test_no_auto_open_on_item_with_manual_position()
     test_spread_collapse_unfilled_sells_at_bid()
+    test_time_exit_sells_at_offer_when_net_positive()
     test_stop_grace_period_blocks_early_stop()
     print("\nAll tests passed.")

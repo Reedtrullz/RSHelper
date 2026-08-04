@@ -333,9 +333,15 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
             if (age_min is not None
                     and age_min >= cfg.spread_collapse_exit_minutes
                     and offer > 0):
-                net_spread_pct = (offer - bid - ge_tax(offer)) / bid * 100
-                if net_spread_pct < cfg.min_exit_spread_pct:
-                    return "spread_collapse"
+                # Time-based exit: after spread_collapse_exit_minutes, a
+                # position that hasn't hit TP or the stop is idling. The old
+                # gate required the net spread to collapse (< 1%), but data
+                # shows positions ride to max_hold with a healthy spread and
+                # then sell at the bid, booking the tax. Fire at the time
+                # mark regardless — run_cycle sells at the better of offer
+                # vs bid, so an idling position captures a small win at the
+                # offer instead of a tax loss at max_hold.
+                return "spread_collapse"
     else:
         # Legacy arbitrage positions (bought at the ask): TP/SL on the bid.
         if bid <= 0:
