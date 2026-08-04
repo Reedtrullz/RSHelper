@@ -14,15 +14,27 @@
     },
     {
       "id": 6,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 636,
-      "buy_price": 393,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 936,
+      "buy_price": 267,
       "direction": "traditional",
-      "opened_at": "2026-08-04T02:43:27.407188+00:00",
+      "opened_at": "2026-08-04T02:59:23.799661+00:00",
       "note": "auto",
-      "entry_sell": 393,
-      "entry_offer": 411
+      "entry_sell": 267,
+      "entry_offer": 277
+    },
+    {
+      "id": 7,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2845,
+      "buy_price": 30,
+      "direction": "traditional",
+      "opened_at": "2026-08-04T02:59:23.799999+00:00",
+      "note": "auto",
+      "entry_sell": 30,
+      "entry_offer": 31
     }
   ]
 }
