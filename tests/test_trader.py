@@ -39,7 +39,7 @@ def _clean():
 def _cfg(**kw):
     defaults = dict(capital=1_000_000, trade_capital_frac=0.40, max_positions=3,
                     min_volume=800, min_price=25, max_spread_ratio=5.0,
-                    dip_depth_pct=3.0, max_dip_pct=10.0, min_spread_pct=4.0,
+                    dip_depth_pct=2.5, max_dip_pct=10.0, min_spread_pct=3.5,
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=3.0, stop_loss_pct=-2.0,
