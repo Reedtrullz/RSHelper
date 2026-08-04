@@ -35,7 +35,8 @@ top = 20
 
 [trader]
 capital = 1000000        # paper bankroll for sizing auto-trades
-trade_capital_frac = 0.25  # fraction of bankroll per position
+trade_capital_frac = 0.40  # fraction of bankroll per position (replay: 0.40
+                         # adds +25% absolute profit at same 98.9% win / dd)
 max_positions = 3        # concurrent auto positions
 min_volume = 800         # 5m executed volume floor (fill plausibility)
 min_price = 25           # skip sub-25gp items: 1gp tick > 2% stop distance
@@ -98,7 +99,7 @@ class MarginConfig:
 @dataclass
 class TraderConfig:
     capital: int = 1_000_000
-    trade_capital_frac: float = 0.25
+    trade_capital_frac: float = 0.40
     max_positions: int = 3
     min_volume: int = 800
     min_price: int = 25
@@ -167,7 +168,7 @@ def load_config(profile: str | None = None) -> Config:
         ),
         trader=TraderConfig(
             capital=trader_raw.get("capital", 1_000_000),
-            trade_capital_frac=trader_raw.get("trade_capital_frac", 0.25),
+            trade_capital_frac=trader_raw.get("trade_capital_frac", 0.40),
             max_positions=trader_raw.get("max_positions", 3),
             min_volume=trader_raw.get("min_volume", 800),
             min_price=trader_raw.get("min_price", 25),
