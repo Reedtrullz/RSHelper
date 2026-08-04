@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 139,
-      "buy_price": 391,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T10:12:38.340780+00:00",
-      "note": "auto",
-      "entry_sell": 391,
-      "entry_offer": 409
-    },
-    {
-      "id": 2,
-      "item_id": 564,
-      "name": "Cosmic rune",
-      "qty": 851,
-      "buy_price": 121,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T10:12:38.341686+00:00",
-      "note": "auto",
-      "entry_sell": 121,
-      "entry_offer": 126
-    }
-  ]
+  "positions": []
 }
