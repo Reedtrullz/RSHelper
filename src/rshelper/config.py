@@ -48,6 +48,9 @@ reentry_minutes = 30     # wait before re-entering an item after an auto close
 stop_reentry_minutes = 90  # wait before re-entering an item after a stop-loss
 take_profit_pct = 3.0    # close when net (after tax) >= this %
 stop_loss_pct = -1.5     # close when the bid falls this % below the stop mark
+stop_grace_minutes = 10  # stop-loss grace period after entry: a buy-the-dip
+                         # entry needs time to revert before the stop arms
+                         # (data: 51% of stops fire within 10 min of entry)
 max_hold_minutes = 180   # force-close after this long
 spread_collapse_exit_minutes = 60  # after this long, exit when the edge is gone
 min_exit_spread_pct = 1.0  # net spread (after tax) below this triggers the exit
@@ -109,6 +112,7 @@ class TraderConfig:
     stop_reentry_minutes: int = 90
     take_profit_pct: float = 3.0
     stop_loss_pct: float = -1.5
+    stop_grace_minutes: int = 10
     max_hold_minutes: int = 180
     spread_collapse_exit_minutes: int = 60
     min_exit_spread_pct: float = 1.0
@@ -178,6 +182,7 @@ def load_config(profile: str | None = None) -> Config:
             stop_reentry_minutes=trader_raw.get("stop_reentry_minutes", 90),
             take_profit_pct=trader_raw.get("take_profit_pct", 3.0),
             stop_loss_pct=trader_raw.get("stop_loss_pct", -1.5),
+            stop_grace_minutes=trader_raw.get("stop_grace_minutes", 10),
             max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
             spread_collapse_exit_minutes=trader_raw.get(
                 "spread_collapse_exit_minutes", 60),

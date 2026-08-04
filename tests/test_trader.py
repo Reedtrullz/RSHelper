@@ -43,6 +43,7 @@ def _cfg(**kw):
                     max_entry_spread_pct=5.0,
                     reentry_minutes=30, stop_reentry_minutes=90,
                     take_profit_pct=3.0, stop_loss_pct=-1.5,
+                    stop_grace_minutes=10,
                     max_hold_minutes=180, spread_collapse_exit_minutes=60,
                     min_exit_spread_pct=1.0, interval_sec=120,
                     stop_slippage=0.97, stop_mark_blend=0.0)
@@ -97,7 +98,7 @@ def test_select_candidates_filters():
 
 def test_exit_reason():
     now = time.time()
-    cfg = _cfg()
+    cfg = _cfg(stop_grace_minutes=0)  # bypass grace: test stop mechanics
     from rshelper.positions import Position
     p = Position(id=1, item_id=1, name="X", qty=10, buy_price=97,
                  direction="traditional",
@@ -178,7 +179,7 @@ def test_stop_on_thin_print_fills_at_window_avg():
                     "highPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, vol_5m, [])):
-        result = run_cycle(_cfg())
+        result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "stop_loss"
     assert result["closed"][0]["fill_guard"] is True
@@ -202,7 +203,7 @@ def test_stop_on_real_crash_keeps_print_fill():
                     "highPriceVolume": 3000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, vol_5m, [])):
-        result = run_cycle(_cfg())
+        result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["fill_guard"] is False
     trade = jmod.list_trades()[0]
@@ -224,7 +225,7 @@ def test_stop_normal_decline_not_guarded():
                     "highPriceVolume": 5000}}  # thin but not an outlier
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, vol_5m, [])):
-        result = run_cycle(_cfg())
+        result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["fill_guard"] is False
     trade = jmod.list_trades()[0]
@@ -359,7 +360,7 @@ def test_spread_does_not_insta_stop_and_stop_records_slippage():
     latest = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
-        result = run_cycle(_cfg())
+        result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "stop_loss"
     trade = jmod.list_trades()[0]
@@ -408,7 +409,7 @@ def test_stop_mark_blend_gives_dip_allowance():
                        _latest(now, **{"1": (100, 96)}), cfg0, now=now,
                        avg_low=100) is None
     # Blend 0.5: bid 96.8 is -1.73% from mark 98.5 -> stop
-    cfg = _cfg(stop_mark_blend=0.5, stop_loss_pct=-1.5)
+    cfg = _cfg(stop_mark_blend=0.5, stop_loss_pct=-1.5, stop_grace_minutes=0)
     assert exit_reason(pmod.list_positions()[0],
                        _latest(now, **{"1": (100, 96)}), cfg, now=now,
                        avg_low=100) == "stop_loss"
@@ -444,7 +445,7 @@ def test_stop_slippage_configurable():
     latest = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, {}, [])):
-        result = run_cycle(_cfg(stop_slippage=0.99))
+        result = run_cycle(_cfg(stop_slippage=0.99, stop_grace_minutes=0))
     trade = jmod.list_trades()[0]
     assert trade.sell_price == int(94 * 0.99)
     print("  PASSED test_stop_slippage_configurable")
@@ -640,6 +641,37 @@ def test_spread_collapse_unfilled_sells_at_bid():
     print("  PASSED test_spread_collapse_unfilled_sells_at_bid")
 
 
+def test_stop_grace_period_blocks_early_stop():
+    """The stop-loss does not arm during stop_grace_minutes after entry —
+    a buy-the-dip entry needs time to revert (51% of stops fired within
+    10 min). TP and max_hold still fire during the grace."""
+    _clean()
+    from unittest import mock
+    from rshelper.positions import open_position
+    now = int(time.time())
+    open_position(1, "Dipped", 100, 97, note="auto", entry_sell=97,
+                  direction="traditional")
+    # Fresh position (age 0), bid crashed to 94 (-3.1% < -1.5% stop): with
+    # the 10-min grace the stop must NOT fire.
+    latest = _latest(now, **{"1": (100, 94)})
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result = run_cycle(_cfg())
+    assert result["closed"] == [], result
+    assert len(pmod.list_positions()) == 1
+    # Age the position past the grace: the stop now fires.
+    pos = pmod._load()
+    pos[0]["opened_at"] = (datetime.now(timezone.utc) -
+                           timedelta(minutes=15)).isoformat()
+    pmod._save(pos)
+    with mock.patch("rshelper.cli._fetch_bootstrap",
+                    return_value=([], latest, {}, [])):
+        result2 = run_cycle(_cfg())
+    assert len(result2["closed"]) == 1
+    assert result2["closed"][0]["reason"] == "stop_loss"
+    print("  PASSED test_stop_grace_period_blocks_early_stop")
+
+
 def test_reentry_cooldown():
     _clean()
     from unittest import mock
@@ -673,7 +705,7 @@ def test_stop_loss_cooldown_is_longer():
     items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
-    cfg = _cfg()
+    cfg = _cfg(stop_grace_minutes=0)  # bypass grace: test cooldown timing
     from unittest import mock
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, vol_5m, items)):
@@ -722,7 +754,7 @@ def test_stop_cooldown_survives_restart():
     items = [_item(1, "Dipped", 100, 96, 10000, limit=5000)]
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
-    cfg = _cfg()
+    cfg = _cfg(stop_grace_minutes=0)  # bypass grace: test restart persistence
     with mock.patch("rshelper.cli._fetch_bootstrap",
                     return_value=([], latest, vol_5m, items)):
         run_cycle(cfg)  # opens position 1
@@ -1077,4 +1109,5 @@ if __name__ == "__main__":
     test_ge_fill_requires_net_profit_after_tax()
     test_no_auto_open_on_item_with_manual_position()
     test_spread_collapse_unfilled_sells_at_bid()
+    test_stop_grace_period_blocks_early_stop()
     print("\nAll tests passed.")

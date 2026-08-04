@@ -304,6 +304,8 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     now = now if now is not None else time.time()
     opened = _opened_ts(position)
     age_min = (now - opened) / 60 if opened is not None else None
+    if age_min is not None:
+        age_min = max(0.0, age_min)  # clamp clock skew: a fresh position is age 0
     # max_hold first: it must fire even when no fresh price is available,
     # otherwise a position on a dead item could sit open forever.
     if age_min is not None and age_min >= cfg.max_hold_minutes:
@@ -320,7 +322,13 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
         if bid > 0:
             mark = _stop_mark(position.buy_price, avg_low, cfg)
             move_pct = (bid - mark) / mark * 100
-            if move_pct <= cfg.stop_loss_pct:
+            # Stop grace period: a buy-the-dip entry needs time to revert.
+            # Data: 51% of stops fire within 10 min of entry — those are
+            # noise stops on the very dip the strategy bought. During the
+            # grace window the stop does not arm (TP and max_hold still do).
+            grace = getattr(cfg, "stop_grace_minutes", 0)
+            if (move_pct <= cfg.stop_loss_pct
+                    and (age_min is None or age_min >= grace)):
                 return "stop_loss"
             if (age_min is not None
                     and age_min >= cfg.spread_collapse_exit_minutes
