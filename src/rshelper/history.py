@@ -104,7 +104,7 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "trades_per_day": round(len(era_trades) / active_days, 1) if active_days else 0,
             "profit_factor": (round(gross_profit / gross_loss, 2)
                               if gross_loss > 0 else
-                              float("inf") if gross_profit > 0 else None),
+                              None if gross_profit > 0 else None),
             "loss_trades": losses,
         })
 

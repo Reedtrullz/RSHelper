@@ -1414,7 +1414,7 @@ def snapshot_list(args: argparse.Namespace) -> None:
 
 def config_show(args: argparse.Namespace) -> None:
     """Print the current config as JSON."""
-    cfg = load_config()
+    cfg = load_config(getattr(args, "profile", None))
     import dataclasses
     print(json.dumps(dataclasses.asdict(cfg), indent=2))
 
@@ -1439,7 +1439,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
             min_margin=0,
         )
         from rshelper.signals import detect_signals
-        return detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60)
+        return detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60), flips
 
     if monitor_interval:
         import time as _time
@@ -1449,7 +1449,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
         try:
             while True:
                 try:
-                    signals = _scan_once()
+                    signals, _flips = _scan_once()
                 except SystemExit:
                     signals = []
                     print("[signals] data sources unavailable; retrying next cycle",
@@ -1466,7 +1466,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
             print("\n[signals] stopped.", file=sys.stderr)
             return
 
-    signals = _scan_once()
+    signals, flips = _scan_once()
     if not signals:
         print("\nNo active signals detected.")
         return
@@ -1667,7 +1667,7 @@ def main() -> None:
                              help="Quantity (default: sized from --capital or 1)")
     trade_paper.add_argument("--capital", type=int, default=0,
                              help="GP to spend; sizes quantity within buy limit")
-    trade_paper.add_argument("--flip-direction", type=str, default="arbitrage",
+    trade_paper.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                              choices=["arbitrage", "traditional"],
                              help="arbitrage: instant buy/sell (default); "
                                   "traditional: buy at bid, sell at offer")
@@ -1680,7 +1680,7 @@ def main() -> None:
                             help="Quantity (default: sized from --capital or 1)")
     trade_open.add_argument("--capital", type=int, default=0,
                             help="GP to spend; sizes quantity within buy limit")
-    trade_open.add_argument("--flip-direction", type=str, default="arbitrage",
+    trade_open.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                             choices=["arbitrage", "traditional"],
                             help="arbitrage: buy at instant-buy (default); "
                                  "traditional: buy at bid")
@@ -1722,7 +1722,7 @@ def main() -> None:
     sig.add_argument("--members-only", action=argparse.BooleanOptionalAction,
                       default=False,
                       help="Filter to members items only")
-    sig.add_argument("--flip-direction", type=str, default="arbitrage",
+    sig.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                       choices=["arbitrage", "traditional"],
                       help="Flip mode for margin-based signals")
     sig.add_argument("--cooldown", type=int, default=15,
@@ -1746,7 +1746,7 @@ def main() -> None:
     watch_rm.add_argument("item_id", type=int, help="Item ID to remove")
     watch_sub.add_parser("list", help="List all watched items")
     watch_chk = watch_sub.add_parser("check", help="Check watchlist for triggered alerts")
-    watch_chk.add_argument("--flip-direction", type=str, default="arbitrage",
+    watch_chk.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                            choices=["arbitrage", "traditional"],
                            help="Flip mode for margin calculation")
     watch_chk.add_argument("--ge-slots", type=int, default=2,
@@ -1843,6 +1843,20 @@ def main() -> None:
     if unknown:
         print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
               file=sys.stderr)
+    # Resolve the effective profile BEFORE building defaults, so per-profile
+    # config.toml values drive the argparse defaults. Global --profile after
+    # the subcommand lands in `unknown` (argparse limitation) — treat a lone
+    # trailing --profile NAME there as the effective profile instead of
+    # silently ignoring it.
+    if args.profile is None and unknown:
+        for i, tok in enumerate(unknown):
+            if tok == "--profile" and i + 1 < len(unknown):
+                args.profile = unknown[i + 1]
+                break
+            if tok.startswith("--profile="):
+                args.profile = tok.split("=", 1)[1]
+                break
+    cfg = load_config(args.profile)
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")

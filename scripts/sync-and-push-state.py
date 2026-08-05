@@ -13,7 +13,17 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPO = Path(os.environ.get("RSHELPER_REPO", Path(__file__).resolve().parents[1]))
+def _default_repo() -> Path:
+    """Find the repo by walking up for a .git dir (the script can be run from
+    ~/.config/rshelper/bin/ where the naive parents[1] is wrong)."""
+    here = Path(__file__).resolve()
+    for parent in (here, *here.parents):
+        if (parent / ".git").is_dir() or (parent / "data" / "state").is_dir():
+            return parent
+    return here.parents[1]
+
+
+REPO = Path(os.environ.get("RSHELPER_REPO", _default_repo()))
 SRC = Path.home() / ".config" / "rshelper"
 DEST = REPO / "data" / "state"
 FILES = ["trades.json", "positions.json", "watchlist.json", "tuning_log.json",

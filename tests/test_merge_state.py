@@ -117,11 +117,35 @@ def test_main_requires_args():
     print("  PASSED test_main_requires_args")
 
 
+def test_alerts_merge_preserves_watch_triggered():
+    """The alerts union must keep watch_triggered (max ts wins), not drop it."""
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / "stage"
+        vol = Path(tmp) / "vol"
+        stage.mkdir()
+        vol.mkdir()
+        (stage / "alerts.json").write_text(json.dumps({
+            "alerts": [{"id": 1, "ts": 100, "type": "signal"}],
+            "watch_triggered": {"561": 200},
+        }))
+        (vol / "alerts.json").write_text(json.dumps({
+            "alerts": [{"id": 1, "ts": 100, "type": "signal"}],
+            "watch_triggered": {"561": 100, "2": 50},
+        }))
+        merge_state.merge_dir(str(stage), str(vol), None)
+        merged = json.loads((vol / "alerts.json").read_text())
+        assert merged["watch_triggered"]["561"] == 200  # max ts wins
+        assert merged["watch_triggered"]["2"] == 50     # volume-only kept
+        assert len(merged["alerts"]) == 1
+    print("  PASSED test_alerts_merge_preserves_watch_triggered")
+
+
 if __name__ == "__main__":
     test_list_union_repo_wins_volume_only_kept()
     test_watchlist_union_and_plain_file_wins()
     test_snapshot_subdir_recursion()
     test_positions_pruned_not_unioned()
     test_positions_stage_wins_on_conflict()
+    test_alerts_merge_preserves_watch_triggered()
     test_main_requires_args()
     print("\nAll merge_state tests passed.")

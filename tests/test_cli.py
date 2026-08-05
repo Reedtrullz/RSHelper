@@ -452,6 +452,62 @@ class TestCLI(unittest.TestCase):
             finally:
                 wl.WATCHLIST_PATH = original_path
 
+    def test_signals_human_mode_does_not_crash_on_flip(self):
+        """`signals` human path must not NameError when a FLIP signal exists."""
+        from unittest import mock
+        import rshelper.signals as sigmod
+        from rshelper.signals import Signal
+        from rshelper.models import Item
+        from argparse import Namespace
+        import rshelper.cli as cmod
+        fake = [Signal(type="FLIP", item_id=561, name="Nature rune",
+                       severity="HIGH", current_price=100, deviation=7.5,
+                       message="Nature rune: 7.5% spread")]
+        # Patch the bootstrap + signal detection so no network is touched.
+        items = [Item(id=561, name="Nature rune", members=False, buy_limit=10000,
+                      alch_value=0, buy_price=100, sell_price=92, volume=600,
+                      profit=7, rs_score=80)]
+        cmod._fetch_bootstrap = lambda p=None: (
+            [{"id": 561, "name": "Nature rune"}],
+            {"561": {"high": 100, "low": 92, "highTime": 1, "lowTime": 1}},
+            {"561": {"avgHighPrice": 100, "avgLowPrice": 92,
+                     "highPriceVolume": 600, "lowPriceVolume": 600}},
+            items)
+        with mock.patch.object(sigmod, "detect_signals", return_value=fake):
+            cmod.signals_cmd(Namespace(profile=None, monitor=0,
+                                       flip_direction="arbitrage",
+                                       members_only=False, cooldown=15,
+                                       json=False))
+
+    def test_signals_monitor_ignores_json_documented(self):
+        """signals --monitor prints [signal] lines; --json is not honored there."""
+        import contextlib
+        import io
+        from unittest import mock
+        from argparse import Namespace
+        import rshelper.signals as sigmod
+        from rshelper.signals import Signal
+        from rshelper.models import Item
+        import rshelper.cli as cmod
+        fake = [Signal(type="DUMP", item_id=561, name="Nature rune",
+                       severity="MEDIUM", current_price=100, deviation=-12.0,
+                       message="Nature rune: -12.0% vs 5m avg")]
+        items = [Item(id=561, name="Nature rune", members=False, buy_limit=10000,
+                      alch_value=0, buy_price=100, sell_price=92, volume=600)]
+        cmod._fetch_bootstrap = lambda p=None: (
+            [{"id": 561, "name": "Nature rune"}],
+            {"561": {"high": 100, "low": 92, "highTime": 1, "lowTime": 1}},
+            {"561": {"avgHighPrice": 100, "avgLowPrice": 92,
+                     "highPriceVolume": 600, "lowPriceVolume": 600}},
+            items)
+        with mock.patch.object(sigmod, "detect_signals", return_value=fake), \
+             mock.patch("time.sleep", side_effect=KeyboardInterrupt):
+            # signals_cmd catches KeyboardInterrupt and returns cleanly.
+            cmod.signals_cmd(Namespace(profile=None, monitor=1,
+                                       flip_direction="arbitrage",
+                                       members_only=False, cooldown=15,
+                                       json=True))
+
 
 if __name__ == "__main__":
     unittest.main()

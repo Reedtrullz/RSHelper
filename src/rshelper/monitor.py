@@ -141,14 +141,21 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
             profit = margin - tax
             above, below = entry.get("alert_margin_above"), entry.get("alert_margin_below")
             if (above is not None and profit > above) or (below is not None and profit < below):
+                # Dedupe like the dashboard: a threshold crossing fires once
+                # per 15-min window, not every poll cycle (which would spam
+                # the feed + notifications every 2 minutes).
+                from rshelper.alerts import push_alert, watch_triggered, set_watch_triggered
+                item_id = int(item_id_str)
+                if watch_triggered(item_id, profile):
+                    continue
                 try:
-                    from rshelper.alerts import push_alert
                     hit = (f"margin {profit:,} gp above {above:,}" if above is not None and profit > above
                            else f"margin {profit:,} gp below {below:,}")
-                    push_alert("watch", "HIGH", int(item_id_str),
+                    push_alert("watch", "HIGH", item_id,
                                entry.get("name", item_id_str),
                                "Watchlist alert", f"{entry.get('name', '')}: {hit}",
                                profile=profile)
+                    set_watch_triggered(item_id, profile)
                 except Exception:
                     pass
                 if not no_notify:

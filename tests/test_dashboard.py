@@ -780,8 +780,6 @@ class TestNewRoutes(unittest.TestCase):
     def test_api_events_sse_headers(self):
         import queue
         q = queue.Queue()
-        q.put_nowait("event: refresh\ndata: {}\n\n")
-        q.put_nowait(": heartbeat\n\n")
 
         class Hub:
             def subscribe(self, qq):
@@ -790,7 +788,9 @@ class TestNewRoutes(unittest.TestCase):
             def unsubscribe(self, qq):
                 pass
         h = self._make(event_hub=Hub())
-        h.path = "/api/events"
+        # ttl=1 bounds the long-lived loop so the test terminates; the event
+        # is written before the deadline, then the stream closes.
+        h.path = "/api/events?ttl=1"
         h.do_GET()
         headers = dict(h.response_headers)
         self.assertEqual(headers.get("Content-Type"), "text/event-stream")
@@ -840,6 +840,55 @@ class TestNewRoutes(unittest.TestCase):
         h.end_headers = lambda: None
         h.do_GET()
         self.assertEqual(calls, [(561, "1h", 48)])
+
+    def test_log_trade_bad_input_400_not_500(self):
+        """A user error (qty <= 0) on POST /api/trades is a 400, not a 500."""
+        from http.server import BaseHTTPRequestHandler
+        import rshelper.journal as jmod
+        from pathlib import Path
+        import tempfile
+        original_path = jmod.TRADES_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            jmod.TRADES_PATH = Path(tmp) / "trades.json"
+            try:
+                Handler = make_handler(FlipScanner(direction="arbitrage"),
+                                       lambda: [])
+                h = BaseHTTPRequestHandler.__new__(Handler)
+                h.path = "/api/trades"
+                h.command = "POST"
+                h.request_version = "HTTP/1.1"
+                payload = json.dumps({"item_id": 1, "name": "X", "qty": 0,
+                                      "buy_price": 100, "sell_price": 110}).encode()
+                h.headers = {"Content-Length": str(len(payload))}
+                h.rfile = io.BytesIO(payload)
+                h.wfile = io.BytesIO()
+                h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+                h.send_response = lambda code, message=None: None
+                h.send_header = lambda key, value: None
+                h.end_headers = lambda: None
+                h.do_POST()
+                self.assertEqual(h.error_code, 400)
+            finally:
+                jmod.TRADES_PATH = original_path
+
+    def test_confidence_negative_cached(self):
+        """/api/confidence caches items with no analysis so they aren't re-fetched."""
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            FlipScanner(direction="arbitrage"), lambda: [],
+            confidence_fn=lambda ids: calls.append(list(ids)) or {})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/confidence?ids=1,2"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        self.assertEqual(calls, [[1, 2]])
 
 
 if __name__ == "__main__":

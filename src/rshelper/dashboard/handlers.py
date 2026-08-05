@@ -391,11 +391,11 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_events(self):
             """Server-Sent Events: refresh + alert pushes, heartbeat comments.
 
-            Long-lived by design: browsers stay connected and receive pushes
-            until they close. The client (EventSource) reconnects on network
-            hiccups, so this handler does not need a server-side cap — but to
-            keep tests deterministic it honors a short `?ttl=` (seconds) query
-            for bounded consumers, and stops on a broken pipe.
+            Long-lived: the stream stays open across events and only closes
+            on a broken pipe, a bounded ?ttl= (for tests/curl), or when the
+            handler is asked to stop. Browsers receive every push; the 0.2s
+            drain-and-return behavior was removed because it dropped events
+            broadcast just after a refresh.
             """
             import queue as _queue
             q: _queue.Queue = _queue.Queue()
@@ -418,16 +418,6 @@ def make_handler(scanner, scan_items: Callable[[], list],
                         item = q.get(timeout=15)
                         self.wfile.write(item.encode("utf-8"))
                         self.wfile.flush()
-                        # After any event, wait briefly for a second one, then
-                        # return so one-shot consumers (tests/curl) terminate;
-                        # browsers reconnect immediately after a short close.
-                        try:
-                            item2 = q.get(timeout=0.2)
-                            self.wfile.write(item2.encode("utf-8"))
-                            self.wfile.flush()
-                        except _queue.Empty:
-                            pass
-                        return
                     except _queue.Empty:
                         if deadline is not None and time.time() >= deadline:
                             return
@@ -629,6 +619,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 )
                 from dataclasses import asdict
                 self._serve_json(asdict(trade))
+            except (ValueError, TypeError) as e:
+                # User error (qty <= 0, non-positive price) is a 400, not a 500.
+                print(f"[dashboard] trade log error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
             except Exception as e:
                 print(f"[dashboard] trade log error: {e}", file=sys.stderr)
                 self.send_error(500, "Trade logging failed")

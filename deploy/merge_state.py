@@ -84,7 +84,12 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
             continue
         if not os.path.isfile(src):
             continue
-        if name in LIST_FILES:
+        if name == "alerts.json":
+            # alerts carry a watch_triggered dedupe map alongside the feed;
+            # the union must preserve it (max ts per item wins) or every
+            # deploy would reset the 15-min window and re-fire alerts.
+            _merge_alerts(src, dst)
+        elif name in LIST_FILES:
             key, id_key = LIST_FILES[name]
             rows: dict = {}
             for row in _read_list(dst, key):
@@ -107,6 +112,38 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
         if chown:
             uid, gid = (int(x) for x in chown.split(":"))
             os.chown(dst, uid, gid)
+
+
+def _merge_alerts(src: str, dst: str) -> None:
+    """Union alerts by id (repo wins ties) and merge watch_triggered by max ts."""
+    def _read(path: str) -> dict:
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+            return data if isinstance(data, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    a, b = _read(dst), _read(src)
+    alerts_rows: dict = {}
+    for row in a.get("alerts", []):
+        if isinstance(row, dict):
+            alerts_rows[row.get("id")] = row
+    for row in b.get("alerts", []):
+        if isinstance(row, dict):
+            alerts_rows[row.get("id")] = row  # repo wins on id ties
+    ordered = sorted(alerts_rows, key=lambda k: (k is None, k))
+    watch_a = a.get("watch_triggered", {}) or {}
+    watch_b = b.get("watch_triggered", {}) or {}
+    watch = dict(watch_a)
+    for k, v in watch_b.items():
+        try:
+            if float(v) > float(watch.get(k, 0)):
+                watch[k] = v
+        except (TypeError, ValueError):
+            pass
+    _write_json(dst, {"alerts": [alerts_rows[k] for k in ordered],
+                      "watch_triggered": watch})
 
 
 def main(argv: list[str]) -> int:

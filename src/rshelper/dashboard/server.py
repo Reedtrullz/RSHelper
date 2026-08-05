@@ -47,6 +47,7 @@ def _spawn_daemon(kind: str, profile: str | None) -> dict:
     """Start auto-trade or monitor detached. Returns {ok, pid} or {ok: False, error}."""
     import rshelper
     pkg_dir = os.path.dirname(os.path.abspath(rshelper.__file__))
+    src_dir = os.path.dirname(pkg_dir)  # repo/src — the parent the package lives in
     cmd = [sys.executable, "-m", "rshelper", kind]
     if profile and profile != "default":
         cmd += ["--profile", profile]
@@ -55,11 +56,18 @@ def _spawn_daemon(kind: str, profile: str | None) -> dict:
     log_path = log_dir / f"{kind}.log"
     if log_path.exists() and log_path.stat().st_size > 5 * 1024 * 1024:
         log_path.unlink(missing_ok=True)  # ponytail: rotate at 5MB
+    # The child runs `python -m rshelper`; when the dashboard's own
+    # importability came from PYTHONPATH (or from cwd in a dev flow), the
+    # child must inherit a path that resolves the package. Prepend src so a
+    # cwd-based launch (PYTHONPATH unset) still works.
+    env = dict(os.environ)
+    env["PYTHONPATH"] = src_dir + os.pathsep + env.get("PYTHONPATH", "")
     try:
         with open(log_path, "ab") as logf:
             proc = subprocess.Popen(
-                cmd, cwd=pkg_dir, stdout=logf, stderr=logf,
+                cmd, cwd=src_dir, stdout=logf, stderr=logf,
                 start_new_session=True,  # survive dashboard shutdown
+                env=env,
             )
     except OSError as exc:
         return {"ok": False, "error": f"could not start {kind}: {exc}"}
@@ -171,6 +179,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                     hit = f"margin {profit:,} gp above {above:,}"
                 elif below is not None and profit < below:
                     hit = f"margin {profit:,} gp below {below:,}"
+                # Check-then-set must be atomic per item (this runs inside the
+                # single-flight refresh lock, so no other thread can race it).
                 if hit and not alerts.watch_triggered(item_id, profile):
                     alert = alerts.push_alert(
                         "watch", "HIGH", item_id, entry.get("name", str(item_id)),
@@ -181,39 +191,47 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         except Exception as e:
             print(f"[dashboard] watch alert check failed: {e}", file=sys.stderr)
 
+    refresh_lock = __import__("threading").Lock()
+
     def refresh():
         now = time.time()
         if (now - cache["last_fetch"]) > 120:
-            print("[dashboard] Re-fetching GE data...", file=sys.stderr)
-            old_source = cache["source"]
-            try:
-                _m, _l, _v, fresh = _fetch_bootstrap(profile)
-                cache["mapping"] = _m
-                cache["items"] = fresh
-                cache["vol"] = _v
-                cache["latest"] = _l
-                cache["source"] = _source(_l)
-            except SystemExit:
-                print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
+            # Single-flight: concurrent request threads must not double-fetch
+            # or double-broadcast (the watch-alert check-then-set is only safe
+            # when one thread performs it per refresh window).
+            with refresh_lock:
+                if (time.time() - cache["last_fetch"]) <= 120:
+                    return
+                print("[dashboard] Re-fetching GE data...", file=sys.stderr)
+                old_source = cache["source"]
                 try:
-                    alerts.push_alert("system", "WARN", None, "",
-                                      "Data source unavailable",
-                                      "Re-fetch failed; keeping previous data",
-                                      profile=profile)
-                    hub.broadcast("alert", {"alert": {
-                        "type": "system", "severity": "WARN",
-                        "title": "Data source unavailable",
-                        "message": "Re-fetch failed; keeping previous data"}})
-                except Exception:
-                    pass
-            cache["last_fetch"] = now
-            _check_watch_alerts(cache["latest"] or {})
-            if cache["source"] != old_source:
-                alerts.push_alert(
-                    "system", "INFO", None, "", "Data source changed",
-                    f"Switched from {old_source} to {cache['source']}",
-                    profile=profile)
-            hub.broadcast("refresh")
+                    _m, _l, _v, fresh = _fetch_bootstrap(profile)
+                    cache["mapping"] = _m
+                    cache["items"] = fresh
+                    cache["vol"] = _v
+                    cache["latest"] = _l
+                    cache["source"] = _source(_l)
+                except SystemExit:
+                    print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
+                    try:
+                        alerts.push_alert("system", "WARN", None, "",
+                                          "Data source unavailable",
+                                          "Re-fetch failed; keeping previous data",
+                                          profile=profile)
+                        hub.broadcast("alert", {"alert": {
+                            "type": "system", "severity": "WARN",
+                            "title": "Data source unavailable",
+                            "message": "Re-fetch failed; keeping previous data"}})
+                    except Exception:
+                        pass
+                cache["last_fetch"] = time.time()
+                _check_watch_alerts(cache["latest"] or {})
+                if cache["source"] != old_source:
+                    alerts.push_alert(
+                        "system", "INFO", None, "", "Data source changed",
+                        f"Switched from {old_source} to {cache['source']}",
+                        profile=profile)
+                hub.broadcast("refresh")
 
     def get_items():
         refresh()
@@ -228,8 +246,15 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         now = time.time()
         with sig_lock:
             if now - sig_cache["ts"] > 30:
-                flips = scanner.scan(cache["items"], **scan_kwargs)
-                sig_cache["list"] = detect_signals(flips, cache["vol"])
+                # Snapshot items+vol together so a refresh mid-scan can't mix
+                # old flips with new volume (spurious/missed signals).
+                items_snap = list(cache["items"])
+                vol_snap = dict(cache["vol"])
+                flips = scanner.scan(items_snap, **scan_kwargs)
+                # DUMP/CRASH/SURGE must see the full priced universe (mirror
+                # the monitor); FLIP stays restricted to scan candidates.
+                sig_cache["list"] = detect_signals(
+                    items_snap, vol_snap, flip_ids={f.id for f in flips})
                 sig_cache["flips"] = len(flips)
                 sig_cache["ts"] = now
                 new = [s for s in sig_cache["list"]
@@ -305,7 +330,17 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             item = next((i for i in cache["items"] if i.id == item_id), None)
             if item is None:
                 raise ValueError(f"item {item_id} not in the current scan")
-            watchlist.add(item_id, item.name, profile=profile)
+            # Re-adding a watched item must preserve its alert thresholds
+            # (un-star + re-star shouldn't wipe them).
+            wl = watchlist.load(profile)
+            existing = wl.get("items", {}).get(str(item_id))
+            if existing:
+                watchlist.add(item_id, item.name,
+                              alert_margin_above=existing.get("alert_margin_above"),
+                              alert_margin_below=existing.get("alert_margin_below"),
+                              profile=profile)
+            else:
+                watchlist.add(item_id, item.name, profile=profile)
         elif action == "remove":
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
@@ -430,15 +465,31 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         from dataclasses import asdict
         from rshelper.positions import open_position
         from rshelper.journal import log_trade
+        # Honor the configured flip direction: the CLI's `trade open/paper`
+        # respects --flip-direction, so the dashboard must too — booking a
+        # traditional-config position as arbitrage buys the ask and sells
+        # the bid, a structurally negative trade.
+        direction = cfg.flip.direction
         if action == "open":
-            pos = open_position(entry["id"], entry["name"], qty, high,
-                                direction="arbitrage", note="paper",
-                                entry_sell=low, profile=profile)
+            if direction == "traditional":
+                pos = open_position(entry["id"], entry["name"], qty, low,
+                                    direction="traditional", note="paper",
+                                    entry_sell=low, entry_offer=high,
+                                    profile=profile)
+            else:
+                pos = open_position(entry["id"], entry["name"], qty, high,
+                                    direction="arbitrage", note="paper",
+                                    entry_sell=low, profile=profile)
             return {"ok": True, "position": asdict(pos)}
         if action == "instant":
-            trade = log_trade(entry["id"], entry["name"], qty, high, low,
-                              note="paper", strategy="manual",
-                              profile=profile)
+            if direction == "traditional":
+                trade = log_trade(entry["id"], entry["name"], qty, low, high,
+                                  note="paper", strategy="manual",
+                                  profile=profile)
+            else:
+                trade = log_trade(entry["id"], entry["name"], qty, high, low,
+                                  note="paper", strategy="manual",
+                                  profile=profile)
             return {"ok": True, "trade": asdict(trade)}
         raise ValueError(f"unknown action '{action}'")
 
@@ -452,6 +503,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         if not control:
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
         if action == "start":
+            from rshelper.trader import trader_status
+            if trader_status(profile) and trader_status(profile).get("running"):
+                raise ValueError("auto-trader is already running")
             return _spawn_daemon("auto-trade", profile)
         if action == "stop":
             return _stop_daemon("auto-trade", profile)
@@ -462,6 +516,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         if not control:
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
         if action == "start":
+            from rshelper.monitor import monitor_status
+            if monitor_status(profile) and monitor_status(profile).get("running"):
+                raise ValueError("monitor is already running")
             return _spawn_daemon("monitor", profile)
         if action == "stop":
             return _stop_daemon("monitor", profile)
@@ -538,39 +595,46 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 "count": len(results), "nature_rune_cost": nature}
 
     confidence_cache = {"ts": 0.0, "data": {}}
+    conf_lock = __import__("threading").Lock()
 
     def get_confidence(item_ids: list[int]) -> dict:
         """Per-item margin confidence scores (MarginScanner), cached 10 min."""
         if not item_ids:
             return {}
-        now = time.time()
-        if now - confidence_cache["ts"] > 600 or not confidence_cache["data"]:
-            confidence_cache["data"] = {}
-            confidence_cache["ts"] = now
-        want = [i for i in item_ids
-                if str(i) not in confidence_cache["data"]][:30]
-        if want:
-            from rshelper.api import fetch_timeseries_batch
-            from rshelper.scanner import MarginScanner
-            from rshelper.analysis import MarginAnalysis
-            lookup = {i.id: i for i in cache["items"]}
-            ts_data = fetch_timeseries_batch(
-                want, timestep="5m", workers=2, profile=profile)
-            results = MarginScanner().scan(
-                lookup, ts_data, direction=cfg.flip.direction)
-            for a in results:
-                confidence_cache["data"][str(a.item_id)] = {
-                    "confidence": round(a.confidence, 4),
-                    "reliability": round(a.reliability, 4),
-                    "profitability_score": round(a.profitability_score, 4),
-                    "avg_margin": round(a.avg_margin, 0),
-                    "margin_volatility": round(a.margin_volatility, 4),
-                    "avg_spread_pct": round(a.avg_spread_pct, 4),
-                    "datapoints": a.datapoints,
-                    "window_hours": round(a.window_hours, 1),
-                }
-        return {k: v for k, v in confidence_cache["data"].items()
-                if k in {str(i) for i in item_ids}}
+        with conf_lock:
+            now = time.time()
+            if now - confidence_cache["ts"] > 600 or not confidence_cache["data"]:
+                confidence_cache["data"] = {}
+                confidence_cache["ts"] = now
+            want = [i for i in item_ids
+                    if str(i) not in confidence_cache["data"]][:30]
+            if want:
+                from rshelper.api import fetch_timeseries_batch
+                from rshelper.scanner import MarginScanner
+                lookup = {i.id: i for i in cache["items"]}
+                ts_data = fetch_timeseries_batch(
+                    want, timestep="5m", workers=2, profile=profile)
+                results = MarginScanner().scan(
+                    lookup, ts_data, direction=cfg.flip.direction)
+                scored = {str(a.item_id) for a in results}
+                for a in results:
+                    confidence_cache["data"][str(a.item_id)] = {
+                        "confidence": round(a.confidence, 4),
+                        "reliability": round(a.reliability, 4),
+                        "profitability_score": round(a.profitability_score, 4),
+                        "avg_margin": round(a.avg_margin, 0),
+                        "margin_volatility": round(a.margin_volatility, 4),
+                        "avg_spread_pct": round(a.avg_spread_pct, 4),
+                        "datapoints": a.datapoints,
+                        "window_hours": round(a.window_hours, 1),
+                    }
+                # Cache negative results (no timeseries / too few windows) so
+                # repeated polls don't re-fetch the same items every 10 min.
+                for iid in want:
+                    if str(iid) not in scored:
+                        confidence_cache["data"][str(iid)] = None
+            return {k: v for k, v in confidence_cache["data"].items()
+                    if k in {str(i) for i in item_ids} and v is not None}
 
     def get_alerts_fn(limit: int = 50) -> dict:
         feed = alerts.list_alerts(limit=limit, profile=profile)
@@ -628,6 +692,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_watch_check() -> dict:
         """Threshold crossings with the current margin, arbitrage convention."""
+        refresh()  # "Check now" must use a fresh quote, not the TTL cache
         from rshelper.market import ge_tax
         latest = cache["latest"] or {}
         wl = watchlist.load(profile)
@@ -737,16 +802,5 @@ def _alert_to_dict(alert) -> dict:
 
 def _item_dict(item) -> dict:
     """Serialize an Item dataclass to a JSON-safe dict (server-side copy)."""
-    return {
-        "id": item.id,
-        "name": item.name,
-        "members": item.members,
-        "buy_limit": item.buy_limit,
-        "alch_value": item.alch_value,
-        "buy_price": item.buy_price,
-        "sell_price": item.sell_price,
-        "volume": item.volume,
-        "profit": item.profit,
-        "gp_per_hour": item.gp_per_hour,
-        "rs_score": getattr(item, "rs_score", 0.0),
-    }
+    from rshelper.dashboard.handlers import _item_to_dict
+    return _item_to_dict(item)

@@ -141,8 +141,18 @@ function subscribeSSE(){
     es.addEventListener('refresh',()=>{sseLastEvent=Date.now();fetchData();});
     es.addEventListener('alert',(ev)=>{
       sseLastEvent=Date.now();
-      try{const d=JSON.parse(ev.data||'{}');if(d&&d.alert){alertsData.unread=(alertsData.unread||0)+1;updateTopbarBell();}}
-      catch(e){}
+      try{
+        const d=JSON.parse(ev.data||'{}');
+        if(d&&d.alert&&d.alert.id){
+          // Dedupe by alert id — re-broadcasts/reconnects must not inflate.
+          const known=(alertsData.alerts||[]).some(a=>a.id===d.alert.id);
+          if(!known){
+            alertsData.alerts=[d.alert].concat(alertsData.alerts||[]).slice(0,200);
+            alertsData.unread=(alertsData.unread||0)+1;
+            updateTopbarBell();
+          }
+        }
+      }catch(e){}
     });
     es.onopen=()=>{sseOk=true;updateFooter();};
     es.onerror=()=>{
@@ -287,6 +297,8 @@ async function fetchData(){
     signalsMap={};
     (await s.json()).signals.forEach(x=>{signalsMap[x.item_id]=x});
     watchIds=new Set(meta.watch_ids||[]);
+    // Initialize the bell from the server's authoritative unread count.
+    if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
     setStatus('Connected',false);
     renderTopbar();
     updateBadges();
@@ -1194,7 +1206,7 @@ async function traderControl(action){
   try{
     const r=await fetch('/api/trader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
     setStatus(action==='start'?'Auto-trader starting...':'Auto-trader stop requested',false);
     setTimeout(fetchData,1500);
   }catch(e){setStatus('Error: '+e.message,true);}
@@ -1203,7 +1215,7 @@ async function monitorControl(action){
   try{
     const r=await fetch('/api/monitor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
     setStatus(action==='start'?'Monitor starting...':'Monitor stop requested',false);
     setTimeout(fetchData,1500);
   }catch(e){setStatus('Error: '+e.message,true);}
