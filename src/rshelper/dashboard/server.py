@@ -599,7 +599,6 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_alch():
         refresh()
         from rshelper.scanner import AlchScanner
-        from rshelper.api import fetch_latest
         nature = cfg.alch.nature_rune_cost
         if nature <= 0:
             price = (cache["latest"] or {}).get("561")
