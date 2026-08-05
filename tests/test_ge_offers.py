@@ -79,6 +79,13 @@ def test_resolve_icon_url_special_chars():
     print("  PASSED test_resolve_icon_url_special_chars")
 
 
+def test_resolve_icon_url_apostrophe_encoded():
+    """Apostrophes must be URL-encoded (the wiki stores Zulrah's scales as %27)."""
+    assert resolve_icon_url("Zulrah's scales") == (
+        "https://oldschool.runescape.wiki/images/Zulrah%27s_scales_detail.png")
+    print("  PASSED test_resolve_icon_url_apostrophe_encoded")
+
+
 def test_fill_zero_volume_slow_default():
     now = 1_000_000.0
     fill = compute_fill_pct(100, 0, _iso(now, 10), now)
@@ -276,6 +283,7 @@ if __name__ == "__main__":
     test_resolve_icon_url_detail()
     test_resolve_icon_url_inventory()
     test_resolve_icon_url_special_chars()
+    test_resolve_icon_url_apostrophe_encoded()
     test_fill_zero_volume_slow_default()
     test_fill_high_volume_fast()
     test_fill_low_volume_slow()

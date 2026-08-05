@@ -15,9 +15,11 @@ def resolve_icon_url(item_name: str, detail: bool = True) -> str:
     detail=True -> <Name>_detail.png (GE slot sprite).
     detail=False -> <Name>.png (inventory sprite).
     """
+    from urllib.parse import quote
     suffix = "_detail" if detail else ""
-    return ("https://oldschool.runescape.wiki/images/"
-            + item_name.replace(" ", "_") + suffix + ".png")
+    # The wiki stores files with URL-encoded names (apostrophes, &, etc.).
+    base = quote(item_name.replace(" ", "_"), safe="")
+    return "https://oldschool.runescape.wiki/images/" + base + suffix + ".png"
 
 
 def _elapsed_minutes(opened_at: str, now: float) -> float:
