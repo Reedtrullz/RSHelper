@@ -14,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 1446,
-      "buy_price": 153,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 176,
+      "buy_price": 107,
       "direction": "traditional",
-      "opened_at": "2026-08-05T03:40:40.824440+00:00",
+      "opened_at": "2026-08-05T03:58:42.727625+00:00",
       "note": "auto",
-      "entry_sell": 153,
-      "entry_offer": 159
+      "entry_sell": 107,
+      "entry_offer": 112
     }
   ]
 }
