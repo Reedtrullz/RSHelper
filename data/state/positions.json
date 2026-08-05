@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 237,
+      "name": "Unicorn horn",
+      "qty": 80,
+      "buy_price": 480,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T12:51:43.710560+00:00",
+      "note": "auto",
+      "entry_sell": 480,
+      "entry_offer": 498
+    }
+  ]
 }
