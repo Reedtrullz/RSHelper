@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 21316,
-      "name": "Amethyst broad bolts",
-      "qty": 200,
-      "buy_price": 157,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T07:58:49.380334+00:00",
-      "note": "auto",
-      "entry_sell": 157,
-      "entry_offer": 164
-    },
-    {
       "id": 2,
       "item_id": 8009,
       "name": "Falador teleport (tablet)",
@@ -23,18 +11,6 @@
       "note": "auto",
       "entry_sell": 671,
       "entry_offer": 698
-    },
-    {
-      "id": 3,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 865,
-      "buy_price": 92,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T10:01:45.601108+00:00",
-      "note": "auto",
-      "entry_sell": 92,
-      "entry_offer": 96
     }
   ]
 }
