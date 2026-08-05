@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2062,
       "entry_offer": 2143
+    },
+    {
+      "id": 5,
+      "item_id": 9194,
+      "name": "Onyx bolt tips",
+      "qty": 49,
+      "buy_price": 8080,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T01:16:32.395909+00:00",
+      "note": "auto",
+      "entry_sell": 8080,
+      "entry_offer": 8468
+    },
+    {
+      "id": 6,
+      "item_id": 2114,
+      "name": "Pineapple",
+      "qty": 236,
+      "buy_price": 188,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T01:24:32.679424+00:00",
+      "note": "auto",
+      "entry_sell": 188,
+      "entry_offer": 195
     }
   ]
 }
