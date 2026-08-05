@@ -1,40 +1,28 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 517,
+      "buy_price": 111,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T00:08:29.879378+00:00",
+      "note": "auto",
+      "entry_sell": 111,
+      "entry_offer": 106
+    },
+    {
       "id": 2,
-      "item_id": 7054,
-      "name": "Chilli potato",
-      "qty": 400,
-      "buy_price": 160,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 165,
+      "buy_price": 725,
       "direction": "traditional",
-      "opened_at": "2026-08-04T22:06:24.652787+00:00",
+      "opened_at": "2026-08-05T00:08:29.879742+00:00",
       "note": "auto",
-      "entry_sell": 160,
-      "entry_offer": 168
-    },
-    {
-      "id": 5,
-      "item_id": 3008,
-      "name": "Energy potion(4)",
-      "qty": 128,
-      "buy_price": 190,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T22:54:26.824792+00:00",
-      "note": "auto",
-      "entry_sell": 190,
-      "entry_offer": 197
-    },
-    {
-      "id": 6,
-      "item_id": 3016,
-      "name": "Super energy(4)",
-      "qty": 199,
-      "buy_price": 2008,
-      "direction": "traditional",
-      "opened_at": "2026-08-04T23:46:28.953594+00:00",
-      "note": "auto",
-      "entry_sell": 2008,
-      "entry_offer": 2085
+      "entry_sell": 725,
+      "entry_offer": 754
     }
   ]
 }
