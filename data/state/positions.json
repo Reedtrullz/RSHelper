@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 11237,
+      "name": "Dragon arrowtips",
+      "qty": 224,
+      "buy_price": 1780,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T04:18:43.237358+00:00",
+      "note": "auto",
+      "entry_sell": 1780,
+      "entry_offer": 1848
+    },
+    {
+      "id": 2,
+      "item_id": 261,
+      "name": "Avantoe",
+      "qty": 92,
+      "buy_price": 1470,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T04:26:43.340056+00:00",
+      "note": "auto",
+      "entry_sell": 1470,
+      "entry_offer": 1535
+    }
+  ]
 }
