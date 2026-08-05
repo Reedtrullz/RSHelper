@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 526,
-      "name": "Bones",
-      "qty": 908,
-      "buy_price": 27,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 205,
+      "buy_price": 266,
       "direction": "traditional",
-      "opened_at": "2026-08-05T23:18:05.614292+00:00",
+      "opened_at": "2026-08-05T23:32:07.435642+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 266,
+      "entry_offer": 281
     },
     {
       "id": 2,
-      "item_id": 861,
-      "name": "Magic shortbow",
-      "qty": 401,
-      "buy_price": 757,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 138,
+      "buy_price": 2880,
       "direction": "traditional",
-      "opened_at": "2026-08-05T23:18:05.615345+00:00",
+      "opened_at": "2026-08-05T23:32:07.436326+00:00",
       "note": "auto",
-      "entry_sell": 757,
-      "entry_offer": 784
+      "entry_sell": 2880,
+      "entry_offer": 2998
     }
   ]
 }
