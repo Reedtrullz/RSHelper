@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1698,
-      "name": "Ruby amulet",
-      "qty": 110,
-      "buy_price": 1142,
+      "id": 3,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 187,
+      "buy_price": 86,
       "direction": "traditional",
-      "opened_at": "2026-08-05T00:24:30.676596+00:00",
+      "opened_at": "2026-08-05T00:28:30.730955+00:00",
       "note": "auto",
-      "entry_sell": 1142,
-      "entry_offer": 1185
+      "entry_sell": 86,
+      "entry_offer": 90
+    },
+    {
+      "id": 4,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 234,
+      "buy_price": 1604,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T00:40:31.313593+00:00",
+      "note": "auto",
+      "entry_sell": 1604,
+      "entry_offer": 1683
     }
   ]
 }
