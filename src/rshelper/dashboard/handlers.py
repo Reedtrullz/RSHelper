@@ -56,7 +56,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  pnl_fn: Callable[[str, str], dict] | None = None,
                  delete_trade_fn: Callable[[int], dict] | None = None,
                  log_trade_fn: Callable[..., dict] | None = None,
-                 event_hub=None) -> type:
+                 event_hub=None,
+                 allowed_hosts: list[str] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -230,13 +231,17 @@ def make_handler(scanner, scan_items: Callable[[], list],
             q = self._query()
             note = q.get("note", [""])[0]
             strategy = q.get("strategy", [""])[0]
-            if trades_fn:
-                self._serve_json(trades_fn(note, strategy))
-                return
-            from rshelper.journal import list_trades
-            from dataclasses import asdict
-            trades = list_trades(note=note, strategy=strategy)
-            self._serve_json({"trades": [asdict(t) for t in trades], "count": len(trades)})
+            try:
+                if trades_fn:
+                    self._serve_json(trades_fn(note, strategy))
+                    return
+                from rshelper.journal import list_trades
+                from dataclasses import asdict
+                trades = list_trades(note=note, strategy=strategy)
+                self._serve_json({"trades": [asdict(t) for t in trades], "count": len(trades)})
+            except Exception as e:
+                print(f"[dashboard] trades error: {e}", file=sys.stderr)
+                self.send_error(500, "Trades failed")
 
         def _serve_pnl(self):
             q = self._query()
@@ -284,7 +289,11 @@ def make_handler(scanner, scan_items: Callable[[], list],
             qs = self._query()
             raw = qs.get("ids", [""])[0]
             ids = [int(i) for i in raw.split(",") if i.strip().isdigit()]
-            self._serve_json({"prices": price_lookup(ids)})
+            try:
+                self._serve_json({"prices": price_lookup(ids)})
+            except Exception as e:
+                print(f"[dashboard] prices error: {e}", file=sys.stderr)
+                self.send_error(500, "Prices failed")
 
         def _serve_meta(self):
             self._serve_json(meta_fn() if meta_fn else {"source": "unknown"})
@@ -649,9 +658,11 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _origin_ok(self) -> bool:
             """Reject state-mutating requests from foreign origins.
 
-            The Origin netloc must match the Host AND the Host must be a
-            loopback host. Comparing Origin-to-Host alone is defeated by DNS
-            rebinding (a malicious page sets both to its own host).
+            The Origin netloc must match the Host, and the Host must be
+            allowlisted (loopback, or the configured deployment host). The
+            Host is validated against a fixed allowlist — NOT against the
+            attacker-controlled Origin — so DNS rebinding cannot pass by
+            setting both to a malicious host.
             """
             origin = self.headers.get("Origin")
             if not origin:
@@ -660,8 +671,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
             if not host:
                 return False
             netloc = host.split(":", 1)[0].lower()
-            if netloc not in ("127.0.0.1", "localhost", "::1"):
-                return False  # non-loopback Host never passes
+            loopback = ("127.0.0.1", "localhost", "::1")
+            allowed = loopback + tuple((h or "").lower() for h in (allowed_hosts or []))
+            if netloc not in allowed:
+                return False
             return urlparse(origin).netloc == host
 
         def log_message(self, format, *args):

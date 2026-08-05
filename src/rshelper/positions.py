@@ -137,9 +137,12 @@ def open_qty(item_id: int, profile: str | None = None) -> int:
 
 
 def close_positions(item_id: int, qty: int, sell_price: int,
-                    profile: str | None = None) -> list[dict]:
+                    profile: str | None = None,
+                    position_id: int | None = None) -> list[dict]:
     """Close qty units of an item FIFO at sell_price.
 
+    When position_id is given, only that specific lot is closed (partial
+    closes reduce it). Otherwise FIFO across lots of the item (oldest first).
     Returns realized lots: [{"position_id", "name", "qty", "buy_price",
     "sell_price", "tax_paid", "profit"}]. Raises ValueError when the item
     has fewer open units or inputs are invalid.
@@ -155,6 +158,9 @@ def close_positions(item_id: int, qty: int, sell_price: int,
         kept = []
         for p in sorted(positions, key=lambda x: x["id"]):
             if p["item_id"] != item_id or remaining <= 0:
+                kept.append(p)
+                continue
+            if position_id is not None and p["id"] != position_id:
                 kept.append(p)
                 continue
             take = min(remaining, p["qty"])

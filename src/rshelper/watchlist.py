@@ -65,12 +65,19 @@ def add(item_id: int, name: str,
         alert_margin_above: int | None = None,
         alert_margin_below: int | None = None,
         profile: str | None = None) -> None:
-    """Add or update a watched item."""
+    """Add or update a watched item.
+
+    Re-adding an existing item preserves its original `added` timestamp so
+    the UI doesn't claim a long-watched item was just added.
+    """
     with _watchlist_lock(profile):
         data = load(profile)
+        existing = data["items"].get(str(item_id))
+        added = existing.get("added") if existing else \
+            datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         data["items"][str(item_id)] = {
             "name": name,
-            "added": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "added": added,
             "alert_margin_above": alert_margin_above,
             "alert_margin_below": alert_margin_below,
         }

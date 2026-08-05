@@ -7,6 +7,7 @@ services:
       - "{{ app_bind_address }}:{{ app_host_port }}:5555"
     environment:
       VERSION: "{{ compose_app_version | default(app_version) }}"
+      RSHELPER_ALLOWED_HOSTS: "{{ app_domain }}"
     volumes:
       - "{{ app_dir }}/data:/home/rshelper"
     healthcheck:

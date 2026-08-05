@@ -131,6 +131,23 @@ def test_unknown_fields_tolerated():
     print("  PASSED test_unknown_fields_tolerated")
 
 
+def test_close_specific_position():
+    """close_positions with position_id closes only that lot, not FIFO."""
+    _clean()
+    p1 = open_position(561, "Nature rune", 5, 90)
+    open_position(561, "Nature rune", 5, 110)
+    lots = close_positions(561, 3, 130, position_id=p1.id)
+    assert len(lots) == 1
+    assert lots[0]["position_id"] == p1.id
+    assert lots[0]["buy_price"] == 90
+    remaining = list_positions()
+    assert len(remaining) == 2
+    assert remaining[0].qty == 2  # p1 partially reduced
+    assert remaining[1].qty == 5  # p2 untouched
+    _clean()
+    print("  PASSED test_close_specific_position")
+
+
 def test_cross_process_open_no_lost_positions():
     """Concurrent opens from separate processes must not lose positions."""
     import subprocess

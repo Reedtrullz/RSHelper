@@ -426,6 +426,50 @@ class TestHandlerRouting(unittest.TestCase):
         h.do_POST()
         self.assertEqual(h.error_code, 403)
 
+    def test_origin_check_accepts_configured_host(self):
+        """A same-origin POST on the deployed host (allowed_hosts) must pass."""
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            watchlist_update_fn=lambda a, i: calls.append(a) or {"items": []},
+            allowed_hosts=["rs.reidar.tech"])
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/watchlist"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"action": "add", "item_id": 5}).encode()
+        h.headers = {"Content-Length": str(len(payload)),
+                     "Host": "rs.reidar.tech",
+                     "Origin": "https://rs.reidar.tech"}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_POST()
+        self.assertEqual(calls, ["add"])
+
+    def test_origin_check_blocks_dns_rebinding_even_with_allowed_hosts(self):
+        """Host=evil.com must 403 even though allowed_hosts has rs.reidar.tech."""
+        from http.server import BaseHTTPRequestHandler
+        Handler = make_handler(
+            self.scanner, lambda: [],
+            watchlist_update_fn=lambda a, i: {"items": []},
+            allowed_hosts=["rs.reidar.tech"])
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/watchlist"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"action": "add", "item_id": 5}).encode()
+        h.headers = {"Content-Length": str(len(payload)),
+                     "Host": "evil.com", "Origin": "http://evil.com"}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.do_POST()
+        self.assertEqual(h.error_code, 403)
+
     def test_dashboard_boot_survives_total_fetch_failure(self):
         """A total source failure must not crash the dashboard at startup."""
         import tempfile

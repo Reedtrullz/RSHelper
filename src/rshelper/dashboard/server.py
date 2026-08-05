@@ -425,7 +425,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         usable = isinstance(price, dict) and price_issue(price) is None
         sell_price = close_market_price(position, cache["latest"])
         at_entry = not usable
-        lots = close_positions(position.item_id, close_qty, sell_price, profile)
+        lots = close_positions(position.item_id, close_qty, sell_price,
+                               profile, position_id=position.id)
         for lot in lots:
             log_trade(position.item_id, lot["name"], lot["qty"],
                       lot["buy_price"], sell_price, note="paper",
@@ -542,6 +543,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                               vol_5m=cache["vol"])
 
     def collect_ge(position_id: int):
+        refresh()  # a collect books P&L — don't use a stale quote
         from rshelper.ge_offers import collect_offer
         return collect_offer(position_id, profile=profile,
                              latest=cache["latest"])
@@ -556,7 +558,13 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         from rshelper.scanner import ProcessScanner
         from rshelper.recipes import RECIPES
         lookup = {i.id: i for i in cache["items"]}
-        results = ProcessScanner().scan(cache["items"], capital=cfg.process.capital)
+        # Honor the same filters as the CLI (members/min_volume/min_profit)
+        # so the dashboard and CLI agree on what "profitable" means.
+        results = ProcessScanner().scan(
+            cache["items"], members_only=cfg.process.members_only,
+            min_volume=cfg.process.min_volume,
+            min_profit=cfg.process.min_profit,
+            capital=cfg.process.capital)
         out = []
         for r in results:
             recipe = RECIPES.get(r.id)
@@ -736,6 +744,13 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                           note=note, profile=profile)
         return asdict(trade)
 
+    # Same-origin POSTs from the deployed host (rs.reidar.tech) must pass the
+    # origin check; the deploy compose sets RSHELPER_ALLOWED_HOSTS. Loopback
+    # hosts always pass (local dashboard).
+    allowed_hosts = [h.strip() for h in
+                     os.environ.get("RSHELPER_ALLOWED_HOSTS", "").split(",")
+                     if h.strip()] or None
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -756,7 +771,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            alerts_read_fn=mark_alerts_read,
                            history_fn=get_history, trades_fn=get_trades,
                            pnl_fn=get_pnl, delete_trade_fn=delete_trade_fn,
-                           log_trade_fn=log_trade_fn, event_hub=hub)
+                           log_trade_fn=log_trade_fn, event_hub=hub,
+                           allowed_hosts=allowed_hosts)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):
