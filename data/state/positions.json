@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 201,
-      "buy_price": 695,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 417,
+      "buy_price": 143,
       "direction": "traditional",
-      "opened_at": "2026-08-05T10:59:38.935870+00:00",
+      "opened_at": "2026-08-05T11:11:39.244925+00:00",
       "note": "auto",
-      "entry_sell": 695,
-      "entry_offer": 720
+      "entry_sell": 143,
+      "entry_offer": 150
     }
   ]
 }
