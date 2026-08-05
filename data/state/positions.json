@@ -13,16 +13,16 @@
       "entry_offer": 8468
     },
     {
-      "id": 6,
-      "item_id": 22461,
-      "name": "Bastion potion(4)",
-      "qty": 26,
-      "buy_price": 14918,
+      "id": 7,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 4712,
+      "buy_price": 38,
       "direction": "traditional",
-      "opened_at": "2026-08-05T02:28:39.843640+00:00",
+      "opened_at": "2026-08-05T02:36:40.173021+00:00",
       "note": "auto",
-      "entry_sell": 14918,
-      "entry_offer": 15518
+      "entry_sell": 38,
+      "entry_offer": 40
     }
   ]
 }
