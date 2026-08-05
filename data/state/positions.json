@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 157,
       "entry_offer": 164
+    },
+    {
+      "id": 2,
+      "item_id": 8009,
+      "name": "Falador teleport (tablet)",
+      "qty": 254,
+      "buy_price": 671,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T09:37:41.187104+00:00",
+      "note": "auto",
+      "entry_sell": 671,
+      "entry_offer": 698
     }
   ]
 }
