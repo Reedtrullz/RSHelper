@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 72,
-      "name": "Magic shortbow (u)",
-      "qty": 728,
-      "buy_price": 549,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1812,
+      "buy_price": 162,
       "direction": "traditional",
-      "opened_at": "2026-08-05T04:52:43.589646+00:00",
+      "opened_at": "2026-08-05T06:28:47.900109+00:00",
       "note": "auto",
-      "entry_sell": 549,
-      "entry_offer": 576
+      "entry_sell": 162,
+      "entry_offer": 169
     }
   ]
 }
