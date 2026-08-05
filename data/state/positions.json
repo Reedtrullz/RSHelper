@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 11237,
-      "name": "Dragon arrowtips",
-      "qty": 224,
-      "buy_price": 1780,
+      "id": 2,
+      "item_id": 9193,
+      "name": "Dragonstone bolt tips",
+      "qty": 832,
+      "buy_price": 420,
       "direction": "traditional",
-      "opened_at": "2026-08-05T04:18:43.237358+00:00",
+      "opened_at": "2026-08-05T04:34:43.801760+00:00",
       "note": "auto",
-      "entry_sell": 1780,
-      "entry_offer": 1848
+      "entry_sell": 420,
+      "entry_offer": 436
     },
     {
-      "id": 2,
-      "item_id": 261,
-      "name": "Avantoe",
-      "qty": 92,
-      "buy_price": 1470,
+      "id": 3,
+      "item_id": 5321,
+      "name": "Watermelon seed",
+      "qty": 181,
+      "buy_price": 232,
       "direction": "traditional",
-      "opened_at": "2026-08-05T04:26:43.340056+00:00",
+      "opened_at": "2026-08-05T04:38:43.880488+00:00",
       "note": "auto",
-      "entry_sell": 1470,
-      "entry_offer": 1535
+      "entry_sell": 232,
+      "entry_offer": 221
+    },
+    {
+      "id": 4,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 120,
+      "buy_price": 1355,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T04:42:44.128546+00:00",
+      "note": "auto",
+      "entry_sell": 1355,
+      "entry_offer": 1413
     }
   ]
 }
