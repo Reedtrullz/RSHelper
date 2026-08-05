@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 45,
       "entry_offer": 47
-    },
-    {
-      "id": 6,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 263,
-      "buy_price": 120,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T20:01:59.864958+00:00",
-      "note": "auto",
-      "entry_sell": 120,
-      "entry_offer": 126
-    },
-    {
-      "id": 7,
-      "item_id": 861,
-      "name": "Magic shortbow",
-      "qty": 238,
-      "buy_price": 752,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T20:01:59.865596+00:00",
-      "note": "auto",
-      "entry_sell": 752,
-      "entry_offer": 784
     }
   ]
 }
