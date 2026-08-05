@@ -121,6 +121,31 @@ class TestAlerts(unittest.TestCase):
         finally:
             os.chmod(self.tmp, 0o700)
 
+    def test_ids_are_monotonic_across_pushes(self):
+        """ids derive from max(persisted)+1 so cross-process pushes never collide."""
+        amod.push_alert("system", "INFO", None, "", "a", "m")
+        amod.push_alert("system", "INFO", None, "", "b", "m")
+        feed = amod.list_alerts(profile="default")
+        ids = sorted(a.id for a in feed)
+        self.assertEqual(ids, [1, 2])
+        self.assertEqual(len(set(ids)), len(ids))
+
+    def test_update_watch_alerts_preserves_entry(self):
+        from rshelper import watchlist
+        watchlist.add(561, "Nature rune", alert_margin_above=100)
+        amod.set_watch_triggered(561, profile="default")
+        amod.update_watch_alerts(561, 250, None, profile="default")
+        entry = watchlist.load()["items"]["561"]
+        self.assertEqual(entry["alert_margin_above"], 250)
+        self.assertEqual(entry["alert_margin_below"], None)
+        self.assertEqual(entry["name"], "Nature rune")
+        self.assertFalse(amod.watch_triggered(561, profile="default"),
+                         "a new threshold must clear the old dedupe")
+
+    def test_update_watch_alerts_unknown_raises(self):
+        with self.assertRaises(ValueError):
+            amod.update_watch_alerts(99999, 1, None, profile="default")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

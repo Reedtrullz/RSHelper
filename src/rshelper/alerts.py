@@ -14,7 +14,7 @@ PRUNE_AFTER_DAYS = 14      # drop alerts older than this on write
 WATCH_DEDUPE_SEC = 15 * 60  # don't re-fire a watch threshold within 15 min
 
 _ALERT_LOCK = threading.Lock()
-_next_id = 1  # per-process monotonic fallback for in-memory ids
+_fallback_id = 0  # per-process monotonic ids when persistence fails
 
 
 @dataclass
@@ -54,6 +54,12 @@ def _save(data: dict, profile: str | None = None) -> None:
     atomic_write_json(_alerts_path(profile), data)
 
 
+def _next_alert_id(store: dict) -> int:
+    """Next id: max of persisted ids + 1 (cross-process safe under the lock)."""
+    ids = [a.get("id", 0) for a in store.get("alerts", []) if isinstance(a, dict)]
+    return (max(ids) + 1) if ids else 1
+
+
 def push_alert(type: str, severity: str, item_id: int | None,
                item_name: str, title: str, message: str,
                profile: str | None = None,
@@ -63,13 +69,11 @@ def push_alert(type: str, severity: str, item_id: int | None,
     Caller-facing, thread-safe, atomic. A failure must never raise: alert
     delivery is best-effort for daemons and the dashboard.
     """
-    global _next_id
     try:
         with _ALERT_LOCK:
             store = _load(profile)
-            _next_id += 1
             alert = {
-                "id": _next_id,
+                "id": _next_alert_id(store),
                 "ts": time.time(),
                 "type": type,
                 "severity": severity,
@@ -88,10 +92,16 @@ def push_alert(type: str, severity: str, item_id: int | None,
         # Disk trouble must not break a trader/monitor cycle.
         import sys
         print(f"[alerts] warning: could not persist alert: {exc}", file=sys.stderr)
-        _next_id += 1
-        return Alert(id=_next_id, ts=time.time(), type=type, severity=severity,
+        return Alert(id=_next_id(), ts=time.time(), type=type, severity=severity,
                      item_id=item_id, item_name=item_name, title=title,
                      message=message, data=data)
+
+
+def _next_id() -> int:
+    """Per-process monotonic fallback id (only used when persistence fails)."""
+    global _fallback_id
+    _fallback_id += 1
+    return _fallback_id
 
 
 def _prune(store: dict) -> None:
@@ -152,4 +162,25 @@ def set_watch_triggered(item_id: int, profile: str | None = None) -> None:
     with _ALERT_LOCK:
         store = _load(profile)
         store.setdefault("watch_triggered", {})[str(item_id)] = time.time()
+        _save(store, profile)
+
+
+def update_watch_alerts(item_id: int, above: int | None, below: int | None,
+                        profile: str | None = None) -> None:
+    """Update (or clear) a watched item's margin alert thresholds.
+
+    A clean add/update: preserves the existing name + added timestamp,
+    and clears a previous dedupe so a newly-set threshold can fire.
+    """
+    from rshelper import watchlist
+    data = watchlist.load(profile)
+    entry = data.get("items", {}).get(str(item_id))
+    if entry is None:
+        raise ValueError(f"item {item_id} is not on the watchlist")
+    entry["alert_margin_above"] = above
+    entry["alert_margin_below"] = below
+    watchlist._save(data, profile)
+    with _ALERT_LOCK:
+        store = _load(profile)
+        store.setdefault("watch_triggered", {}).pop(str(item_id), None)
         _save(store, profile)

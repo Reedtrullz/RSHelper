@@ -275,7 +275,7 @@ _SHELL = r"""
 _FOOTER = r"""
 <div class="footer">
   <span><span class="dot" id="statusDot"></span><span id="statusText">Connected</span><span class="source-badge none" id="sourceBadge">-</span></span>
-  <span><span class="kbd" id="kbdHint">&#8593;&#8595; move</span> <span id="lastUpdated">Last updated: --</span></span>
+  <span><span class="kbd" id="kbdHint">&#8593;&#8595; move</span> <span id="lastUpdated">Last updated: --</span> <span id="footerBell"></span></span>
 </div>
 """
 

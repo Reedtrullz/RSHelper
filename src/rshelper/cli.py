@@ -582,7 +582,13 @@ def _trade_close(args: argparse.Namespace) -> None:
         sys.exit(1)
     # Close at the price convention of the oldest open lot for this item.
     direction = open_positions[0].direction
-    _, sell_price = _resolve_paper_prices(entry, profile, direction)
+    if direction == "traditional":
+        _, sell_price = _resolve_paper_prices(entry, profile, "traditional")
+    else:
+        # Arbitrage positions sell at the bid (low). Fetch the raw guarded
+        # pair and take the sell leg explicitly — never a live-price side.
+        _buy, _sell = _resolve_paper_prices(entry, profile, "arbitrage")
+        sell_price = _sell
     qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
     try:
         lots = close_positions(entry["id"], qty, sell_price, profile)

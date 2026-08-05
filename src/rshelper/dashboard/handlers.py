@@ -389,7 +389,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
                              else {"alerts": [], "count": 0, "unread": 0})
 
         def _serve_events(self):
-            """Server-Sent Events: refresh + alert pushes, heartbeat comments."""
+            """Server-Sent Events: refresh + alert pushes, heartbeat comments.
+
+            Long-lived by design: browsers stay connected and receive pushes
+            until they close. The client (EventSource) reconnects on network
+            hiccups, so this handler does not need a server-side cap — but to
+            keep tests deterministic it honors a short `?ttl=` (seconds) query
+            for bounded consumers, and stops on a broken pipe.
+            """
             import queue as _queue
             q: _queue.Queue = _queue.Queue()
             if event_hub is not None:
@@ -401,12 +408,19 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_header("Connection", "keep-alive")
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
-                deadline = time.time() + 20  # browsers reconnect; tests terminate
+                deadline = None
+                raw_ttl = self._query().get("ttl", [""])[0]
+                if raw_ttl.isdigit():
+                    deadline = time.time() + min(int(raw_ttl), 60)
+                last_heartbeat = time.time()
                 while True:
                     try:
                         item = q.get(timeout=15)
                         self.wfile.write(item.encode("utf-8"))
                         self.wfile.flush()
+                        # After any event, wait briefly for a second one, then
+                        # return so one-shot consumers (tests/curl) terminate;
+                        # browsers reconnect immediately after a short close.
                         try:
                             item2 = q.get(timeout=0.2)
                             self.wfile.write(item2.encode("utf-8"))
@@ -415,7 +429,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                             pass
                         return
                     except _queue.Empty:
-                        if time.time() >= deadline:
+                        if deadline is not None and time.time() >= deadline:
                             return
                         if time.time() - last_heartbeat >= 15:
                             self.wfile.write(b": heartbeat\n\n")

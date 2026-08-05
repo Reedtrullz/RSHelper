@@ -204,20 +204,23 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     scanner = FlipScanner(direction=cfg.flip.direction)
 
     sig_cache = {"list": [], "flips": 0, "ts": 0.0, "active": set()}
+    sig_lock = __import__("threading").Lock()
 
     def active_signals():
         now = time.time()
-        if now - sig_cache["ts"] > 30:
-            flips = scanner.scan(cache["items"], **scan_kwargs)
-            sig_cache["list"] = detect_signals(flips, cache["vol"])
-            sig_cache["flips"] = len(flips)
-            sig_cache["ts"] = now
-            new = [s for s in sig_cache["list"]
-                   if (s.item_id, s.type) not in sig_cache["active"]]
-            sig_cache["active"] = {(s.item_id, s.type) for s in sig_cache["list"]}
-            if new:
-                _emit_signal_alerts(new)
-        return sig_cache["list"]
+        with sig_lock:
+            if now - sig_cache["ts"] > 30:
+                flips = scanner.scan(cache["items"], **scan_kwargs)
+                sig_cache["list"] = detect_signals(flips, cache["vol"])
+                sig_cache["flips"] = len(flips)
+                sig_cache["ts"] = now
+                new = [s for s in sig_cache["list"]
+                       if (s.item_id, s.type) not in sig_cache["active"]]
+                sig_cache["active"] = {(s.item_id, s.type)
+                                       for s in sig_cache["list"]}
+                if new:
+                    _emit_signal_alerts(new)
+            return list(sig_cache["list"])
 
     def get_signals():
         refresh()
@@ -288,15 +291,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         elif action == "remove":
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
-            if not watchlist.remove(item_id, profile=profile):
-                # Re-add is handled by the dashboard's star flow; only
-                # update thresholds for items already watched.
-                raise ValueError(f"item {item_id} is not on the watchlist")
-            wl = watchlist.load(profile)
-            entry = wl["items"].get(str(item_id))
-            name = entry["name"] if entry else str(item_id)
-            watchlist.add(item_id, name, alert_margin_above=alert_above,
-                          alert_margin_below=alert_below, profile=profile)
+            alerts.update_watch_alerts(item_id, alert_above, alert_below,
+                                       profile)
         else:
             raise ValueError(f"unknown watchlist action '{action}'")
         return get_watchlist()

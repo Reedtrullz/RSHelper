@@ -796,6 +796,32 @@ class TestNewRoutes(unittest.TestCase):
         self.assertEqual(headers.get("Content-Type"), "text/event-stream")
         self.assertIn("event: refresh", h.wfile.getvalue().decode())
 
+    def test_api_events_ttl_terminates(self):
+        """SSE with ?ttl= must return (not hang) for bounded consumers."""
+        from http.server import BaseHTTPRequestHandler
+        import queue
+        q = queue.Queue()
+
+        class Hub:
+            def subscribe(self, qq):
+                pass
+
+            def unsubscribe(self, qq):
+                pass
+        Handler = make_handler(FlipScanner(direction="arbitrage"), lambda: [],
+                               event_hub=Hub())
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/events?ttl=1"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        self.assertEqual(h.wfile.getvalue(), b"")  # returned without events
+
     def test_api_timeseries_step_param(self):
         from http.server import BaseHTTPRequestHandler
         calls = []

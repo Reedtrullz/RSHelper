@@ -130,6 +130,9 @@ function updateFooter(){
   if(src==='ge_tracker')kbd.textContent='signals limited on fallback';
   else if(!sseOk)kbd.textContent='polling '+refreshSecs+'s';
   else kbd.textContent='live via SSE';
+  // Bell also lives in the footer for always-visible alert access.
+  const bell=document.getElementById('footerBell');
+  if(bell)bell.innerHTML=alertBadgeHtml();
 }
 function subscribeSSE(){
   try{
@@ -141,7 +144,13 @@ function subscribeSSE(){
       catch(e){}
     });
     es.onopen=()=>{sseOk=true;updateFooter();};
-    es.onerror=()=>{sseOk=false;updateFooter();};
+    es.onerror=()=>{
+      sseOk=false;
+      updateFooter();
+      // EventSource auto-reconnects; track the gap so the 60s poll
+      // fallback takes over if the stream never comes back.
+      sseLastEvent=Date.now();
+    };
   }catch(e){sseOk=false;}
 }
 function valueOf(item,col){
@@ -217,6 +226,9 @@ function setView(v){
     const btn=document.getElementById('btn'+n.charAt(0).toUpperCase()+n.slice(1));
     if(btn)btn.classList.toggle('active',v===n);
   });
+  const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
+                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity'};
+  if(titles[v])document.title='RSHelper — '+titles[v];
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
   else if(v==='signals')renderSignals();
@@ -330,6 +342,10 @@ function viewbarHtml(){
       '<input id="ptQty" type="number" min="1" placeholder="Qty" aria-label="Quantity" style="width:64px">'+
       '<select id="ptAction" aria-label="Trade action"><option value="open">Open position</option><option value="instant">Instant trade</option></select>'+
       '<button class="act-btn" onclick="paperTrade()">Trade</button></div>';
+  }
+  if(view==='watchlist'){
+    return '<div class="viewbar"><span class="title">Watchlist</span>'+
+      '<button class="toggle-btn" onclick="watchCheckNow()">Check now</button></div>';
   }
   if(view==='ge'){
     return '<div class="viewbar"><span class="title">Grand Exchange</span></div>';
@@ -569,11 +585,31 @@ function renderDetail(id){
     metric('Buy Limit',format(item.buy_limit||0),'')+
     metric('Alch Value',format(item.alch_value||0)+' gp','')+
     metric('Members','<span class="val '+(item.members?'gold':'dim')+'">'+(item.members?'Yes':'No')+'</span>','')+
+    '<div class="metric" id="confTile" style="display:none"></div>'+
     '</div>'+notice+
     '<div class="chart-title">Price history (8h, 5m)</div><canvas id="spark" height="84"></canvas>'+
     '<div class="chart-title">Margin history (24h, 1h)</div><canvas id="marginChart" height="120"></canvas>';
   drawSpark(id);
-  drawMargin(id);
+  // Only draw the margin chart when the item came from the flip scan
+  // (it carries volume/rs_score); watch-detail rows are price-only.
+  if(typeof item.volume==='number')drawMargin(id);
+  loadConfidence(id);
+}
+function loadConfidence(id){
+  const ctx=document.getElementById('contextPanel');
+  if(!ctx)return;
+  // Lazily fetch margin confidence and append a tile; failure is silent.
+  fetch('/api/confidence?ids='+id).then(r=>r.ok?r.json():{}).then(d=>{
+    const row=d[String(id)];
+    if(!row||!ctx.contains(document.getElementById('confTile')))return;
+    const tile=document.getElementById('confTile');
+    if(row.confidence==null||row.confidence===0)return;
+    const pct=(row.confidence*100).toFixed(0);
+    const cls=pct>=70?'green':pct>=40?'gold':'red';
+    tile.innerHTML='<div class="lbl">Margin Confidence</div><div class="val '+cls+'">'+pct+'%</div>'+
+      '<div class="lbl" style="margin-top:4px">'+(row.datapoints||0)+' windows, '+(row.window_hours||0).toFixed(1)+'h</div>';
+    tile.style.display='';
+  }).catch(()=>{});
 }
 function watchDetail(id){
   const w=viewRows.find(r=>r.id===id);
@@ -795,6 +831,30 @@ async function saveWatchAlerts(id){
     if(!r.ok)throw new Error('save failed');
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
     renderWatchlist();
+    setStatus('Alert thresholds saved',false);
+  }catch(e){
+    setStatus('Error: '+e.message,true);
+  }
+}
+async function watchCheckNow(){
+  const body=document.getElementById('listBody');
+  const orig=body.innerHTML;
+  try{
+    const r=await fetch('/api/watchlist/check');
+    if(!r.ok)throw new Error('check failed');
+    const d=await r.json();
+    const trig=d.triggered||[];
+    let notice;
+    if(trig.length){
+      notice='<div class="notice warn-red" style="margin:8px 0">'+trig.length+' alert(s) triggered now:'+
+        trig.map(t=>'<br>&bull; '+escHtml(t.name)+': margin '+format(t.current)+' gp '+escHtml(t.reason)+' '+format(t.threshold)).join('')+'</div>';
+    }else{
+      notice='<div class="notice" style="margin:8px 0;border-color:var(--pos);color:var(--pos)">No watchlist alerts triggered.</div>';
+    }
+    // Re-render the list with the notice pinned above it.
+    const list=orig;
+    body.innerHTML='<div style="display:contents">'+notice+'</div>'+list;
+    setStatus('Watchlist check complete',false);
   }catch(e){
     setStatus('Error: '+e.message,true);
   }

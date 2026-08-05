@@ -78,6 +78,21 @@ class TestWatchlist(unittest.TestCase):
         self.assertEqual(len(ids), 2)
         self.assertNotIn(2, ids)
 
+    def test_alerts_preserves_entry_on_update(self):
+        """Updating thresholds must not touch name/added (dashboard save flow)."""
+        import rshelper.alerts as amod
+        watchlist.add(561, "Nature rune", alert_margin_above=100)
+        amod.update_watch_alerts(561, 250, None)
+        entry = watchlist.load()["items"]["561"]
+        self.assertEqual(entry["alert_margin_above"], 250)
+        self.assertEqual(entry["name"], "Nature rune")
+        self.assertIn("added", entry)
+
+    def test_alerts_unknown_item_raises(self):
+        import rshelper.alerts as amod
+        with self.assertRaises(ValueError):
+            amod.update_watch_alerts(99999, 1, None)
+
 
 if __name__ == "__main__":
     unittest.main()
