@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 2214,
-      "buy_price": 88,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T19:28:00.315667+00:00",
-      "note": "auto",
-      "entry_sell": 88,
-      "entry_offer": 92
-    },
-    {
       "id": 3,
       "item_id": 245,
       "name": "Wine of zamorak",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 985,
       "entry_offer": 1020
+    },
+    {
+      "id": 4,
+      "item_id": 2351,
+      "name": "Iron bar",
+      "qty": 355,
+      "buy_price": 134,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T19:48:00.795338+00:00",
+      "note": "auto",
+      "entry_sell": 134,
+      "entry_offer": 139
     }
   ]
 }
