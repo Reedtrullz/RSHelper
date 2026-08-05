@@ -580,29 +580,43 @@ def _trade_close(args: argparse.Namespace) -> None:
     if not open_positions:
         print(f"No open positions for {entry['name']}.", file=sys.stderr)
         sys.exit(1)
-    # Close at the price convention of the oldest open lot for this item.
-    direction = open_positions[0].direction
-    if direction == "traditional":
-        _, sell_price = _resolve_paper_prices(entry, profile, "traditional")
-    else:
-        # Arbitrage positions sell at the bid (low). Fetch the raw guarded
-        # pair and take the sell leg explicitly — never a live-price side.
-        _buy, _sell = _resolve_paper_prices(entry, profile, "arbitrage")
-        sell_price = _sell
-    qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
-    try:
-        lots = close_positions(entry["id"], qty, sell_price, profile)
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
+    # Auto-trader positions are owned by the daemon — closing one by hand
+    # would corrupt the auto P&L and fight the trader's exit logic.
+    auto_lots = [p for p in open_positions if p.note == "auto"]
+    if auto_lots:
+        print(f"Position(s) on {entry['name']} are managed by the auto-trader; "
+              f"let the trader close them.", file=sys.stderr)
         sys.exit(1)
-    for lot in lots:
-        log_trade(entry["id"], lot["name"], lot["qty"], lot["buy_price"],
-                  sell_price, note="paper", profile=profile, strategy="manual",
-                  exit_reason="manual")
-    profit = sum(l["profit"] for l in lots)
-    tax = sum(l["tax_paid"] for l in lots)
-    print(f"Closed {qty:,}x {entry['name']} at {sell_price:,} gp "
-          f"({direction}) — profit: {profit:+,} gp (tax: {tax:,})")
+    # Close each lot at its OWN direction's exit leg: a mixed traditional +
+    # arbitrage stack must not sell both at the oldest lot's leg (one would
+    # book a guaranteed loss).
+    qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
+    remaining = qty
+    total_profit = 0
+    total_tax = 0
+    for p in sorted(open_positions, key=lambda x: x.id):
+        if remaining <= 0:
+            break
+        take = min(remaining, p.qty)
+        if p.direction == "traditional":
+            _, sell_price = _resolve_paper_prices(entry, profile, "traditional")
+        else:
+            _buy, sell_price = _resolve_paper_prices(entry, profile, "arbitrage")
+        try:
+            lots = close_positions(entry["id"], take, sell_price, profile,
+                                   position_id=p.id)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        for lot in lots:
+            log_trade(entry["id"], lot["name"], lot["qty"], lot["buy_price"],
+                      sell_price, note="paper", profile=profile, strategy="manual",
+                      exit_reason="manual")
+        total_profit += sum(l["profit"] for l in lots)
+        total_tax += sum(l["tax_paid"] for l in lots)
+        remaining -= take
+    print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
+          f"(tax: {total_tax:,})")
 
 
 def _trade_positions(args: argparse.Namespace) -> None:

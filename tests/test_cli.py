@@ -508,6 +508,34 @@ class TestCLI(unittest.TestCase):
                                        members_only=False, cooldown=15,
                                        json=True))
 
+    def test_trade_close_refuses_auto_lots(self):
+        """`trade close` must refuse lots the auto-trader owns."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import tempfile
+        import rshelper.api as amod
+        import rshelper.positions as pmod
+        import rshelper.cli as cmod
+        original_pos = pmod.POSITIONS_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            pmod.POSITIONS_PATH = Path(tmp) / "positions.json"
+            try:
+                pmod.open_position(561, "Nature rune", 5, 100,
+                                   direction="arbitrage", note="auto")
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 561, "name": "Nature rune", "limit": 13000}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "561": {"high": 150, "low": 140,
+                                    "highTime": int(time.time()) - 60,
+                                    "lowTime": int(time.time()) - 60}}):
+                        with self.assertRaises(SystemExit):
+                            cmod._trade_close(Namespace(
+                                item="nature rune", qty=0, profile=None))
+                self.assertEqual(len(pmod.list_positions()), 1)  # untouched
+            finally:
+                pmod.POSITIONS_PATH = original_pos
+
     def test_item_info_json_timeseries_single_doc(self):
         """item-info --json --timeseries must emit ONE JSON document on stdout."""
         from pathlib import Path
