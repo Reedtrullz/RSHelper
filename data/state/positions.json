@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 671,
       "entry_offer": 698
+    },
+    {
+      "id": 3,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 865,
+      "buy_price": 92,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T10:01:45.601108+00:00",
+      "note": "auto",
+      "entry_sell": 92,
+      "entry_offer": 96
     }
   ]
 }
