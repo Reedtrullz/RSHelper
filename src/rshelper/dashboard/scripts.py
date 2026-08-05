@@ -117,7 +117,23 @@ function updateBadges(){
   document.getElementById('badgeSignals').textContent=meta.signals||0;
   document.getElementById('badgeWatchlist').textContent=meta.watchlist||0;
   document.getElementById('badgeOverview').textContent=alertsData.unread||0;
+  // GE/Bank/Materials badges are set by their render fns; on page load they
+  // stay "-" until the tab is opened. Keep them accurate with a light
+  // one-time fetch (the render fns still overwrite on view).
+  refreshExtBadges();
   updateTopbarBell();
+}
+let _extBadgeFetched=false;
+async function refreshExtBadges(){
+  if(_extBadgeFetched)return;
+  _extBadgeFetched=true;
+  try{
+    const [g,b]=await Promise.all([
+      fetch('/api/ge').then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch('/api/bank').then(r=>r.ok?r.json():null).catch(()=>null)]);
+    if(g&&g.slots)document.getElementById('badgeGE').textContent=g.slots.length||0;
+    if(b&&typeof b.slot_count==='number')document.getElementById('badgeBank').textContent=b.slot_count||0;
+  }catch(e){}
 }
 function updateFooter(){
   const src=meta.source||'none';
