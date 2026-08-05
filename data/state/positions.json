@@ -26,15 +26,15 @@
     },
     {
       "id": 6,
-      "item_id": 2114,
-      "name": "Pineapple",
-      "qty": 236,
-      "buy_price": 188,
+      "item_id": 3138,
+      "name": "Potato cactus",
+      "qty": 211,
+      "buy_price": 69,
       "direction": "traditional",
-      "opened_at": "2026-08-05T01:24:32.679424+00:00",
+      "opened_at": "2026-08-05T01:56:38.184788+00:00",
       "note": "auto",
-      "entry_sell": 188,
-      "entry_offer": 195
+      "entry_sell": 69,
+      "entry_offer": 66
     }
   ]
 }
