@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 9194,
-      "name": "Onyx bolt tips",
-      "qty": 49,
-      "buy_price": 8080,
+      "id": 1,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 1333,
+      "buy_price": 100,
       "direction": "traditional",
-      "opened_at": "2026-08-05T01:16:32.395909+00:00",
+      "opened_at": "2026-08-05T02:58:40.676933+00:00",
       "note": "auto",
-      "entry_sell": 8080,
-      "entry_offer": 8468
+      "entry_sell": 100,
+      "entry_offer": 105
     },
     {
-      "id": 7,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 4712,
-      "buy_price": 38,
+      "id": 2,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 3200,
+      "buy_price": 125,
       "direction": "traditional",
-      "opened_at": "2026-08-05T02:36:40.173021+00:00",
+      "opened_at": "2026-08-05T02:58:40.677535+00:00",
       "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
+      "entry_sell": 125,
+      "entry_offer": 130
+    },
+    {
+      "id": 3,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 767,
+      "buy_price": 521,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T02:58:40.677933+00:00",
+      "note": "auto",
+      "entry_sell": 521,
+      "entry_offer": 545
     }
   ]
 }
