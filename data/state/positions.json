@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 187,
-      "buy_price": 86,
+      "id": 4,
+      "item_id": 31979,
+      "name": "Ironwood repair kit",
+      "qty": 110,
+      "buy_price": 2062,
       "direction": "traditional",
-      "opened_at": "2026-08-05T00:28:30.730955+00:00",
+      "opened_at": "2026-08-05T00:44:31.419351+00:00",
       "note": "auto",
-      "entry_sell": 86,
-      "entry_offer": 90
+      "entry_sell": 2062,
+      "entry_offer": 2143
     },
     {
-      "id": 4,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 234,
-      "buy_price": 1604,
+      "id": 5,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1069,
+      "buy_price": 70,
       "direction": "traditional",
-      "opened_at": "2026-08-05T00:40:31.313593+00:00",
+      "opened_at": "2026-08-05T00:56:31.861011+00:00",
       "note": "auto",
-      "entry_sell": 1604,
-      "entry_offer": 1683
+      "entry_sell": 70,
+      "entry_offer": 73
+    },
+    {
+      "id": 6,
+      "item_id": 8007,
+      "name": "Varrock teleport (tablet)",
+      "qty": 87,
+      "buy_price": 731,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T00:56:31.862121+00:00",
+      "note": "auto",
+      "entry_sell": 731,
+      "entry_offer": 759
     }
   ]
 }
