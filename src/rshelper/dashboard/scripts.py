@@ -13,6 +13,7 @@ let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
 let chip='all',density='normal',strategy='';
 let viewRows=[];
 let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
+let confMap={};
 let sparkSeq=0;
 let countdown=refreshSecs;
 let sseOk=false,sseLastEvent=Date.now();
@@ -653,7 +654,7 @@ function renderMarket(){
     return;
   }
   let h='<table><thead><tr>';
-  const cols=[['name','Item'],['buy_price','Buy'],['sell_price','Sell'],['margin','Margin'],['roi','ROI'],['gp_per_hour','GP/hr'],['volume','Vol'],['sig','Signal'],['star','']];
+  const cols=[['name','Item'],['buy_price','Buy'],['sell_price','Sell'],['margin','Margin'],['roi','ROI'],['gp_per_hour','GP/hr'],['volume','Vol'],['conf','Conf'],['sig','Signal'],['star','']];
   cols.forEach(c=>{
     const isSort=c[1]!==''&&c[0]!=='sig'&&c[0]!=='star';
     let arrow='';
@@ -670,6 +671,10 @@ function renderMarket(){
     const mp=marginPct(item),rp=roiPct(item);
     const cls=marginClass(mp);
     const sel=item.id===selectedId?' selected':'';
+    const conf=confMap[item.id];
+    const confTxt=conf&&conf.confidence!=null
+      ?'<span class="'+(conf.confidence>=0.7?'pos':conf.confidence>=0.4?'gold':'neg')+'" title="'+conf.datapoints+' windows, '+(conf.window_hours||0).toFixed(1)+'h">'+(conf.confidence*100).toFixed(0)+'%</span>'
+      :'<span class="dim">-</span>';
     h+='<tr class="'+sel+'" data-id="'+item.id+'" onclick="selectId('+item.id+',false)">'+
       '<td class="name" title="'+escHtml(item.name)+'">'+escHtml(item.name)+'</td>'+
       '<td>'+gp(item.buy_price)+'</td><td>'+gp(item.sell_price)+'</td>'+
@@ -677,11 +682,25 @@ function renderMarket(){
       '<td class="'+marginClass(rp)+'">'+rp.toFixed(1)+'%</td>'+
       '<td>'+gp(item.gp_per_hour)+'</td>'+
       '<td>'+gp(item.volume)+'</td>'+
+      '<td>'+confTxt+'</td>'+
       '<td>'+sigBadge(item)+'</td>'+
       '<td>'+starHtml(item.id)+'</td></tr>';
   });
   h+='</tbody></table>';
   body.innerHTML=h;
+  loadConfColumn(rows);
+}
+function loadConfColumn(rows){
+  // Lazily fetch margin confidence for the visible top of the table.
+  const ids=rows.slice(0,30).map(r=>r.id);
+  if(!ids.length)return;
+  fetch('/api/confidence?ids='+ids.join(',')).then(r=>r.ok?r.json():{}).then(d=>{
+    let changed=false;
+    Object.keys(d||{}).forEach(k=>{
+      if(!confMap[k]){confMap[k]=d[k];changed=true;}
+    });
+    if(changed&&view==='market'&&marketMode==='flips')renderMarket();
+  }).catch(()=>{});
 }
 async function renderAlch(){
   const body=document.getElementById('listBody');

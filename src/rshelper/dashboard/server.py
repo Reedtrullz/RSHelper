@@ -102,6 +102,13 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         items = []
         _latest = {}
         _vol_5m = {}
+        try:
+            alerts.push_alert("system", "WARN", None, "",
+                              "Data source unavailable",
+                              "Initial OSRS Wiki fetch failed; serving cached/empty data",
+                              profile=profile)
+        except Exception:
+            pass
 
     from rshelper.tuning import record_if_changed
     record_if_changed(profile)
@@ -188,6 +195,17 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 cache["source"] = _source(_l)
             except SystemExit:
                 print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
+                try:
+                    alerts.push_alert("system", "WARN", None, "",
+                                      "Data source unavailable",
+                                      "Re-fetch failed; keeping previous data",
+                                      profile=profile)
+                    hub.broadcast("alert", {"alert": {
+                        "type": "system", "severity": "WARN",
+                        "title": "Data source unavailable",
+                        "message": "Re-fetch failed; keeping previous data"}})
+                except Exception:
+                    pass
             cache["last_fetch"] = now
             _check_watch_alerts(cache["latest"] or {})
             if cache["source"] != old_source:

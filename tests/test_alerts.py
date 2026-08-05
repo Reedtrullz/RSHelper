@@ -146,6 +146,19 @@ class TestAlerts(unittest.TestCase):
         with self.assertRaises(ValueError):
             amod.update_watch_alerts(99999, 1, None, profile="default")
 
+    def test_dashboard_boot_failure_pushes_system_alert(self):
+        """A failed initial fetch must surface a system alert, not just stderr."""
+        from unittest import mock
+        import rshelper.dashboard.server as smod
+        with mock.patch.object(smod, "_fetch_bootstrap", side_effect=SystemExit), \
+             mock.patch.object(smod.ThreadingHTTPServer, "serve_forever",
+                               side_effect=KeyboardInterrupt):
+            smod.run(bind="127.0.0.1", port=0)
+        feed = amod.list_alerts(profile="default")
+        sys_types = [a for a in feed if a.type == "system"]
+        self.assertGreaterEqual(len(sys_types), 1)
+        self.assertIn("Data source unavailable", sys_types[0].title)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

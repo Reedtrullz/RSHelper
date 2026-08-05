@@ -1211,12 +1211,15 @@ def watch_list(args: argparse.Namespace) -> None:
 def watch_check(args: argparse.Namespace) -> None:
     """Check all watched items against current prices."""
     from rshelper.api import fetch_latest
-    from rshelper.scanner import FlipScanner
     import json as _json
 
+    json_mode = getattr(args, "json", False)
     watched_ids = watchlist.get_watched_ids(profile=args.profile if hasattr(args, "profile") else None)
     if not watched_ids:
-        print("Watchlist is empty.")
+        if json_mode:
+            print(_json.dumps({"alerts": [], "count": 0}))
+        else:
+            print("Watchlist is empty.")
         return
 
     print("Fetching latest prices...", file=sys.stderr)
@@ -1264,21 +1267,26 @@ def watch_check(args: argparse.Namespace) -> None:
                           "reason": "below", "threshold": below, "current": profit})
             triggered = True
 
-        if args.verbose or triggered:
+        # Human-readable lines are stdout noise in JSON mode — the alert
+        # payload is the only thing that may touch stdout there.
+        if (args.verbose or triggered) and not json_mode:
             flag = " *** ALERT ***" if triggered else ""
             print(f"  {entry['name']:<30} margin={profit:>8,} gp  " +
                   f"(above={above}, below={below}){flag}")
 
     if not alerts:
-        print("No alerts triggered.")
+        if json_mode:
+            print(_json.dumps({"alerts": [], "count": 0}))
+        else:
+            print("No alerts triggered.")
         return
 
-    if getattr(args, "json", False):
-        print(json.dumps(alerts, indent=2))
-
-    print(f"\n{len(alerts)} alert(s) triggered:")
-    for a in alerts:
-        print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
+    if json_mode:
+        print(_json.dumps(alerts, indent=2))
+    else:
+        print(f"\n{len(alerts)} alert(s) triggered:")
+        for a in alerts:
+            print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
     sys.exit(1)
 def _save_alch_snapshot(results, profile: str | None = None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,

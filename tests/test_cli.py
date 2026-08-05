@@ -1,12 +1,16 @@
 """E2E CLI tests: subprocess invocations of rshelper commands."""
 
+import contextlib
+import io
 import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
 RSHELPER = [sys.executable, "-m", "rshelper"]
 _TEST_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -392,6 +396,61 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(data[0]["name"], "Steel bar")
         self.assertIn("gp_per_hour", data[0])
         self.assertIn("input_cost", data[0])
+
+    def test_watch_check_json_stdout_pure(self):
+        """watch check --json must emit ONLY JSON on stdout (no human lines)."""
+        import rshelper.api as amod
+        import rshelper.watchlist as wl
+        from pathlib import Path
+        from argparse import Namespace
+        from unittest import mock
+        import rshelper.cli as cmod
+        original_path = wl.WATCHLIST_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            wl.WATCHLIST_PATH = Path(tmp) / "watchlist.json"
+            try:
+                wl.add(561, "Nature rune", alert_margin_above=50)
+                now = int(time.time())
+                with mock.patch.object(amod, "fetch_latest", return_value={
+                        "561": {"high": 100, "low": 200,
+                                "highTime": now - 60, "lowTime": now - 60}}), \
+                     contextlib.redirect_stdout(io.StringIO()) as out, \
+                     contextlib.redirect_stderr(io.StringIO()) as err:
+                    with self.assertRaises(SystemExit) as ctx:
+                        cmod.watch_check(Namespace(profile=None,
+                                                   flip_direction="arbitrage",
+                                                   ge_slots=2, verbose=False,
+                                                   json=True))
+                self.assertEqual(ctx.exception.code, 1)
+                data = json.loads(out.getvalue())
+                self.assertIsInstance(data, list)
+                self.assertEqual(len(data), 1)
+                self.assertEqual(data[0]["name"], "Nature rune")
+                self.assertIn("Fetching latest prices", err.getvalue())
+            finally:
+                wl.WATCHLIST_PATH = original_path
+
+    def test_watch_check_json_empty(self):
+        """Empty watchlist + --json emits a JSON object, not prose."""
+        import contextlib
+        import io
+        import rshelper.watchlist as wl
+        from pathlib import Path
+        from argparse import Namespace
+        import rshelper.cli as cmod
+        original_path = wl.WATCHLIST_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            wl.WATCHLIST_PATH = Path(tmp) / "watchlist.json"
+            try:
+                with contextlib.redirect_stdout(io.StringIO()) as out:
+                    cmod.watch_check(Namespace(profile=None,
+                                               flip_direction="arbitrage",
+                                               ge_slots=2, verbose=False,
+                                               json=True))
+                data = json.loads(out.getvalue())
+                self.assertEqual(data, {"alerts": [], "count": 0})
+            finally:
+                wl.WATCHLIST_PATH = original_path
 
 
 if __name__ == "__main__":
