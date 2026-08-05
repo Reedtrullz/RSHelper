@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 911,
       "entry_offer": 950
+    },
+    {
+      "id": 4,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 169,
+      "buy_price": 200,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T15:41:50.275623+00:00",
+      "note": "auto",
+      "entry_sell": 200,
+      "entry_offer": 210
+    },
+    {
+      "id": 5,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 119,
+      "buy_price": 2889,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T15:47:49.388469+00:00",
+      "note": "auto",
+      "entry_sell": 2889,
+      "entry_offer": 3000
     }
   ]
 }
