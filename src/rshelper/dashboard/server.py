@@ -294,14 +294,15 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         refresh()
         signals = active_signals()
         from rshelper.journal import list_trades
+        watched = watchlist.get_watched_ids(profile)  # single disk read
         return {
             "source": cache["source"],
             "items": len(cache["items"]),
             "flips": sig_cache["flips"],
             "signals": len(signals),
             "trades": len(list_trades(profile=profile)),
-            "watchlist": len(watchlist.get_watched_ids(profile)),
-            "watch_ids": watchlist.get_watched_ids(profile),
+            "watchlist": len(watched),
+            "watch_ids": watched,
             "last_fetch": cache["last_fetch"],
             "control": control,
             "profile": profile or "default",
@@ -516,7 +517,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
         if action == "start":
             from rshelper.trader import trader_status
-            if trader_status(profile) and trader_status(profile).get("running"):
+            status = trader_status(profile)
+            if status and status.get("running"):
                 raise ValueError("auto-trader is already running")
             return _spawn_daemon("auto-trade", profile)
         if action == "stop":
@@ -529,7 +531,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
         if action == "start":
             from rshelper.monitor import monitor_status
-            if monitor_status(profile) and monitor_status(profile).get("running"):
+            status = monitor_status(profile)
+            if status and status.get("running"):
                 raise ValueError("monitor is already running")
             return _spawn_daemon("monitor", profile)
         if action == "stop":
