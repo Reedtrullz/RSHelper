@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 5000,
-      "buy_price": 80,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T18:29:58.282953+00:00",
-      "note": "auto",
-      "entry_sell": 80,
-      "entry_offer": 84
-    },
-    {
-      "id": 2,
-      "item_id": 19484,
-      "name": "Dragon javelin",
-      "qty": 137,
-      "buy_price": 607,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T18:29:58.283468+00:00",
-      "note": "auto",
-      "entry_sell": 607,
-      "entry_offer": 640
-    }
-  ]
+  "positions": []
 }
