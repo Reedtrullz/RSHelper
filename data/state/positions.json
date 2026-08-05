@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 2234,
+      "buy_price": 179,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T20:44:01.818544+00:00",
+      "note": "auto",
+      "entry_sell": 179,
+      "entry_offer": 186
+    },
+    {
+      "id": 2,
+      "item_id": 2499,
+      "name": "Blue d'hide body",
+      "qty": 85,
+      "buy_price": 4700,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T20:48:00.781334+00:00",
+      "note": "auto",
+      "entry_sell": 4700,
+      "entry_offer": 4943
+    }
+  ]
 }
