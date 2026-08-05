@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 823,
-      "name": "Adamant dart tip",
-      "qty": 2234,
-      "buy_price": 179,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T20:44:01.818544+00:00",
-      "note": "auto",
-      "entry_sell": 179,
-      "entry_offer": 186
-    },
-    {
-      "id": 2,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 152,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T21:18:02.688786+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    }
-  ]
+  "positions": []
 }
