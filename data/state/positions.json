@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 328,
-      "buy_price": 1217,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 1108,
+      "buy_price": 115,
       "direction": "traditional",
-      "opened_at": "2026-08-05T03:10:41.292074+00:00",
+      "opened_at": "2026-08-05T03:14:41.365058+00:00",
       "note": "auto",
-      "entry_sell": 1217,
-      "entry_offer": 1275
+      "entry_sell": 115,
+      "entry_offer": 120
+    },
+    {
+      "id": 2,
+      "item_id": 21146,
+      "name": "Necklace of passage(5)",
+      "qty": 179,
+      "buy_price": 1407,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T03:14:41.365305+00:00",
+      "note": "auto",
+      "entry_sell": 1407,
+      "entry_offer": 1458
     }
   ]
 }
