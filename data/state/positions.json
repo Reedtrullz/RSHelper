@@ -13,16 +13,16 @@
       "entry_offer": 40
     },
     {
-      "id": 2,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 95,
-      "buy_price": 41,
+      "id": 3,
+      "item_id": 373,
+      "name": "Swordfish",
+      "qty": 147,
+      "buy_price": 194,
       "direction": "traditional",
-      "opened_at": "2026-08-05T15:03:48.635939+00:00",
+      "opened_at": "2026-08-05T15:15:49.084590+00:00",
       "note": "auto",
-      "entry_sell": 41,
-      "entry_offer": 43
+      "entry_sell": 194,
+      "entry_offer": 201
     }
   ]
 }
