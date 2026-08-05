@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 1333,
-      "buy_price": 100,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 328,
+      "buy_price": 1217,
       "direction": "traditional",
-      "opened_at": "2026-08-05T02:58:40.676933+00:00",
+      "opened_at": "2026-08-05T03:10:41.292074+00:00",
       "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 105
-    },
-    {
-      "id": 2,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 3200,
-      "buy_price": 125,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T02:58:40.677535+00:00",
-      "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 130
-    },
-    {
-      "id": 3,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 767,
-      "buy_price": 521,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T02:58:40.677933+00:00",
-      "note": "auto",
-      "entry_sell": 521,
-      "entry_offer": 545
+      "entry_sell": 1217,
+      "entry_offer": 1275
     }
   ]
 }
