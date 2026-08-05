@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 908,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T23:18:05.614292+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
+    },
+    {
+      "id": 2,
+      "item_id": 861,
+      "name": "Magic shortbow",
+      "qty": 401,
+      "buy_price": 757,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T23:18:05.615345+00:00",
+      "note": "auto",
+      "entry_sell": 757,
+      "entry_offer": 784
+    }
+  ]
 }
