@@ -151,5 +151,33 @@ class GeTrackerFallbackTest(unittest.TestCase):
         self.assertEqual(by_id[4151].buy_limit, 70)
 
 
+class TestCrossProcessThrottle(unittest.TestCase):
+    def test_throttle_file_serializes_across_calls(self):
+        """A recent stamp from another process must serialize the next call."""
+        import time as _t
+        import rshelper.api as amod
+        stamp = amod._throttle_path()
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(f"{_t.time() - 0.5}")  # another process called 0.5s ago
+        t0 = _t.monotonic()
+        amod._throttle()
+        t1 = _t.monotonic()
+        self.assertGreaterEqual(t1 - t0, 0.4)  # waited out the remaining budget
+        # A second call right after writes a fresh stamp -> serializes ~1s
+        # (correct 1 req/sec pacing).
+        t2 = _t.monotonic()
+        amod._throttle()
+        t3 = _t.monotonic()
+        self.assertGreaterEqual(t3 - t2, 0.9)
+        # An ancient stamp (dead process) must not serialize.
+        amod._LAST_REQUEST = 0  # reset in-process state too
+        stamp.write_text("0")
+        t4 = _t.monotonic()
+        amod._throttle()
+        t5 = _t.monotonic()
+        self.assertLess(t5 - t4, 0.4)
+        stamp.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
     unittest.main()

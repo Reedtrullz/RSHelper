@@ -7,7 +7,10 @@ logs the realized trades into the journal. State lives in positions.json
 journal.
 """
 
+import contextlib
+import fcntl
 import json
+import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -18,6 +21,36 @@ from rshelper.profile import atomic_write_json, filter_fields, resolve_config_pa
 
 POSITIONS_PATH = Path.home() / ".config" / "rshelper" / "positions.json"
 _LOCK = threading.Lock()
+
+
+def _positions_lock(profile: str | None = None):
+    """Cross-process advisory lock for positions.json (flock sidecar).
+
+    The trader daemon, dashboard, and CLI are separate processes that all
+    open/close positions; a process-local lock cannot serialize them.
+    """
+    path = _positions_path(profile).with_suffix(".json.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError:
+        return _LOCK
+
+    @contextlib.contextmanager
+    def _locked():
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        try:
+            yield
+        finally:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+            os.close(fd)
+    return _locked()
 
 
 @dataclass
@@ -75,7 +108,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         raise ValueError(f"buy_price must be positive, got {buy_price}")
     if direction not in ("arbitrage", "traditional"):
         raise ValueError(f"direction must be 'arbitrage' or 'traditional', got '{direction}'")
-    with _LOCK:
+    with _positions_lock(profile):
         positions = _load(profile)
         position = {
             "id": _next_id(positions), "item_id": item_id, "name": name,
@@ -115,7 +148,7 @@ def close_positions(item_id: int, qty: int, sell_price: int,
         raise ValueError(f"qty must be positive, got {qty}")
     if sell_price <= 0:
         raise ValueError(f"sell_price must be positive, got {sell_price}")
-    with _LOCK:
+    with _positions_lock(profile):
         positions = _load(profile)
         lots = []
         remaining = qty

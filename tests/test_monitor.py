@@ -2,10 +2,21 @@
 import sys
 import os
 import json
+import tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+import rshelper.monitor as mon
 from rshelper.monitor import notify, stop_monitor, monitor_status, PID_PATH, STATE_PATH, _write_state
+
+# Isolate ALL monitor state to a temp dir so the test suite never touches the
+# real ~/.config/rshelper (a live monitor's pid/state files must not be
+# clobbered by a test run).
+_TMP = Path(tempfile.mkdtemp(prefix="rshelper-monitor-test-"))
+mon.PID_PATH = _TMP / "monitor.pid"
+mon.STATE_PATH = _TMP / "monitor_state.json"
+PID_PATH = mon.PID_PATH
+STATE_PATH = mon.STATE_PATH
 
 
 def test_notify_command_format():

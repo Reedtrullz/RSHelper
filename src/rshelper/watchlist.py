@@ -1,5 +1,7 @@
 """Watchlist state file — JSON-backed, atomic writes."""
 
+import contextlib
+import fcntl
 import json
 import os
 from datetime import datetime, timezone
@@ -16,6 +18,32 @@ def _watchlist_path(profile: str | None = None) -> Path:
     if profile == "default":
         return WATCHLIST_PATH
     return resolve_config_path("watchlist.json", profile)
+
+
+def _watchlist_lock(profile: str | None = None):
+    """Cross-process advisory lock for watchlist.json (flock sidecar)."""
+    path = _watchlist_path(profile).with_suffix(".json.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError:
+        return contextlib.nullcontext()
+
+    @contextlib.contextmanager
+    def _locked():
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        try:
+            yield
+        finally:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+            os.close(fd)
+    return _locked()
 
 
 def load(profile: str | None = None) -> dict:
@@ -38,22 +66,24 @@ def add(item_id: int, name: str,
         alert_margin_below: int | None = None,
         profile: str | None = None) -> None:
     """Add or update a watched item."""
-    data = load(profile)
-    data["items"][str(item_id)] = {
-        "name": name,
-        "added": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "alert_margin_above": alert_margin_above,
-        "alert_margin_below": alert_margin_below,
-    }
-    _save(data, profile)
+    with _watchlist_lock(profile):
+        data = load(profile)
+        data["items"][str(item_id)] = {
+            "name": name,
+            "added": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "alert_margin_above": alert_margin_above,
+            "alert_margin_below": alert_margin_below,
+        }
+        _save(data, profile)
 
 
 def remove(item_id: int, profile: str | None = None) -> bool:
     """Remove a watched item. Returns True if it existed."""
-    data = load(profile)
-    popped = data["items"].pop(str(item_id), None)
-    if popped is not None:
-        _save(data, profile)
+    with _watchlist_lock(profile):
+        data = load(profile)
+        popped = data["items"].pop(str(item_id), None)
+        if popped is not None:
+            _save(data, profile)
     return popped is not None
 
 

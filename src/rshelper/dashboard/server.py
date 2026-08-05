@@ -417,10 +417,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         close_qty = qty if qty and qty > 0 else position.qty
         if close_qty > position.qty:
             raise ValueError(f"only {position.qty} units open for {position.name}")
+        # Close at the direction-aware market leg when a usable price exists;
+        # otherwise fall back to the entry buy_price (like collect_offer) so a
+        # stale-data position is never stranded forever. The response flags
+        # the fallback so the UI can surface the warning.
         price = (cache["latest"] or {}).get(str(position.item_id))
-        if not isinstance(price, dict) or price_issue(price):
-            raise ValueError(f"no reliable live price for {position.name}")
+        usable = isinstance(price, dict) and price_issue(price) is None
         sell_price = close_market_price(position, cache["latest"])
+        at_entry = not usable
         lots = close_positions(position.item_id, close_qty, sell_price, profile)
         for lot in lots:
             log_trade(position.item_id, lot["name"], lot["qty"],
@@ -433,6 +437,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             "qty": close_qty,
             "sell_price": sell_price,
             "profit": sum(lot["profit"] for lot in lots),
+            "closed_at_entry": at_entry,
         }
 
     def paper_trade(action: str, query: str, qty: int) -> dict:

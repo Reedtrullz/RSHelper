@@ -415,8 +415,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
                     deadline = time.time() + min(int(raw_ttl), 60)
                 last_heartbeat = time.time()
                 while True:
+                    # Honor the deadline BEFORE the blocking wait so a
+                    # bounded consumer (?ttl=) terminates immediately instead
+                    # of always eating a full 15s queue timeout.
+                    if deadline is not None and time.time() >= deadline:
+                        return
                     try:
-                        item = q.get(timeout=15)
+                        item = q.get(timeout=min(15, max(0.1, (deadline - time.time())
+                                                         if deadline else 15)))
                         self.wfile.write(item.encode("utf-8"))
                         self.wfile.flush()
                     except _queue.Empty:

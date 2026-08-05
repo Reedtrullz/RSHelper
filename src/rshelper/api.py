@@ -36,13 +36,42 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _throttle() -> None:
-    """Rate-limit to 1 req/sec per Wiki API policy. Thread-safe."""
+    """Rate-limit to 1 req/sec per Wiki API policy. Thread-safe.
+
+    The trader, monitor, dashboard, and VPS deploy are separate processes
+    that each throttle independently with a process-local timestamp — with
+    several running that can exceed the wiki's 1 req/sec policy. A shared
+    timestamp file (in the cache dir) serializes the budget across
+    processes; each caller sleeps until its turn. A missing or ancient
+    stamp (older than a few seconds) means no recent request anywhere, so
+    the caller proceeds immediately and writes its own stamp.
+    """
     global _LAST_REQUEST
     with _THROTTLE_LOCK:
-        elapsed = time.time() - _LAST_REQUEST
-        if elapsed < 1.0:
-            time.sleep(1.0 - elapsed)
+        stamp = _throttle_path()
+        now = time.time()
+        last = _LAST_REQUEST
+        try:
+            file_last = float(stamp.read_text())
+            # Only honor a stamp that is recent (within ~2s); an old one is
+            # leftover from a dead process and should not serialize us.
+            if now - file_last < 2.0:
+                last = file_last
+        except (OSError, ValueError):
+            pass
+        wait = 1.0 - (now - last)
+        if wait > 0:
+            time.sleep(wait)
         _LAST_REQUEST = time.time()
+        try:
+            stamp.write_text(f"{_LAST_REQUEST}")
+        except OSError:
+            pass  # no cross-process throttle without a writable cache dir
+
+
+def _throttle_path() -> Path:
+    """Shared throttle stamp in the cache dir (per-user, cross-process)."""
+    return CACHE_DIR / ".throttle"
 
 
 # Backoff config for retryable errors

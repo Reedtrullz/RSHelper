@@ -131,6 +131,31 @@ def test_unknown_fields_tolerated():
     print("  PASSED test_unknown_fields_tolerated")
 
 
+def test_cross_process_open_no_lost_positions():
+    """Concurrent opens from separate processes must not lose positions."""
+    import subprocess
+    import sys
+    _clean()
+    # The child must patch the module POSITIONS_PATH to the same temp file.
+    code = (
+        "import sys; sys.path.insert(0,'src');"
+        "import rshelper.positions as p;"
+        "p.POSITIONS_PATH = __import__('pathlib').Path(%r);"
+        "p.open_position(561, 'Nature rune', 1, 100, profile='default')"
+    ) % str(pmod.POSITIONS_PATH)
+    procs = [subprocess.Popen([sys.executable, "-c", code], cwd=Path(__file__).resolve().parent.parent,
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+             for _ in range(4)]
+    for p in procs:
+        p.wait(timeout=30)
+    positions = list_positions()
+    assert len(positions) == 4, f"lost positions: {len(positions)}"
+    ids = [pos.id for pos in positions]
+    assert len(ids) == len(set(ids)), f"colliding ids: {ids}"
+    _clean()
+    print("  PASSED test_cross_process_open_no_lost_positions")
+
+
 if __name__ == "__main__":
     test_open_and_close_round_trip()
     test_close_fifo_across_lots()
@@ -140,4 +165,5 @@ if __name__ == "__main__":
     test_traditional_direction_stored()
     test_entry_offer_roundtrip()
     test_unknown_fields_tolerated()
+    test_cross_process_open_no_lost_positions()
     print("\nAll tests passed.")
