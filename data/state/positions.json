@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 2046,
-      "buy_price": 38,
+      "id": 2,
+      "item_id": 32362,
+      "name": "Marlin scales",
+      "qty": 439,
+      "buy_price": 911,
       "direction": "traditional",
-      "opened_at": "2026-08-05T15:03:48.633952+00:00",
+      "opened_at": "2026-08-05T15:19:49.543940+00:00",
       "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
-    },
-    {
-      "id": 3,
-      "item_id": 373,
-      "name": "Swordfish",
-      "qty": 147,
-      "buy_price": 194,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T15:15:49.084590+00:00",
-      "note": "auto",
-      "entry_sell": 194,
-      "entry_offer": 201
+      "entry_sell": 911,
+      "entry_offer": 950
     }
   ]
 }
