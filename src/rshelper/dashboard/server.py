@@ -165,8 +165,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 issue = price_issue(price)
                 if issue:
                     continue
-                buy = int(price.get("high", 0) or 0)
-                sell = int(price.get("low", 0) or 0)
+                buy = safe_int(price.get("high", 0))
+                sell = safe_int(price.get("low", 0))
                 if buy <= 0 or sell <= 0:
                     continue
                 # Direction-aware margin, matching `watch check
@@ -277,6 +277,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_prices(item_ids: list[int]) -> dict:
         refresh()
+        from rshelper.market import safe_int
         latest = cache["latest"] or {}
         out = {}
         for item_id in item_ids:
@@ -286,8 +287,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 out[str(item_id)] = {"usable": False, "reason": issue}
             else:
                 out[str(item_id)] = {"usable": True,
-                                     "buy": int(price.get("high", 0)),
-                                     "sell": int(price.get("low", 0))}
+                                     "buy": safe_int(price.get("high", 0)),
+                                     "sell": safe_int(price.get("low", 0))}
         return out
 
     def get_meta() -> dict:
@@ -322,8 +323,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "alert_below": entry.get("alert_margin_below"),
                    "usable": issue is None}
             if issue is None:
-                row["buy"] = int(price.get("high", 0))
-                row["sell"] = int(price.get("low", 0))
+                row["buy"] = safe_int(price.get("high", 0))
+                row["sell"] = safe_int(price.get("low", 0))
             else:
                 row["reason"] = issue
             rows.append(row)
@@ -360,13 +361,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_timeseries(item_id: int, step: str = "5m",
                        points: int = 96) -> dict:
         from rshelper.api import fetch_timeseries
+        from rshelper.market import safe_int
         ts = fetch_timeseries(item_id, step, profile)
         points_out = []
         for dp in (ts or [])[-points:]:
             high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
             if high is None or low is None:
                 continue
-            h, l = int(high), int(low)
+            h, l = safe_int(high), safe_int(low)
             if h <= 0 or l <= 0:
                 continue
             points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
@@ -374,7 +376,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_positions() -> dict:
         refresh()
-        from rshelper.market import ge_tax
+        from rshelper.market import ge_tax, safe_int
         from rshelper.positions import list_positions
         latest = cache["latest"] or {}
         rows = []
@@ -387,8 +389,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "note": p.note, "auto": p.note == "auto",
                    "usable": issue is None}
             if issue is None:
-                sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
-                    else int(price.get("high", 0) or 0)
+                sell = safe_int(price.get("low", 0)) if p.direction == "arbitrage" \
+                    else safe_int(price.get("high", 0))
                 row["current"] = sell
                 tax = ge_tax(sell)
                 row["unrealized"] = (sell - p.buy_price) * p.qty - tax * p.qty
@@ -471,8 +473,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         issue = price_issue(price) if isinstance(price, dict) else "no data"
         if issue:
             raise ValueError(f"no reliable live price for {entry.get('name')} ({issue})")
-        high = int(price.get("high", 0) or 0)
-        low = int(price.get("low", 0) or 0)
+        high = safe_int(price.get("high", 0))
+        low = safe_int(price.get("low", 0))
         if high <= 0 or low <= 0:
             raise ValueError(f"no live price data for {entry.get('name')}")
         from dataclasses import asdict
@@ -606,7 +608,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         if nature <= 0:
             price = (cache["latest"] or {}).get("561")
             if isinstance(price, dict) and price_issue(price) is None:
-                nature = int(price.get("high", 0) or 0)
+                nature = safe_int(price.get("high", 0))
             if nature <= 0:
                 nature = 147
         results = AlchScanner(nature_rune_cost=nature).scan(
@@ -729,8 +731,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             issue = price_issue(price)
             if issue:
                 continue
-            buy = int(price.get("high", 0) or 0)
-            sell = int(price.get("low", 0) or 0)
+            buy = safe_int(price.get("high", 0))
+            sell = safe_int(price.get("low", 0))
             if buy <= 0 or sell <= 0:
                 continue
             # Direction-aware margin, matching `watch check --flip-direction`.

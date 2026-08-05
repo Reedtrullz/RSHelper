@@ -10,7 +10,7 @@ from datetime import date
 
 from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
-from rshelper.market import MAX_PRICE_RATIO, ge_tax, price_issue
+from rshelper.market import MAX_PRICE_RATIO, ge_tax, price_issue, safe_int
 from rshelper.config import load_config
 from rshelper import snapshot, watchlist, tuning
 from rshelper.profile import resolve_config_path
@@ -513,8 +513,8 @@ def _resolve_paper_prices(entry: dict, profile: str | None, direction: str
         print(f"No reliable live price data for {entry.get('name')} "
               f"(stale or manipulated prices).", file=sys.stderr)
         sys.exit(1)
-    high = int(price.get("high", 0) or 0)
-    low = int(price.get("low", 0) or 0)
+    high = safe_int(price.get("high", 0))
+    low = safe_int(price.get("low", 0))
     if direction == "traditional":
         buy_price, sell_price = low, high
     else:
@@ -639,8 +639,8 @@ def _trade_positions(args: argparse.Namespace) -> None:
         sell = None
         unrealized = None
         if usable:
-            sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
-                else int(price.get("high", 0) or 0)
+            sell = safe_int(price.get("low", 0)) if p.direction == "arbitrage" \
+                else safe_int(price.get("high", 0))
         if usable and sell and sell > 0:
             tax = ge_tax(sell)
             unrealized = (sell - p.buy_price) * p.qty - tax * p.qty
@@ -688,8 +688,8 @@ def trade_status(args: argparse.Namespace) -> None:
         sell = None
         unrealized = None
         if usable:
-            sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
-                else int(price.get("high", 0) or 0)
+            sell = safe_int(price.get("low", 0)) if p.direction == "arbitrage" \
+                else safe_int(price.get("high", 0))
         if usable and sell and sell > 0:
             tax = ge_tax(sell)
             unrealized = (sell - p.buy_price) * p.qty - tax * p.qty
@@ -1022,8 +1022,8 @@ def item_info(args: argparse.Namespace) -> None:
     alch_value = int(matched.get("highalch") or 0)
 
     price = latest.get(str(item_id), {})
-    buy_price = int(price.get("high") or 0)
-    sell_price = int(price.get("low") or 0)
+    buy_price = safe_int(price.get("high"))
+    sell_price = safe_int(price.get("low"))
     issue = price_issue(price)
     if issue:
         print(f"  Warning: price data for {name} is unusable ({issue}); "
@@ -1284,8 +1284,8 @@ def watch_check(args: argparse.Namespace) -> None:
             print(f"  Skipped {entry['name']}: price data {issue} "
                   f"(stale or manipulated)", file=sys.stderr)
             continue
-        buy = int(price.get("high", 0) or 0)
-        sell = int(price.get("low", 0) or 0)
+        buy = safe_int(price.get("high", 0))
+        sell = safe_int(price.get("low", 0))
         if buy <= 0 or sell <= 0:
             continue
 

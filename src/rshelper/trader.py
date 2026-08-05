@@ -23,7 +23,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rshelper.market import ge_tax, price_issue
+from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.profile import atomic_write_json, resolve_config_path
 
 TRADER_DIR = Path.home() / ".config" / "rshelper"
@@ -319,8 +319,8 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     price = latest.get(str(position.item_id))
     if not isinstance(price, dict) or price_issue(price) or not _fresh(price, EXIT_MAX_AGE, now):
         return None  # no usable price this cycle; hold
-    offer = int(price.get("high", 0) or 0)
-    bid = int(price.get("low", 0) or 0)
+    offer = safe_int(price.get("high", 0))
+    bid = safe_int(price.get("low", 0))
     if position.direction == "traditional":
         if offer > 0 and unrealized_pct(position.buy_price, offer,
                                         position.qty) >= cfg.take_profit_pct:
@@ -442,7 +442,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                 if (isinstance(price_now, dict)
                         and price_issue(price_now) is None
                         and _fresh(price_now, EXIT_MAX_AGE, now)):
-                    offer_now = int(price_now.get("high", 0) or 0)
+                    offer_now = safe_int(price_now.get("high", 0))
                     if (offer_now > 0 and p.buy_price > 0
                             and unrealized_pct(p.buy_price, offer_now,
                                                p.qty) > 0):
@@ -460,7 +460,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                 # flat close at the entry price would ignore real moves and
                 # guarantee the 2% sale tax. Only with no price data at all
                 # do we close flat at the entry.
-                quote_sell = int(price.get("low", 0) or 0)
+                quote_sell = safe_int(price.get("low", 0))
                 sell = quote_sell if quote_sell > 0 else p.buy_price
                 if quote_sell > 0:
                     guarded_fill = _artifact_exit_fill(
@@ -471,7 +471,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                 sell = p.buy_price  # expired; close flat without any quote
         elif fresh:
             if p.direction == "traditional" and reason in ("take_profit", "ge_fill"):
-                quote_sell = int(price.get("high", 0) or 0)  # sell at the offer
+                quote_sell = safe_int(price.get("high", 0))  # sell at the offer
                 sell = quote_sell
             elif reason == "spread_collapse":
                 # Data: 49 of 67 spread-collapse exits sold ABOVE the buy
@@ -479,12 +479,12 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                 # ate the "win". The realistic exit for a traditional
                 # (buy-at-bid) position is the offer; sell at the better of
                 # offer vs bid so a collapse never throws away the spread.
-                offer_now = int(price.get("high", 0) or 0)
-                bid_now = int(price.get("low", 0) or 0)
+                offer_now = safe_int(price.get("high", 0))
+                bid_now = safe_int(price.get("low", 0))
                 quote_sell = offer_now if offer_now > bid_now else bid_now
                 sell = quote_sell
             else:
-                quote_sell = int(price.get("low", 0) or 0)  # sell at the bid
+                quote_sell = safe_int(price.get("low", 0))  # sell at the bid
                 sell = quote_sell
                 if reason == "stop_loss":
                     guarded_fill = _artifact_exit_fill(

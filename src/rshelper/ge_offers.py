@@ -53,8 +53,8 @@ def compute_fill_pct(qty: int, volume_5m: int, opened_at: str,
 def _current_leg(price: dict, direction: str) -> int:
     """Exit leg for a position: offer (high) for traditional, bid (low) for arbitrage."""
     if direction == "traditional":
-        return int(price.get("high", 0) or 0)
-    return int(price.get("low", 0) or 0)
+        return safe_int(price.get("high", 0))
+    return safe_int(price.get("low", 0))
 
 
 def _item_volume_5m(entry) -> int:

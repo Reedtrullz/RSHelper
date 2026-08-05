@@ -3,7 +3,7 @@
 import time
 
 from rshelper.ge_offers import resolve_icon_url
-from rshelper.market import ge_tax, price_issue
+from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.positions import list_positions
 
 
@@ -49,8 +49,8 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
             # Mark each lot to its own exit leg: traditional sells at the
             # offer (high), arbitrage at the bid (low). A stack with mixed
             # directions is valued per-lot, not with the first lot's leg.
-            offer = int(price.get("high", 0) or 0)
-            bid = int(price.get("low", 0) or 0)
+            offer = safe_int(price.get("high", 0))
+            bid = safe_int(price.get("low", 0))
             trad_qty = g["qty_by_direction"].get("traditional", 0)
             arb_qty = g["qty_by_direction"].get("arbitrage", 0)
             current_price = offer if trad_qty >= arb_qty else bid

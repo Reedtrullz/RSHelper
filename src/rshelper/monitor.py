@@ -7,7 +7,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from rshelper.market import ge_tax, price_issue
+from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.profile import atomic_write_json, resolve_config_path
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
@@ -139,8 +139,8 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
                 print(f"[monitor] Skipped watchlist {entry['name']}: {issue} prices",
                       file=sys.stderr)
                 continue
-            buy = int(price.get("high", 0) or 0)
-            sell = int(price.get("low", 0) or 0)
+            buy = safe_int(price.get("high", 0))
+            sell = safe_int(price.get("low", 0))
             # Direction-aware margin, matching `watch check --flip-direction`
             # and the CLI convention: traditional sells at the offer (high),
             # so tax applies to `buy`; arbitrage sells at the bid (low).
