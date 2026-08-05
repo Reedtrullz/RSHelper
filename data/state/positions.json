@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 245,
-      "name": "Wine of zamorak",
-      "qty": 89,
-      "buy_price": 985,
+      "id": 5,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 219,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-05T19:28:00.316411+00:00",
+      "opened_at": "2026-08-05T19:51:59.692969+00:00",
       "note": "auto",
-      "entry_sell": 985,
-      "entry_offer": 1020
+      "entry_sell": 45,
+      "entry_offer": 47
     },
     {
-      "id": 4,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 355,
-      "buy_price": 134,
+      "id": 6,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 263,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-05T19:48:00.795338+00:00",
+      "opened_at": "2026-08-05T20:01:59.864958+00:00",
       "note": "auto",
-      "entry_sell": 134,
-      "entry_offer": 139
+      "entry_sell": 120,
+      "entry_offer": 126
+    },
+    {
+      "id": 7,
+      "item_id": 861,
+      "name": "Magic shortbow",
+      "qty": 238,
+      "buy_price": 752,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T20:01:59.865596+00:00",
+      "note": "auto",
+      "entry_sell": 752,
+      "entry_offer": 784
     }
   ]
 }
