@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 237,
-      "name": "Unicorn horn",
-      "qty": 246,
-      "buy_price": 481,
+      "id": 3,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 1118,
+      "buy_price": 200,
       "direction": "traditional",
-      "opened_at": "2026-08-05T13:43:46.099278+00:00",
+      "opened_at": "2026-08-05T13:51:46.373229+00:00",
       "note": "auto",
-      "entry_sell": 481,
-      "entry_offer": 498
+      "entry_sell": 200,
+      "entry_offer": 209
+    },
+    {
+      "id": 4,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 240,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T13:59:46.601707+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 128
     }
   ]
 }
