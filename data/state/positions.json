@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1749,
+      "name": "Red dragonhide",
+      "qty": 183,
+      "buy_price": 2185,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T07:06:49.020110+00:00",
+      "note": "auto",
+      "entry_sell": 2185,
+      "entry_offer": 2299
+    }
+  ]
 }
