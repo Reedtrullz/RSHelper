@@ -885,6 +885,27 @@ class TestNewRoutes(unittest.TestCase):
         h.do_GET()
         self.assertEqual(calls, [(561, "1h", 48)])
 
+    def test_timeseries_real_typeerror_not_masked(self):
+        """A TypeError raised INSIDE the fn must 500, not re-call with 1 arg."""
+        from http.server import BaseHTTPRequestHandler
+
+        def boom(i, step, points):
+            raise TypeError("int() arg is a string")  # real bug, not arity
+        Handler = make_handler(FlipScanner(direction="arbitrage"), lambda: [],
+                               timeseries_fn=boom)
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/timeseries?id=561"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        self.assertEqual(h.error_code, 500)  # not silently re-invoked
+
     def test_log_trade_bad_input_400_not_500(self):
         """A user error (qty <= 0) on POST /api/trades is a 400, not a 500."""
         from http.server import BaseHTTPRequestHandler

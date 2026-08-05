@@ -627,15 +627,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 confidence_cache["ts"] = now
             want = [i for i in item_ids
                     if str(i) not in confidence_cache["data"]][:30]
-            if want:
-                from rshelper.api import fetch_timeseries_batch
-                from rshelper.scanner import MarginScanner
-                lookup = {i.id: i for i in cache["items"]}
-                ts_data = fetch_timeseries_batch(
-                    want, timestep="5m", workers=2, profile=profile)
-                results = MarginScanner().scan(
-                    lookup, ts_data, direction=cfg.flip.direction)
-                scored = {str(a.item_id) for a in results}
+        if want:
+            # Fetch OUTSIDE the lock — a throttled batch can take ~30s and
+            # must not block other /api/confidence requests.
+            from rshelper.api import fetch_timeseries_batch
+            from rshelper.scanner import MarginScanner
+            lookup = {i.id: i for i in cache["items"]}
+            ts_data = fetch_timeseries_batch(
+                want, timestep="5m", workers=2, profile=profile)
+            results = MarginScanner().scan(
+                lookup, ts_data, direction=cfg.flip.direction)
+            scored = {str(a.item_id) for a in results}
+            with conf_lock:
                 for a in results:
                     confidence_cache["data"][str(a.item_id)] = {
                         "confidence": round(a.confidence, 4),
@@ -652,6 +655,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 for iid in want:
                     if str(iid) not in scored:
                         confidence_cache["data"][str(iid)] = None
+        with conf_lock:
             return {k: v for k, v in confidence_cache["data"].items()
                     if k in {str(i) for i in item_ids} and v is not None}
 

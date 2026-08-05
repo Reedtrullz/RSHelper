@@ -869,12 +869,14 @@ async function saveWatchAlerts(id){
 }
 async function watchCheckNow(){
   const body=document.getElementById('listBody');
-  const orig=body.innerHTML;
   try{
     const r=await fetch('/api/watchlist/check');
     if(!r.ok)throw new Error('check failed');
     const d=await r.json();
     const trig=d.triggered||[];
+    // Re-render fresh (not a captured snapshot) so a concurrent SSE refresh
+    // can't be clobbered, then pin the notice above the list.
+    await renderWatchlist();
     let notice;
     if(trig.length){
       notice='<div class="notice warn-red" style="margin:8px 0">'+trig.length+' alert(s) triggered now:'+
@@ -882,9 +884,7 @@ async function watchCheckNow(){
     }else{
       notice='<div class="notice" style="margin:8px 0;border-color:var(--pos);color:var(--pos)">No watchlist alerts triggered.</div>';
     }
-    // Re-render the list with the notice pinned above it.
-    const list=orig;
-    body.innerHTML='<div style="display:contents">'+notice+'</div>'+list;
+    body.innerHTML=notice+body.innerHTML;
     setStatus('Watchlist check complete',false);
   }catch(e){
     setStatus('Error: '+e.message,true);

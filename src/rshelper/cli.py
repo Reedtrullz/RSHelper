@@ -989,7 +989,9 @@ def item_info(args: argparse.Namespace) -> None:
                     print(f"  {e['id']:>6}  {e['name']}")
                 if len(candidates) > 20:
                     print(f"  ... and {len(candidates) - 20} more")
-            return
+            # Ambiguous is an error: scripts must distinguish "resolved" from
+            # "multiple matches" (matches every other resolver's exit-1).
+            sys.exit(1)
         else:
             print(f"No item found matching '{args.item}'", file=sys.stderr)
             sys.exit(1)

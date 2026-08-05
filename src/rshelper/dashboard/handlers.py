@@ -327,9 +327,19 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 if fn is None:
                     self._serve_json({"points": []})
                 else:
+                    # Check arity by signature so a real TypeError raised
+                    # INSIDE the function isn't mistaken for a wrong-arity
+                    # call (which would double-fetch and mask the bug).
+                    import inspect
                     try:
+                        sig = inspect.signature(fn)
+                        n_params = len([p for p in sig.parameters.values()
+                                        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)])
+                    except (TypeError, ValueError):
+                        n_params = 3  # builtin without a signature: assume new arity
+                    if n_params >= 3:
                         self._serve_json(fn(item_id, step, points))
-                    except TypeError:
+                    else:
                         self._serve_json(fn(item_id))
             except Exception as e:
                 print(f"[dashboard] timeseries error: {e}", file=sys.stderr)
