@@ -39,6 +39,7 @@ REPLAY_DATA = os.environ.get("REPLAY_DATA", "/tmp/replay_ts.json")
 @dataclass
 class ReplayConfig:
     min_spread_pct: float = 4.0
+    max_entry_spread_pct: float = 5.0
     dip_depth_pct: float = 2.0
     max_dip_pct: float = 10.0
     min_volume: int = 800
@@ -220,7 +221,7 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                 avg_low = sum(safe_int(c.get("avgLowPrice")) for c in window) / max(1, len(window))
                 dip = (avg_low - lo) / avg_low * 100 if avg_low > 0 else 0
                 if (lo >= 25 and vol >= cfg.min_volume
-                        and cfg.min_spread_pct <= spread <= 5.0
+                        and cfg.min_spread_pct <= spread <= cfg.max_entry_spread_pct
                         and cfg.dip_depth_pct <= dip <= cfg.max_dip_pct
                         and (not cfg.dip_reversal or idx == 0
                              or lo >= safe_int(cs[idx - 1].get("avgLowPrice")))):
