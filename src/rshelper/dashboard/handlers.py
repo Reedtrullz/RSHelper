@@ -590,7 +590,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 length = int(self.headers.get("Content-Length", 0))
                 body = json.loads(self.rfile.read(length))
                 ids = body.get("ids")
-                all_flag = bool(body.get("all", False))
+                # Strict bool: a JSON string "false" must not coerce to True.
+                all_flag = body.get("all") is True
                 ids = [int(i) for i in ids] if isinstance(ids, list) else None
             except Exception:
                 self.send_error(400, "Invalid JSON")

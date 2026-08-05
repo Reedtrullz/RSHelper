@@ -564,5 +564,41 @@ class TestCLI(unittest.TestCase):
                 pmod.CONFIG_DIR = orig
 
 
+    def test_signals_scan_full_universe(self):
+        """`signals` must pass the FULL item list to detect_signals (flip_ids
+        restrict FLIP only), mirroring the monitor/dashboard."""
+        from unittest import mock
+        from argparse import Namespace
+        from rshelper.models import Item
+        import rshelper.signals as sigmod
+        import rshelper.cli as cmod
+        items = [Item(id=1, name="A", members=False, buy_limit=100, alch_value=0,
+                      buy_price=100, sell_price=90, volume=500),
+                 Item(id=2, name="B", members=False, buy_limit=100, alch_value=0,
+                      buy_price=100, sell_price=95, volume=500)]
+        cmod._fetch_bootstrap = lambda p=None: (
+            [{"id": 1, "name": "A"}, {"id": 2, "name": "B"}],
+            {"1": {"high": 100, "low": 90, "highTime": 1, "lowTime": 1},
+             "2": {"high": 100, "low": 95, "highTime": 1, "lowTime": 1}},
+            {"1": {"avgHighPrice": 100, "avgLowPrice": 90,
+                   "highPriceVolume": 500, "lowPriceVolume": 500},
+             "2": {"avgHighPrice": 100, "avgLowPrice": 95,
+                   "highPriceVolume": 500, "lowPriceVolume": 500}},
+            items)
+        captured = {}
+        def fake_detect(items_arg, vol, cooldown_sec=0, flip_ids=None, profile=None):
+            captured["items"] = items_arg
+            captured["flip_ids"] = flip_ids
+            captured["profile"] = profile
+            return []
+        with mock.patch.object(sigmod, "detect_signals", side_effect=fake_detect):
+            cmod.signals_cmd(Namespace(profile=None, monitor=0,
+                                       flip_direction="arbitrage",
+                                       members_only=False, cooldown=15,
+                                       json=False))
+        self.assertEqual(len(captured["items"]), 2)  # full universe, not flips
+        self.assertEqual(captured["profile"], None)
+
+
 if __name__ == "__main__":
     unittest.main()

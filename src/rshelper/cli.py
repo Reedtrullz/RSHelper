@@ -1463,7 +1463,13 @@ def signals_cmd(args: argparse.Namespace) -> None:
             min_margin=0,
         )
         from rshelper.signals import detect_signals
-        return detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60), flips
+        # DUMP/CRASH/SURGE must see the full priced universe (mirror the
+        # monitor + dashboard); FLIP stays restricted to scan candidates.
+        # profile scopes cooldowns/baselines per profile.
+        return (detect_signals(items, volume_5m, cooldown_sec=args.cooldown * 60,
+                               flip_ids={f.id for f in flips},
+                               profile=args.profile),
+                flips)
 
     if monitor_interval:
         import time as _time

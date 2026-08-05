@@ -885,6 +885,28 @@ class TestNewRoutes(unittest.TestCase):
         h.do_GET()
         self.assertEqual(calls, [(561, "1h", 48)])
 
+    def test_alerts_read_all_string_false_not_coerced(self):
+        """A JSON string 'false' for all must NOT mark everything read."""
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            FlipScanner(direction="arbitrage"), lambda: [],
+            alerts_read_fn=lambda ids, allf: calls.append((ids, allf))
+            or {"changed": 0, "unread": 0})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/alerts/read"
+        h.command = "POST"
+        h.request_version = "HTTP/1.1"
+        payload = json.dumps({"all": "false"}).encode()  # string, not bool
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_POST()
+        self.assertEqual(calls, [(None, False)])  # NOT (None, True)
+
     def test_timeseries_real_typeerror_not_masked(self):
         """A TypeError raised INSIDE the fn must 500, not re-call with 1 arg."""
         from http.server import BaseHTTPRequestHandler
