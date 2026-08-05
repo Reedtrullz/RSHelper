@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 555,
-      "buy_price": 720,
+      "item_id": 2315,
+      "name": "Pie shell",
+      "qty": 267,
+      "buy_price": 275,
       "direction": "traditional",
-      "opened_at": "2026-08-05T21:56:02.755999+00:00",
+      "opened_at": "2026-08-05T22:18:04.875021+00:00",
       "note": "auto",
-      "entry_sell": 720,
-      "entry_offer": 748
-    },
-    {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 875,
-      "buy_price": 200,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T22:02:03.071740+00:00",
-      "note": "auto",
-      "entry_sell": 200,
-      "entry_offer": 209
+      "entry_sell": 275,
+      "entry_offer": 289
     }
   ]
 }
