@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 2062,
       "entry_offer": 2143
-    },
-    {
-      "id": 5,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 1069,
-      "buy_price": 70,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T00:56:31.861011+00:00",
-      "note": "auto",
-      "entry_sell": 70,
-      "entry_offer": 73
-    },
-    {
-      "id": 6,
-      "item_id": 8007,
-      "name": "Varrock teleport (tablet)",
-      "qty": 87,
-      "buy_price": 731,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T00:56:31.862121+00:00",
-      "note": "auto",
-      "entry_sell": 731,
-      "entry_offer": 759
     }
   ]
 }
