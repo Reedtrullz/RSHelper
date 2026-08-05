@@ -76,21 +76,22 @@ def test_scan_skill_filter():
 
 
 def test_fletch_recipe_batch_ratio():
-    """Fletching arrows: 15 shafts + 15 arrowtips -> 15 arrows (batch)."""
+    """Fletching arrows: 15 shafts + 15 feathers + 15 arrowtips -> 15 arrows."""
     scanner = ProcessScanner(recipes={892: RECIPES[892]})  # rune arrow
     items = [
         _item(892, "Rune arrow", 190, 200, limit=10000),
         _item(52, "Arrow shaft", 5, 4, limit=10000),
+        _item(314, "Feather", 2, 1, limit=10000),
         _item(44, "Rune arrowtips", 100, 95, limit=10000),
     ]
     results = scanner.scan(items)
     assert len(results) == 1
     r = results[0]
-    # input_cost per arrow = (15*5 + 15*100)/15 = 105
-    assert r.input_cost == 105
+    # input_cost per arrow = (15*5 + 15*2 + 15*100)/15 = 107
+    assert r.input_cost == 107
     assert r.name == "Rune arrow"
-    # profit per arrow = (200 - ge_tax(200)) - 105 = 196 - 105 = 91
-    assert r.profit == 91
+    # profit per arrow = (200 - ge_tax(200)) - 107 = 196 - 107 = 89
+    assert r.profit == 89
     print("  PASSED test_fletch_recipe_batch_ratio")
 
 

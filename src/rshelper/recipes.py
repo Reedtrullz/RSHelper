@@ -44,17 +44,18 @@ SMITHING: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# FLETCHING — arrow shafts + arrowtips -> arrows. Wiki: ~2,400 arrows/hr
-# (the 15-arrow batch is fast; ~40k headless/hr but full arrows slower).
+# FLETCHING — arrow shafts + feathers + arrowtips -> arrows. Wiki: ~2,400
+# arrows/hr. Full arrow = shaft + feather + tip (15 per batch).
 # ---------------------------------------------------------------------------
 _FLETCH = 2400
+_FL = 314  # feather
 FLETCHING: dict[int, Recipe] = {
-    882: Recipe(882, {52: 15, 39: 15}, "fletching", _FLETCH, outputs_per_run=15),  # bronze arrow
-    884: Recipe(884, {52: 15, 40: 15}, "fletching", _FLETCH, outputs_per_run=15),  # iron arrow
-    886: Recipe(886, {52: 15, 41: 15}, "fletching", _FLETCH, outputs_per_run=15),  # steel arrow
-    888: Recipe(888, {52: 15, 42: 15}, "fletching", _FLETCH, outputs_per_run=15),  # mithril arrow
-    890: Recipe(890, {52: 15, 43: 15}, "fletching", _FLETCH, outputs_per_run=15),  # adamant arrow
-    892: Recipe(892, {52: 15, 44: 15}, "fletching", _FLETCH, outputs_per_run=15),  # rune arrow
+    882: Recipe(882, {52: 15, _FL: 15, 39: 15}, "fletching", _FLETCH, outputs_per_run=15),  # bronze arrow
+    884: Recipe(884, {52: 15, _FL: 15, 40: 15}, "fletching", _FLETCH, outputs_per_run=15),  # iron arrow
+    886: Recipe(886, {52: 15, _FL: 15, 41: 15}, "fletching", _FLETCH, outputs_per_run=15),  # steel arrow
+    888: Recipe(888, {52: 15, _FL: 15, 42: 15}, "fletching", _FLETCH, outputs_per_run=15),  # mithril arrow
+    890: Recipe(890, {52: 15, _FL: 15, 43: 15}, "fletching", _FLETCH, outputs_per_run=15),  # adamant arrow
+    892: Recipe(892, {52: 15, _FL: 15, 44: 15}, "fletching", _FLETCH, outputs_per_run=15),  # rune arrow
 }
 
 # ---------------------------------------------------------------------------
@@ -115,11 +116,15 @@ COOKING: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# HERBLORE — grimy -> clean (~2,000/hr); herb + secondary -> potion (~1,500/hr)
+# HERBLORE — grimy -> clean (~2,000/hr); clean herb + secondary -> potion
+# (~1,500/hr). Every potion needs a vial of water (227) as its base, plus
+# the correct secondary (wiki-verified).
 # ---------------------------------------------------------------------------
 _HERB_CLEAN = 2000
 _HERB_POT = 1500
+_VOW = 227  # vial of water
 HERBLORE: dict[int, Recipe] = {
+    # Cleaning grimy herbs
     249: Recipe(249, {199: 1}, "herblore", _HERB_CLEAN),    # guam leaf
     251: Recipe(251, {201: 1}, "herblore", _HERB_CLEAN),    # marrentill
     253: Recipe(253, {203: 1}, "herblore", _HERB_CLEAN),    # tarromin
@@ -131,19 +136,19 @@ HERBLORE: dict[int, Recipe] = {
     263: Recipe(263, {213: 1}, "herblore", _HERB_CLEAN),    # kwuarm
     3000: Recipe(3000, {3051: 1}, "herblore", _HERB_CLEAN), # snapdragon
     269: Recipe(269, {219: 1}, "herblore", _HERB_CLEAN),    # torstol
-    # Potions
-    121: Recipe(121, {249: 1, 221: 1}, "herblore", _HERB_POT),    # attack potion(3)
-    115: Recipe(115, {251: 1, 225: 1}, "herblore", _HERB_POT),    # strength potion(3)
-    133: Recipe(133, {253: 1, 223: 1}, "herblore", _HERB_POT),    # defence potion(3)
-    139: Recipe(139, {257: 1, 239: 1}, "herblore", _HERB_POT),    # prayer potion(3)
-    145: Recipe(145, {2998: 1, 221: 1}, "herblore", _HERB_POT),   # super attack(3)
-    157: Recipe(157, {259: 1, 225: 1}, "herblore", _HERB_POT),    # super strength(3)
-    163: Recipe(163, {261: 1, 225: 1}, "herblore", _HERB_POT),    # super defence(3)
-    169: Recipe(169, {263: 1, 239: 1}, "herblore", _HERB_POT),    # ranging potion(3)
-    3042: Recipe(3042, {3000: 1, 2357: 1}, "herblore", _HERB_POT),  # magic potion(3)
-    175: Recipe(175, {253: 1, 223: 1}, "herblore", _HERB_POT),    # antipoison(3)
-    3010: Recipe(3010, {249: 1, 221: 1}, "herblore", _HERB_POT),  # energy potion(3)
-    127: Recipe(127, {253: 1, 225: 1}, "herblore", _HERB_POT),    # restore potion(3)
+    # Potions (vial of water + clean herb + secondary)
+    121: Recipe(121, {_VOW: 1, 249: 1, 221: 1}, "herblore", _HERB_POT),      # attack: guam + eye of newt
+    115: Recipe(115, {_VOW: 1, 253: 1, 225: 1}, "herblore", _HERB_POT),      # strength: tarromin + limpwurt
+    133: Recipe(133, {_VOW: 1, 257: 1, 239: 1}, "herblore", _HERB_POT),      # defence: ranarr + white berries
+    139: Recipe(139, {_VOW: 1, 257: 1, 231: 1}, "herblore", _HERB_POT),      # prayer: ranarr + snape grass
+    145: Recipe(145, {_VOW: 1, 259: 1, 221: 1}, "herblore", _HERB_POT),      # super attack: irit + eye of newt
+    157: Recipe(157, {_VOW: 1, 263: 1, 225: 1}, "herblore", _HERB_POT),      # super strength: kwuarm + limpwurt
+    163: Recipe(163, {_VOW: 1, 265: 1, 239: 1}, "herblore", _HERB_POT),      # super defence: cadantine + white berries
+    169: Recipe(169, {_VOW: 1, 267: 1, 245: 1}, "herblore", _HERB_POT),      # ranging: dwarf weed + wine of zamorak
+    3042: Recipe(3042, {_VOW: 1, 2481: 1, 3138: 1}, "herblore", _HERB_POT),  # magic: lantadyme + potato cactus
+    175: Recipe(175, {_VOW: 1, 251: 1, 235: 1}, "herblore", _HERB_POT),      # antipoison: marrentill + unicorn horn dust
+    3010: Recipe(3010, {_VOW: 1, 255: 1, 1975: 1}, "herblore", _HERB_POT),   # energy: harralander + chocolate dust
+    127: Recipe(127, {_VOW: 1, 255: 1, 223: 1}, "herblore", _HERB_POT),      # restore: harralander + red spiders' eggs
 }
 
 # ---------------------------------------------------------------------------
