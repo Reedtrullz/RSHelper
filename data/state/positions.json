@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 517,
-      "buy_price": 111,
+      "item_id": 1698,
+      "name": "Ruby amulet",
+      "qty": 110,
+      "buy_price": 1142,
       "direction": "traditional",
-      "opened_at": "2026-08-05T00:08:29.879378+00:00",
+      "opened_at": "2026-08-05T00:24:30.676596+00:00",
       "note": "auto",
-      "entry_sell": 111,
-      "entry_offer": 106
-    },
-    {
-      "id": 2,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 165,
-      "buy_price": 725,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T00:08:29.879742+00:00",
-      "note": "auto",
-      "entry_sell": 725,
-      "entry_offer": 754
+      "entry_sell": 1142,
+      "entry_offer": 1185
     }
   ]
 }
