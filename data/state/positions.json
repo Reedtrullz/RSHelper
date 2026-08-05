@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 911,
       "entry_offer": 950
+    },
+    {
+      "id": 3,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 207,
+      "buy_price": 1930,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T16:49:53.560064+00:00",
+      "note": "auto",
+      "entry_sell": 1930,
+      "entry_offer": 2000
+    },
+    {
+      "id": 4,
+      "item_id": 1660,
+      "name": "Ruby necklace",
+      "qty": 193,
+      "buy_price": 1037,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T16:53:53.378321+00:00",
+      "note": "auto",
+      "entry_sell": 1037,
+      "entry_offer": 1080
     }
   ]
 }
