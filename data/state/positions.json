@@ -14,27 +14,15 @@
     },
     {
       "id": 6,
-      "item_id": 3138,
-      "name": "Potato cactus",
-      "qty": 211,
-      "buy_price": 69,
+      "item_id": 22461,
+      "name": "Bastion potion(4)",
+      "qty": 26,
+      "buy_price": 14918,
       "direction": "traditional",
-      "opened_at": "2026-08-05T01:56:38.184788+00:00",
+      "opened_at": "2026-08-05T02:28:39.843640+00:00",
       "note": "auto",
-      "entry_sell": 69,
-      "entry_offer": 66
-    },
-    {
-      "id": 7,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 4970,
-      "buy_price": 45,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T02:12:38.968522+00:00",
-      "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 14918,
+      "entry_offer": 15518
     }
   ]
 }
