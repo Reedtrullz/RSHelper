@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 205,
-      "buy_price": 266,
+      "item_id": 12695,
+      "name": "Super combat potion(4)",
+      "qty": 35,
+      "buy_price": 11345,
       "direction": "traditional",
-      "opened_at": "2026-08-05T23:32:07.435642+00:00",
+      "opened_at": "2026-08-05T23:48:08.103726+00:00",
       "note": "auto",
-      "entry_sell": 266,
-      "entry_offer": 281
+      "entry_sell": 11345,
+      "entry_offer": 11844
     },
     {
       "id": 2,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 138,
-      "buy_price": 2880,
+      "item_id": 571,
+      "name": "Water orb",
+      "qty": 134,
+      "buy_price": 1640,
       "direction": "traditional",
-      "opened_at": "2026-08-05T23:32:07.436326+00:00",
+      "opened_at": "2026-08-05T23:48:08.104123+00:00",
       "note": "auto",
-      "entry_sell": 2880,
-      "entry_offer": 2998
+      "entry_sell": 1640,
+      "entry_offer": 1707
     }
   ]
 }
