@@ -80,6 +80,9 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
 
 ## Known Deliberate Simplifications (ponytail)
 
+- `recipes.py`: the recipe table is hand-maintained and curated (smelting
+  bars + a couple of crafts). Recipe IDs are verified against the wiki
+  mapping; add new recipes by appending to `RECIPES` with verified IDs.
 - `scanner.py`: 5-min volume is extrapolated to hourly with `volume * 12`.
 - `dashboard/server.py`: closure-based TTL cache, re-fetch every 120s.
 - `api.py`: GE Tracker fallback volume is order quantities

@@ -258,6 +258,21 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
         from rshelper.bank import build_bank_items
         return build_bank_items(latest=cache["latest"])
 
+    def get_process():
+        refresh()
+        from rshelper.scanner import ProcessScanner
+        results = ProcessScanner().scan(cache["items"], capital=cfg.process.capital)
+        return {"recipes": [
+            {
+                "name": r.name, "item_id": r.id,
+                "input_cost": r.input_cost, "sell_price": r.sell_price,
+                "profit": r.profit,
+                "roi_pct": round(r.profit / r.input_cost * 100, 1) if r.input_cost else 0,
+                "gp_per_hour": r.gp_per_hour,
+                "volume": r.volume, "buy_limit": r.buy_limit,
+            } for r in results
+        ], "count": len(results)}
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -267,7 +282,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                            paper_trade_fn=paper_trade,
                            trader_fn=get_trader_status,
                            ge_fn=get_ge, ge_collect_fn=collect_ge,
-                           bank_fn=get_bank)
+                           bank_fn=get_bank, process_fn=get_process)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

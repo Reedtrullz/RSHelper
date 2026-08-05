@@ -211,6 +211,45 @@ class TestHandlerRouting(unittest.TestCase):
         self.assertEqual(body["prices"]["561"]["buy"], 100)
         self.assertEqual(body["prices"]["2"]["sell"], 110)
 
+    def test_api_process(self):
+        """GET /api/process returns profitable processing recipes."""
+        from http.server import BaseHTTPRequestHandler
+        from rshelper.models import Item
+        # Steel bar recipe components (2353 = 1 iron ore 440 + 2 coal 453).
+        items = [
+            Item(id=2353, name="Steel bar", members=False, buy_limit=10000,
+                 alch_value=0, buy_price=400, sell_price=576, volume=5000),
+            Item(id=440, name="Iron ore", members=False, buy_limit=10000,
+                 alch_value=0, buy_price=100, sell_price=90, volume=5000),
+            Item(id=453, name="Coal", members=False, buy_limit=10000,
+                 alch_value=0, buy_price=130, sell_price=120, volume=5000),
+        ]
+        Handler = make_handler(self.scanner, lambda: [],
+                               process_fn=lambda: {
+                                   "recipes": [{
+                                       "name": "Steel bar", "item_id": 2353,
+                                       "input_cost": 360, "sell_price": 576,
+                                       "profit": 205, "roi_pct": 56.9,
+                                       "gp_per_hour": 235200,
+                                       "volume": 5000, "buy_limit": 10000,
+                                   }], "count": 1})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/process"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.response_code = None
+        h.response_headers = []
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: setattr(h, "response_code", code)
+        h.send_header = lambda key, value: h.response_headers.append((key, value))
+        h.end_headers = lambda: None
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["recipes"][0]["name"], "Steel bar")
+        self.assertIn("gp_per_hour", body["recipes"][0])
+
     def test_api_meta(self):
         from http.server import BaseHTTPRequestHandler
         Handler = make_handler(

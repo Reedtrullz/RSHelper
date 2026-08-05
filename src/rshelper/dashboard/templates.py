@@ -243,6 +243,7 @@ button:focus-visible{border-color:var(--gold)}
   <button class="nav-btn" id="btnWatchlist" role="tab" onclick="setView('watchlist')">Watchlist <span class="badge" id="badgeWatchlist">-</span></button>
   <button class="nav-btn" id="btnGE" role="tab" onclick="setView('ge')">Grand Exchange <span class="badge" id="badgeGE">-</span></button>
   <button class="nav-btn" id="btnBank" role="tab" onclick="setView('bank')">Bank <span class="badge" id="badgeBank">-</span></button>
+  <button class="nav-btn" id="btnProcess" role="tab" onclick="setView('process')">Materials <span class="badge" id="badgeProcess">-</span></button>
 </div>
 <div class="main">
   <div class="list-panel">
@@ -346,12 +347,14 @@ function setView(v){
   document.getElementById('btnWatchlist').classList.toggle('active',v==='watchlist');
   document.getElementById('btnGE').classList.toggle('active',v==='ge');
   document.getElementById('btnBank').classList.toggle('active',v==='bank');
+  document.getElementById('btnProcess').classList.toggle('active',v==='process');
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
   else if(v==='signals')renderSignals();
   else if(v==='watchlist')renderWatchlist();
   else if(v==='ge')renderGE();
   else if(v==='bank')renderBank();
+  else if(v==='process')renderProcess();
   if(v==='market'&&selectedId==null)renderContextEmpty();
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
@@ -417,6 +420,7 @@ async function fetchData(){
     else if(view==='watchlist')renderWatchlist();
     else if(view==='ge')renderGE();
     else if(view==='bank')renderBank();
+    else if(view==='process')renderProcess();
     if(view==='market'&&selectedId!=null)renderDetail(selectedId);
     countdown=refreshSecs;
   }catch(e){
@@ -505,6 +509,10 @@ function viewbarHtml(){
   }
   if(view==='bank'){
     return '<div class="viewbar"><span class="title">Bank of RuneScape</span></div>';
+  }
+  if(view==='process'){
+    return '<div class="viewbar"><span class="title">Materials Processing</span>'+
+      '<span class="dim" style="font-size:12px;margin-left:8px">Buy inputs, process, sell output</span></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
 }
@@ -868,6 +876,48 @@ function bankSlotClick(itemId){
     metric('Unrealized %',pctHtml,pnl!=null&&pnl>0?'green':pnl!=null&&pnl<0?'red':'')+
     metric('Positions',format(it.position_count),'')+
     '</div>';
+}
+
+async function renderProcess(){
+  const bar=document.getElementById('viewbar');
+  bar.innerHTML=viewbarHtml();
+  const body=document.getElementById('listBody');
+  const context=document.getElementById('contextPanel');
+  body.innerHTML='<div class="loading"><span class="spinner"></span>Loading materials...</div>';
+  context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
+  try{
+    const r=await fetch('/api/process');
+    if(!r.ok)throw new Error('Process API failed');
+    const data=await r.json();
+    const recipes=data.recipes||[];
+    document.getElementById('badgeProcess').textContent=recipes.length;
+    let h='<table><thead><tr><th>Output</th><th>Input Cost</th><th>Sell</th><th>Profit</th><th>ROI%</th><th>GP/hr</th><th>Vol</th></tr></thead><tbody>';
+    recipes.forEach(x=>{
+      const roi=x.roi_pct!=null?x.roi_pct.toFixed(1):'-';
+      h+='<tr><td class="name">'+escHtml(x.name)+'</td>'+
+        '<td>'+format(x.input_cost)+' gp</td>'+
+        '<td>'+format(x.sell_price)+' gp</td>'+
+        '<td class="margin pos">'+format(x.profit)+' gp</td>'+
+        '<td>'+roi+'%</td>'+
+        '<td class="margin pos">'+format(x.gp_per_hour)+'</td>'+
+        '<td>'+format(x.volume||0)+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    if(!recipes.length)h='<div class="loading">No profitable processing recipes right now — buy inputs cheap, sell output dear.</div>';
+    body.innerHTML=h;
+    context.innerHTML='<div class="item-name" style="margin-bottom:12px">Materials Processing</div>'+
+      '<div class="metric-grid">'+
+      metric('Recipes',format(recipes.length),'gold')+
+      metric('Best GP/hr',recipes.length?format(recipes[0].gp_per_hour):'-','gold')+
+      metric('Best ROI',recipes.length?(recipes[0].roi_pct||0).toFixed(1)+'%':'','')+
+      '</div>'+
+      '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
+      'Buys inputs at instant-buy, sells the processed output at instant-sell (2% GE tax on the sale). '+
+      'GP/hr is capped by action rate, the output buy limit, and the limiting input feed.</div>';
+  }catch(e){
+    body.innerHTML='<div class="loading">Error loading materials: '+escHtml(e.message)+'</div>';
+    context.innerHTML='';
+  }
 }
 
 function renderContextEmpty(){

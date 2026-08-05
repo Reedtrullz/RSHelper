@@ -334,6 +334,65 @@ class TestCLI(unittest.TestCase):
         data = json.loads(r.stdout)  # real ledger; may be []
         self.assertIsInstance(data, list)
 
+    def test_process_scan_json(self):
+        """process-scan --json outputs a JSON list (stdout = data only)."""
+        import sys as _sys
+        from unittest import mock
+        import tempfile
+        from pathlib import Path
+        _sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
+        import rshelper.api as amod
+        import rshelper.cli as cmod
+        from argparse import Namespace
+        import contextlib
+        import io
+        # Isolate the cache so the mock fetch is actually used (a warm cache
+        # would short-circuit the mocks with real data).
+        import rshelper.api as _api_mod
+        orig_cache_path = _api_mod._cache_path
+        tmpdir_ref = {}
+        with tempfile.TemporaryDirectory() as tmp:
+            def _fake_cache_path(name, profile=None):
+                return Path(tmp) / (name + ".json")
+            _api_mod._cache_path = _fake_cache_path
+            try:
+                now = int(time.time())
+                mapping = [
+                    {"id": 2353, "name": "Steel bar", "limit": 10000},
+                    {"id": 440, "name": "Iron ore", "limit": 10000},
+                    {"id": 453, "name": "Coal", "limit": 10000},
+                ]
+                latest = {
+                    "2353": {"high": 400, "low": 576, "highTime": now - 60, "lowTime": now - 60},
+                    "440": {"high": 100, "low": 90, "highTime": now - 60, "lowTime": now - 60},
+                    "453": {"high": 130, "low": 120, "highTime": now - 60, "lowTime": now - 60},
+                }
+                vol = {
+                    "2353": {"avgHighPrice": 400, "avgLowPrice": 576,
+                             "highPriceVolume": 5000, "lowPriceVolume": 5000},
+                    "440": {"avgHighPrice": 100, "avgLowPrice": 90,
+                            "highPriceVolume": 5000, "lowPriceVolume": 5000},
+                    "453": {"avgHighPrice": 130, "avgLowPrice": 120,
+                            "highPriceVolume": 5000, "lowPriceVolume": 5000},
+                }
+                with mock.patch.object(cmod, "fetch_mapping", return_value=mapping), \
+                     mock.patch.object(cmod, "fetch_latest", return_value=latest), \
+                     mock.patch.object(cmod, "fetch_5m", return_value=vol), \
+                     contextlib.redirect_stdout(io.StringIO()) as out:
+                    cmod.process_scan(Namespace(profile=None, members_only=False,
+                                                min_volume=0, min_profit=0,
+                                                capital=0, top=10, name="",
+                                                json=True, csv=False, html=False,
+                                                save_snapshot=False))
+            finally:
+                _api_mod._cache_path = orig_cache_path
+        data = json.loads(out.getvalue())
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data[0]["name"], "Steel bar")
+        self.assertIn("gp_per_hour", data[0])
+        self.assertIn("input_cost", data[0])
+
 
 if __name__ == "__main__":
     unittest.main()

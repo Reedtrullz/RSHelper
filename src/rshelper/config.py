@@ -33,6 +33,13 @@ min_margin = 0
 check = 20
 top = 20
 
+[process]
+members_only = false
+min_volume = 0
+min_profit = 0
+top = 20
+capital = 0
+
 [trader]
 capital = 1000000        # paper bankroll for sizing auto-trades
 trade_capital_frac = 0.40  # fraction of bankroll per position (replay: 0.40
@@ -97,6 +104,15 @@ class MarginConfig:
 
 
 @dataclass
+class ProcessConfig:
+    members_only: bool = False
+    min_volume: int = 0
+    min_profit: int = 0
+    top: int = 20
+    capital: int = 0
+
+
+@dataclass
 class TraderConfig:
     capital: int = 1_000_000
     trade_capital_frac: float = 0.40
@@ -128,6 +144,7 @@ class Config:
     alch: AlchConfig = field(default_factory=AlchConfig)
     flip: FlipConfig = field(default_factory=FlipConfig)
     margin: MarginConfig = field(default_factory=MarginConfig)
+    process: ProcessConfig = field(default_factory=ProcessConfig)
     trader: TraderConfig = field(default_factory=TraderConfig)
 
 
@@ -142,6 +159,7 @@ def load_config(profile: str | None = None) -> Config:
     alch_raw = raw.get("alch", {})
     flip_raw = raw.get("flip", {})
     margin_raw = raw.get("margin", {})
+    process_raw = raw.get("process", {})
     trader_raw = raw.get("trader", {})
 
     return Config(
@@ -165,6 +183,13 @@ def load_config(profile: str | None = None) -> Config:
             min_margin=margin_raw.get("min_margin", 0),
             check=margin_raw.get("check", 20),
             top=margin_raw.get("top", 20),
+        ),
+        process=ProcessConfig(
+            members_only=process_raw.get("members_only", False),
+            min_volume=process_raw.get("min_volume", 0),
+            min_profit=process_raw.get("min_profit", 0),
+            top=process_raw.get("top", 20),
+            capital=process_raw.get("capital", 0),
         ),
         trader=TraderConfig(
             capital=trader_raw.get("capital", 1_000_000),

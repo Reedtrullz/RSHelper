@@ -40,7 +40,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  trader_fn: Callable[[], dict] | None = None,
                  ge_fn: Callable[[], dict] | None = None,
                  ge_collect_fn: Callable[[int], dict] | None = None,
-                 bank_fn: Callable[[], dict] | None = None) -> type:
+                 bank_fn: Callable[[], dict] | None = None,
+                 process_fn: Callable[[], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -58,6 +59,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
     ge_fn: Optional callable() -> GE slots dict for /api/ge
     ge_collect_fn: Optional callable(position_id) -> collect result for /api/ge/collect
     bank_fn: Optional callable() -> bank holdings dict for /api/bank
+    process_fn: Optional callable() -> processing recipes dict for /api/process
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -97,6 +99,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_ge()
             elif path == "/api/bank":
                 self._serve_bank()
+            elif path == "/api/process":
+                self._serve_process()
             else:
                 self.send_error(404)
 
@@ -261,6 +265,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except Exception as e:
                 print(f"[dashboard] bank data error: {e}", file=sys.stderr)
                 self.send_error(500, "Bank data failed")
+
+        def _serve_process(self):
+            try:
+                self._serve_json(process_fn() if process_fn else
+                                 {"recipes": [], "count": 0})
+            except Exception as e:
+                print(f"[dashboard] process data error: {e}", file=sys.stderr)
+                self.send_error(500, "Process data failed")
 
         def _handle_ge_collect(self):
             try:

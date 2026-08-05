@@ -1,7 +1,7 @@
-"""Alch-profit and flip-margin scanner — core calculation engine."""
+"""Alch-profit, flip-margin, and materials-processing scanner."""
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from rshelper.market import (
     MAX_PRICE_RATIO,
     STALE_PRICE_AGE,
@@ -12,6 +12,7 @@ from rshelper.market import (
 from rshelper.models import Item
 from rshelper.analysis import analyze_timeseries, MarginAnalysis
 from rshelper.signals import compute_rs_score_flip, compute_rs_score_alch
+from rshelper.recipes import RECIPES, Recipe
 
 MAX_CASTS_PER_HOUR = 1200  # 5-tick cast speed
 
@@ -239,4 +240,83 @@ class MarginScanner:
         results.sort(key=lambda a: a.expected_gp_per_hour, reverse=True)
         for a in results:
             a.rs_score = a.confidence * 100
+        return results
+
+
+@dataclass
+class ProcessScanner:
+    """Materials processing: buy inputs, process, sell output.
+
+    The closest analog is AlchScanner — each recipe converts inputs into
+    an output. Inputs are bought at their instant-buy price (no tax on
+    buys); the output is sold at its instant-sell price with GE tax on
+    that leg only. Throughput is capped by the action rate, the OUTPUT's
+    buy limit / volume (the sell side consumes the output's 4h limit),
+    and the limiting input's 4h buy-limit capacity (the min-ratio problem).
+    """
+
+    recipes: dict[int, Recipe] = field(default_factory=lambda: RECIPES)
+
+    def scan(self, items: list[Item], *, members_only: bool = False,
+             min_volume: int = 0, min_profit: int = 0,
+             capital: int = 0) -> list[Item]:
+        """Rank recipes by GP/hr. Returns new Items, never mutates input."""
+        lookup = {i.id: i for i in items}
+        results: list[Item] = []
+        for recipe in self.recipes.values():
+            output = lookup.get(recipe.output_id)
+            if output is None:
+                continue
+            comps = [lookup.get(iid) for iid in recipe.inputs]
+            if any(c is None for c in comps):
+                continue
+            comps = [c for c in comps if c is not None]  # type: ignore[assignment]
+            if members_only and (output.members or any(c.members for c in comps)):
+                continue
+            if output.volume < min_volume:
+                continue
+            # Price sanity: skip if any component's price is unusable.
+            if any(c.buy_price <= 0 or c.sell_price <= 0 for c in comps):
+                continue
+            if output.sell_price <= 0 or output.buy_price <= 0:
+                continue
+
+            input_cost = sum(c.buy_price * qty
+                             for c, qty in zip(comps, recipe.inputs.values()))
+            output_gp = output.sell_price - ge_tax(output.sell_price)
+            profit = output_gp - input_cost - recipe.cost_per_unit
+            if profit <= 0 or profit < min_profit:
+                continue
+
+            # Throughput: the output's 4h buy limit / 4 (hourly) caps the
+            # sell side; the market volume*12 caps absorb; the limiting
+            # input's buy-limit capacity caps feed. min-ratio problem.
+            output_rate = output.buy_limit / 4 if output.buy_limit > 0 else 0
+            volume_rate = output.volume * 12
+            input_capacity = min(
+                (c.buy_limit / 4) // qty
+                for c, qty in zip(comps, recipe.inputs.values())
+                if c.buy_limit > 0
+            ) if comps else 0
+            outputs_per_hour = int(min(
+                recipe.rate_per_hour, output_rate, volume_rate, input_capacity))
+            if outputs_per_hour <= 0:
+                continue
+
+            # Capital cap: scale throughput by how many units the budget buys.
+            if capital > 0 and input_cost > 0:
+                by_capital = capital // input_cost
+                outputs_per_hour = min(outputs_per_hour, by_capital)
+
+            gp_per_hour = int(profit * outputs_per_hour)
+            results.append(Item(
+                id=output.id, name=output.name, members=output.members,
+                buy_limit=output.buy_limit, alch_value=output.alch_value,
+                buy_price=output.buy_price, sell_price=output.sell_price,
+                volume=output.volume, profit=profit, gp_per_hour=gp_per_hour,
+                input_cost=input_cost, output_id=recipe.output_id,
+            ))
+
+        results.sort(key=lambda i: i.gp_per_hour, reverse=True)
+        compute_rs_score_alch(results)
         return results

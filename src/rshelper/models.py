@@ -16,3 +16,5 @@ class Item:
     profit: int = 0  # profit per alch cast
     gp_per_hour: int = 0  # estimated GP/hr after buy limit constraint
     rs_score: float = 0.0  # 0-100 composite flip quality score
+    input_cost: int = 0  # total input cost per output unit (process scan)
+    output_id: int = 0  # output item id (process scan result; == id)

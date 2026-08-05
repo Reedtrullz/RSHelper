@@ -332,6 +332,102 @@ def flip_scan(args: argparse.Namespace) -> None:
         _save_flip_snapshot(results[:args.top], args.profile)
 
 
+def process_scan(args: argparse.Namespace) -> None:
+    """Fetch data, scan materials-processing recipes, print results."""
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+
+    from rshelper.scanner import ProcessScanner
+    scanner = ProcessScanner()
+    results = scanner.scan(
+        items,
+        members_only=args.members_only,
+        min_volume=args.min_volume,
+        min_profit=args.min_profit,
+        capital=args.capital,
+    )
+    print(f"  {len(results)} profitable processing recipes", file=sys.stderr)
+    if args.name:
+        results = _filter_by_name(results, args.name)
+        print(f"  {len(results)} after --name filter", file=sys.stderr)
+    else:
+        print(file=sys.stderr)
+
+    if args.csv:
+        from dataclasses import asdict
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=[
+            "rank", "name", "input_cost", "sell_price", "profit", "roi",
+            "gp_per_hour", "volume", "buy_limit",
+        ], extrasaction='ignore')
+        writer.writeheader()
+        for i, item in enumerate(results[:args.top], 1):
+            row = asdict(item)
+            row["rank"] = i
+            row["roi"] = round(_roi_pct(item), 2)
+            writer.writerow(row)
+        print(out.getvalue())
+    elif args.json:
+        print(json.dumps([
+            {
+                "rank": i + 1,
+                "name": r.name,
+                "input_cost": r.input_cost,
+                "sell_price": r.sell_price,
+                "profit": r.profit,
+                "roi": round(_roi_pct(r), 2),
+                "gp_per_hour": r.gp_per_hour,
+                "volume": r.volume,
+                "buy_limit": r.buy_limit,
+            }
+            for i, r in enumerate(results[:args.top])
+        ], indent=2))
+    elif args.html:
+        cols = ["Rank", "Output", "Input Cost", "Sell", "Profit", "ROI%", "GP/hr"]
+        rows = [{"Rank": i + 1, "Output": r.name,
+                 "Input Cost": f"{r.input_cost:,}", "Sell": f"{r.sell_price:,}",
+                 "Profit": f"{r.profit:,}", "ROI%": f"{_roi_pct(r):.1f}",
+                 "GP/hr": f"{r.gp_per_hour:,}"}
+                for i, r in enumerate(results[:args.top])]
+        print(_html_output(rows, cols, "Materials Processing"))
+    else:
+        print(_format_process_table(results, args.top))
+
+    if getattr(args, 'save_snapshot', False):
+        _save_process_snapshot(results[:args.top], args.profile)
+
+
+def _format_process_table(results, top: int) -> str:
+    """Render process-scan results as an aligned text table."""
+    rows = results[:top]
+    if not rows:
+        return "No profitable processing recipes."
+    name_width = max((len(r.name) for r in rows), default=10)
+    name_width = min(name_width, 24)
+    name_width = max(name_width, 6)
+    header = (f"{'Output':<{name_width}} {'InputCost':>9} {'Sell':>8} "
+              f"{'Profit':>7} {'ROI%':>6} {'GP/hr':>9}")
+    lines = [header, "-" * len(header)]
+    for r in rows:
+        lines.append(f"{r.name:<{name_width}} {r.input_cost:>9,} "
+                     f"{r.sell_price:>8,} {r.profit:>7,} "
+                     f"{_roi_pct(r):>6.1f} {r.gp_per_hour:>9,}")
+    return "\n".join(lines)
+
+
+def _save_process_snapshot(results, profile: str | None = None) -> None:
+    """Persist a process scan snapshot for diffing across days."""
+    from rshelper import snapshot
+    data = [{
+        "item_id": r.id, "name": r.name,
+        "input_cost": r.input_cost, "sell_price": r.sell_price,
+        "profit": r.profit, "gp_per_hour": r.gp_per_hour,
+        "volume": r.volume, "buy_limit": r.buy_limit,
+    } for r in results]
+    snapshot.save("process", data, profile)
+    from rshelper import tuning
+    tuning.record_if_changed(profile)
+
+
 def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
                          risk_metrics: dict | None = None) -> str:
     """Render margin-check results as an aligned text table."""
@@ -1331,6 +1427,29 @@ def main() -> None:
     flip.add_argument("--ge-slots", type=int, default=2,
                        help="Number of GE slots to model for GP/hr (default: 2 for buy+sell)")
 
+    process = sub.add_parser("process-scan", help="Scan profitable materials-processing recipes")
+    process.add_argument("--members-only", action=argparse.BooleanOptionalAction,
+                         default=cfg.process.members_only,
+                         help="Filter to members-only recipes")
+    process.add_argument("--min-volume", type=int, default=cfg.process.min_volume,
+                         help="Minimum 5-minute output volume")
+    process.add_argument("--min-profit", type=int, default=cfg.process.min_profit,
+                         help="Minimum profit per output unit")
+    process.add_argument("--top", type=int, default=cfg.process.top,
+                         help="Number of results to show")
+    process.add_argument("--capital", type=int, default=cfg.process.capital,
+                         help="Available GP; caps per-recipe throughput by budget")
+    process.add_argument("--name", type=str, default="",
+                         help="Filter by output name (substring match)")
+    process.add_argument("--json", action="store_true",
+                         help="Output JSON instead of table")
+    process.add_argument("--csv", action="store_true",
+                         help="Output CSV instead of table")
+    process.add_argument("--html", action="store_true",
+                         help="Output self-contained sortable HTML")
+    process.add_argument("--save-snapshot", action="store_true",
+                         help="Save results for later diff/trend comparison")
+
     info = sub.add_parser("item-info", help="Look up a single item by name or ID")
     info.add_argument("item", help="Item name or ID")
     info.add_argument("--timeseries", action="store_true",
@@ -1470,7 +1589,7 @@ def main() -> None:
     # Diff subcommand
     diff_p = sub.add_parser("diff", help="Compare today's scan with a previous one")
     diff_p.add_argument("scan_type", nargs="?", default="flip",
-                        choices=["alch", "flip", "margin"],
+                        choices=["alch", "flip", "margin", "process"],
                         help="Scan type to compare (default: flip)")
     diff_p.add_argument("--date", type=str, default=None,
                         help="Previous date to compare against (YYYY-MM-DD, default: most recent)")
@@ -1490,7 +1609,7 @@ def main() -> None:
 
     snap_p = sub.add_parser("snapshots", help="List saved scan snapshots")
     snap_p.add_argument("scan_type", nargs="?", default=None,
-                        choices=["alch", "flip", "margin"],
+                        choices=["alch", "flip", "margin", "process"],
                         help="Filter by scan type (default: all)")
 
     # Config subcommand
@@ -1579,6 +1698,8 @@ def main() -> None:
         alch_scan(args)
     elif args.command == "flip-scan":
         flip_scan(args)
+    elif args.command == "process-scan":
+        process_scan(args)
     elif args.command == "watch":
         if args.watch_action == "add":
             watch_add(args)
