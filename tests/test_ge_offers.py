@@ -254,6 +254,24 @@ def test_collect_no_price_fallback():
     print("  PASSED test_collect_no_price_fallback")
 
 
+def test_collect_closes_specific_lot_not_fifo():
+    """Collecting one of several lots must close THAT lot, not the oldest."""
+    _clean()
+    p1 = open_position(561, "Nature rune", 5, 90, direction="traditional")
+    open_position(561, "Nature rune", 5, 110, direction="traditional")
+    r = collect_offer(p1.id, latest={"561": _fresh_price(120, 110, time.time())})
+    assert r["qty"] == 5
+    assert r["profit"] == 140  # (120-90)*5 - 2*5
+    remaining = list_positions()
+    assert len(remaining) == 1
+    assert remaining[0].buy_price == 110  # the OTHER lot is still open
+    trades = list_trades()
+    assert len(trades) == 1
+    assert trades[0].buy_price == 90  # journaled the clicked lot's cost basis
+    _clean()
+    print("  PASSED test_collect_closes_specific_lot_not_fifo")
+
+
 if __name__ == "__main__":
     test_resolve_icon_url_detail()
     test_resolve_icon_url_inventory()
@@ -274,4 +292,5 @@ if __name__ == "__main__":
     test_collect_closes_and_logs()
     test_collect_unknown_id()
     test_collect_no_price_fallback()
+    test_collect_closes_specific_lot_not_fifo()
     print("\nAll tests passed.")

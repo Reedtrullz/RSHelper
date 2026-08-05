@@ -169,8 +169,13 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 sell = int(price.get("low", 0) or 0)
                 if buy <= 0 or sell <= 0:
                     continue
-                profit = (sell - buy) - __import__(
-                    "rshelper.market", fromlist=["ge_tax"]).ge_tax(sell)
+                # Direction-aware margin, matching `watch check
+                # --flip-direction` and the monitor.
+                from rshelper.market import ge_tax
+                if cfg.flip.direction == "traditional":
+                    profit = (buy - sell) - ge_tax(buy)
+                else:
+                    profit = (sell - buy) - ge_tax(sell)
                 item_id = int(id_str)
                 above = entry.get("alert_margin_above")
                 below = entry.get("alert_margin_below")
@@ -722,7 +727,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             sell = int(price.get("low", 0) or 0)
             if buy <= 0 or sell <= 0:
                 continue
-            profit = (sell - buy) - ge_tax(sell)
+            # Direction-aware margin, matching `watch check --flip-direction`.
+            if cfg.flip.direction == "traditional":
+                profit = (buy - sell) - ge_tax(buy)
+            else:
+                profit = (sell - buy) - ge_tax(sell)
             item_id = int(id_str)
             above = entry.get("alert_margin_above")
             below = entry.get("alert_margin_below")

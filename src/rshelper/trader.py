@@ -386,6 +386,26 @@ def _ge_fill_pct(position, vol_5m: dict, now: float) -> float:
                             position.opened_at, now)
 
 
+def _preview_lots(position, sell_price: int) -> list[dict]:
+    """Realized lots the close WILL produce (single-position close).
+
+    Mirrors positions.close_positions for one specific lot so run_cycle can
+    journal before committing the positions write.
+    """
+    from rshelper.market import ge_tax
+    tax = ge_tax(sell_price)
+    return [{
+        "position_id": position.id,
+        "name": position.name,
+        "qty": position.qty,
+        "buy_price": position.buy_price,
+        "sell_price": sell_price,
+        "tax_paid": tax * position.qty,
+        "profit": (sell_price - position.buy_price) * position.qty
+                  - tax * position.qty,
+    }]
+
+
 def run_cycle(cfg, profile: str | None = None) -> dict:
     """One poll cycle: manage auto positions (exits) then open new ones."""
     from rshelper.cli import _fetch_bootstrap
@@ -488,17 +508,25 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             hold_minutes = None
         else:
             hold_minutes = round((now - opened) / 60, 1)
-        lots = close_positions(p.item_id, p.qty, sell, profile)
         entry_spread_pct = None
         if p.entry_offer and p.buy_price > 0:
             entry_spread_pct = round(
                 (p.entry_offer - p.buy_price) / p.buy_price * 100, 2)
-        for lot in lots:
+        # Compute the realized lots WITHOUT writing positions yet, journal
+        # them first, then commit the close. close_positions writes the file
+        # itself, so to journal-before-commit we log the would-be lots with
+        # the same ids the close will produce. A crash between the journal
+        # write and the positions write leaves the position open with a
+        # realized journal entry — recoverable — instead of a closed
+        # position with no journal entry (lost P&L).
+        preview = _preview_lots(p, sell)
+        for lot in preview:
             log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
                       sell, note="paper", profile=profile, strategy="auto",
                       exit_reason=reason, hold_minutes=hold_minutes,
                       quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
                       fill_guard=guarded_fill is not None)
+        lots = close_positions(p.item_id, p.qty, sell, profile)
         profit_sum = sum(l["profit"] for l in lots)
         try:
             from rshelper.alerts import push_alert

@@ -156,7 +156,11 @@ def collect_offer(position_id: int, profile=None, latest=None) -> dict:
     if position is None:
         raise ValueError(f"unknown position id {position_id}")
     sell_price = close_market_price(position, latest)
-    lots = close_positions(position.item_id, position.qty, sell_price, profile)
+    # Close the SPECIFIC lot (not FIFO): the GE Collect button maps to one
+    # slot; with several lots of the same item open, FIFO would book the
+    # oldest lot's cost basis instead of the clicked one.
+    lots = close_positions(position.item_id, position.qty, sell_price,
+                           profile, position_id=position.id)
     for lot in lots:
         log_trade(position.item_id, lot["name"], lot["qty"], lot["buy_price"],
                   sell_price, note="paper", profile=profile,

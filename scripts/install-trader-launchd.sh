@@ -74,10 +74,7 @@ write_plist() {
   </dict>
   <key>WorkingDirectory</key><string>$DIR_X</string>
   <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key>
-  <dict>
-    <key>SuccessfulExit</key><false/>
-  </dict>
+  <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>60</integer>
   <key>StandardOutPath</key><string>$OUT_X</string>
   <key>StandardErrorPath</key><string>$ERR_X</string>
@@ -142,10 +139,7 @@ write_monitor_plist() {
   </dict>
   <key>WorkingDirectory</key><string>$DIR_X</string>
   <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key>
-  <dict>
-    <key>SuccessfulExit</key><false/>
-  </dict>
+  <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>60</integer>
   <key>StandardOutPath</key><string>$OUT_X</string>
   <key>StandardErrorPath</key><string>$ERR_X</string>

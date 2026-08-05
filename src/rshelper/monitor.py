@@ -141,8 +141,15 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
                 continue
             buy = int(price.get("high", 0) or 0)
             sell = int(price.get("low", 0) or 0)
-            margin = sell - buy
-            tax = ge_tax(sell)
+            # Direction-aware margin, matching `watch check --flip-direction`
+            # and the CLI convention: traditional sells at the offer (high),
+            # so tax applies to `buy`; arbitrage sells at the bid (low).
+            if cfg.flip.direction == "traditional":
+                margin = buy - sell
+                tax = ge_tax(buy)
+            else:
+                margin = sell - buy
+                tax = ge_tax(sell)
             profit = margin - tax
             above, below = entry.get("alert_margin_above"), entry.get("alert_margin_below")
             if (above is not None and profit > above) or (below is not None and profit < below):
