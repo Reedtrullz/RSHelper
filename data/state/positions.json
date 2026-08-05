@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 183,
-      "buy_price": 2185,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 172,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-05T07:06:49.020110+00:00",
+      "opened_at": "2026-08-05T07:42:49.949339+00:00",
       "note": "auto",
-      "entry_sell": 2185,
-      "entry_offer": 2299
+      "entry_sell": 25,
+      "entry_offer": 26
+    },
+    {
+      "id": 2,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 259,
+      "buy_price": 385,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T07:42:49.950338+00:00",
+      "note": "auto",
+      "entry_sell": 385,
+      "entry_offer": 401
+    },
+    {
+      "id": 3,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 604,
+      "buy_price": 131,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T07:42:49.950611+00:00",
+      "note": "auto",
+      "entry_sell": 131,
+      "entry_offer": 136
     }
   ]
 }
