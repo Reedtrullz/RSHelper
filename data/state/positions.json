@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 172,
-      "buy_price": 25,
+      "item_id": 21316,
+      "name": "Amethyst broad bolts",
+      "qty": 200,
+      "buy_price": 157,
       "direction": "traditional",
-      "opened_at": "2026-08-05T07:42:49.949339+00:00",
+      "opened_at": "2026-08-05T07:58:49.380334+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
-      "id": 2,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 259,
-      "buy_price": 385,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T07:42:49.950338+00:00",
-      "note": "auto",
-      "entry_sell": 385,
-      "entry_offer": 401
-    },
-    {
-      "id": 3,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 604,
-      "buy_price": 131,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T07:42:49.950611+00:00",
-      "note": "auto",
-      "entry_sell": 131,
-      "entry_offer": 136
+      "entry_sell": 157,
+      "entry_offer": 164
     }
   ]
 }
