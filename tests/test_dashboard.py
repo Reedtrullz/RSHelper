@@ -635,5 +635,186 @@ class TestCLIDashboardSubcommand(unittest.TestCase):
             self.parser.parse_args(["dashboard", "--help"])
 
 
+class TestNewRoutes(unittest.TestCase):
+    """Routes added by the v3.0 UI/UX refactor."""
+
+    def _make(self, **fns):
+        from http.server import BaseHTTPRequestHandler
+        from rshelper.scanner import FlipScanner
+        scanner = fns.pop("scanner", FlipScanner(direction="arbitrage"))
+        Handler = make_handler(scanner, lambda: [], **fns)
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.response_code = None
+        h.response_headers = []
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: setattr(h, "response_code", code)
+        h.send_header = lambda key, value: h.response_headers.append((key, value))
+        h.end_headers = lambda: None
+        return h
+
+    def test_api_alerts(self):
+        h = self._make(alerts_fn=lambda limit: {"alerts": [
+            {"id": 1, "ts": 1.0, "type": "trader", "severity": "HIGH",
+             "item_id": 1, "item_name": "Nature rune", "title": "take_profit",
+             "message": "+3,000 gp", "read": False}],
+            "count": 1, "unread": 1})
+        h.path = "/api/alerts"
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["unread"], 1)
+
+    def test_api_alerts_read(self):
+        calls = []
+        h = self._make(alerts_read_fn=lambda ids, allf: calls.append((ids, allf))
+                       or {"changed": 1, "unread": 0})
+        h.path = "/api/alerts/read"
+        h.command = "POST"
+        payload = json.dumps({"all": True}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, [(None, True)])
+
+    def test_api_confidence(self):
+        h = self._make(confidence_fn=lambda ids: {str(ids[0]): {
+            "confidence": 0.7, "avg_margin": 100}})
+        h.path = "/api/confidence?ids=1,2"
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["1"]["confidence"], 0.7)
+
+    def test_api_alch(self):
+        h = self._make(alch_fn=lambda: {"items": [{"id": 561, "name": "Nature rune"}],
+                                        "count": 1, "nature_rune_cost": 147})
+        h.path = "/api/alch"
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["count"], 1)
+
+    def test_api_watchlist_check(self):
+        h = self._make(watchlist_check_fn=lambda: {"triggered": [
+            {"item_id": 1, "name": "Nature rune", "reason": "above",
+             "threshold": 50, "current": 60}], "count": 1})
+        h.path = "/api/watchlist/check"
+        h.do_GET()
+        body = json.loads(h.wfile.getvalue())
+        self.assertEqual(body["count"], 1)
+
+    def test_api_watchlist_alerts_action(self):
+        calls = []
+        h = self._make(watchlist_update_fn=lambda a, i, ab=None, bl=None:
+                       calls.append((a, i, ab, bl)) or {"items": []})
+        h.path = "/api/watchlist"
+        h.command = "POST"
+        payload = json.dumps({"action": "alerts", "item_id": 5,
+                              "alert_above": 100, "alert_below": None}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, [("alerts", 5, 100, None)])
+
+    def test_api_positions_close(self):
+        calls = []
+        h = self._make(close_position_fn=lambda pid, qty: calls.append((pid, qty))
+                       or {"ok": True})
+        h.path = "/api/positions"
+        h.command = "POST"
+        payload = json.dumps({"action": "close", "position_id": 7}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, [(7, None)])
+
+    def test_api_trader_control_denied_without_control(self):
+        def deny(action):
+            raise PermissionError("daemon control is disabled")
+        h = self._make(trader_control_fn=deny)
+        h.path = "/api/trader"
+        h.command = "POST"
+        payload = json.dumps({"action": "stop"}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.do_POST()
+        self.assertEqual(h.error_code, 403)
+
+    def test_api_trader_control_start(self):
+        calls = []
+        h = self._make(trader_control_fn=lambda a: calls.append(a) or {"ok": True})
+        h.path = "/api/trader"
+        h.command = "POST"
+        payload = json.dumps({"action": "start"}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, ["start"])
+
+    def test_api_monitor_control_denied_without_control(self):
+        def deny(action):
+            raise PermissionError("daemon control is disabled")
+        h = self._make(monitor_control_fn=deny)
+        h.path = "/api/monitor"
+        h.command = "POST"
+        payload = json.dumps({"action": "stop"}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.send_error = lambda code, message=None: setattr(h, "error_code", code)
+        h.do_POST()
+        self.assertEqual(h.error_code, 403)
+
+    def test_api_trades_delete(self):
+        calls = []
+        h = self._make(delete_trade_fn=lambda tid: calls.append(tid) or {"ok": True})
+        h.path = "/api/trades/delete"
+        h.command = "POST"
+        payload = json.dumps({"trade_id": 3}).encode()
+        h.headers = {"Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, [3])
+
+    def test_api_events_sse_headers(self):
+        import queue
+        q = queue.Queue()
+        q.put_nowait("event: refresh\ndata: {}\n\n")
+        q.put_nowait(": heartbeat\n\n")
+
+        class Hub:
+            def subscribe(self, qq):
+                qq.put_nowait("event: refresh\ndata: {}\n\n")
+
+            def unsubscribe(self, qq):
+                pass
+        h = self._make(event_hub=Hub())
+        h.path = "/api/events"
+        h.do_GET()
+        headers = dict(h.response_headers)
+        self.assertEqual(headers.get("Content-Type"), "text/event-stream")
+        self.assertIn("event: refresh", h.wfile.getvalue().decode())
+
+    def test_api_timeseries_step_param(self):
+        from http.server import BaseHTTPRequestHandler
+        calls = []
+        Handler = make_handler(
+            FlipScanner(direction="arbitrage"), lambda: [],
+            timeseries_fn=lambda i, step, points: calls.append((i, step, points))
+            or {"points": []})
+        h = BaseHTTPRequestHandler.__new__(Handler)
+        h.path = "/api/timeseries?id=561&step=1h&points=48"
+        h.request_version = "HTTP/1.1"
+        h.command = "GET"
+        h.headers = {}
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: None
+        h.send_header = lambda key, value: None
+        h.end_headers = lambda: None
+        h.do_GET()
+        self.assertEqual(calls, [(561, "1h", 48)])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

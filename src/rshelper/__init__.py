@@ -1,3 +1,3 @@
 """RSHelper — OSRS Grand Exchange profit scanner."""
 
-__version__ = "2.5.0"
+__version__ = "3.0.0"

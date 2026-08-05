@@ -26,6 +26,7 @@ import tempfile
 
 LIST_FILES = {
     "trades.json": ("trades", "id"),
+    "alerts.json": ("alerts", "id"),
 }
 DICT_FILES = {
     "watchlist.json": "items",

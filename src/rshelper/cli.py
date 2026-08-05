@@ -623,7 +623,7 @@ def _trade_positions(args: argparse.Namespace) -> None:
             "id": p.id, "item_id": p.item_id, "name": p.name, "qty": p.qty,
             "buy_price": p.buy_price, "direction": p.direction,
             "opened_at": p.opened_at, "current": sell,
-            "unrealized": unrealized,
+            "unrealized": unrealized, "note": p.note,
         })
     if args.json:
         print(json.dumps(rows, indent=2))
@@ -643,6 +643,116 @@ def _trade_positions(args: argparse.Namespace) -> None:
               f"{r['buy_price']:>10,} {cur:>10} {unreal:>12} "
               f"{r['opened_at'][:10]}")
     return rows
+
+
+def trade_status(args: argparse.Namespace) -> None:
+    """One-shot summary: open positions, unrealized, realized P&L, trader."""
+    from rshelper.positions import list_positions
+    from rshelper.api import fetch_latest
+    from rshelper.journal import compute_pnl
+    from rshelper.market import ge_tax
+    from rshelper.trader import trader_status
+    profile = getattr(args, "profile", None)
+    latest = fetch_latest(profile) or {}
+    positions = list_positions(profile)
+    rows = []
+    unreal = 0
+    for p in positions:
+        price = latest.get(str(p.item_id))
+        usable = isinstance(price, dict) and price_issue(price) is None
+        sell = None
+        unrealized = None
+        if usable:
+            sell = int(price.get("low", 0) or 0) if p.direction == "arbitrage" \
+                else int(price.get("high", 0) or 0)
+        if usable and sell and sell > 0:
+            tax = ge_tax(sell)
+            unrealized = (sell - p.buy_price) * p.qty - tax * p.qty
+            unreal += unrealized
+        rows.append({
+            "id": p.id, "item_id": p.item_id, "name": p.name, "qty": p.qty,
+            "buy_price": p.buy_price, "direction": p.direction,
+            "opened_at": p.opened_at, "current": sell,
+            "unrealized": unrealized, "note": p.note,
+        })
+    pnl = compute_pnl(profile=profile, strategy="auto")
+    trader = trader_status(profile) or {"running": False}
+    if args.json:
+        print(json.dumps({
+            "positions": rows,
+            "unrealized": unreal,
+            "realized_pnl": pnl.total_profit,
+            "auto_trades": pnl.trade_count,
+            "trader_running": bool(trader.get("running")),
+            "trader": trader,
+        }, indent=2))
+        return
+    print(f"\n  Trader: {'running' if trader.get('running') else 'not running'}"
+          f" (profile {profile or 'default'})")
+    print(f"  Realized P&L (auto): {pnl.total_profit:+,} gp "
+          f"({pnl.trade_count} trades)")
+    print(f"  Unrealized: {unreal:+,} gp "
+          f"({len(rows)} open position{'s' if len(rows) != 1 else ''})")
+    if not rows:
+        print("\n  No open positions.")
+        return
+    nw = max(len(r["name"]) for r in rows)
+    nw = min(nw, 30)
+    print(f"\n  {'ID':<4} {'Item':<{nw}} {'Qty':>6} {'Buy':>10} "
+          f"{'Current':>10} {'Unrealized':>12}")
+    print("  " + "-" * (56 + nw))
+    for r in rows:
+        cur = f"{r['current']:,}" if r["current"] else "-"
+        unreal_txt = f"{r['unrealized']:+,}" if r["unrealized"] is not None else "-"
+        print(f"  {r['id']:<4} {r['name'][:nw]:<{nw}} {r['qty']:>6,} "
+              f"{r['buy_price']:>10,} {cur:>10} {unreal_txt:>12}")
+
+
+def history_cmd(args: argparse.Namespace) -> None:
+    """Progression: daily buckets, tuning eras, and per-item P&L (dashboard parity)."""
+    from rshelper.history import build_history
+    profile = getattr(args, "profile", None)
+    h = build_history(profile=profile, paper_only=not args.all,
+                      strategy=args.strategy)
+    if args.json:
+        print(json.dumps(h, indent=2, default=str))
+        return
+    s = h["summary"]
+    print(f"\n  History (paper {'all' if args.all else 'only'})")
+    print("  " + "=" * 50)
+    print(f"  Total profit:     {s['total_profit']:>+15,} gp")
+    print(f"  ROI:              {s['roi_pct']:>14.2f}%")
+    print(f"  Trades:           {s['trade_count']:>15}")
+    print(f"  Win rate:         {s['win_rate']:>14.1f}%")
+    print(f"  Items traded:     {s['items_traded']:>15}")
+    print(f"  Active days:      {s['active_days']:>15}")
+    buckets = h.get("buckets", [])
+    if buckets:
+        print(f"\n  {'Date':<12} {'Trades':>7} {'Profit':>12} {'Cum':>12} {'Win%':>7}")
+        print("  " + "-" * 52)
+        for b in buckets:
+            wr = f"{b['win_rate']:.0f}%" if b.get("win_rate") is not None else "-"
+            print(f"  {b['date']:<12} {b['trade_count']:>7,} "
+                  f"{b['profit']:>+12,} {b['cumulative_profit']:>+12,} {wr:>7}")
+    eras = h.get("eras", [])
+    if eras:
+        print(f"\n  {'Start':<12} {'End':<12} {'Trades':>7} {'Profit':>12} {'Win%':>7}")
+        print("  " + "-" * 52)
+        for e in eras:
+            wr = f"{e['win_rate']:.0f}%" if e.get("win_rate") is not None else "-"
+            print(f"  {e['start']:<12} {e['end']:<12} {e['trade_count']:>7,} "
+                  f"{e['profit']:>+12,} {wr:>7}")
+    items = h.get("items", [])
+    if items:
+        print(f"\n  {'Item':<28} {'Trades':>6} {'Qty':>9} {'Profit':>11} {'ROI':>7} {'Win%':>6}")
+        print("  " + "-" * 68)
+        for r in items[:20]:
+            print(f"  {r['name'][:28]:<28} {r['trade_count']:>6} "
+                  f"{r['qty']:>9,} {r['profit']:>+11,} "
+                  f"{r['roi_pct']:>6.1f}% {r['win_rate']:>5.1f}%")
+        if len(items) > 20:
+            print(f"  ... and {len(items) - 20} more")
+    print()
 
 
 def auto_trade_cmd(args: argparse.Namespace) -> None:
@@ -1157,6 +1267,9 @@ def watch_check(args: argparse.Namespace) -> None:
         print("No alerts triggered.")
         return
 
+    if getattr(args, "json", False):
+        print(json.dumps(alerts, indent=2))
+
     print(f"\n{len(alerts)} alert(s) triggered:")
     for a in alerts:
         print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
@@ -1299,23 +1412,47 @@ def config_path(args: argparse.Namespace) -> None:
 
 def signals_cmd(args: argparse.Namespace) -> None:
     """Fetch data, detect market signals, print results grouped by type."""
-    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+    monitor_interval = getattr(args, "monitor", 0) or 0
 
-    # Run flip scan to get items with current prices and RS scores
-    direction = getattr(args, "flip_direction", "arbitrage")
-    scanner = FlipScanner(direction=direction, ge_slots=2)
-    flips = scanner.scan(
-        items,
-        members_only=args.members_only,
-        min_volume=0,
-        min_margin=0,
-    )
+    def _scan_once():
+        mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+        direction = getattr(args, "flip_direction", "arbitrage")
+        scanner = FlipScanner(direction=direction, ge_slots=2)
+        flips = scanner.scan(
+            items,
+            members_only=args.members_only,
+            min_volume=0,
+            min_margin=0,
+        )
+        from rshelper.signals import detect_signals
+        return detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60)
 
-    print(f"  {len(flips)} items scanned for signals", file=sys.stderr)
+    if monitor_interval:
+        import time as _time
+        seen: set[tuple] = set()
+        print(f"[signals] live follow mode — re-scanning every {monitor_interval}s. "
+              f"Ctrl-C to stop.", file=sys.stderr)
+        try:
+            while True:
+                try:
+                    signals = _scan_once()
+                except SystemExit:
+                    signals = []
+                    print("[signals] data sources unavailable; retrying next cycle",
+                          file=sys.stderr)
+                for s in signals:
+                    key = (s.type, s.item_id)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    print(f"[signal] {s.type} {s.severity} {s.name} "
+                          f"{s.current_price:,} gp {s.message}")
+                _time.sleep(max(1, monitor_interval))
+        except KeyboardInterrupt:
+            print("\n[signals] stopped.", file=sys.stderr)
+            return
 
-    from rshelper.signals import detect_signals, Signal
-    signals = detect_signals(flips, volume_5m, cooldown_sec=args.cooldown * 60)
-
+    signals = _scan_once()
     if not signals:
         print("\nNo active signals detected.")
         return
@@ -1561,6 +1698,9 @@ def main() -> None:
     trade_pnl.add_argument("--json", action="store_true")
     trade_del = trade_sub.add_parser("delete", help="Delete a trade by ID")
     trade_del.add_argument("id", type=int, help="Trade ID to delete")
+    trade_status_p = trade_sub.add_parser(
+        "status", help="Positions + unrealized + realized P&L + trader in one view")
+    trade_status_p.add_argument("--json", action="store_true")
 
 
     # Signals subcommand
@@ -1575,6 +1715,9 @@ def main() -> None:
                       help="Signal cooldown in minutes (default: 15)")
     sig.add_argument("--json", action="store_true",
                       help="Output JSON instead of table")
+    sig.add_argument("--monitor", type=int, nargs="?", const=30, default=0,
+                     help="Live follow mode: re-scan every N seconds (default 30) "
+                          "and print new signals as they appear")
 
     # Watchlist subcommand
     watch = sub.add_parser("watch", help="Manage item watchlist and check alerts")
@@ -1596,6 +1739,8 @@ def main() -> None:
                            help="GE slots (unused in check, accepted for consistency)")
     watch_chk.add_argument("-v", "--verbose", action="store_true",
                            help="Show all watched items, not just alerts")
+    watch_chk.add_argument("--json", action="store_true",
+                           help="Output alerts as JSON (exit 1 still fires on triggers)")
 
     # Diff subcommand
     diff_p = sub.add_parser("diff", help="Compare today's scan with a previous one")
@@ -1632,6 +1777,21 @@ def main() -> None:
     dash = sub.add_parser("dashboard", help="Launch local web dashboard")
     dash.add_argument("--port", type=int, default=5555)
     dash.add_argument("--bind", type=str, default="127.0.0.1")
+    dash.add_argument("--open", action="store_true",
+                      help="Open the dashboard in your browser")
+    dash.add_argument("--control", action="store_true",
+                      help="Enable daemon control endpoints (start/stop auto-trade "
+                           "and monitor). Only use on trusted local sessions.")
+    dash.add_argument("--profile", type=str, default=None,
+                      help="Profile to serve (default: active profile)")
+
+    hist = sub.add_parser("history", help="Progression: daily buckets, eras, per-item P&L")
+    hist.add_argument("--all", action="store_true",
+                      help="Include non-paper trades (default: paper only)")
+    hist.add_argument("--strategy", type=str, default="",
+                      choices=["", "auto", "manual"],
+                      help="Filter by strategy (auto=trader, manual=hand)")
+    hist.add_argument("--json", action="store_true", help="Output JSON instead of table")
 
     margin = sub.add_parser("margin-check", help="Analyze timeseries history for flip confidence scoring")
     margin.add_argument("--members-only", action=argparse.BooleanOptionalAction,
@@ -1699,9 +1859,13 @@ def main() -> None:
     elif args.command == "signals":
         signals_cmd(args)
 
+    elif args.command == "history":
+        history_cmd(args)
+
     elif args.command == "dashboard":
         from rshelper.dashboard.server import run
-        run(bind=args.bind, port=args.port)
+        run(bind=args.bind, port=args.port, control=args.control,
+            open_browser=args.open, profile=args.profile)
 
     elif args.command == "margin-check":
         margin_check(args)
@@ -1752,6 +1916,8 @@ def main() -> None:
             _trade_close(args)
         elif args.trade_action == "positions":
             _trade_positions(args)
+        elif args.trade_action == "status":
+            trade_status(args)
         elif args.trade_action == "list":
             from rshelper.journal import list_trades
             profile = args.profile if hasattr(args, "profile") else None

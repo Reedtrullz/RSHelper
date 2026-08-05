@@ -2,10 +2,11 @@
 
 RSHelper is a stdlib-only Python CLI and local web dashboard for Old School
 RuneScape Grand Exchange trading: alch-profit scanning, flip/margin analysis,
-market signals, a daemon monitor, a trade journal, and multi-account profiles.
-It also ships a production deployment (Docker on a Racknerd VPS behind Caddy)
-served at https://rs.reidar.tech. Current version: `2.6.0`
-(`rshelper --version`). Latest handoff: `HANDOFF-v3.0.md`.
+market signals, a daemon monitor, a trade journal, an auto-trader, a
+persistent alert feed, and multi-account profiles. It also ships a production
+deployment (Docker on a Racknerd VPS behind Caddy) served at
+https://rs.reidar.tech. Current version: `3.0.0`
+(`rshelper --version`). Latest handoff: `HANDOFF-v4.0.md`.
 
 ## Environment
 
@@ -15,13 +16,13 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
   (OSRS Wiki + GE Tracker fallback) use `urllib` and the dashboard uses
   `http.server`.
 - Cache at `~/.cache/rshelper/` (0600, atomic writes). Config, watchlist,
-  trades, snapshots, cooldowns, volume baselines, monitor state at
-  `~/.config/rshelper/`.
+  trades, snapshots, cooldowns, volume baselines, monitor/trader state,
+  alerts at `~/.config/rshelper/`.
 - Run tests:
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 295 tests across 21 files, all passing.
+  Expected: 344 tests across 24 files, all passing.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -53,7 +54,7 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
    stderr. Breaking this breaks `--json`/`--csv` piping — it is the most
    common regression in this repo.
 6. **`--quiet`** routes status output to `/dev/null`; `--version` prints the
-   `__version__` constant. Keep the CLI surface listed in `HANDOFF-v3.0.md`
+   `__version__` constant. Keep the CLI surface listed in `HANDOFF-v4.0.md`
    working: every subcommand and flag must have at least one test and a smoke
    check.
 7. **Defaults are tuned for paper trading**: flip/margin scans default
@@ -85,11 +86,20 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
   mapping; add new recipes by appending to `RECIPES` with verified IDs.
 - `scanner.py`: 5-min volume is extrapolated to hourly with `volume * 12`.
 - `dashboard/server.py`: closure-based TTL cache, re-fetch every 120s.
+  Daemon control endpoints (start/stop auto-trade + monitor) are gated by
+  the `--control` flag — never enabled on the VPS deploy.
+- `dashboard/templates.py` + `dashboard/scripts.py`: inline HTML/JS split
+  into core/charts/views constants, still one served artifact, no engine.
+- `alerts.py`: the alert feed is persisted (cap 200, prune 14d) and synced
+  to the deploy like the journal; watch-threshold dedupe is 15 min.
 - `api.py`: GE Tracker fallback volume is order quantities
   (`buyingQuantity`/`sellingQuantity`), not real 5m trade volume; real
   trade-volume timeseries are wiki-only. The GE Tracker dump is cached 300s
   so the undocumented endpoint gets one fetch per refresh cycle.
-- `dashboard/templates.py`: inline HTML template, no template engine.
+- `dashboard/templates.py` + `dashboard/scripts.py`: inline HTML/JS split
+  into core/charts/views constants, still one served artifact, no engine.
+- `alerts.py`: the alert feed is persisted (cap 200, prune 14d) and synced
+  to the deploy like the journal; watch-threshold dedupe is 15 min.
 - `market.py`: staleness (>24h) and spread-ratio (>20x) thresholds are
   hardcoded guards shared by every price consumer; price sanity is applied
   in `build_items_from_api` and by all raw-price paths (watch-check,
@@ -100,7 +110,7 @@ served at https://rs.reidar.tech. Current version: `2.6.0`
 ## Workflow Gates
 
 Before committing a round:
-1. Run all 18 test files; zero failures.
+1. Run all 24 test files; zero failures.
 2. Smoke-test every touched subcommand against the live Wiki API (or the GE
    Tracker fallback when testing from a datacenter IP).
 3. Verify `--json` output pipes through `json.tool` without stderr leakage.
@@ -132,10 +142,10 @@ survives crashes:
   at this repo's venv.
 - `~/Library/LaunchAgents/com.reidar.rshelper-state-sync.plist` — runs
   `~/.config/rshelper/bin/sync-and-push-state.py` every 15 min, committing
-  trading state (`data/state/*.json`) to `main` as "state: sync trading
-  history". It commits with `commit.gpgsign=true` (SSH signing via 1Password),
-  so it only pushes while 1Password is unlocked; if sync stalls, unlock
-  1Password (or check `launchctl list | grep rshelper-state-sync`).
+  trading state (`data/state/*.json`, incl. `alerts.json`) to `main` as
+  "state: sync trading history". It commits with `commit.gpgsign=true` (SSH
+  signing via 1Password), so it only pushes while 1Password is unlocked; if
+  sync stalls, unlock 1Password (or check `launchctl list | grep rshelper-state-sync`).
 
 Do not edit `~/.config/rshelper/` trading state by hand — it is written by
 the CLI and synced to the repo by the state-sync agent.

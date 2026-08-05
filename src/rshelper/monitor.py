@@ -108,9 +108,19 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
     # are currently profitable flips; FLIP stays restricted to the scanned
     # candidates (they carry an RS score from the scanner).
     signals = detect_signals(items, vol_5m, flip_ids={f.id for f in flips})
-    if signals and not no_notify:
-        high = [s for s in signals if s.severity == "HIGH"]
-        notify("RSHelper Alert", f"{len(high)} high-severity signal(s)" if high else f"{len(signals)} signal(s)")
+    if signals:
+        try:
+            from rshelper.alerts import push_alert
+            for s in signals:
+                push_alert("signal", s.severity, s.item_id, s.name, s.type,
+                           s.message, profile=profile,
+                           data={"deviation": s.deviation,
+                                 "current_price": s.current_price})
+        except Exception:
+            pass  # alert delivery must never break a poll cycle
+        if not no_notify:
+            high = [s for s in signals if s.severity == "HIGH"]
+            notify("RSHelper Alert", f"{len(high)} high-severity signal(s)" if high else f"{len(signals)} signal(s)")
 
     watched_ids = watchlist.get_watched_ids(profile)
     if watched_ids:
@@ -131,6 +141,16 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
             profit = margin - tax
             above, below = entry.get("alert_margin_above"), entry.get("alert_margin_below")
             if (above is not None and profit > above) or (below is not None and profit < below):
+                try:
+                    from rshelper.alerts import push_alert
+                    hit = (f"margin {profit:,} gp above {above:,}" if above is not None and profit > above
+                           else f"margin {profit:,} gp below {below:,}")
+                    push_alert("watch", "HIGH", int(item_id_str),
+                               entry.get("name", item_id_str),
+                               "Watchlist alert", f"{entry.get('name', '')}: {hit}",
+                               profile=profile)
+                except Exception:
+                    pass
                 if not no_notify:
                     notify("RSHelper Watchlist", f"{entry['name']}: margin {profit:,} gp")
 

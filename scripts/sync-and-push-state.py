@@ -17,7 +17,8 @@ REPO = Path(os.environ.get("RSHELPER_REPO", Path(__file__).resolve().parents[1])
 SRC = Path.home() / ".config" / "rshelper"
 DEST = REPO / "data" / "state"
 FILES = ["trades.json", "positions.json", "watchlist.json", "tuning_log.json",
-         "volume_baseline.json", "signal_cooldowns.json", "trader_state.json"]
+         "volume_baseline.json", "signal_cooldowns.json", "trader_state.json",
+         "alerts.json"]
 
 
 def _files_differ(src_dir: Path, dst_dir: Path, name: str) -> bool:

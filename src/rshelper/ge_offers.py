@@ -155,12 +155,7 @@ def collect_offer(position_id: int, profile=None, latest=None) -> dict:
                      if p.id == position_id), None)
     if position is None:
         raise ValueError(f"unknown position id {position_id}")
-    sell_price = position.buy_price
-    price = (latest or {}).get(str(position.item_id))
-    if isinstance(price, dict) and price_issue(price) is None:
-        leg = _current_leg(price, position.direction)
-        if leg > 0:
-            sell_price = leg
+    sell_price = close_market_price(position, latest)
     lots = close_positions(position.item_id, position.qty, sell_price, profile)
     for lot in lots:
         log_trade(position.item_id, lot["name"], lot["qty"], lot["buy_price"],
@@ -173,3 +168,21 @@ def collect_offer(position_id: int, profile=None, latest=None) -> dict:
         "sell_price": sell_price,
         "profit": sum(lot["profit"] for lot in lots),
     }
+
+
+def close_market_price(position, latest: dict | None) -> int:
+    """Current market exit price for a position, else its entry price.
+
+    The direction-aware exit leg (offer/high for traditional, bid/low for
+    arbitrage) at a usable live quote; falls back to the entry buy_price
+    when no usable price exists (the same fallback collect_offer uses).
+    Shared by the dashboard's manual position close and GE collect.
+    """
+    latest = latest or {}
+    sell_price = position.buy_price
+    price = latest.get(str(position.item_id))
+    if isinstance(price, dict) and price_issue(price) is None:
+        leg = _current_leg(price, position.direction)
+        if leg > 0:
+            sell_price = leg
+    return sell_price

@@ -33,15 +33,30 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  price_lookup: Callable[[list[int]], dict] | None = None,
                  meta_fn: Callable[[], dict] | None = None,
                  watchlist_fn: Callable[[], dict] | None = None,
-                 watchlist_update_fn: Callable[[str, int], dict] | None = None,
-                 timeseries_fn: Callable[[int], dict] | None = None,
+                 watchlist_update_fn: Callable[..., dict] | None = None,
+                 watchlist_check_fn: Callable[[], dict] | None = None,
+                 timeseries_fn: Callable[[int, str, int], dict] | None = None,
                  positions_fn: Callable[[], dict] | None = None,
+                 close_position_fn: Callable[[int, int | None], dict] | None = None,
                  paper_trade_fn: Callable[[str, str, int], dict] | None = None,
                  trader_fn: Callable[[], dict] | None = None,
+                 trader_control_fn: Callable[[str], dict] | None = None,
+                 monitor_fn: Callable[[], dict] | None = None,
+                 monitor_control_fn: Callable[[str], dict] | None = None,
                  ge_fn: Callable[[], dict] | None = None,
                  ge_collect_fn: Callable[[int], dict] | None = None,
                  bank_fn: Callable[[], dict] | None = None,
-                 process_fn: Callable[[], dict] | None = None) -> type:
+                 process_fn: Callable[[], dict] | None = None,
+                 alch_fn: Callable[[], dict] | None = None,
+                 confidence_fn: Callable[[list[int]], dict] | None = None,
+                 alerts_fn: Callable[[int], dict] | None = None,
+                 alerts_read_fn: Callable[[list[int] | None, bool], dict] | None = None,
+                 history_fn: Callable[[bool, str], dict] | None = None,
+                 trades_fn: Callable[[str, str], dict] | None = None,
+                 pnl_fn: Callable[[str, str], dict] | None = None,
+                 delete_trade_fn: Callable[[int], dict] | None = None,
+                 log_trade_fn: Callable[..., dict] | None = None,
+                 event_hub=None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -51,15 +66,30 @@ def make_handler(scanner, scan_items: Callable[[], list],
     price_lookup: Optional callable(list[item_id]) -> {id: {usable, buy, sell}}
     meta_fn: Optional callable() -> {source, items, signals, watchlist, last_fetch}
     watchlist_fn: Optional callable() -> {items: [...]}
-    watchlist_update_fn: Optional callable(action, item_id) -> {items: [...]}
-    timeseries_fn: Optional callable(item_id) -> {points: [...]}
+    watchlist_update_fn: Optional callable(action, item_id, ...) -> {items: [...]}
+    watchlist_check_fn: Optional callable() -> {triggered: [...]}
+    timeseries_fn: Optional callable(item_id, step, points) -> {points: [...]}
     positions_fn: Optional callable() -> {positions, open_qty, unrealized}
+    close_position_fn: Optional callable(position_id, qty) -> {ok, ...}
     paper_trade_fn: Optional callable(action, item, qty) -> {ok, ...}
     trader_fn: Optional callable() -> trader status dict
+    trader_control_fn: Optional callable(action) -> {ok, ...} (403 without control)
+    monitor_fn: Optional callable() -> monitor status dict
+    monitor_control_fn: Optional callable(action) -> {ok, ...} (403 without control)
     ge_fn: Optional callable() -> GE slots dict for /api/ge
     ge_collect_fn: Optional callable(position_id) -> collect result for /api/ge/collect
     bank_fn: Optional callable() -> bank holdings dict for /api/bank
     process_fn: Optional callable() -> processing recipes dict for /api/process
+    alch_fn: Optional callable() -> alch scan dict for /api/alch
+    confidence_fn: Optional callable(ids) -> {id: {...}} for /api/confidence
+    alerts_fn: Optional callable(limit) -> {alerts, unread} for /api/alerts
+    alerts_read_fn: Optional callable(ids, all) -> {changed, unread}
+    history_fn: Optional callable(paper_only, strategy) -> history dict
+    trades_fn: Optional callable(note, strategy) -> {trades, count}
+    pnl_fn: Optional callable(note, strategy) -> pnl dict
+    delete_trade_fn: Optional callable(trade_id) -> {ok}
+    log_trade_fn: Optional callable(item_id, name, qty, buy, sell, note) -> trade dict
+    event_hub: Optional EventHub for SSE broadcasts
     """
 
     class DashboardHandler(BaseHTTPRequestHandler):
@@ -89,6 +119,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_meta()
             elif path == "/api/watchlist":
                 self._serve_watchlist()
+            elif path == "/api/watchlist/check":
+                self._serve_watchlist_check()
             elif path == "/api/timeseries":
                 self._serve_timeseries()
             elif path == "/api/positions":
@@ -101,6 +133,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_bank()
             elif path == "/api/process":
                 self._serve_process()
+            elif path == "/api/alch":
+                self._serve_alch()
+            elif path == "/api/confidence":
+                self._serve_confidence()
+            elif path == "/api/alerts":
+                self._serve_alerts()
+            elif path == "/api/events":
+                self._serve_events()
             else:
                 self.send_error(404)
 
@@ -117,6 +157,16 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._handle_paper_trade()
             elif path == "/api/ge/collect":
                 self._handle_ge_collect()
+            elif path == "/api/positions":
+                self._handle_close_position()
+            elif path == "/api/trader":
+                self._handle_trader_control()
+            elif path == "/api/monitor":
+                self._handle_monitor_control()
+            elif path == "/api/alerts/read":
+                self._handle_alerts_read()
+            elif path == "/api/trades/delete":
+                self._handle_trade_delete()
             else:
                 self.send_error(404)
 
@@ -170,24 +220,32 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(500, "Signal detection failed")
 
         def _serve_monitor(self):
-            from rshelper.monitor import monitor_status
-            status = monitor_status()
-            self._serve_json(status if status else {"running": False})
+            try:
+                self._serve_json(monitor_fn() if monitor_fn else {"running": False})
+            except Exception as e:
+                print(f"[dashboard] monitor error: {e}", file=sys.stderr)
+                self.send_error(500, "Monitor status failed")
 
         def _serve_trades(self):
-            from rshelper.journal import list_trades
-            from dataclasses import asdict
             q = self._query()
             note = q.get("note", [""])[0]
             strategy = q.get("strategy", [""])[0]
+            if trades_fn:
+                self._serve_json(trades_fn(note, strategy))
+                return
+            from rshelper.journal import list_trades
+            from dataclasses import asdict
             trades = list_trades(note=note, strategy=strategy)
             self._serve_json({"trades": [asdict(t) for t in trades], "count": len(trades)})
 
         def _serve_pnl(self):
-            from rshelper.journal import compute_pnl
             q = self._query()
             note = q.get("note", [""])[0]
             strategy = q.get("strategy", [""])[0]
+            if pnl_fn:
+                self._serve_json(pnl_fn(note, strategy))
+                return
+            from rshelper.journal import compute_pnl
             pnl = compute_pnl(note=note, strategy=strategy)
             d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
                  "total_cost_basis": pnl.total_cost_basis,
@@ -205,11 +263,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
             self._serve_json(d)
 
         def _serve_history(self):
-            from rshelper.history import build_history
             qs = self._query()
             paper_only = qs.get("paper", ["1"])[0] != "0"
             strategy = qs.get("strategy", [""])[0]
             try:
+                if history_fn:
+                    self._serve_json(history_fn(paper_only, strategy))
+                    return
+                from rshelper.history import build_history
                 self._serve_json(build_history(paper_only=paper_only,
                                                strategy=strategy))
             except Exception as e:
@@ -231,6 +292,14 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _serve_watchlist(self):
             self._serve_json(watchlist_fn() if watchlist_fn else {"items": []})
 
+        def _serve_watchlist_check(self):
+            try:
+                self._serve_json(watchlist_check_fn() if watchlist_check_fn
+                                 else {"triggered": [], "count": 0})
+            except Exception as e:
+                print(f"[dashboard] watchlist check error: {e}", file=sys.stderr)
+                self.send_error(500, "Watchlist check failed")
+
         def _serve_timeseries(self):
             qs = self._query()
             raw = qs.get("id", [""])[0]
@@ -238,7 +307,24 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(400, "Invalid item id")
                 return
             item_id = int(raw)
-            self._serve_json(timeseries_fn(item_id) if timeseries_fn else {"points": []})
+            step = qs.get("step", ["5m"])[0]
+            if step not in ("5m", "1h", "6h", "24h"):
+                step = "5m"
+            points = 96
+            if qs.get("points", [""])[0].isdigit():
+                points = min(1000, int(qs["points"][0]))
+            try:
+                fn = timeseries_fn
+                if fn is None:
+                    self._serve_json({"points": []})
+                else:
+                    try:
+                        self._serve_json(fn(item_id, step, points))
+                    except TypeError:
+                        self._serve_json(fn(item_id))
+            except Exception as e:
+                print(f"[dashboard] timeseries error: {e}", file=sys.stderr)
+                self.send_error(500, "Timeseries failed")
 
         def _serve_positions(self):
             self._serve_json(positions_fn() if positions_fn else
@@ -273,6 +359,74 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except Exception as e:
                 print(f"[dashboard] process data error: {e}", file=sys.stderr)
                 self.send_error(500, "Process data failed")
+
+        def _serve_alch(self):
+            try:
+                self._serve_json(alch_fn() if alch_fn else {"items": [], "count": 0})
+            except Exception as e:
+                print(f"[dashboard] alch data error: {e}", file=sys.stderr)
+                self.send_error(500, "Alch data failed")
+
+        def _serve_confidence(self):
+            if confidence_fn is None:
+                self._serve_json({})
+                return
+            qs = self._query()
+            raw = qs.get("ids", [""])[0]
+            ids = [int(i) for i in raw.split(",") if i.strip().isdigit()]
+            try:
+                self._serve_json(confidence_fn(ids))
+            except Exception as e:
+                print(f"[dashboard] confidence error: {e}", file=sys.stderr)
+                self.send_error(500, "Confidence failed")
+
+        def _serve_alerts(self):
+            qs = self._query()
+            limit = 50
+            if qs.get("limit", [""])[0].isdigit():
+                limit = min(200, int(qs["limit"][0]))
+            self._serve_json(alerts_fn(limit) if alerts_fn
+                             else {"alerts": [], "count": 0, "unread": 0})
+
+        def _serve_events(self):
+            """Server-Sent Events: refresh + alert pushes, heartbeat comments."""
+            import queue as _queue
+            q: _queue.Queue = _queue.Queue()
+            if event_hub is not None:
+                event_hub.subscribe(q)
+            try:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "keep-alive")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                deadline = time.time() + 20  # browsers reconnect; tests terminate
+                while True:
+                    try:
+                        item = q.get(timeout=15)
+                        self.wfile.write(item.encode("utf-8"))
+                        self.wfile.flush()
+                        try:
+                            item2 = q.get(timeout=0.2)
+                            self.wfile.write(item2.encode("utf-8"))
+                            self.wfile.flush()
+                        except _queue.Empty:
+                            pass
+                        return
+                    except _queue.Empty:
+                        if time.time() >= deadline:
+                            return
+                        if time.time() - last_heartbeat >= 15:
+                            self.wfile.write(b": heartbeat\n\n")
+                            self.wfile.flush()
+                            last_heartbeat = time.time()
+                        continue
+                    except (BrokenPipeError, ConnectionResetError, OSError):
+                        return
+            finally:
+                if event_hub is not None:
+                    event_hub.unsubscribe(q)
 
         def _handle_ge_collect(self):
             try:
@@ -316,6 +470,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 body = json.loads(self.rfile.read(length))
                 action = body.get("action", "")
                 item_id = int(body.get("item_id", 0))
+                above = body.get("alert_above")
+                below = body.get("alert_below")
+                if above is not None:
+                    above = int(above)
+                if below is not None:
+                    below = int(below)
             except Exception:
                 self.send_error(400, "Invalid JSON")
                 return
@@ -323,10 +483,113 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(404)
                 return
             try:
-                self._serve_json(watchlist_update_fn(action, item_id))
+                if action == "alerts":
+                    self._serve_json(watchlist_update_fn(action, item_id,
+                                                         above, below))
+                else:
+                    self._serve_json(watchlist_update_fn(action, item_id))
             except (ValueError, TypeError) as e:
                 print(f"[dashboard] watchlist error: {e}", file=sys.stderr)
                 self.send_error(400, "Watchlist update failed")
+
+        def _handle_close_position(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                action = body.get("action", "")
+                position_id = int(body.get("position_id", 0))
+                qty = body.get("qty")
+                qty = int(qty) if qty not in (None, "") else None
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if close_position_fn is None:
+                self.send_error(404)
+                return
+            if action != "close":
+                self.send_error(400, "Unknown action")
+                return
+            try:
+                self._serve_json(close_position_fn(position_id, qty))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] close position error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
+
+        def _handle_trader_control(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                action = body.get("action", "")
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if trader_control_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(trader_control_fn(action))
+            except PermissionError as e:
+                print(f"[dashboard] trader control denied: {e}", file=sys.stderr)
+                self.send_error(403, str(e))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] trader control error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
+
+        def _handle_monitor_control(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                action = body.get("action", "")
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if monitor_control_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(monitor_control_fn(action))
+            except PermissionError as e:
+                print(f"[dashboard] monitor control denied: {e}", file=sys.stderr)
+                self.send_error(403, str(e))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] monitor control error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
+
+        def _handle_alerts_read(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                ids = body.get("ids")
+                all_flag = bool(body.get("all", False))
+                ids = [int(i) for i in ids] if isinstance(ids, list) else None
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if alerts_read_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(alerts_read_fn(ids, all_flag))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] alerts read error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
+
+        def _handle_trade_delete(self):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length))
+                trade_id = int(body.get("trade_id", 0))
+            except Exception:
+                self.send_error(400, "Invalid JSON")
+                return
+            if delete_trade_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(delete_trade_fn(trade_id))
+            except (ValueError, TypeError) as e:
+                print(f"[dashboard] trade delete error: {e}", file=sys.stderr)
+                self.send_error(400, str(e))
 
         def _handle_log_trade(self):
             try:
@@ -337,6 +600,13 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(400, "Invalid JSON")
                 return
             try:
+                if log_trade_fn:
+                    trade = log_trade_fn(
+                        data.get("item_id", 0), data.get("name", ""),
+                        data.get("qty", 0), data.get("buy_price", 0),
+                        data.get("sell_price", 0), data.get("note", ""))
+                    self._serve_json(trade)
+                    return
                 from rshelper.journal import log_trade
                 trade = log_trade(
                     data.get("item_id", 0), data.get("name", ""),

@@ -488,10 +488,25 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                       exit_reason=reason, hold_minutes=hold_minutes,
                       quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
                       fill_guard=guarded_fill is not None)
+        profit_sum = sum(l["profit"] for l in lots)
+        try:
+            from rshelper.alerts import push_alert
+            push_alert(
+                "trader",
+                "HIGH" if reason == "stop_loss" else
+                "MEDIUM" if reason == "max_hold" else "INFO",
+                p.item_id, p.name, reason,
+                f"{p.name}: {reason} {profit_sum:+,} gp "
+                f"({p.qty:,}x @ {sell:,})",
+                profile=profile,
+                data={"exit_reason": reason, "profit": profit_sum,
+                      "hold_minutes": hold_minutes})
+        except Exception:
+            pass  # alert delivery must never break a cycle
         closed.append({"item_id": p.item_id, "name": p.name, "qty": p.qty,
                        "reason": reason, "sell_price": sell,
                        "quote_sell": quote_sell, "hold_minutes": hold_minutes,
-                       "profit": sum(l["profit"] for l in lots),
+                       "profit": profit_sum,
                        "fill_guard": guarded_fill is not None})
         _RECENT_EXITS[p.item_id] = (now, reason)
         _persist_recent_exits()
