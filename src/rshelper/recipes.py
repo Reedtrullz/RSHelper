@@ -171,23 +171,24 @@ CONSTRUCTION: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# RUNECRAFTING — essence -> runes. Wiki: ~4,000-6,000 runes/hr at high
-# level through the Abyss (use 5000 avg; essence -> runes is 1:1 at low
-# level but multiplies at high level — conservative 1:1 here).
+# RUNECRAFTING — essence -> runes. Wiki (99 RC reference): each essence
+# crafts multiple runes (air 10x, mind 7x, water 5x, earth 4x, fire/body
+# 3x, cosmic/chaos/nature/law/death 2x). Throughput ~3,350 essence/hr via
+# the Abyss with the colossal pouch (50 trips x 67 essence).
 # ---------------------------------------------------------------------------
-_RC = 5000
+_RC = 3350
 RUNECRAFTING: dict[int, Recipe] = {
-    556: Recipe(556, {1436: 1}, "runecrafting", _RC),   # air rune
-    558: Recipe(558, {1436: 1}, "runecrafting", _RC),   # mind rune
-    555: Recipe(555, {1436: 1}, "runecrafting", _RC),   # water rune
-    557: Recipe(557, {1436: 1}, "runecrafting", _RC),   # earth rune
-    554: Recipe(554, {1436: 1}, "runecrafting", _RC),   # fire rune
-    559: Recipe(559, {1436: 1}, "runecrafting", _RC),   # body rune
-    564: Recipe(564, {7936: 1}, "runecrafting", _RC),   # cosmic rune
-    562: Recipe(562, {7936: 1}, "runecrafting", _RC),   # chaos rune
-    561: Recipe(561, {7936: 1}, "runecrafting", _RC),   # nature rune
-    563: Recipe(563, {7936: 1}, "runecrafting", _RC),   # law rune
-    560: Recipe(560, {7936: 1}, "runecrafting", _RC),   # death rune
+    556: Recipe(556, {1436: 1}, "runecrafting", _RC, outputs_per_run=10),  # air rune
+    558: Recipe(558, {1436: 1}, "runecrafting", _RC, outputs_per_run=7),   # mind rune
+    555: Recipe(555, {1436: 1}, "runecrafting", _RC, outputs_per_run=5),   # water rune
+    557: Recipe(557, {1436: 1}, "runecrafting", _RC, outputs_per_run=4),   # earth rune
+    554: Recipe(554, {1436: 1}, "runecrafting", _RC, outputs_per_run=3),   # fire rune
+    559: Recipe(559, {1436: 1}, "runecrafting", _RC, outputs_per_run=3),   # body rune
+    564: Recipe(564, {7936: 1}, "runecrafting", _RC, outputs_per_run=2),   # cosmic rune
+    562: Recipe(562, {7936: 1}, "runecrafting", _RC, outputs_per_run=2),   # chaos rune
+    561: Recipe(561, {7936: 1}, "runecrafting", _RC, outputs_per_run=2),   # nature rune
+    563: Recipe(563, {7936: 1}, "runecrafting", _RC, outputs_per_run=2),   # law rune
+    560: Recipe(560, {7936: 1}, "runecrafting", _RC, outputs_per_run=2),   # death rune
 }
 
 # ---------------------------------------------------------------------------
