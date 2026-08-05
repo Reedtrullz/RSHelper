@@ -1,40 +1,28 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 5000,
+      "buy_price": 80,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T18:29:58.282953+00:00",
+      "note": "auto",
+      "entry_sell": 80,
+      "entry_offer": 84
+    },
+    {
       "id": 2,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 327,
-      "buy_price": 1221,
+      "item_id": 19484,
+      "name": "Dragon javelin",
+      "qty": 137,
+      "buy_price": 607,
       "direction": "traditional",
-      "opened_at": "2026-08-05T18:09:57.187187+00:00",
+      "opened_at": "2026-08-05T18:29:58.283468+00:00",
       "note": "auto",
-      "entry_sell": 1221,
-      "entry_offer": 1269
-    },
-    {
-      "id": 3,
-      "item_id": 2970,
-      "name": "Mort myre fungus",
-      "qty": 185,
-      "buy_price": 245,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T18:13:57.402685+00:00",
-      "note": "auto",
-      "entry_sell": 245,
-      "entry_offer": 254
-    },
-    {
-      "id": 4,
-      "item_id": 12625,
-      "name": "Stamina potion(4)",
-      "qty": 85,
-      "buy_price": 3550,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T18:13:57.403555+00:00",
-      "note": "auto",
-      "entry_sell": 3550,
-      "entry_offer": 3679
+      "entry_sell": 607,
+      "entry_offer": 640
     }
   ]
 }
