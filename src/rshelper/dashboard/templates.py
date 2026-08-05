@@ -891,16 +891,16 @@ async function renderProcess(){
     const data=await r.json();
     const recipes=data.recipes||[];
     document.getElementById('badgeProcess').textContent=recipes.length;
-    let h='<table><thead><tr><th>Output</th><th>Input Cost</th><th>Sell</th><th>Profit</th><th>ROI%</th><th>GP/hr</th><th>Vol</th></tr></thead><tbody>';
+    let h='<table><thead><tr><th>Output</th><th>Process</th><th>Inputs</th><th>Profit</th><th>ROI%</th><th>GP/hr</th></tr></thead><tbody>';
     recipes.forEach(x=>{
       const roi=x.roi_pct!=null?x.roi_pct.toFixed(1):'-';
+      const inputs=(x.inputs||[]).map(i=>escHtml(i.name)+' &times;'+i.qty).join(', ')||'-';
       h+='<tr><td class="name">'+escHtml(x.name)+'</td>'+
-        '<td>'+format(x.input_cost)+' gp</td>'+
-        '<td>'+format(x.sell_price)+' gp</td>'+
+        '<td>'+escHtml(x.process||'')+'</td>'+
+        '<td class="dim">'+inputs+'</td>'+
         '<td class="margin pos">'+format(x.profit)+' gp</td>'+
         '<td>'+roi+'%</td>'+
-        '<td class="margin pos">'+format(x.gp_per_hour)+'</td>'+
-        '<td>'+format(x.volume||0)+'</td></tr>';
+        '<td class="margin pos">'+format(x.gp_per_hour)+'</td></tr>';
     });
     h+='</tbody></table>';
     if(!recipes.length)h='<div class="loading">No profitable processing recipes right now — buy inputs cheap, sell output dear.</div>';

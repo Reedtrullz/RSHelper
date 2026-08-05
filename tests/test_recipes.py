@@ -20,13 +20,37 @@ def test_recipe_table_integrity():
     """Output ids are unique; inputs are non-empty with positive qty."""
     outputs = [r.output_id for r in RECIPES.values()]
     assert len(outputs) == len(set(outputs)), "output ids must be unique"
-    assert len(RECIPES) >= 5, "expected a curated recipe set"
+    assert len(RECIPES) >= 20, "expected a broad curated recipe set"
     for r in RECIPES.values():
         assert isinstance(r, Recipe)
         assert r.inputs, "every recipe needs inputs"
         assert all(qty > 0 for qty in r.inputs.values())
         assert r.rate_per_hour > 0
+    # The classic chains are present
+    assert 2353 in RECIPES  # steel bar
+    assert 892 in RECIPES   # rune arrow (fletch)
+    assert 573 in RECIPES   # air orb (blow)
+    assert 1777 in RECIPES  # bowstring (spin)
     print("  PASSED test_recipe_table_integrity")
+
+
+def test_fletch_recipe_batch_ratio():
+    """Fletching arrows: 15 shafts + 15 arrowtips -> 15 arrows (batch)."""
+    scanner = ProcessScanner(recipes={892: RECIPES[892]})  # rune arrow
+    items = [
+        _item(892, "Rune arrow", 190, 200, limit=10000),
+        _item(52, "Arrow shaft", 5, 4, limit=10000),
+        _item(44, "Rune arrowtips", 100, 95, limit=10000),
+    ]
+    results = scanner.scan(items)
+    assert len(results) == 1
+    r = results[0]
+    # input_cost per arrow = (15*5 + 15*100)/15 = 105
+    assert r.input_cost == 105
+    assert r.name == "Rune arrow"
+    # profit per arrow = (200 - ge_tax(200)) - 105 = 196 - 105 = 91
+    assert r.profit == 91
+    print("  PASSED test_fletch_recipe_batch_ratio")
 
 
 def test_process_scan_profit_steel_bar():
@@ -151,6 +175,7 @@ def test_process_scan_does_not_mutate_input():
 
 if __name__ == "__main__":
     test_recipe_table_integrity()
+    test_fletch_recipe_batch_ratio()
     test_process_scan_profit_steel_bar()
     test_process_scan_throughput_capped_by_input()
     test_process_scan_skips_unprofitable()

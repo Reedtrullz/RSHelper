@@ -18,10 +18,11 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Recipe:
     output_id: int
-    inputs: dict[int, int]   # {input_item_id: qty_per_output}
-    process: str             # "smelt" | "craft"
+    inputs: dict[int, int]   # {input_item_id: qty_per_run}
+    process: str             # "smelt" | "craft" | "fletch" | "blow" | "spin"
     rate_per_hour: int       # action-rate cap (smelting ~1200/hr)
     cost_per_unit: int = 0   # non-GE process cost, default 0
+    outputs_per_run: int = 1  # units produced per recipe run (batch: 15 arrows)
 
 
 # Verified against the wiki mapping (ids 440=Iron ore, 453=Coal, etc.).
@@ -47,4 +48,23 @@ RECIPES: dict[int, Recipe] = {
     1741: Recipe(1741, {1739: 1}, "craft", 1800),
     # Plain pizza: 1 pizza base + 1 tomato + 1 cheese (craft)
     2289: Recipe(2289, {2283: 1, 1982: 1, 1985: 1}, "craft", 1200),
+    # Fletching arrows: 15 arrow shafts + 15 arrowtips -> 15 arrows (fletch)
+    882: Recipe(882, {52: 15, 39: 15}, "fletch", 2000, outputs_per_run=15),  # bronze arrow
+    884: Recipe(884, {52: 15, 40: 15}, "fletch", 2000, outputs_per_run=15),  # iron arrow
+    886: Recipe(886, {52: 15, 41: 15}, "fletch", 2000, outputs_per_run=15),  # steel arrow
+    888: Recipe(888, {52: 15, 42: 15}, "fletch", 2000, outputs_per_run=15),  # mithril arrow
+    890: Recipe(890, {52: 15, 43: 15}, "fletch", 2000, outputs_per_run=15),  # adamant arrow
+    892: Recipe(892, {52: 15, 44: 15}, "fletch", 2000, outputs_per_run=15),  # rune arrow
+    # Glassblowing: 1 molten glass -> 1 orb (blow)
+    573: Recipe(573, {1775: 1}, "blow", 1800),              # air orb
+    571: Recipe(571, {1775: 1}, "blow", 1800),              # water orb
+    575: Recipe(575, {1775: 1}, "blow", 1800),              # earth orb
+    569: Recipe(569, {1775: 1}, "blow", 1800),              # fire orb
+    # Spinning: 1 flax -> 1 bowstring (spin)
+    1777: Recipe(1777, {1779: 1}, "spin", 1800),
+    # Crafting jewelry: 1 gold bar + 1 gem -> 1 ring (craft)
+    1637: Recipe(1637, {2357: 1, 1607: 1}, "craft", 1200),  # sapphire ring
+    1639: Recipe(1639, {2357: 1, 1605: 1}, "craft", 1200),  # emerald ring
+    1641: Recipe(1641, {2357: 1, 1603: 1}, "craft", 1200),  # ruby ring
+    1643: Recipe(1643, {2357: 1, 1601: 1}, "craft", 1200),  # diamond ring
 }

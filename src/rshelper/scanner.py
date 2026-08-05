@@ -283,29 +283,37 @@ class ProcessScanner:
 
             input_cost = sum(c.buy_price * qty
                              for c, qty in zip(comps, recipe.inputs.values()))
+            # Batch recipes (e.g. 15 shafts + 15 tips -> 15 arrows): cost is
+            # per RUN; per-output-unit cost divides by outputs_per_run.
+            per_unit_cost = input_cost / recipe.outputs_per_run
             output_gp = output.sell_price - ge_tax(output.sell_price)
-            profit = output_gp - input_cost - recipe.cost_per_unit
+            profit = int(output_gp - per_unit_cost - recipe.cost_per_unit)
             if profit <= 0 or profit < min_profit:
                 continue
 
             # Throughput: the output's 4h buy limit / 4 (hourly) caps the
             # sell side; the market volume*12 caps absorb; the limiting
             # input's buy-limit capacity caps feed. min-ratio problem.
+            # Batch: each run consumes the per-run input qty and produces
+            # outputs_per_run units, so runs/hr = min(input feed // qty).
             output_rate = output.buy_limit / 4 if output.buy_limit > 0 else 0
             volume_rate = output.volume * 12
-            input_capacity = min(
+            runs_by_input = [
                 (c.buy_limit / 4) // qty
                 for c, qty in zip(comps, recipe.inputs.values())
                 if c.buy_limit > 0
-            ) if comps else 0
-            outputs_per_hour = int(min(
-                recipe.rate_per_hour, output_rate, volume_rate, input_capacity))
+            ]
+            input_capacity = min(runs_by_input) if runs_by_input else 0
+            runs_per_hour = int(min(
+                recipe.rate_per_hour, output_rate / recipe.outputs_per_run,
+                volume_rate / recipe.outputs_per_run, input_capacity))
+            outputs_per_hour = runs_per_hour * recipe.outputs_per_run
             if outputs_per_hour <= 0:
                 continue
 
             # Capital cap: scale throughput by how many units the budget buys.
             if capital > 0 and input_cost > 0:
-                by_capital = capital // input_cost
+                by_capital = (capital // input_cost) * recipe.outputs_per_run
                 outputs_per_hour = min(outputs_per_hour, by_capital)
 
             gp_per_hour = int(profit * outputs_per_hour)
@@ -314,7 +322,7 @@ class ProcessScanner:
                 buy_limit=output.buy_limit, alch_value=output.alch_value,
                 buy_price=output.buy_price, sell_price=output.sell_price,
                 volume=output.volume, profit=profit, gp_per_hour=gp_per_hour,
-                input_cost=input_cost, output_id=recipe.output_id,
+                input_cost=int(per_unit_cost), output_id=recipe.output_id,
             ))
 
         results.sort(key=lambda i: i.gp_per_hour, reverse=True)
