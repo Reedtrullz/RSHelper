@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 251,
+      "name": "Marrentill",
+      "qty": 218,
+      "buy_price": 247,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T14:33:47.515846+00:00",
+      "note": "auto",
+      "entry_sell": 247,
+      "entry_offer": 260
+    },
+    {
+      "id": 2,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 553,
+      "buy_price": 213,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T14:33:47.516804+00:00",
+      "note": "auto",
+      "entry_sell": 213,
+      "entry_offer": 224
+    },
+    {
+      "id": 3,
+      "item_id": 9380,
+      "name": "Adamant bolts(unf)",
+      "qty": 714,
+      "buy_price": 173,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T14:33:47.517132+00:00",
+      "note": "auto",
+      "entry_sell": 173,
+      "entry_offer": 181
+    }
+  ]
 }
