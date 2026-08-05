@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 1108,
-      "buy_price": 115,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T03:14:41.365058+00:00",
-      "note": "auto",
-      "entry_sell": 115,
-      "entry_offer": 120
-    },
-    {
       "id": 2,
       "item_id": 21146,
       "name": "Necklace of passage(5)",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1407,
       "entry_offer": 1458
+    },
+    {
+      "id": 3,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1446,
+      "buy_price": 153,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T03:40:40.824440+00:00",
+      "note": "auto",
+      "entry_sell": 153,
+      "entry_offer": 159
     }
   ]
 }
