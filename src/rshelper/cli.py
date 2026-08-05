@@ -201,6 +201,9 @@ def alch_scan(args: argparse.Namespace) -> None:
         min_volume=args.min_volume,
     )
     print(f"  {len(results)} profitable alchs", file=sys.stderr)
+    # Snapshot the FULL top-N (pre-name-filter): --name only narrows the
+    # display; a daily snapshot should capture the whole scan.
+    snap_results = results[:args.top]
     if args.name:
         results = _filter_by_name(results, args.name)
         print(f"  {len(results)} after --name filter", file=sys.stderr)
@@ -246,7 +249,7 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(_format_table(results, args.top))
 
     if getattr(args, 'save_snapshot', False):
-        _save_alch_snapshot(results[:args.top], args.profile)
+        _save_alch_snapshot(snap_results, args.profile)
 
 
 def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
@@ -275,6 +278,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         min_margin=args.min_margin,
     )
     print(f"  {len(results)} profitable flips ({direction} mode)", file=sys.stderr)
+    snap_results = results[:args.top]
     if args.name:
         results = _filter_by_name(results, args.name)
         print(f"  {len(results)} after --name filter", file=sys.stderr)
@@ -329,7 +333,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
     if getattr(args, 'save_snapshot', False):
-        _save_flip_snapshot(results[:args.top], args.profile)
+        _save_flip_snapshot(snap_results, args.profile)
 
 
 def process_scan(args: argparse.Namespace) -> None:
@@ -349,6 +353,7 @@ def process_scan(args: argparse.Namespace) -> None:
     )
     scope = f" ({skill})" if skill else ""
     print(f"  {len(results)} profitable processing recipes{scope}", file=sys.stderr)
+    snap_results = results[:args.top]
     if args.name:
         results = _filter_by_name(results, args.name)
         print(f"  {len(results)} after --name filter", file=sys.stderr)
@@ -396,7 +401,7 @@ def process_scan(args: argparse.Namespace) -> None:
         print(_format_process_table(results, args.top))
 
     if getattr(args, 'save_snapshot', False):
-        _save_process_snapshot(results[:args.top], args.profile)
+        _save_process_snapshot(snap_results, args.profile)
 
 
 def _format_process_table(results, top: int) -> str:

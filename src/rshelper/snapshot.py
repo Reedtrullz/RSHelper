@@ -38,15 +38,22 @@ def save(scan_type: str, results: list[dict], profile: str | None = None) -> Pat
     return path
 
 
+def _read_snapshot(path: Path) -> dict | None:
+    """Load a snapshot JSON, returning None on missing/corrupt."""
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, dict) else None
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def load(scan_type: str, day: str | None = None, profile: str | None = None) -> dict | None:
     """Load a snapshot. If day is None, loads the most recent before today."""
     snap_dir = _snapshot_dir(profile)
     snap_dir.mkdir(parents=True, exist_ok=True)
     if day:
         path = snap_dir / f"{scan_type}-{day}.json"
-        if path.exists():
-            return json.loads(path.read_text())
-        return None
+        return _read_snapshot(path)
 
     # Find most recent snapshot
     prefix = f"{scan_type}-"
@@ -57,7 +64,7 @@ def load(scan_type: str, day: str | None = None, profile: str | None = None) -> 
     if not candidates:
         return None
     candidates.sort(reverse=True)
-    return json.loads(candidates[0][1].read_text())
+    return _read_snapshot(candidates[0][1])
 
 
 def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None = None) -> dict | None:
@@ -68,14 +75,13 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
     snap_dir = _snapshot_dir(profile)
     today_str = date.today().isoformat()
     today_path = snap_dir / f"{scan_type}-{today_str}.json"
-    if not today_path.exists():
+    today_data = _read_snapshot(today_path)
+    if today_data is None:
         return None
-
-    today_data = json.loads(today_path.read_text())
 
     # Get previous snapshot: explicit date, or most recent before today
     if day:
-        prev_data = load(scan_type, day, profile)
+        prev_data = _read_snapshot(snap_dir / f"{scan_type}-{day}.json")
     else:
         today = date.today().isoformat()
         prefix = f"{scan_type}-"
@@ -86,7 +92,7 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
                 candidates.append((day_str, p))
         if candidates:
             candidates.sort(reverse=True)
-            prev_data = json.loads(candidates[0][1].read_text())
+            prev_data = _read_snapshot(candidates[0][1])
         else:
             prev_data = None
 
@@ -95,7 +101,7 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
 
     # Build lookup by item_id
     prev_by_id = {}
-    for item in prev_data["items"]:
+    for item in prev_data.get("items", []):
         prev_by_id[item["item_id"]] = item
 
     new_items = []
@@ -104,10 +110,10 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
     unchanged = 0
 
     # Determine the value key: 'profit' for alch/flip, 'avg_margin' for margin scans
-    sample = today_data["items"][0] if today_data["items"] else {}
+    sample = today_data.get("items", [{}])[0] if today_data.get("items") else {}
     value_key = "profit" if "profit" in sample else "avg_margin"
 
-    for item in today_data["items"]:
+    for item in today_data.get("items", []):
         iid = item["item_id"]
         prev = prev_by_id.get(iid)
         if prev is None:
@@ -124,16 +130,16 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
             unchanged += 1
 
     prev_ids = set(prev_by_id)
-    today_ids = {item["item_id"] for item in today_data["items"]}
+    today_ids = {item["item_id"] for item in today_data.get("items", [])}
     removed_ids = prev_ids - today_ids
     removed = [prev_by_id[iid] for iid in removed_ids]
 
     return {
         "scan_type": scan_type,
-        "today_date": today_data["date"],
-        "prev_date": prev_data["date"],
-        "today_count": len(today_data["items"]),
-        "prev_count": len(prev_data["items"]),
+        "today_date": today_data.get("date"),
+        "prev_date": prev_data.get("date"),
+        "today_count": len(today_data.get("items", [])),
+        "prev_count": len(prev_data.get("items", [])),
         "new": sorted(new_items, key=lambda x: -x.get(value_key, x.get("profit", 0))),
         "improved": sorted(improved, key=lambda x: -x["delta"]),
         "fell_off": sorted(fell_off, key=lambda x: x["delta"]),
@@ -143,9 +149,9 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
 
 
 def list_snapshots(scan_type: str | None = None, profile: str | None = None) -> list[Path]:
-    """List all snapshot files, newest first."""
+    """List all snapshot files, newest first (by mtime)."""
     snap_dir = _snapshot_dir(profile)
     snap_dir.mkdir(parents=True, exist_ok=True)
     pattern = f"{scan_type}-*.json" if scan_type else "*.json"
-    paths = sorted(snap_dir.glob(pattern), reverse=True)
+    paths = sorted(snap_dir.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
     return paths

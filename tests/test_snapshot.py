@@ -167,6 +167,29 @@ class TestSnapshot(unittest.TestCase):
         alch_paths = snapshot.list_snapshots("alch")
         self.assertEqual(len(alch_paths), 1)
 
+    def test_corrupt_snapshot_does_not_crash(self):
+        """A corrupt previous snapshot must yield None, not JSONDecodeError."""
+        snapshot.save("flip", self._fake_results())
+        today = date.today().isoformat()
+        prev = Path(self.tmp) / "flip-2026-08-01.json"
+        prev.write_text("{corrupt")
+        self.assertIsNone(snapshot.load("flip", "2026-08-01"))
+        self.assertIsNone(snapshot.diff_scan_type("flip", "2026-08-01"))
+
+    def test_diff_empty_items_no_crash(self):
+        """diff with an empty today snapshot must not IndexError."""
+        snapshot.save("flip", [])
+        prev = Path(self.tmp) / f"flip-{date.today().isoformat()}.json"
+        # save() wrote today; add a prior day for the diff baseline
+        yesterday = Path(self.tmp) / "flip-2026-08-01.json"
+        yesterday.write_text(json.dumps({
+            "scan_type": "flip", "date": "2026-08-01", "saved_at": "x",
+            "count": 1, "config": {}, "items": [{"item_id": 1, "profit": 100}],
+        }))
+        result = snapshot.diff_scan_type("flip", "2026-08-01")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["today_count"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
