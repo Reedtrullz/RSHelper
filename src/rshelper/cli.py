@@ -60,6 +60,11 @@ def _format_table(results, top: int) -> str:
     return "\n".join(lines)
 
 
+def _process_roi(r) -> float:
+    """ROI% for a process recipe: profit / input_cost (the actual capital)."""
+    return (r.profit / r.input_cost * 100) if r.input_cost > 0 else 0.0
+
+
 def _roi_pct(item) -> float:
     """Return flip ROI as a percentage of buy price."""
     return item.profit / item.buy_price * 100 if item.buy_price > 0 else 0.0
@@ -296,7 +301,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
             row["rank"] = i
-            row["roi"] = round(_roi_pct(item), 2)
+            row["roi"] = round(_process_roi(item), 2)
             row["capital_per_unit"] = item.buy_price
             writer.writerow(row)
         print(out.getvalue())
@@ -308,7 +313,7 @@ def flip_scan(args: argparse.Namespace) -> None:
                 "buy_price": r.buy_price,
                 "sell_price": r.sell_price,
                 "margin": r.profit,
-                "roi": round(_roi_pct(r), 2),
+                "roi": round(_process_roi(r), 2),
                 "capital_per_unit": r.buy_price,
                 "gp_per_hour": r.gp_per_hour,
                 "volume": r.volume,
@@ -321,7 +326,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         cols = ["Rank", "Item", "Buy", "Sell", "Margin", "ROI%", "RS", "GP/hr", "Limit"]
         rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
                  "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
-                 "ROI%": f"{_roi_pct(r):.1f}",
+                 "ROI%": f"{_process_roi(r):.1f}",
                  "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
                 for i, r in enumerate(results[:args.top])]
         if capital:
@@ -371,7 +376,7 @@ def process_scan(args: argparse.Namespace) -> None:
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
             row["rank"] = i
-            row["roi"] = round(_roi_pct(item), 2)
+            row["roi"] = round(_process_roi(item), 2)
             writer.writerow(row)
         print(out.getvalue())
     elif args.json:
@@ -382,7 +387,7 @@ def process_scan(args: argparse.Namespace) -> None:
                 "input_cost": r.input_cost,
                 "sell_price": r.sell_price,
                 "profit": r.profit,
-                "roi": round(_roi_pct(r), 2),
+                "roi": round(_process_roi(r), 2),
                 "gp_per_hour": r.gp_per_hour,
                 "volume": r.volume,
                 "buy_limit": r.buy_limit,
@@ -393,7 +398,7 @@ def process_scan(args: argparse.Namespace) -> None:
         cols = ["Rank", "Output", "Input Cost", "Sell", "Profit", "ROI%", "GP/hr"]
         rows = [{"Rank": i + 1, "Output": r.name,
                  "Input Cost": f"{r.input_cost:,}", "Sell": f"{r.sell_price:,}",
-                 "Profit": f"{r.profit:,}", "ROI%": f"{_roi_pct(r):.1f}",
+                 "Profit": f"{r.profit:,}", "ROI%": f"{_process_roi(r):.1f}",
                  "GP/hr": f"{r.gp_per_hour:,}"}
                 for i, r in enumerate(results[:args.top])]
         print(_html_output(rows, cols, "Materials Processing"))
@@ -416,9 +421,10 @@ def _format_process_table(results, top: int) -> str:
               f"{'Profit':>7} {'ROI%':>6} {'GP/hr':>9}")
     lines = [header, "-" * len(header)]
     for r in rows:
+        roi = _process_roi(r)
         lines.append(f"{r.name:<{name_width}} {r.input_cost:>9,} "
                      f"{r.sell_price:>8,} {r.profit:>7,} "
-                     f"{_roi_pct(r):>6.1f} {r.gp_per_hour:>9,}")
+                     f"{roi:>6.1f} {r.gp_per_hour:>9,}")
     return "\n".join(lines)
 
 

@@ -396,6 +396,20 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(data[0]["name"], "Steel bar")
         self.assertIn("gp_per_hour", data[0])
         self.assertIn("input_cost", data[0])
+        # ROI must be profit / input_cost, NOT profit / output buy price.
+        self.assertAlmostEqual(
+            data[0]["roi"],
+            data[0]["profit"] / data[0]["input_cost"] * 100, places=1)
+
+    def test_process_roi_uses_input_cost(self):
+        """process ROI% uses input_cost (the actual capital), not output price."""
+        from rshelper.models import Item
+        import rshelper.cli as cmod
+        r = Item(id=2353, name="Steel bar", members=False, buy_limit=10000,
+                 alch_value=0, buy_price=576, sell_price=576, volume=5000,
+                 profit=205, input_cost=360)
+        self.assertAlmostEqual(cmod._process_roi(r), 205 / 360 * 100, places=2)
+        self.assertAlmostEqual(cmod._roi_pct(r), 205 / 576 * 100, places=2)
 
     def test_watch_check_json_stdout_pure(self):
         """watch check --json must emit ONLY JSON on stdout (no human lines)."""
