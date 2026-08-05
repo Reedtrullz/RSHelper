@@ -95,6 +95,40 @@ class TestSnapshot(unittest.TestCase):
         self.assertEqual(len(diff["removed"]), 1)    # Item 99: gone
         self.assertEqual(diff["unchanged"], 0)
 
+    def test_diff_process_tracks_gp_per_hour(self):
+        """Process diff uses profit AND carries gp_per_hour (the actionable
+        'is it a good time now vs before' number)."""
+        snapshot.save("process", [
+            {"item_id": 569, "name": "Fire orb", "profit": 2000,
+             "gp_per_hour": 3600000, "input_cost": 95, "sell_price": 2079},
+            {"item_id": 2353, "name": "Steel bar", "profit": 195,
+             "gp_per_hour": 234000, "input_cost": 371, "sell_price": 577},
+        ])
+        prev = {
+            "scan_type": "process",
+            "date": "2026-07-28",
+            "saved_at": "2026-07-28T12:00:00Z",
+            "count": 2,
+            "items": [
+                {"item_id": 569, "name": "Fire orb", "profit": 1500,
+                 "gp_per_hour": 2700000, "input_cost": 95, "sell_price": 1600},
+                {"item_id": 2353, "name": "Steel bar", "profit": 195,
+                 "gp_per_hour": 234000, "input_cost": 371, "sell_price": 577},
+            ],
+        }
+        (snapshot.SNAPSHOT_DIR / "process-2026-07-28.json").write_text(json.dumps(prev))
+
+        diff = snapshot.diff_scan_type("process", "2026-07-28")
+        self.assertIsNotNone(diff)
+        # Fire orb improved (profit 1500→2000, gp/hr 2.7M→3.6M)
+        self.assertEqual(len(diff["improved"]), 1)
+        improved = diff["improved"][0]
+        self.assertEqual(improved["item_id"], 569)
+        self.assertEqual(improved["delta"], 500)
+        self.assertEqual(improved["gp_per_hour"], 3600000)  # flows through
+        # Steel bar unchanged
+        self.assertEqual(diff["unchanged"], 1)
+
     def test_diff_margin_uses_avg_margin(self):
         today = [
             {"item_id": 1, "name": "Item A", "avg_margin": 150, "confidence": 0.8},

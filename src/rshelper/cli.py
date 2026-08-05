@@ -1239,7 +1239,9 @@ def diff_cmd(args: argparse.Namespace) -> None:
             name = item.get("name", item.get("item_id"))
             profit = item.get("profit", item.get("avg_margin", 0))
             delta = item["delta"]
-            print(f"    {name:<35} {profit:>10,}  (+{delta:>+10,})")
+            gph = item.get("gp_per_hour")
+            gph_str = f"  gp/hr={gph:>10,}" if gph is not None else ""
+            print(f"    {name:<35} {profit:>10,}  (+{delta:>+10,}){gph_str}")
         if len(result["improved"]) > 10:
             print(f"    ... and {len(result['improved']) - 10} more")
 
@@ -1249,7 +1251,9 @@ def diff_cmd(args: argparse.Namespace) -> None:
             name = item.get("name", item.get("item_id"))
             profit = item.get("profit", item.get("avg_margin", 0))
             delta = item["delta"]
-            print(f"    {name:<35} {profit:>10,}  ({delta:>+10,})")
+            gph = item.get("gp_per_hour")
+            gph_str = f"  gp/hr={gph:>10,}" if gph is not None else ""
+            print(f"    {name:<35} {profit:>10,}  ({delta:>+10,}){gph_str}")
         if len(result["fell_off"]) > 10:
             print(f"    ... and {len(result['fell_off']) - 10} more")
 
