@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 302,
       "entry_offer": 319
+    },
+    {
+      "id": 4,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 321,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T13:31:45.361518+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
