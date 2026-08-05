@@ -1,4 +1,6 @@
 """Trade journal: log trades, compute P&L."""
+import contextlib
+import fcntl
 import json
 import os
 import threading
@@ -17,6 +19,37 @@ def _trades_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return TRADES_PATH
     return resolve_config_path("trades.json", profile)
+
+
+def _trade_lock(profile: str | None = None):
+    """Cross-process advisory lock for the journal.
+
+    The trader daemon and the VPS dashboard are separate processes that both
+    append to trades.json; a process-local lock cannot serialize them, so
+    log_trade/delete take an flock on a sidecar .lock file.
+    """
+    path = _trades_path(profile).with_suffix(".json.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError:
+        return _TRADE_LOCK
+
+    @contextlib.contextmanager
+    def _locked():
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        try:
+            yield
+        finally:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+            os.close(fd)
+    return _locked()
 
 
 @dataclass
@@ -101,7 +134,7 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
     per_item_tax = ge_tax(sell_price)
     tax_paid = per_item_tax * qty
     profit = (sell_price - buy_price) * qty - tax_paid
-    with _TRADE_LOCK:
+    with _trade_lock(profile):
         trades = _load(profile)
         trade = {
             "id": _next_id(trades), "item_id": item_id, "name": name, "qty": qty,
@@ -123,7 +156,7 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
 
 def delete_trade(trade_id: int, profile: str | None = None) -> bool:
     """Delete a trade by ID. Returns True if it existed."""
-    with _TRADE_LOCK:
+    with _trade_lock(profile):
         trades = _load(profile)
         for i, t in enumerate(trades):
             if t["id"] == trade_id:

@@ -52,10 +52,16 @@ EXITS_PATH = TRADER_DIR / "recent_exits.json"
 RECENT_EXIT_MAX_AGE = 2 * 3600
 
 
-def _load_recent_exits() -> None:
+def _exits_path(profile: str | None = None) -> Path:
+    if profile is None or profile == "default":
+        return EXITS_PATH
+    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "recent_exits.json"
+
+
+def _load_recent_exits(profile: str | None = None) -> None:
     """Merge persisted exits into the in-memory map (survives restarts)."""
     try:
-        data = json.loads(EXITS_PATH.read_text())
+        data = json.loads(_exits_path(profile).read_text())
     except (OSError, json.JSONDecodeError, ValueError):
         return
     now = time.time()
@@ -74,11 +80,11 @@ def _load_recent_exits() -> None:
             continue
 
 
-def _persist_recent_exits() -> None:
+def _persist_recent_exits(profile: str | None = None) -> None:
     now = time.time()
     fresh = {iid: (ts, reason) for iid, (ts, reason) in _RECENT_EXITS.items()
              if now - ts <= RECENT_EXIT_MAX_AGE}
-    atomic_write_json(EXITS_PATH, {
+    atomic_write_json(_exits_path(profile), {
         str(iid): {"ts": ts, "reason": reason}
         for iid, (ts, reason) in fresh.items()
     })
@@ -386,7 +392,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
     from rshelper.positions import close_positions, list_positions, open_position
     from rshelper.journal import log_trade
 
-    _load_recent_exits()
+    _load_recent_exits(profile)
     _mapping, latest, vol_5m, items = _fetch_bootstrap(profile)
     candidates = select_candidates(items, latest, vol_5m, cfg)
 
@@ -410,7 +416,12 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             # a net loss.
             if _ge_fill_pct(p, vol_5m, now) >= 1.0:
                 price_now = latest.get(str(p.item_id))
-                if isinstance(price_now, dict):
+                # A filled close must use a FRESH quote — TP/SL correctly
+                # hold on stale data, so ge_fill must too (a stale offer can
+                # book a profit/loss at a price that no longer exists).
+                if (isinstance(price_now, dict)
+                        and price_issue(price_now) is None
+                        and _fresh(price_now, EXIT_MAX_AGE, now)):
                     offer_now = int(price_now.get("high", 0) or 0)
                     if (offer_now > 0 and p.buy_price > 0
                             and unrealized_pct(p.buy_price, offer_now,
@@ -509,7 +520,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                        "profit": profit_sum,
                        "fill_guard": guarded_fill is not None})
         _RECENT_EXITS[p.item_id] = (now, reason)
-        _persist_recent_exits()
+        _persist_recent_exits(profile)
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))
@@ -579,11 +590,16 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
     p_path = _pid_path(profile)
     # Claim the pid file with O_EXCL so two racing starts cannot both pass
     # the liveness check; a stale file from a dead process is replaced.
+    # The pid is written+fsynced while the O_EXCL fd is still held, so a
+    # concurrent claimant can never read a partial/empty file and unlink a
+    # live claim.
     for _ in range(2):
         try:
             fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             with os.fdopen(fd, "w") as f:
                 f.write(str(pid))
+                f.flush()
+                os.fsync(f.fileno())
             break
         except FileExistsError:
             try:

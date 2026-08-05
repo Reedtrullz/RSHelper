@@ -508,6 +508,61 @@ class TestCLI(unittest.TestCase):
                                        members_only=False, cooldown=15,
                                        json=True))
 
+    def test_item_info_json_timeseries_single_doc(self):
+        """item-info --json --timeseries must emit ONE JSON document on stdout."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import rshelper.api as amod
+        import rshelper.cli as cmod
+        now = int(time.time())
+        ts_data = [
+            {"timestamp": now - (60 * (10 - i)), "avgHighPrice": 100 + i,
+             "avgLowPrice": 90 + i, "highPriceVolume": 100, "lowPriceVolume": 100}
+            for i in range(10)
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            orig_cache = amod._cache_path
+            amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 1397, "name": "Air battlestaff", "members": True,
+                         "limit": 18000, "highalch": 9300}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "1397": {"high": 8780, "low": 8750,
+                                     "highTime": now - 60, "lowTime": now - 60}}):
+                        with mock.patch.object(amod, "fetch_timeseries",
+                                               return_value=ts_data):
+                            import contextlib, io
+                            with contextlib.redirect_stdout(io.StringIO()) as out:
+                                cmod.item_info(Namespace(
+                                    item="air battlestaff", profile=None,
+                                    json=True, timeseries=True, predict=False,
+                                    tax_curve=False, wiki=False, wiki_open=False))
+                            data = json.loads(out.getvalue())  # must parse as ONE doc
+                            self.assertIn("timeseries_analysis", data)
+                            self.assertIn("confidence", data["timeseries_analysis"])
+            finally:
+                amod._cache_path = orig_cache
+
+    def test_profile_switch_missing_raises(self):
+        """profile switch to a nonexistent profile must exit 1."""
+        import rshelper.profile as pmod
+        from pathlib import Path
+        orig = pmod.CONFIG_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            pmod.CONFIG_DIR = Path(tmp) / "config"
+            try:
+                import subprocess as sp
+                r = sp.run([sys.executable, "-m", "rshelper", "profile", "switch", "bogus"],
+                           capture_output=True, text=True,
+                           cwd=os.path.join(_TEST_DIR, ".."),
+                           env={**os.environ, "PYTHONPATH": "src"})
+                self.assertEqual(r.returncode, 1)
+                self.assertIn("does not exist", r.stderr)
+            finally:
+                pmod.CONFIG_DIR = orig
+
 
 if __name__ == "__main__":
     unittest.main()

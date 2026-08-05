@@ -134,7 +134,7 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
         "prev_date": prev_data["date"],
         "today_count": len(today_data["items"]),
         "prev_count": len(prev_data["items"]),
-        "new": sorted(new_items, key=lambda x: -x.get("profit", 0)),
+        "new": sorted(new_items, key=lambda x: -x.get(value_key, x.get("profit", 0))),
         "improved": sorted(improved, key=lambda x: -x["delta"]),
         "fell_off": sorted(fell_off, key=lambda x: x["delta"]),
         "removed": removed,

@@ -56,12 +56,16 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
     started = datetime.now(timezone.utc).isoformat()
     p_path = _pid_path(profile)
     # Claim the pid file with O_EXCL so a second monitor cannot silently
-    # clobber a live one (mirrors the trader's single-instance guard).
+    # clobber a live one (mirrors the trader's single-instance guard). The
+    # pid is written+fsynced while the O_EXCL fd is held so a concurrent
+    # claimant never reads a partial file and unlinks a live claim.
     for _ in range(2):
         try:
             fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             with os.fdopen(fd, "w") as f:
                 f.write(str(pid))
+                f.flush()
+                os.fsync(f.fileno())
             break
         except FileExistsError:
             try:
@@ -107,7 +111,8 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
     # DUMP/CRASH/SURGE must see the full priced universe, not just items that
     # are currently profitable flips; FLIP stays restricted to the scanned
     # candidates (they carry an RS score from the scanner).
-    signals = detect_signals(items, vol_5m, flip_ids={f.id for f in flips})
+    signals = detect_signals(items, vol_5m, flip_ids={f.id for f in flips},
+                             profile=profile)
     if signals:
         try:
             from rshelper.alerts import push_alert

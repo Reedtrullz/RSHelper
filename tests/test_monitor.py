@@ -54,7 +54,7 @@ def test_state_file_roundtrip():
 
 def test_monitor_cli_args():
     import subprocess
-    for flag_arg in ["--help", "--stop", "--status"]:
+    for flag_arg in ["--help", "--status"]:
         result = subprocess.run(
             [sys.executable, "-m", "rshelper", "monitor", flag_arg],
             capture_output=True, text=True,
@@ -62,6 +62,15 @@ def test_monitor_cli_args():
             env={**os.environ, "PYTHONPATH": "src"},
         )
         assert result.returncode == 0, f"monitor {flag_arg} failed: {result.stderr}"
+    # --stop with nothing running exits 1 (new contract: scripts can detect
+    # "nothing was stopped").
+    result = subprocess.run(
+        [sys.executable, "-m", "rshelper", "monitor", "--stop"],
+        capture_output=True, text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+        env={**os.environ, "PYTHONPATH": "src"},
+    )
+    assert result.returncode == 1, f"monitor --stop should exit 1, got {result.returncode}"
     print("  PASSED test_monitor_cli_args")
 
 
@@ -104,7 +113,7 @@ def test_signals_receive_full_universe():
     flips = [items[0]]
     captured = {}
 
-    def fake_detect(items_arg, vol_5m, flip_ids=None):
+    def fake_detect(items_arg, vol_5m, flip_ids=None, profile=None):
         captured["items"] = items_arg
         captured["flip_ids"] = flip_ids
         return []

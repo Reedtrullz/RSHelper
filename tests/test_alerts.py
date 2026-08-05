@@ -159,6 +159,30 @@ class TestAlerts(unittest.TestCase):
         self.assertGreaterEqual(len(sys_types), 1)
         self.assertIn("Data source unavailable", sys_types[0].title)
 
+    def test_cross_process_lock_prevents_id_collision(self):
+        """Two processes pushing alerts must not collide on ids (flock)."""
+        import subprocess
+        import os
+        code = (
+            "import sys; sys.path.insert(0,'src');"
+            "from rshelper.alerts import push_alert;"
+            "push_alert('system','INFO',None,'','p','m',profile='default')"
+        )
+        procs = [subprocess.Popen([sys.executable, "-c", code],
+                                  cwd=os.getcwd(),
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
+                 for _ in range(4)]
+        for p in procs:
+            p.wait(timeout=30)
+        feed = amod.list_alerts(limit=100, profile="default")
+        ids = [a.id for a in feed if a.title == "p"]
+        self.assertEqual(len(ids), len(set(ids)), f"colliding ids: {ids}")
+        # cleanup
+        for a in feed:
+            if a.title == "p":
+                amod.mark_read(ids=[a.id], profile="default")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

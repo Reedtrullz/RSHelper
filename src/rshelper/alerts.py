@@ -1,6 +1,7 @@
 """Persistent alert feed: signals, watchlist triggers, trader exits, system."""
 
 import json
+import os
 import threading
 import time
 from dataclasses import dataclass
@@ -15,6 +16,42 @@ WATCH_DEDUPE_SEC = 15 * 60  # don't re-fire a watch threshold within 15 min
 
 _ALERT_LOCK = threading.Lock()
 _fallback_id = 0  # per-process monotonic ids when persistence fails
+
+
+def _file_lock(profile: str | None = None):
+    """Cross-process advisory lock for the alerts store.
+
+    The trader daemon, monitor daemon, and dashboard server are separate
+    processes that all read-modify-write alerts.json. A process-local
+    threading.Lock cannot serialize them, so push/mark-read/dedupe take an
+    flock on a sidecar .lock file (same profile dir). Returns a context
+    manager; best-effort (falls back to the thread lock on unsupported
+    platforms).
+    """
+    path = _alerts_path(profile).with_suffix(".json.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError:
+        return _ALERT_LOCK
+    import contextlib
+    @contextlib.contextmanager
+    def _locked():
+        try:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except (ImportError, OSError):
+            pass
+        try:
+            yield
+        finally:
+            try:
+                import fcntl
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except (ImportError, OSError):
+                pass
+            os.close(fd)
+    return _locked()
 
 
 @dataclass
@@ -70,7 +107,7 @@ def push_alert(type: str, severity: str, item_id: int | None,
     delivery is best-effort for daemons and the dashboard.
     """
     try:
-        with _ALERT_LOCK:
+        with _file_lock(profile):
             store = _load(profile)
             alert = {
                 "id": _next_alert_id(store),
@@ -131,7 +168,7 @@ def mark_read(ids: list[int] | None = None, all: bool = False,
 
     ids=None + all=True marks everything; ids=None + all=False is a no-op.
     """
-    with _ALERT_LOCK:
+    with _file_lock(profile):
         store = _load(profile)
         changed = 0
         if all:
@@ -159,7 +196,7 @@ def watch_triggered(item_id: int, profile: str | None = None) -> bool:
 
 def set_watch_triggered(item_id: int, profile: str | None = None) -> None:
     """Record the moment a watch threshold fired (dedupe window)."""
-    with _ALERT_LOCK:
+    with _file_lock(profile):
         store = _load(profile)
         store.setdefault("watch_triggered", {})[str(item_id)] = time.time()
         _save(store, profile)
@@ -180,7 +217,7 @@ def update_watch_alerts(item_id: int, above: int | None, below: int | None,
     entry["alert_margin_above"] = above
     entry["alert_margin_below"] = below
     watchlist._save(data, profile)
-    with _ALERT_LOCK:
+    with _file_lock(profile):
         store = _load(profile)
         store.setdefault("watch_triggered", {}).pop(str(item_id), None)
         _save(store, profile)

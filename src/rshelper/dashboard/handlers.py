@@ -406,7 +406,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache")
                 self.send_header("Connection", "keep-alive")
-                self.send_header("Access-Control-Allow-Origin", "*")
+                # Same-origin only: a wildcard ACAO would let any website read
+                # the alert stream (item names/prices) via EventSource.
                 self.end_headers()
                 deadline = None
                 raw_ttl = self._query().get("ttl", [""])[0]
@@ -640,12 +641,22 @@ def make_handler(scanner, scan_items: Callable[[], list],
             return parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
 
         def _origin_ok(self) -> bool:
-            """Reject state-mutating requests from foreign origins."""
+            """Reject state-mutating requests from foreign origins.
+
+            The Origin netloc must match the Host AND the Host must be a
+            loopback host. Comparing Origin-to-Host alone is defeated by DNS
+            rebinding (a malicious page sets both to its own host).
+            """
             origin = self.headers.get("Origin")
             if not origin:
                 return True
             host = self.headers.get("Host", "")
-            return bool(host) and urlparse(origin).netloc == host
+            if not host:
+                return False
+            netloc = host.split(":", 1)[0].lower()
+            if netloc not in ("127.0.0.1", "localhost", "::1"):
+                return False  # non-loopback Host never passes
+            return urlparse(origin).netloc == host
 
         def log_message(self, format, *args):
             print(f"[dashboard] {format % args}", file=sys.stderr)

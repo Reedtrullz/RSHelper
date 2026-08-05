@@ -15,6 +15,22 @@ COOLDOWN_DIR = resolve_config_path("")
 COOLDOWN_PATH = resolve_config_path("signal_cooldowns.json")
 BASELINE_PATH = resolve_config_path("volume_baseline.json")
 
+
+def _cooldown_path(profile: str | None = None) -> Path:
+    if profile is None:
+        profile = "default"
+    if profile == "default" and COOLDOWN_PATH is not None:
+        return COOLDOWN_PATH  # honor tests/legacy module patching
+    return resolve_config_path("signal_cooldowns.json", profile)
+
+
+def _baseline_path(profile: str | None = None) -> Path:
+    if profile is None:
+        profile = "default"
+    if profile == "default" and BASELINE_PATH is not None:
+        return BASELINE_PATH  # honor tests/legacy module patching
+    return resolve_config_path("volume_baseline.json", profile)
+
 # Thresholds
 DUMP_THRESHOLD = 0.10   # 10% below 5m average = DUMP
 CRASH_THRESHOLD = 0.20  # 20% below 5m average = CRASH
@@ -36,23 +52,25 @@ class Signal:
     message: str
 
 
-def _load_cooldowns() -> dict:
-    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
+def _load_cooldowns(profile: str | None = None) -> dict:
+    path = _cooldown_path(profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        if COOLDOWN_PATH.exists():
-            return json.loads(COOLDOWN_PATH.read_text())
+        if path.exists():
+            return json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         pass
     return {}
 
 
-def _save_cooldowns(data: dict) -> None:
-    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=COOLDOWN_DIR, suffix=".tmp")
+def _save_cooldowns(data: dict, profile: str | None = None) -> None:
+    path = _cooldown_path(profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(data, f)
-        os.replace(tmp, COOLDOWN_PATH)
+        os.replace(tmp, path)
     except Exception:
         try:
             os.unlink(tmp)
@@ -66,7 +84,7 @@ def _cooldown_key(item_id: int, signal_type: str) -> str:
 
 
 def _is_cooling(item_id: int, signal_type: str, cooldown_sec: int,
-                  cooldowns: dict | None = None) -> bool:
+                cooldowns: dict | None = None) -> bool:
     if cooldowns is None:
         cooldowns = _load_cooldowns()
     key = _cooldown_key(item_id, signal_type)
@@ -82,7 +100,7 @@ def _set_cooldown(item_id: int, signal_type: str,
     cooldowns[key] = time.time()
 
 
-def _persist_cooldowns(cooldowns: dict) -> None:
+def _persist_cooldowns(cooldowns: dict, profile: str | None = None) -> None:
     """Best-effort cooldown save; a failure must not kill the scan cycle.
 
     Cooldowns are saved right after each signal fires so a later disk error
@@ -90,29 +108,31 @@ def _persist_cooldowns(cooldowns: dict) -> None:
     cycle). A failed save is loud on stderr, never silent.
     """
     try:
-        _save_cooldowns(cooldowns)
+        _save_cooldowns(cooldowns, profile)
     except OSError as exc:
         print(f"[signals] warning: could not persist cooldowns: {exc}",
               file=sys.stderr)
 
 
-def _load_baselines() -> dict[str, float]:
-    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
+def _load_baselines(profile: str | None = None) -> dict[str, float]:
+    path = _baseline_path(profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        if BASELINE_PATH.exists():
-            return json.loads(BASELINE_PATH.read_text())
+        if path.exists():
+            return json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         pass
     return {}
 
 
-def _save_baselines(data: dict) -> None:
-    COOLDOWN_DIR.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=COOLDOWN_DIR, suffix=".tmp")
+def _save_baselines(data: dict, profile: str | None = None) -> None:
+    path = _baseline_path(profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(data, f)
-        os.replace(tmp, BASELINE_PATH)
+        os.replace(tmp, path)
     except Exception:
         try:
             os.unlink(tmp)
@@ -140,6 +160,7 @@ def detect_signals(
     volume_5m: dict[str, dict],
     cooldown_sec: int = DEFAULT_COOLDOWN,
     flip_ids: set[int] | None = None,
+    profile: str | None = None,
 ) -> list[Signal]:
     """Scan items for DUMP, CRASH, SURGE, and FLIP signals.
 
@@ -151,10 +172,14 @@ def detect_signals(
     always evaluated over the full item universe so market events on
     non-flip items are not silently missed. None keeps the historical
     behavior of scanning everything for every signal type.
+
+    profile scopes cooldowns/volume-baselines per profile (they are shared
+    mutable state; without this, a monitor on one profile would suppress
+    signals on another).
     """
     signals: list[Signal] = []
-    cooldowns = _load_cooldowns()  # load once for entire scan
-    baselines = _load_baselines()
+    cooldowns = _load_cooldowns(profile)  # load once for entire scan
+    baselines = _load_baselines(profile)
 
     for item in items:
         # Skip items without price data
@@ -186,7 +211,7 @@ def detect_signals(
                         message=f"{item.name}: {drop*100:+.1f}% vs 5m avg (sell price)",
                     ))
                     _set_cooldown(item.id, "CRASH", cooldowns)
-                    _persist_cooldowns(cooldowns)
+                    _persist_cooldowns(cooldowns, profile)
             elif drop <= -DUMP_THRESHOLD:
                 if not _is_cooling(item.id, "DUMP", cooldown_sec, cooldowns):
                     signals.append(Signal(
@@ -196,7 +221,7 @@ def detect_signals(
                         message=f"{item.name}: {drop*100:+.1f}% vs 5m avg (sell price)",
                     ))
                     _set_cooldown(item.id, "DUMP", cooldowns)
-                    _persist_cooldowns(cooldowns)
+                    _persist_cooldowns(cooldowns, profile)
 
         # SURGE: 5m volume > 3x the rolling baseline (persisted across scans).
         # A single snapshot has no 'normal', so the baseline seeds from the
@@ -215,7 +240,7 @@ def detect_signals(
                     message=f"{item.name}: {five_min_vol} volume (normal: ~{prev:.0f})",
                 ))
                 _set_cooldown(item.id, "SURGE", cooldowns)
-                _persist_cooldowns(cooldowns)
+                _persist_cooldowns(cooldowns, profile)
 
         # FLIP: spread > 5% of buy price, with sufficient volume
         if (flip_ids is None or item.id in flip_ids) and has_real_5m \
@@ -237,11 +262,11 @@ def detect_signals(
                         message=f"{item.name}: {spread_pct*100:.1f}% spread, RS={item.rs_score:.0f}",
                     ))
                     _set_cooldown(item.id, "FLIP", cooldowns)
-                    _persist_cooldowns(cooldowns)
+                    _persist_cooldowns(cooldowns, profile)
 
-    _persist_cooldowns(cooldowns)  # final best-effort flush
+    _persist_cooldowns(cooldowns, profile)  # final best-effort flush
     try:
-        _save_baselines(baselines)
+        _save_baselines(baselines, profile)
     except OSError as exc:
         print(f"[signals] warning: could not persist volume baselines: {exc}",
               file=sys.stderr)

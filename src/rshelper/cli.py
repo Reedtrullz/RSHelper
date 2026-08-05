@@ -773,7 +773,10 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     if args.status:
         status = trader_status(profile)
         if not status:
-            print("Trader: not running (no state yet)")
+            if args.json:
+                print(json.dumps({"running": False, "local": False, "pid": None}))
+            else:
+                print("Trader: not running (no state yet)")
             return
         if args.json:
             print(json.dumps(status, indent=2))
@@ -1031,6 +1034,42 @@ def item_info(args: argparse.Namespace) -> None:
                                  "profit": int(buy_price * m) - buy_price
                                  - ge_tax(int(buy_price * m))}
                                 for m in steps]
+        if (args.timeseries or getattr(args, "predict", False)) and buy_price > 0:
+            ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
+            if ts:
+                from rshelper.analysis import analyze_timeseries
+                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+                if analysis:
+                    out["timeseries_analysis"] = {
+                        "confidence": round(analysis.confidence, 3),
+                        "reliability": round(analysis.reliability, 3),
+                        "profitability_score": round(analysis.profitability_score, 3),
+                        "avg_margin": round(analysis.avg_margin, 0),
+                        "margin_consistency": round(analysis.margin_consistency, 3),
+                        "margin_volatility": round(analysis.margin_volatility, 4),
+                        "avg_spread_pct": round(analysis.avg_spread_pct, 2),
+                        "datapoints": analysis.datapoints,
+                        "window_hours": round(analysis.window_hours, 1),
+                    }
+                    if getattr(args, "predict", False):
+                        try:
+                            from rshelper.analysis import analyze_timeseries as _at
+                            # Reuse the same analysis; prediction is a small
+                            # linear trend on the timeseries.
+                            import statistics
+                            lows = [int(p.get("avgLowPrice") or 0)
+                                    for p in (ts or []) if p.get("avgLowPrice")]
+                            if len(lows) >= 6:
+                                xs = list(range(len(lows)))
+                                slope, intercept = statistics.linear_regression(
+                                    xs, lows)
+                                out["prediction"] = {
+                                    "trend": "up" if slope > 0 else "down",
+                                    "slope_per_window": round(slope, 3),
+                                    "next_low_estimate": round(intercept + slope * len(lows)),
+                                }
+                        except Exception:
+                            pass
         print(json.dumps(out, indent=2))
     else:
         tag = " (members)" if members else ""
@@ -1086,60 +1125,43 @@ def item_info(args: argparse.Namespace) -> None:
                 cap_mark = " *" if tax == 5_000_000 else ""
                 print(f"  {sp:>12,}  {tax:>10,}  {profit:>+10,}  {roi:>5.1f}%{cap_mark}")
     # Timeseries if requested
-    if args.timeseries or getattr(args, "predict", False):
+    if not args.json and (args.timeseries or getattr(args, "predict", False)):
         ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
         if ts:
             from rshelper.analysis import analyze_timeseries
             analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
             if analysis:
-                if args.json:
-                    print()
-                    print(json.dumps({
-                        "timeseries_analysis": {
-                            "confidence": round(analysis.confidence, 3),
-                            "reliability": round(analysis.reliability, 3),
-                            "profitability_score": round(analysis.profitability_score, 3),
-                            "avg_margin": round(analysis.avg_margin, 0),
-                            "margin_consistency": round(analysis.margin_consistency, 3),
-                            "margin_volatility": round(analysis.margin_volatility, 4),
-                            "avg_spread_pct": round(analysis.avg_spread_pct, 2),
-                            "datapoints": analysis.datapoints,
-                            "window_hours": round(analysis.window_hours, 1),
-                        }
-                    }, indent=2))
-                else:
-                    print(f"\n  Historical ({analysis.datapoints} windows, {analysis.window_hours:.0f}h):")
-                    print(f"  Confidence: {analysis.confidence:.2f} (reliability: {analysis.reliability:.2f}, profitability: {analysis.profitability_score:.2f})")
-                    print(f"  Avg margin: {analysis.avg_margin:,.0f} gp")
-                    print(f"  Margin consistency: {analysis.margin_consistency:.0%}")
-                    print(f"  Margin volatility: {analysis.margin_volatility:.4f}")
-                    if getattr(args, "predict", False):
-                        try:
-                            from statistics import linear_regression
-                            ts_pts = [(dp["timestamp"], dp["avgHighPrice"]) for dp in ts if dp.get("timestamp") and dp.get("avgHighPrice")]
-                            if len(ts_pts) >= 6:
-                                xs = [t - ts_pts[0][0] for t, _ in ts_pts]
-                                ys = [float(p) for _, p in ts_pts]
-                                slope, intercept = linear_regression(xs, ys)
-                                mean = sum(ys) / len(ys)
-                                pct_per_hr = (slope * 3600 / mean * 100) if mean > 0 else 0
-                                ss_res = sum((y - (slope * x + intercept))**2 for x, y in zip(xs, ys))
-                                ss_tot = sum((y - mean)**2 for y in ys)
-                                r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
-                                direction = "up" if pct_per_hr > 0.05 else "down" if pct_per_hr < -0.05 else "flat"
-                                arrow = "↗" if direction == "up" else "↘" if direction == "down" else "→"
-                                conf = min(100, max(0, r2 * 100))
-                                print(f"\n  Prediction: {arrow} likely {direction} ({pct_per_hr:+.2f}%/hr, R²={r2:.3f})")
-                            else:
-                                print("\n  Prediction: insufficient data (need ≥6 datapoints)")
-                        except ImportError:
-                            print("\n  Prediction: requires Python 3.10+ (statistics.linear_regression)")
-                        except Exception:
-                            print("\n  Prediction: could not compute")
+                print(f"\n  Historical ({analysis.datapoints} windows, {analysis.window_hours:.0f}h):")
+                print(f"  Confidence: {analysis.confidence:.2f} (reliability: {analysis.reliability:.2f}, profitability: {analysis.profitability_score:.2f})")
+                print(f"  Avg margin: {analysis.avg_margin:,.0f} gp")
+                print(f"  Margin consistency: {analysis.margin_consistency:.0%}")
+                print(f"  Margin volatility: {analysis.margin_volatility:.4f}")
+                if getattr(args, "predict", False):
+                    try:
+                        from statistics import linear_regression
+                        ts_pts = [(dp["timestamp"], dp["avgHighPrice"]) for dp in ts if dp.get("timestamp") and dp.get("avgHighPrice")]
+                        if len(ts_pts) >= 6:
+                            xs = [t - ts_pts[0][0] for t, _ in ts_pts]
+                            ys = [float(p) for _, p in ts_pts]
+                            slope, intercept = linear_regression(xs, ys)
+                            mean = sum(ys) / len(ys)
+                            pct_per_hr = (slope * 3600 / mean * 100) if mean > 0 else 0
+                            ss_res = sum((y - (slope * x + intercept))**2 for x, y in zip(xs, ys))
+                            ss_tot = sum((y - mean)**2 for y in ys)
+                            r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+                            direction = "up" if pct_per_hr > 0.05 else "down" if pct_per_hr < -0.05 else "flat"
+                            arrow = "↗" if direction == "up" else "↘" if direction == "down" else "→"
+                            conf = min(100, max(0, r2 * 100))
+                            print(f"\n  Prediction: {arrow} likely {direction} ({pct_per_hr:+.2f}%/hr, R²={r2:.3f})")
+                        else:
+                            print("\n  Prediction: insufficient data (need ≥6 datapoints)")
+                    except ImportError:
+                        print("\n  Prediction: requires Python 3.10+ (statistics.linear_regression)")
+                    except Exception:
+                        print("\n  Prediction: could not compute")
             else:
-                if not args.json:
-                    print("\n  Not enough timeseries data for analysis.")
-        elif not args.json:
+                print("\n  Not enough timeseries data for analysis.")
+        else:
             print("\n  No timeseries data available.")
 
 
@@ -1444,6 +1466,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
     if monitor_interval:
         import time as _time
         seen: set[tuple] = set()
+        json_mode = bool(getattr(args, "json", False))
         print(f"[signals] live follow mode — re-scanning every {monitor_interval}s. "
               f"Ctrl-C to stop.", file=sys.stderr)
         try:
@@ -1454,13 +1477,25 @@ def signals_cmd(args: argparse.Namespace) -> None:
                     signals = []
                     print("[signals] data sources unavailable; retrying next cycle",
                           file=sys.stderr)
+                active_keys = {(s.type, s.item_id) for s in signals}
+                # Prune signals that have cleared, so a re-occurring signal
+                # after a lull is reported again (bounded memory too).
+                seen = {k for k in seen if k in active_keys}
                 for s in signals:
                     key = (s.type, s.item_id)
                     if key in seen:
                         continue
                     seen.add(key)
-                    print(f"[signal] {s.type} {s.severity} {s.name} "
-                          f"{s.current_price:,} gp {s.message}")
+                    if json_mode:
+                        # Keep stdout parseable in --json follow mode.
+                        print(json.dumps({
+                            "type": s.type, "item_id": s.item_id, "name": s.name,
+                            "severity": s.severity, "current_price": s.current_price,
+                            "deviation": s.deviation, "message": s.message,
+                        }, indent=2))
+                    else:
+                        print(f"[signal] {s.type} {s.severity} {s.name} "
+                              f"{s.current_price:,} gp {s.message}")
                 _time.sleep(max(1, monitor_interval))
         except KeyboardInterrupt:
             print("\n[signals] stopped.", file=sys.stderr)
@@ -1866,7 +1901,11 @@ def main() -> None:
         if args.stop:
             from rshelper.monitor import stop_monitor
             ok = stop_monitor(args.profile if hasattr(args, "profile") else None)
-            print("Monitor stopped." if ok else "No monitor running.")
+            if ok:
+                print("Monitor stopped.")
+            else:
+                print("No monitor running.", file=sys.stderr)
+                sys.exit(1)
         elif args.status:
             from rshelper.monitor import monitor_status
             status = monitor_status()
@@ -2042,7 +2081,11 @@ def main() -> None:
             from rshelper.journal import delete_trade
             profile = args.profile if hasattr(args, "profile") else None
             ok = delete_trade(args.id, profile=profile)
-            print(f"Trade {args.id} deleted." if ok else f"Trade {args.id} not found.")
+            if ok:
+                print(f"Trade {args.id} deleted.")
+            else:
+                print(f"Trade {args.id} not found.", file=sys.stderr)
+                sys.exit(1)
     elif args.command == "profile":
         from rshelper.profile import (get_active_profile, set_active_profile,
                                        create_profile, delete_profile, list_profiles,
@@ -2059,6 +2102,9 @@ def main() -> None:
                 print("Switched to default profile.")
             elif not validate_profile_name(args.name):
                 print(f"Invalid profile name: {args.name}", file=sys.stderr)
+                sys.exit(1)
+            elif args.name not in list_profiles():
+                print(f"Profile '{args.name}' does not exist.", file=sys.stderr)
                 sys.exit(1)
             else:
                 set_active_profile(args.name)

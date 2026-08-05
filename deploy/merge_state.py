@@ -97,7 +97,13 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
             for row in _read_list(src, key):
                 rows[row.get(id_key)] = row  # repo wins on id ties
             ordered = sorted(rows, key=lambda k: (k is None, k))
-            _write_json(dst, {key: [rows[k] for k in ordered]})
+            # Id-collision guard: if a repo row and a volume row share an id
+            # but differ (cross-process id reuse), keep both by giving the
+            # volume row a synthetic id rather than silently dropping it.
+            merged = [rows[k] for k in ordered]
+            if name == "trades.json":
+                merged = _dedupe_collisions(merged)
+            _write_json(dst, {key: merged})
         elif name in REPLACE_FILES:
             # The staged copy is the source of truth: replace the volume
             # file wholesale so closed positions are pruned (no ghosts).
@@ -144,6 +150,28 @@ def _merge_alerts(src: str, dst: str) -> None:
             pass
     _write_json(dst, {"alerts": [alerts_rows[k] for k in ordered],
                       "watch_triggered": watch})
+
+
+def _dedupe_collisions(rows: list[dict]) -> list[dict]:
+    """Give volume-side rows that collided on id a synthetic id.
+
+    trades.json ids come from max+1 per machine; when the Mac and the VPS
+    both wrote trade #N for different trades, the union would drop one. This
+    keeps both by renumbering the later (volume) row.
+    """
+    seen: set = set()
+    out: list[dict] = []
+    next_synthetic = max((r.get("id", 0) or 0) for r in rows) + 1 if rows else 1
+    for row in rows:
+        rid = row.get("id")
+        if rid is not None and rid in seen:
+            row = dict(row)
+            row["id"] = next_synthetic
+            next_synthetic += 1
+        if rid is not None:
+            seen.add(rid)
+        out.append(row)
+    return out
 
 
 def main(argv: list[str]) -> int:

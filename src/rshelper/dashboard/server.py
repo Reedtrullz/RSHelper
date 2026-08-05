@@ -254,7 +254,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 # DUMP/CRASH/SURGE must see the full priced universe (mirror
                 # the monitor); FLIP stays restricted to scan candidates.
                 sig_cache["list"] = detect_signals(
-                    items_snap, vol_snap, flip_ids={f.id for f in flips})
+                    items_snap, vol_snap, flip_ids={f.id for f in flips},
+                    profile=profile)
                 sig_cache["flips"] = len(flips)
                 sig_cache["ts"] = now
                 new = [s for s in sig_cache["list"]

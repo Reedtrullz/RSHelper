@@ -15,8 +15,8 @@ from rshelper.signals import (
 
 import rshelper.signals as _s
 _baseline_state = {}
-_s._load_baselines = lambda: dict(_baseline_state)
-_s._save_baselines = lambda data: _baseline_state.update(data)
+_s._load_baselines = lambda profile=None: dict(_baseline_state)
+_s._save_baselines = lambda data, profile=None: _baseline_state.update(data)
 
 
 
@@ -109,8 +109,8 @@ def _reset_cooldowns():
     _orig_load = _s._load_cooldowns
     _orig_save = _s._save_cooldowns
     _state = {}
-    _s._load_cooldowns = lambda: dict(_state)
-    _s._save_cooldowns = lambda data: _state.update(data)
+    _s._load_cooldowns = lambda profile=None: dict(_state)
+    _s._save_cooldowns = lambda data, profile=None: _state.update(data)
     return (_orig_load, _orig_save)
 
 def _restore_cooldowns(orig):
@@ -211,7 +211,7 @@ def test_cooldown_save_failure_does_not_kill_scan():
     orig = _reset_cooldowns()
     orig_save = _s._save_cooldowns
 
-    def boom(data):
+    def boom(data, profile=None):
         raise OSError("disk full")
 
     _s._save_cooldowns = boom
@@ -250,7 +250,7 @@ def test_concurrent_cooldown_save():
 
     def writer():
         try:
-            _s._save_cooldowns({"k": 1})
+            _s._save_cooldowns({"k": 1}, profile="default")
         except Exception as e:
             errors.append(e)
 
