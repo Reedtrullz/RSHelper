@@ -176,6 +176,23 @@ def test_pnl_gp_per_hour():
     print("  PASSED test_pnl_gp_per_hour")
 
 
+def test_pnl_gp_per_hour_mixed_naive_tz():
+    """A legacy naive timestamp among tz-aware ones must not zero GP/hr."""
+    _clean()
+    log_trade(1, "A", 1, 100, 1000)
+    log_trade(2, "B", 1, 100, 1000)
+    trades_data = json.loads(TRADES_PATH.read_text())
+    from datetime import datetime, timezone, timedelta
+    t1 = datetime.now(timezone.utc) - timedelta(hours=2)
+    t2 = datetime.now(timezone.utc)
+    trades_data["trades"][0]["timestamp"] = t1.isoformat()  # tz-aware
+    trades_data["trades"][1]["timestamp"] = t2.strftime("%Y-%m-%dT%H:%M:%S")  # naive
+    TRADES_PATH.write_text(json.dumps(trades_data))
+    pnl = compute_pnl()
+    assert pnl.active_gp_per_hour > 0, "mixed naive/tz timestamps must not zero GP/hr"
+    print("  PASSED test_pnl_gp_per_hour_mixed_naive_tz")
+
+
 def test_pnl_cost_basis_and_roi():
     _clean()
     log_trade(1, "Nature rune", 1000, 100, 110)  # profit
@@ -354,6 +371,7 @@ if __name__ == "__main__":
     test_pnl_mixed_wins_losses()
     test_pnl_empty_ledger()
     test_pnl_gp_per_hour()
+    test_pnl_gp_per_hour_mixed_naive_tz()
     test_pnl_cost_basis_and_roi()
     test_pnl_profit_factor_and_drawdown()
     test_pnl_profit_factor_no_losses()

@@ -227,8 +227,15 @@ def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
     active_gp_per_hour = 0.0
     if len(timestamps) >= 2:
         try:
-            first = datetime.fromisoformat(timestamps[0])
-            last = datetime.fromisoformat(timestamps[-1])
+            # Normalize timestamps so a mix of naive (legacy) and tz-aware
+            # entries doesn't make fromisoformat raise on the comparison.
+            def _parse(ts: str):
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            first = _parse(timestamps[0])
+            last = _parse(timestamps[-1])
             hours = (last - first).total_seconds() / 3600
             if hours > 0:
                 active_gp_per_hour = total_profit / hours
