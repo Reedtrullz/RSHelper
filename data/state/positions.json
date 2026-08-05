@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 102,
-      "buy_price": 302,
+      "id": 1,
+      "item_id": 237,
+      "name": "Unicorn horn",
+      "qty": 246,
+      "buy_price": 481,
       "direction": "traditional",
-      "opened_at": "2026-08-05T13:07:44.195636+00:00",
+      "opened_at": "2026-08-05T13:43:46.099278+00:00",
       "note": "auto",
-      "entry_sell": 302,
-      "entry_offer": 319
-    },
-    {
-      "id": 4,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 321,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T13:31:45.361518+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 481,
+      "entry_offer": 498
     }
   ]
 }
