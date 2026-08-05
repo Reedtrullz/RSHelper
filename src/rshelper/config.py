@@ -44,7 +44,7 @@ max_spread_ratio = 5.0   # max buy/sell gap for entries
 dip_depth_pct = 2.5      # buy when sell is >=2.5% below the 5m average (replay: 2.5% doubles trade count vs 3% at same 99.5% win)
 max_dip_pct = 10.0       # don't catch deeper freefalls than this
 min_spread_pct = 3.5     # spread must exceed the 2% GE tax + buffer (replay: 3.5% unlocks the 3.5-4% band, +95% absolute profit at same risk)
-max_entry_spread_pct = 5.0  # high/low gap cap so entries don't overpay
+max_entry_spread_pct = 5.75  # high/low gap cap (replay: 5.75 adds +34% profit at same 99.6% win / dd; 6.0+ brings the first losing item)
 reentry_minutes = 30     # wait before re-entering an item after an auto close
 stop_reentry_minutes = 90  # wait before re-entering an item after a stop-loss
 take_profit_pct = 3.0    # close when net (after tax) >= this %
@@ -107,7 +107,7 @@ class TraderConfig:
     dip_depth_pct: float = 2.5
     max_dip_pct: float = 10.0
     min_spread_pct: float = 3.5
-    max_entry_spread_pct: float = 5.0
+    max_entry_spread_pct: float = 5.75
     reentry_minutes: int = 30
     stop_reentry_minutes: int = 90
     take_profit_pct: float = 3.0
@@ -176,7 +176,7 @@ def load_config(profile: str | None = None) -> Config:
             dip_depth_pct=trader_raw.get("dip_depth_pct", 2.5),
             max_dip_pct=trader_raw.get("max_dip_pct", 10.0),
             min_spread_pct=trader_raw.get("min_spread_pct", 3.5),
-            max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.0),
+            max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.75),
             reentry_minutes=trader_raw.get("reentry_minutes", 30),
             stop_reentry_minutes=trader_raw.get("stop_reentry_minutes", 90),
             take_profit_pct=trader_raw.get("take_profit_pct", 3.0),
