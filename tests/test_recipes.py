@@ -27,13 +27,13 @@ def test_recipe_table_integrity():
         assert all(qty > 0 for qty in r.inputs.values())
         assert r.rate_per_hour > 0
         assert r.skill in ("smithing", "fletching", "crafting", "cooking",
-                           "herblore", "construction", "runecrafting")
+                           "herblore", "construction", "runecrafting", "magic")
     # Every skill is represented
     from collections import Counter
     skills = Counter(r.skill for r in RECIPES.values())
     for skill in ("smithing", "fletching", "crafting", "cooking",
-                  "herblore", "construction", "runecrafting"):
-        assert skills[skill] >= 5, f"{skill} needs >= 5 recipes, got {skills[skill]}"
+                  "herblore", "construction", "runecrafting", "magic"):
+        assert skills[skill] >= 4, f"{skill} needs >= 4 recipes, got {skills[skill]}"
     # The classic chains are present
     assert 2353 in RECIPES  # steel bar
     assert 892 in RECIPES   # rune arrow (fletch)

@@ -1440,7 +1440,7 @@ def main() -> None:
                          help="Filter to members-only recipes")
     process.add_argument("--skill", type=str, default="",
                          choices=["smithing", "fletching", "crafting", "cooking",
-                                  "herblore", "construction", "runecrafting"],
+                                  "herblore", "construction", "runecrafting", "magic"],
                          help="Filter to one skill (default: all)")
     process.add_argument("--min-volume", type=int, default=cfg.process.min_volume,
                          help="Minimum 5-minute output volume")

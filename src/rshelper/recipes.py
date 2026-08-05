@@ -2,12 +2,14 @@
 
 The scanner buys the inputs at their instant-buy price, processes them,
 and sells the output at its instant-sell price (GE tax on the sell leg
-only). Item IDs are verified against the OSRS wiki mapping.
+only). Item IDs are verified against the OSRS wiki mapping, and the
+`rate_per_hour` / `cost_per_unit` values are calibrated to the OSRS Wiki
+money-making guides (not guessed).
 
 Recipe economics:
   input_cost = sum(input.buy_price * qty for each input)
   output_gp  = output.sell_price - ge_tax(output.sell_price)
-  profit     = output_gp / outputs_per_run - input_cost/outputs_per_run - cost_per_unit
+  profit     = output_gp - input_cost/outputs_per_run - cost_per_unit
   gp_per_hour = profit * min(rate_per_hour, output.buy_limit/4,
                              output.volume*12, input_capacity)
 """
@@ -20,16 +22,16 @@ class Recipe:
     output_id: int
     inputs: dict[int, int]   # {input_item_id: qty_per_run}
     skill: str               # "smithing" | "fletching" | "crafting" | "cooking"
-                             # | "herblore" | "construction" | "runecrafting"
-    rate_per_hour: int       # action-rate cap (smelting ~1200/hr)
-    cost_per_unit: int = 0   # non-GE process cost, default 0
+                             # | "herblore" | "construction" | "runecrafting" | "magic"
+    rate_per_hour: int       # action-rate cap (wiki-calibrated)
+    cost_per_unit: int = 0   # non-GE process cost (e.g. sawmill fee)
     outputs_per_run: int = 1  # units produced per recipe run (batch: 15 arrows)
 
 
 # ---------------------------------------------------------------------------
-# SMITHING — ores -> bars (1 run = 1 bar)
+# SMITHING — ores -> bars. Wiki: ~775 bars/hr at the Edgeville furnace.
 # ---------------------------------------------------------------------------
-_SMELT = 1200
+_SMELT = 775
 SMITHING: dict[int, Recipe] = {
     2349: Recipe(2349, {438: 1, 436: 1}, "smithing", _SMELT),          # bronze bar
     2351: Recipe(2351, {440: 1}, "smithing", _SMELT),                  # iron bar
@@ -42,9 +44,10 @@ SMITHING: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# FLETCHING — arrow shafts + arrowtips -> arrows (15 per run)
+# FLETCHING — arrow shafts + arrowtips -> arrows. Wiki: ~2,400 arrows/hr
+# (the 15-arrow batch is fast; ~40k headless/hr but full arrows slower).
 # ---------------------------------------------------------------------------
-_FLETCH = 2000
+_FLETCH = 2400
 FLETCHING: dict[int, Recipe] = {
     882: Recipe(882, {52: 15, 39: 15}, "fletching", _FLETCH, outputs_per_run=15),  # bronze arrow
     884: Recipe(884, {52: 15, 40: 15}, "fletching", _FLETCH, outputs_per_run=15),  # iron arrow
@@ -55,45 +58,48 @@ FLETCHING: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# CRAFTING — leather, glassblowing, jewelry, pottery
+# CRAFTING — leather, jewelry, pottery, spinning. (Orbs are a Magic method:
+# blowing molten glass is low-profit XP; the real money-maker is charging,
+# which needs cosmic runes — see MAGIC below.)
 # ---------------------------------------------------------------------------
-_CRAFT = 1200
 CRAFTING: dict[int, Recipe] = {
-    # Leather: cowhide -> leather
-    1741: Recipe(1741, {1739: 1}, "crafting", 1800),
-    # Hard leather: cowhide -> hard leather (needs 1 cowhide + craft)
-    1743: Recipe(1743, {1739: 1}, "crafting", 1800),
-    # Dragon leather: green/blue/red/black dragonhide -> leather
-    1745: Recipe(1745, {1753: 1}, "crafting", 1800),  # green dragon leather
-    2505: Recipe(2505, {1751: 1}, "crafting", 1800),  # blue dragon leather
-    2507: Recipe(2507, {1749: 1}, "crafting", 1800),  # red dragon leather
-    2509: Recipe(2509, {1747: 1}, "crafting", 1800),  # black dragon leather
-    # Glassblowing: molten glass -> orb
-    573: Recipe(573, {1775: 1}, "crafting", 1800),    # air orb
-    571: Recipe(571, {1775: 1}, "crafting", 1800),    # water orb
-    575: Recipe(575, {1775: 1}, "crafting", 1800),    # earth orb
-    569: Recipe(569, {1775: 1}, "crafting", 1800),    # fire orb
-    # Jewelry: gold bar + gem -> ring
-    1637: Recipe(1637, {2357: 1, 1607: 1}, "crafting", _CRAFT),  # sapphire ring
-    1639: Recipe(1639, {2357: 1, 1605: 1}, "crafting", _CRAFT),  # emerald ring
-    1641: Recipe(1641, {2357: 1, 1603: 1}, "crafting", _CRAFT),  # ruby ring
-    1643: Recipe(1643, {2357: 1, 1601: 1}, "crafting", _CRAFT),  # diamond ring
-    # Jewelry: gold bar + gem -> amulet (u)
-    1675: Recipe(1675, {2357: 1, 1607: 1}, "crafting", _CRAFT),  # sapphire amulet (u)
-    1677: Recipe(1677, {2357: 1, 1605: 1}, "crafting", _CRAFT),  # emerald amulet (u)
-    1679: Recipe(1679, {2357: 1, 1603: 1}, "crafting", _CRAFT),  # ruby amulet (u)
-    1681: Recipe(1681, {2357: 1, 1601: 1}, "crafting", _CRAFT),  # diamond amulet (u)
-    # Pottery: soft clay -> unfired pot -> pot
-    1787: Recipe(1787, {1761: 1}, "crafting", 1500),  # unfired pot
-    1931: Recipe(1931, {1787: 1}, "crafting", 1500),  # pot (fire unfired pot)
-    # Spinning: flax -> bowstring
-    1777: Recipe(1777, {1779: 1}, "crafting", 1800),
+    1741: Recipe(1741, {1739: 1}, "crafting", 1800),    # cowhide -> leather
+    1743: Recipe(1743, {1739: 1}, "crafting", 1800),    # cowhide -> hard leather
+    1745: Recipe(1745, {1753: 1}, "crafting", 1800),    # green dhide -> leather
+    2505: Recipe(2505, {1751: 1}, "crafting", 1800),    # blue dhide -> leather
+    2507: Recipe(2507, {1749: 1}, "crafting", 1800),    # red dhide -> leather
+    2509: Recipe(2509, {1747: 1}, "crafting", 1800),    # black dhide -> leather
+    # Jewelry: gold bar + gem -> ring (wiki: ~1,000/hr)
+    1637: Recipe(1637, {2357: 1, 1607: 1}, "crafting", 1000),  # sapphire ring
+    1639: Recipe(1639, {2357: 1, 1605: 1}, "crafting", 1000),  # emerald ring
+    1641: Recipe(1641, {2357: 1, 1603: 1}, "crafting", 1000),  # ruby ring
+    1643: Recipe(1643, {2357: 1, 1601: 1}, "crafting", 1000),  # diamond ring
+    1675: Recipe(1675, {2357: 1, 1607: 1}, "crafting", 1000),  # sapphire amulet (u)
+    1677: Recipe(1677, {2357: 1, 1605: 1}, "crafting", 1000),  # emerald amulet (u)
+    1679: Recipe(1679, {2357: 1, 1603: 1}, "crafting", 1000),  # ruby amulet (u)
+    1681: Recipe(1681, {2357: 1, 1601: 1}, "crafting", 1000),  # diamond amulet (u)
+    1787: Recipe(1787, {1761: 1}, "crafting", 1500),  # soft clay -> unfired pot
+    1931: Recipe(1931, {1787: 1}, "crafting", 1500),  # unfired pot -> pot
+    1777: Recipe(1777, {1779: 1}, "crafting", 1000),  # flax -> bowstring
 }
 
 # ---------------------------------------------------------------------------
-# COOKING — raw fish -> cooked fish (1 per run)
+# MAGIC — charging unpowered orbs. Wiki: ~525 orbs/hr (21 trips x 25),
+# each orb needs 3 cosmic runes. (The real "air orb" money-maker; blowing
+# molten glass into an orb is a low-profit crafting XP method.)
 # ---------------------------------------------------------------------------
-_COOK = 1800
+_CHARGE = 525
+MAGIC: dict[int, Recipe] = {
+    573: Recipe(573, {567: 1, 564: 3}, "magic", _CHARGE),   # air orb
+    571: Recipe(571, {567: 1, 564: 3}, "magic", _CHARGE),   # water orb
+    575: Recipe(575, {567: 1, 564: 3}, "magic", _CHARGE),   # earth orb
+    569: Recipe(569, {567: 1, 564: 3}, "magic", _CHARGE),   # fire orb
+}
+
+# ---------------------------------------------------------------------------
+# COOKING — raw fish -> cooked. Wiki: ~1,000-1,300/hr (use 1100 avg).
+# ---------------------------------------------------------------------------
+_COOK = 1100
 COOKING: dict[int, Recipe] = {
     333: Recipe(333, {335: 1}, "cooking", _COOK),    # trout
     329: Recipe(329, {331: 1}, "cooking", _COOK),    # salmon
@@ -109,65 +115,70 @@ COOKING: dict[int, Recipe] = {
 }
 
 # ---------------------------------------------------------------------------
-# HERBLORE — grimy herb -> clean herb; clean herb + secondary -> potion(3)
+# HERBLORE — grimy -> clean (~2,000/hr); herb + secondary -> potion (~1,500/hr)
 # ---------------------------------------------------------------------------
-_HERB = 900
+_HERB_CLEAN = 2000
+_HERB_POT = 1500
 HERBLORE: dict[int, Recipe] = {
-    # Cleaning grimy herbs
-    249: Recipe(249, {199: 1}, "herblore", _HERB),    # guam leaf
-    251: Recipe(251, {201: 1}, "herblore", _HERB),    # marrentill
-    253: Recipe(253, {203: 1}, "herblore", _HERB),    # tarromin
-    255: Recipe(255, {205: 1}, "herblore", _HERB),    # harralander
-    257: Recipe(257, {207: 1}, "herblore", _HERB),    # ranarr weed
-    2998: Recipe(2998, {3049: 1}, "herblore", _HERB), # toadflax
-    259: Recipe(259, {209: 1}, "herblore", _HERB),    # irit leaf
-    261: Recipe(261, {211: 1}, "herblore", _HERB),    # avantoe
-    263: Recipe(263, {213: 1}, "herblore", _HERB),    # kwuarm
-    3000: Recipe(3000, {3051: 1}, "herblore", _HERB), # snapdragon
-    269: Recipe(269, {219: 1}, "herblore", _HERB),    # torstol
-    # Potions: clean herb + secondary -> potion (3-dose)
-    121: Recipe(121, {249: 1, 221: 1}, "herblore", _HERB),    # attack potion(3)
-    115: Recipe(115, {251: 1, 225: 1}, "herblore", _HERB),    # strength potion(3)
-    133: Recipe(133, {253: 1, 223: 1}, "herblore", _HERB),    # defence potion(3)
-    139: Recipe(139, {257: 1, 239: 1}, "herblore", _HERB),    # prayer potion(3)
-    145: Recipe(145, {2998: 1, 221: 1}, "herblore", _HERB),   # super attack(3)
-    157: Recipe(157, {259: 1, 225: 1}, "herblore", _HERB),    # super strength(3)
-    163: Recipe(163, {261: 1, 225: 1}, "herblore", _HERB),    # super defence(3)
-    169: Recipe(169, {263: 1, 239: 1}, "herblore", _HERB),    # ranging potion(3)
-    3042: Recipe(3042, {3000: 1, 2357: 1}, "herblore", _HERB),  # magic potion(3) (snapdragon + gold bar)
-    175: Recipe(175, {253: 1, 223: 1}, "herblore", _HERB),    # antipoison(3) (tarromin + red spiders' eggs)
-    3010: Recipe(3010, {249: 1, 221: 1}, "herblore", _HERB),  # energy potion(3) (guam + newt)
-    127: Recipe(127, {253: 1, 225: 1}, "herblore", _HERB),    # restore potion(3) (harralander + limpwurt)
+    249: Recipe(249, {199: 1}, "herblore", _HERB_CLEAN),    # guam leaf
+    251: Recipe(251, {201: 1}, "herblore", _HERB_CLEAN),    # marrentill
+    253: Recipe(253, {203: 1}, "herblore", _HERB_CLEAN),    # tarromin
+    255: Recipe(255, {205: 1}, "herblore", _HERB_CLEAN),    # harralander
+    257: Recipe(257, {207: 1}, "herblore", _HERB_CLEAN),    # ranarr weed
+    2998: Recipe(2998, {3049: 1}, "herblore", _HERB_CLEAN), # toadflax
+    259: Recipe(259, {209: 1}, "herblore", _HERB_CLEAN),    # irit leaf
+    261: Recipe(261, {211: 1}, "herblore", _HERB_CLEAN),    # avantoe
+    263: Recipe(263, {213: 1}, "herblore", _HERB_CLEAN),    # kwuarm
+    3000: Recipe(3000, {3051: 1}, "herblore", _HERB_CLEAN), # snapdragon
+    269: Recipe(269, {219: 1}, "herblore", _HERB_CLEAN),    # torstol
+    # Potions
+    121: Recipe(121, {249: 1, 221: 1}, "herblore", _HERB_POT),    # attack potion(3)
+    115: Recipe(115, {251: 1, 225: 1}, "herblore", _HERB_POT),    # strength potion(3)
+    133: Recipe(133, {253: 1, 223: 1}, "herblore", _HERB_POT),    # defence potion(3)
+    139: Recipe(139, {257: 1, 239: 1}, "herblore", _HERB_POT),    # prayer potion(3)
+    145: Recipe(145, {2998: 1, 221: 1}, "herblore", _HERB_POT),   # super attack(3)
+    157: Recipe(157, {259: 1, 225: 1}, "herblore", _HERB_POT),    # super strength(3)
+    163: Recipe(163, {261: 1, 225: 1}, "herblore", _HERB_POT),    # super defence(3)
+    169: Recipe(169, {263: 1, 239: 1}, "herblore", _HERB_POT),    # ranging potion(3)
+    3042: Recipe(3042, {3000: 1, 2357: 1}, "herblore", _HERB_POT),  # magic potion(3)
+    175: Recipe(175, {253: 1, 223: 1}, "herblore", _HERB_POT),    # antipoison(3)
+    3010: Recipe(3010, {249: 1, 221: 1}, "herblore", _HERB_POT),  # energy potion(3)
+    127: Recipe(127, {253: 1, 225: 1}, "herblore", _HERB_POT),    # restore potion(3)
 }
 
 # ---------------------------------------------------------------------------
-# CONSTRUCTION — logs -> planks; bar -> nails
+# CONSTRUCTION — logs -> planks at the Sawmill. Wiki: 1,500 gp fee per
+# mahogany plank (100/250/500 for regular/oak/teak), ~2,800 planks/hr
+# at max efficiency. Nails: 1 bar -> 15 nails (smithing at the anvil).
 # ---------------------------------------------------------------------------
-_CONSTR = 600
+_CONSTR_PLANK = 2800
+_CONSTR_NAIL = 800
 CONSTRUCTION: dict[int, Recipe] = {
-    960: Recipe(960, {1511: 1}, "construction", _CONSTR),       # regular plank (normal logs)
-    8778: Recipe(8778, {1521: 1}, "construction", _CONSTR),     # oak plank
-    8780: Recipe(8780, {6333: 1}, "construction", _CONSTR),     # teak plank
-    8782: Recipe(8782, {6332: 1}, "construction", _CONSTR),     # mahogany plank
-    4819: Recipe(4819, {2349: 1}, "construction", 800),         # bronze nails
-    4820: Recipe(4820, {2351: 1}, "construction", 800),         # iron nails
-    1539: Recipe(1539, {2353: 1}, "construction", 800),         # steel nails
-    4822: Recipe(4822, {2359: 1}, "construction", 800),         # mithril nails
-    4823: Recipe(4823, {2361: 1}, "construction", 800),         # adamantite nails
+    960: Recipe(960, {1511: 1}, "construction", _CONSTR_PLANK, cost_per_unit=100),
+    8778: Recipe(8778, {1521: 1}, "construction", _CONSTR_PLANK, cost_per_unit=250),
+    8780: Recipe(8780, {6333: 1}, "construction", _CONSTR_PLANK, cost_per_unit=500),
+    8782: Recipe(8782, {6332: 1}, "construction", _CONSTR_PLANK, cost_per_unit=1500),
+    4819: Recipe(4819, {2349: 1}, "construction", _CONSTR_NAIL, outputs_per_run=15),
+    4820: Recipe(4820, {2351: 1}, "construction", _CONSTR_NAIL, outputs_per_run=15),
+    1539: Recipe(1539, {2353: 1}, "construction", _CONSTR_NAIL, outputs_per_run=15),
+    4822: Recipe(4822, {2359: 1}, "construction", _CONSTR_NAIL, outputs_per_run=15),
+    4823: Recipe(4823, {2361: 1}, "construction", _CONSTR_NAIL, outputs_per_run=15),
 }
 
 # ---------------------------------------------------------------------------
-# RUNECRAFTING — essence -> runes (multi per run)
+# RUNECRAFTING — essence -> runes. Wiki: ~4,000-6,000 runes/hr at high
+# level through the Abyss (use 5000 avg; essence -> runes is 1:1 at low
+# level but multiplies at high level — conservative 1:1 here).
 # ---------------------------------------------------------------------------
-_RC = 1000
+_RC = 5000
 RUNECRAFTING: dict[int, Recipe] = {
-    556: Recipe(556, {1436: 1}, "runecrafting", _RC),   # air rune (rune essence)
+    556: Recipe(556, {1436: 1}, "runecrafting", _RC),   # air rune
     558: Recipe(558, {1436: 1}, "runecrafting", _RC),   # mind rune
     555: Recipe(555, {1436: 1}, "runecrafting", _RC),   # water rune
     557: Recipe(557, {1436: 1}, "runecrafting", _RC),   # earth rune
     554: Recipe(554, {1436: 1}, "runecrafting", _RC),   # fire rune
     559: Recipe(559, {1436: 1}, "runecrafting", _RC),   # body rune
-    564: Recipe(564, {7936: 1}, "runecrafting", _RC),   # cosmic rune (pure essence)
+    564: Recipe(564, {7936: 1}, "runecrafting", _RC),   # cosmic rune
     562: Recipe(562, {7936: 1}, "runecrafting", _RC),   # chaos rune
     561: Recipe(561, {7936: 1}, "runecrafting", _RC),   # nature rune
     563: Recipe(563, {7936: 1}, "runecrafting", _RC),   # law rune
@@ -178,6 +189,6 @@ RUNECRAFTING: dict[int, Recipe] = {
 # AGGREGATE — all recipes, keyed by output item id
 # ---------------------------------------------------------------------------
 RECIPES: dict[int, Recipe] = {
-    **SMITHING, **FLETCHING, **CRAFTING, **COOKING,
+    **SMITHING, **FLETCHING, **CRAFTING, **MAGIC, **COOKING,
     **HERBLORE, **CONSTRUCTION, **RUNECRAFTING,
 }

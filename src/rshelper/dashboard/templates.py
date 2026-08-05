@@ -521,6 +521,7 @@ function viewbarHtml(){
       '<option value="herblore">Herblore</option>'+
       '<option value="construction">Construction</option>'+
       '<option value="runecrafting">Runecrafting</option>'+
+      '<option value="magic">Magic</option>'+
       '</select></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
