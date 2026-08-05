@@ -277,7 +277,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                         "buy_price": it.buy_price if it else 0,
                     })
             out.append({
-                "name": r.name, "item_id": r.id, "process": recipe.process if recipe else "",
+                "name": r.name, "item_id": r.id,
+                "skill": recipe.skill if recipe else "",
                 "input_cost": r.input_cost, "sell_price": r.sell_price,
                 "profit": r.profit,
                 "roi_pct": round(r.profit / r.input_cost * 100, 1) if r.input_cost else 0,
@@ -285,6 +286,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555) -> None:
                 "volume": r.volume, "buy_limit": r.buy_limit,
                 "inputs": inputs,
             })
+        # Group by skill, then sort each skill's recipes by GP/hr desc.
+        out.sort(key=lambda x: (x["skill"], -x["gp_per_hour"]))
         return {"recipes": out, "count": len(out)}
 
     handler = make_handler(scanner, get_items, signal_detector=get_signals,

@@ -512,7 +512,16 @@ function viewbarHtml(){
   }
   if(view==='process'){
     return '<div class="viewbar"><span class="title">Materials Processing</span>'+
-      '<span class="dim" style="font-size:12px;margin-left:8px">Buy inputs, process, sell output</span></div>';
+      '<select id="processSkill" aria-label="Skill filter" onchange="renderProcess()" style="margin-left:8px">'+
+      '<option value="">All skills</option>'+
+      '<option value="smithing">Smithing</option>'+
+      '<option value="fletching">Fletching</option>'+
+      '<option value="crafting">Crafting</option>'+
+      '<option value="cooking">Cooking</option>'+
+      '<option value="herblore">Herblore</option>'+
+      '<option value="construction">Construction</option>'+
+      '<option value="runecrafting">Runecrafting</option>'+
+      '</select></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
 }
@@ -889,14 +898,16 @@ async function renderProcess(){
     const r=await fetch('/api/process');
     if(!r.ok)throw new Error('Process API failed');
     const data=await r.json();
-    const recipes=data.recipes||[];
+    let recipes=data.recipes||[];
+    const sel=document.getElementById('processSkill');
+    if(sel&&sel.value)recipes=recipes.filter(x=>x.skill===sel.value);
     document.getElementById('badgeProcess').textContent=recipes.length;
-    let h='<table><thead><tr><th>Output</th><th>Process</th><th>Inputs</th><th>Profit</th><th>ROI%</th><th>GP/hr</th></tr></thead><tbody>';
+    let h='<table><thead><tr><th>Skill</th><th>Output</th><th>Inputs</th><th>Profit</th><th>ROI%</th><th>GP/hr</th></tr></thead><tbody>';
     recipes.forEach(x=>{
       const roi=x.roi_pct!=null?x.roi_pct.toFixed(1):'-';
       const inputs=(x.inputs||[]).map(i=>escHtml(i.name)+' &times;'+i.qty).join(', ')||'-';
-      h+='<tr><td class="name">'+escHtml(x.name)+'</td>'+
-        '<td>'+escHtml(x.process||'')+'</td>'+
+      h+='<tr><td class="dim">'+escHtml(x.skill||'')+'</td>'+
+        '<td class="name">'+escHtml(x.name)+'</td>'+
         '<td class="dim">'+inputs+'</td>'+
         '<td class="margin pos">'+format(x.profit)+' gp</td>'+
         '<td>'+roi+'%</td>'+

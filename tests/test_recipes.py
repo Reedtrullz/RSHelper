@@ -20,18 +20,59 @@ def test_recipe_table_integrity():
     """Output ids are unique; inputs are non-empty with positive qty."""
     outputs = [r.output_id for r in RECIPES.values()]
     assert len(outputs) == len(set(outputs)), "output ids must be unique"
-    assert len(RECIPES) >= 20, "expected a broad curated recipe set"
+    assert len(RECIPES) >= 80, "expected a broad multi-skill recipe set"
     for r in RECIPES.values():
         assert isinstance(r, Recipe)
         assert r.inputs, "every recipe needs inputs"
         assert all(qty > 0 for qty in r.inputs.values())
         assert r.rate_per_hour > 0
+        assert r.skill in ("smithing", "fletching", "crafting", "cooking",
+                           "herblore", "construction", "runecrafting")
+    # Every skill is represented
+    from collections import Counter
+    skills = Counter(r.skill for r in RECIPES.values())
+    for skill in ("smithing", "fletching", "crafting", "cooking",
+                  "herblore", "construction", "runecrafting"):
+        assert skills[skill] >= 5, f"{skill} needs >= 5 recipes, got {skills[skill]}"
     # The classic chains are present
     assert 2353 in RECIPES  # steel bar
     assert 892 in RECIPES   # rune arrow (fletch)
     assert 573 in RECIPES   # air orb (blow)
     assert 1777 in RECIPES  # bowstring (spin)
+    assert 385 in RECIPES   # shark (cooking)
+    assert 139 in RECIPES   # prayer potion(3) (herblore)
+    assert 8782 in RECIPES  # mahogany plank (construction)
+    assert 560 in RECIPES   # death rune (runecrafting)
     print("  PASSED test_recipe_table_integrity")
+
+
+def test_scan_skill_filter():
+    """skill= filters to one skill; empty returns all."""
+    scanner = ProcessScanner(recipes={
+        2353: RECIPES[2353],  # smithing: steel bar
+        385: RECIPES[385],    # cooking: shark
+        8782: RECIPES[8782],  # construction: mahogany plank
+    })
+    items = [
+        _item(2353, "Steel bar", 400, 576),
+        _item(440, "Iron ore", 100, 90),
+        _item(453, "Coal", 130, 120),
+        _item(385, "Shark", 800, 1029),
+        _item(383, "Raw shark", 700, 690),
+        _item(8782, "Mahogany plank", 200, 1883),
+        _item(6332, "Mahogany logs", 150, 140),
+    ]
+    all_r = scanner.scan(items)
+    assert len(all_r) == 3, f"expected all 3 recipes, got {len(all_r)}"
+    cook_r = scanner.scan(items, skill="cooking")
+    assert [r.name for r in cook_r] == ["Shark"]
+    smith_r = scanner.scan(items, skill="smithing")
+    assert [r.name for r in smith_r] == ["Steel bar"]
+    constr_r = scanner.scan(items, skill="construction")
+    assert [r.name for r in constr_r] == ["Mahogany plank"]
+    none_r = scanner.scan(items, skill="herblore")
+    assert none_r == []
+    print("  PASSED test_scan_skill_filter")
 
 
 def test_fletch_recipe_batch_ratio():
@@ -175,6 +216,7 @@ def test_process_scan_does_not_mutate_input():
 
 if __name__ == "__main__":
     test_recipe_table_integrity()
+    test_scan_skill_filter()
     test_fletch_recipe_batch_ratio()
     test_process_scan_profit_steel_bar()
     test_process_scan_throughput_capped_by_input()

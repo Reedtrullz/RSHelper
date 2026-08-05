@@ -338,14 +338,17 @@ def process_scan(args: argparse.Namespace) -> None:
 
     from rshelper.scanner import ProcessScanner
     scanner = ProcessScanner()
+    skill = getattr(args, "skill", "")
     results = scanner.scan(
         items,
         members_only=args.members_only,
         min_volume=args.min_volume,
         min_profit=args.min_profit,
         capital=args.capital,
+        skill=skill,
     )
-    print(f"  {len(results)} profitable processing recipes", file=sys.stderr)
+    scope = f" ({skill})" if skill else ""
+    print(f"  {len(results)} profitable processing recipes{scope}", file=sys.stderr)
     if args.name:
         results = _filter_by_name(results, args.name)
         print(f"  {len(results)} after --name filter", file=sys.stderr)
@@ -1435,6 +1438,10 @@ def main() -> None:
     process.add_argument("--members-only", action=argparse.BooleanOptionalAction,
                          default=cfg.process.members_only,
                          help="Filter to members-only recipes")
+    process.add_argument("--skill", type=str, default="",
+                         choices=["smithing", "fletching", "crafting", "cooking",
+                                  "herblore", "construction", "runecrafting"],
+                         help="Filter to one skill (default: all)")
     process.add_argument("--min-volume", type=int, default=cfg.process.min_volume,
                          help="Minimum 5-minute output volume")
     process.add_argument("--min-profit", type=int, default=cfg.process.min_profit,

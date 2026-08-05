@@ -259,11 +259,14 @@ class ProcessScanner:
 
     def scan(self, items: list[Item], *, members_only: bool = False,
              min_volume: int = 0, min_profit: int = 0,
-             capital: int = 0) -> list[Item]:
-        """Rank recipes by GP/hr. Returns new Items, never mutates input."""
+             capital: int = 0, skill: str = "") -> list[Item]:
+        """Rank recipes by GP/hr. Returns new Items, never mutates input.
+        skill filters to one skill ("smithing", "cooking", ...) or all."""
         lookup = {i.id: i for i in items}
         results: list[Item] = []
         for recipe in self.recipes.values():
+            if skill and recipe.skill != skill:
+                continue
             output = lookup.get(recipe.output_id)
             if output is None:
                 continue
