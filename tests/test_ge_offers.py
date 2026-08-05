@@ -101,6 +101,15 @@ def test_fill_high_volume_fast():
     print("  PASSED test_fill_high_volume_fast")
 
 
+def test_item_volume_fallback_keys():
+    """GE Tracker fallback entries (high_volume/low_volume) must feed the fill."""
+    from rshelper.ge_offers import _item_volume_5m
+    assert _item_volume_5m({"high_volume": 400, "low_volume": 600}) == 1000
+    assert _item_volume_5m({"highPriceVolume": 100, "lowPriceVolume": 200}) == 300
+    assert _item_volume_5m(500) == 500
+    print("  PASSED test_item_volume_fallback_keys")
+
+
 def test_fill_low_volume_slow():
     now = 1_000_000.0
     fill = compute_fill_pct(1000, 10, _iso(now, 5), now)
@@ -286,6 +295,7 @@ if __name__ == "__main__":
     test_resolve_icon_url_apostrophe_encoded()
     test_fill_zero_volume_slow_default()
     test_fill_high_volume_fast()
+    test_item_volume_fallback_keys()
     test_fill_low_volume_slow()
     test_fill_ease_out_shape()
     test_fill_caps_at_one()

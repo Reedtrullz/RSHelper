@@ -60,10 +60,17 @@ def _current_leg(price: dict, direction: str) -> int:
 
 
 def _item_volume_5m(entry) -> int:
-    """Total 5m trade volume from a cache entry (int or wiki per-side dict)."""
+    """Total 5m trade volume from a cache entry (int or per-side dict).
+
+    Handles BOTH key sets: the wiki cache uses highPriceVolume/lowPriceVolume;
+    the GE Tracker fallback uses high_volume/low_volume (offer quantities).
+    """
     if isinstance(entry, dict):
-        return (safe_int(entry.get("highPriceVolume"))
-                + safe_int(entry.get("lowPriceVolume")))
+        if "highPriceVolume" in entry or "lowPriceVolume" in entry:
+            return (safe_int(entry.get("highPriceVolume"))
+                    + safe_int(entry.get("lowPriceVolume")))
+        return (safe_int(entry.get("high_volume"))
+                + safe_int(entry.get("low_volume")))
     return safe_int(entry)
 
 
