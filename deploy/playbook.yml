@@ -175,6 +175,15 @@
           become: false
           tags: [deploy]
 
+        - name: Fail if tracked state is missing on a production deploy
+          ansible.builtin.fail:
+            msg: >-
+              data/state is absent from the checkout — the live site would
+              serve stale/empty journal/positions/watchlist. Run the
+              state-sync agent (or scripts/sync-state.sh) before deploying.
+          when: not (tracked_state.stat.exists | bool)
+          tags: [deploy]
+
         - name: Stage tracked state for merge
           ansible.builtin.copy:
             src: "{{ playbook_dir }}/../data/state/"
@@ -183,14 +192,12 @@
             group: '1000'
             mode: preserve
             directory_mode: '0755'
-          when: tracked_state.stat.exists | bool
           tags: [deploy]
 
         - name: Merge staged state over the live volume (site writes win by id)
           ansible.builtin.script: >-
             merge_state.py {{ app_dir }}/state-stage
             {{ app_dir }}/data/.config/rshelper --chown 1000:1000
-          when: tracked_state.stat.exists | bool
           tags: [deploy]
 
         - name: Remove state staging directory
