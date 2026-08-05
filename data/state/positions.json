@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 31979,
-      "name": "Ironwood repair kit",
-      "qty": 110,
-      "buy_price": 2062,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T00:44:31.419351+00:00",
-      "note": "auto",
-      "entry_sell": 2062,
-      "entry_offer": 2143
-    },
-    {
       "id": 5,
       "item_id": 9194,
       "name": "Onyx bolt tips",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 69,
       "entry_offer": 66
+    },
+    {
+      "id": 7,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 4970,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T02:12:38.968522+00:00",
+      "note": "auto",
+      "entry_sell": 45,
+      "entry_offer": 47
     }
   ]
 }
