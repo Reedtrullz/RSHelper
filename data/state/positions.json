@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1601,
+      "buy_price": 70,
+      "direction": "traditional",
+      "opened_at": "2026-08-05T19:01:59.335128+00:00",
+      "note": "auto",
+      "entry_sell": 70,
+      "entry_offer": 73
+    }
+  ]
 }
