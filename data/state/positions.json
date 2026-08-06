@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 2993,
-      "buy_price": 95,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T16:42:47.179581+00:00",
-      "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 99
-    },
-    {
       "id": 3,
       "item_id": 31912,
       "name": "Adamant cannonball",
@@ -23,18 +11,6 @@
       "note": "auto",
       "entry_sell": 214,
       "entry_offer": 222
-    },
-    {
-      "id": 4,
-      "item_id": 24607,
-      "name": "Blighted ancient ice sack",
-      "qty": 1111,
-      "buy_price": 360,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T16:44:46.064929+00:00",
-      "note": "auto",
-      "entry_sell": 360,
-      "entry_offer": 374
     }
   ]
 }
