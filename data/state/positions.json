@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1654,
-      "name": "Gold necklace",
-      "qty": 609,
-      "buy_price": 151,
+      "id": 1,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 926,
+      "buy_price": 345,
       "direction": "traditional",
-      "opened_at": "2026-08-06T04:50:21.927880+00:00",
+      "opened_at": "2026-08-06T05:48:24.688080+00:00",
       "note": "auto",
-      "entry_sell": 151,
-      "entry_offer": 159
-    },
-    {
-      "id": 5,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 4425,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T05:30:24.032772+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 24
+      "entry_sell": 345,
+      "entry_offer": 363
     }
   ]
 }
