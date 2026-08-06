@@ -14,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 24635,
-      "name": "Divine bastion potion(4)",
-      "qty": 20,
-      "buy_price": 19208,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 4425,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-06T05:06:22.578542+00:00",
+      "opened_at": "2026-08-06T05:30:24.032772+00:00",
       "note": "auto",
-      "entry_sell": 19208,
-      "entry_offer": 20217
+      "entry_sell": 25,
+      "entry_offer": 24
     }
   ]
 }
