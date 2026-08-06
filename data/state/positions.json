@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 29174,
-      "name": "Moonlight antelope fur",
-      "qty": 223,
-      "buy_price": 503,
+      "item_id": 13431,
+      "name": "Sandworms",
+      "qty": 3603,
+      "buy_price": 111,
       "direction": "traditional",
-      "opened_at": "2026-08-06T18:14:49.701737+00:00",
+      "opened_at": "2026-08-06T18:30:49.899891+00:00",
       "note": "auto",
-      "entry_sell": 503,
-      "entry_offer": 526
+      "entry_sell": 111,
+      "entry_offer": 116
     }
   ]
 }
