@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 66,
-      "name": "Yew longbow (u)",
-      "qty": 715,
-      "buy_price": 189,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T21:14:53.763876+00:00",
-      "note": "auto",
-      "entry_sell": 189,
-      "entry_offer": 196
-    },
-    {
-      "id": 3,
-      "item_id": 373,
-      "name": "Swordfish",
-      "qty": 645,
-      "buy_price": 194,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T21:46:54.422399+00:00",
-      "note": "auto",
-      "entry_sell": 194,
-      "entry_offer": 201
-    }
-  ]
+  "positions": []
 }
