@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 660,
-      "buy_price": 213,
+      "id": 6,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 732,
+      "buy_price": 546,
       "direction": "traditional",
-      "opened_at": "2026-08-06T19:52:50.536652+00:00",
+      "opened_at": "2026-08-06T20:02:51.961312+00:00",
       "note": "auto",
-      "entry_sell": 213,
-      "entry_offer": 221
+      "entry_sell": 546,
+      "entry_offer": 566
     }
   ]
 }
