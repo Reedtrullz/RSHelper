@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1975,
-      "name": "Chocolate dust",
-      "qty": 445,
-      "buy_price": 54,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 476,
+      "buy_price": 155,
       "direction": "traditional",
-      "opened_at": "2026-08-06T13:08:38.062848+00:00",
+      "opened_at": "2026-08-06T13:24:38.314235+00:00",
       "note": "auto",
-      "entry_sell": 54,
-      "entry_offer": 57
-    },
-    {
-      "id": 2,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 203,
-      "buy_price": 1100,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T13:08:38.063621+00:00",
-      "note": "auto",
-      "entry_sell": 1100,
-      "entry_offer": 1150
-    },
-    {
-      "id": 3,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 501,
-      "buy_price": 113,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T13:08:38.063910+00:00",
-      "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 117
+      "entry_sell": 155,
+      "entry_offer": 161
     }
   ]
 }
