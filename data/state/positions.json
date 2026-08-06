@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 561,
-      "name": "Nature rune",
-      "qty": 2580,
-      "buy_price": 155,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 1987,
+      "buy_price": 146,
       "direction": "traditional",
-      "opened_at": "2026-08-06T10:54:35.007022+00:00",
+      "opened_at": "2026-08-06T11:06:35.421931+00:00",
       "note": "auto",
-      "entry_sell": 155,
-      "entry_offer": 163
+      "entry_sell": 146,
+      "entry_offer": 152
     }
   ]
 }
