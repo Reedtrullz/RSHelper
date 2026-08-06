@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 1382,
-      "buy_price": 110,
+      "item_id": 13439,
+      "name": "Raw anglerfish",
+      "qty": 192,
+      "buy_price": 2073,
       "direction": "traditional",
-      "opened_at": "2026-08-06T01:06:11.991487+00:00",
+      "opened_at": "2026-08-06T01:18:12.429731+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 116
+      "entry_sell": 2073,
+      "entry_offer": 2155
     },
     {
       "id": 2,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 292,
-      "buy_price": 25,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 682,
+      "buy_price": 61,
       "direction": "traditional",
-      "opened_at": "2026-08-06T01:06:11.991931+00:00",
+      "opened_at": "2026-08-06T01:22:12.679511+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 61,
+      "entry_offer": 64
+    },
+    {
+      "id": 3,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 344,
+      "buy_price": 225,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T01:22:12.680242+00:00",
+      "note": "auto",
+      "entry_sell": 225,
+      "entry_offer": 234
     }
   ]
 }
