@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 161,
       "entry_offer": 168
+    },
+    {
+      "id": 2,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 553,
+      "buy_price": 220,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T12:44:37.514950+00:00",
+      "note": "auto",
+      "entry_sell": 220,
+      "entry_offer": 228
     }
   ]
 }
