@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1347,
-      "buy_price": 156,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 3542,
+      "buy_price": 64,
       "direction": "traditional",
-      "opened_at": "2026-08-06T08:06:30.661571+00:00",
+      "opened_at": "2026-08-06T08:22:31.624762+00:00",
       "note": "auto",
-      "entry_sell": 156,
-      "entry_offer": 163
+      "entry_sell": 64,
+      "entry_offer": 67
     }
   ]
 }
