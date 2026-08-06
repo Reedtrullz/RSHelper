@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 2469,
-      "buy_price": 162,
+      "item_id": 2349,
+      "name": "Bronze bar",
+      "qty": 102,
+      "buy_price": 63,
       "direction": "traditional",
-      "opened_at": "2026-08-06T06:16:25.547450+00:00",
+      "opened_at": "2026-08-06T06:32:26.250004+00:00",
       "note": "auto",
-      "entry_sell": 162,
-      "entry_offer": 168
+      "entry_sell": 63,
+      "entry_offer": 66
+    },
+    {
+      "id": 3,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 650,
+      "buy_price": 202,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T06:32:26.250884+00:00",
+      "note": "auto",
+      "entry_sell": 202,
+      "entry_offer": 210
     }
   ]
 }
