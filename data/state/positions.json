@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 89,
       "entry_offer": 93
+    },
+    {
+      "id": 2,
+      "item_id": 1963,
+      "name": "Banana",
+      "qty": 105,
+      "buy_price": 49,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T15:30:43.650300+00:00",
+      "note": "auto",
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
