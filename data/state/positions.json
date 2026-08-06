@@ -14,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 837,
-      "buy_price": 159,
+      "item_id": 1654,
+      "name": "Gold necklace",
+      "qty": 609,
+      "buy_price": 151,
       "direction": "traditional",
-      "opened_at": "2026-08-06T04:46:21.630659+00:00",
+      "opened_at": "2026-08-06T04:50:21.927880+00:00",
       "note": "auto",
-      "entry_sell": 159,
-      "entry_offer": 166
+      "entry_sell": 151,
+      "entry_offer": 159
     }
   ]
 }
