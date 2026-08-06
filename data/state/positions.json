@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 125,
-      "buy_price": 25,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 2580,
+      "buy_price": 155,
       "direction": "traditional",
-      "opened_at": "2026-08-06T10:38:34.669484+00:00",
+      "opened_at": "2026-08-06T10:54:35.007022+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 155,
+      "entry_offer": 163
     }
   ]
 }
