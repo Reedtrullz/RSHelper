@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1933,
-      "name": "Pot of flour",
-      "qty": 874,
-      "buy_price": 53,
+      "id": 6,
+      "item_id": 5952,
+      "name": "Antidote++(4)",
+      "qty": 44,
+      "buy_price": 8900,
       "direction": "traditional",
-      "opened_at": "2026-08-06T14:32:40.763938+00:00",
+      "opened_at": "2026-08-06T15:02:42.477989+00:00",
       "note": "auto",
-      "entry_sell": 53,
-      "entry_offer": 55
-    },
-    {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 3221,
-      "buy_price": 29,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T14:38:39.998914+00:00",
-      "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
-    },
-    {
-      "id": 4,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 655,
-      "buy_price": 105,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T14:40:41.329911+00:00",
-      "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 111
+      "entry_sell": 8900,
+      "entry_offer": 9254
     }
   ]
 }
