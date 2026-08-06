@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1303,
+      "buy_price": 161,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T10:02:33.728526+00:00",
+      "note": "auto",
+      "entry_sell": 161,
+      "entry_offer": 169
+    },
+    {
+      "id": 2,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 271,
+      "buy_price": 195,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T10:06:33.849212+00:00",
+      "note": "auto",
+      "entry_sell": 195,
+      "entry_offer": 205
+    }
+  ]
 }
