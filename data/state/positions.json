@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 28157,
-      "name": "Forester's ration",
-      "qty": 2188,
-      "buy_price": 46,
+      "item_id": 1933,
+      "name": "Pot of flour",
+      "qty": 874,
+      "buy_price": 53,
       "direction": "traditional",
-      "opened_at": "2026-08-06T13:44:38.793384+00:00",
+      "opened_at": "2026-08-06T14:32:40.763938+00:00",
       "note": "auto",
-      "entry_sell": 46,
-      "entry_offer": 48
+      "entry_sell": 53,
+      "entry_offer": 55
     },
     {
       "id": 3,
-      "item_id": 6034,
-      "name": "Supercompost",
-      "qty": 514,
-      "buy_price": 25,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 3221,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-06T14:18:39.038635+00:00",
+      "opened_at": "2026-08-06T14:38:39.998914+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
-      "id": 4,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 1498,
-      "buy_price": 113,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T14:24:40.533292+00:00",
-      "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 117
+      "entry_sell": 29,
+      "entry_offer": 28
     }
   ]
 }
