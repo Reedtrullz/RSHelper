@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1617,
-      "name": "Uncut diamond",
-      "qty": 163,
-      "buy_price": 2452,
+      "id": 2,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 799,
+      "buy_price": 108,
       "direction": "traditional",
-      "opened_at": "2026-08-06T00:18:09.736154+00:00",
+      "opened_at": "2026-08-06T00:22:09.785284+00:00",
       "note": "auto",
-      "entry_sell": 2452,
-      "entry_offer": 2555
+      "entry_sell": 108,
+      "entry_offer": 112
     }
   ]
 }
