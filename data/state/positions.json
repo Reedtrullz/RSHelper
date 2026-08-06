@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2349,
-      "name": "Bronze bar",
-      "qty": 99,
-      "buy_price": 62,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 208,
+      "buy_price": 321,
       "direction": "traditional",
-      "opened_at": "2026-08-06T13:36:38.726587+00:00",
+      "opened_at": "2026-08-06T13:44:38.793108+00:00",
       "note": "auto",
-      "entry_sell": 62,
-      "entry_offer": 65
+      "entry_sell": 321,
+      "entry_offer": 306
+    },
+    {
+      "id": 2,
+      "item_id": 28157,
+      "name": "Forester's ration",
+      "qty": 2188,
+      "buy_price": 46,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T13:44:38.793384+00:00",
+      "note": "auto",
+      "entry_sell": 46,
+      "entry_offer": 48
+    },
+    {
+      "id": 3,
+      "item_id": 7218,
+      "name": "Summer pie",
+      "qty": 81,
+      "buy_price": 662,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T13:52:39.152751+00:00",
+      "note": "auto",
+      "entry_sell": 662,
+      "entry_offer": 699
     }
   ]
 }
