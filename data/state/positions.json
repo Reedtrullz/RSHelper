@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 29174,
+      "name": "Moonlight antelope fur",
+      "qty": 100,
+      "buy_price": 503,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T19:38:51.456970+00:00",
+      "note": "auto",
+      "entry_sell": 503,
+      "entry_offer": 526
+    },
+    {
+      "id": 2,
+      "item_id": 1963,
+      "name": "Banana",
+      "qty": 162,
+      "buy_price": 50,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T19:46:51.658885+00:00",
+      "note": "auto",
+      "entry_sell": 50,
+      "entry_offer": 52
+    }
+  ]
 }
