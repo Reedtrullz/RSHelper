@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 5952,
-      "name": "Antidote++(4)",
-      "qty": 44,
-      "buy_price": 8900,
+      "id": 1,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 1493,
+      "buy_price": 89,
       "direction": "traditional",
-      "opened_at": "2026-08-06T15:02:42.477989+00:00",
+      "opened_at": "2026-08-06T15:22:43.186873+00:00",
       "note": "auto",
-      "entry_sell": 8900,
-      "entry_offer": 9254
+      "entry_sell": 89,
+      "entry_offer": 93
     }
   ]
 }
