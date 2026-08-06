@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 12695,
-      "name": "Super combat potion(4)",
-      "qty": 35,
-      "buy_price": 11345,
-      "direction": "traditional",
-      "opened_at": "2026-08-05T23:48:08.103726+00:00",
-      "note": "auto",
-      "entry_sell": 11345,
-      "entry_offer": 11844
-    },
-    {
       "id": 2,
       "item_id": 571,
       "name": "Water orb",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1640,
       "entry_offer": 1707
+    },
+    {
+      "id": 3,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 1473,
+      "buy_price": 105,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T00:00:08.873733+00:00",
+      "note": "auto",
+      "entry_sell": 105,
+      "entry_offer": 109
     }
   ]
 }
