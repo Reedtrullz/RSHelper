@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 597,
-      "buy_price": 101,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T04:38:21.209774+00:00",
-      "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 105
-    },
-    {
       "id": 4,
       "item_id": 1654,
       "name": "Gold necklace",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 151,
       "entry_offer": 159
+    },
+    {
+      "id": 5,
+      "item_id": 24635,
+      "name": "Divine bastion potion(4)",
+      "qty": 20,
+      "buy_price": 19208,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T05:06:22.578542+00:00",
+      "note": "auto",
+      "entry_sell": 19208,
+      "entry_offer": 20217
     }
   ]
 }
