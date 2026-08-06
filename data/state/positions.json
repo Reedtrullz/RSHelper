@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 6687,
-      "name": "Saradomin brew(3)",
-      "qty": 84,
-      "buy_price": 4712,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T22:38:55.868688+00:00",
-      "note": "auto",
-      "entry_sell": 4712,
-      "entry_offer": 4950
-    },
-    {
-      "id": 4,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 2702,
-      "buy_price": 135,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T23:00:56.280194+00:00",
-      "note": "auto",
-      "entry_sell": 135,
-      "entry_offer": 140
-    },
-    {
       "id": 5,
       "item_id": 440,
       "name": "Iron ore",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 72,
       "entry_offer": 75
+    },
+    {
+      "id": 6,
+      "item_id": 960,
+      "name": "Plank",
+      "qty": 490,
+      "buy_price": 120,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T23:14:55.470188+00:00",
+      "note": "auto",
+      "entry_sell": 120,
+      "entry_offer": 126
+    },
+    {
+      "id": 7,
+      "item_id": 3016,
+      "name": "Super energy(4)",
+      "qty": 142,
+      "buy_price": 2123,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T23:16:56.724827+00:00",
+      "note": "auto",
+      "entry_sell": 2123,
+      "entry_offer": 2237
     }
   ]
 }
