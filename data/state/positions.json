@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 329,
-      "name": "Salmon",
-      "qty": 121,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T06:44:26.647770+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
-    },
-    {
-      "id": 2,
-      "item_id": 24621,
-      "name": "Blighted vengeance sack",
-      "qty": 370,
-      "buy_price": 68,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T06:56:27.054536+00:00",
-      "note": "auto",
-      "entry_sell": 68,
-      "entry_offer": 71
-    }
-  ]
+  "positions": []
 }
