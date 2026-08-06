@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 276,
-      "buy_price": 1352,
+      "id": 1,
+      "item_id": 1617,
+      "name": "Uncut diamond",
+      "qty": 162,
+      "buy_price": 2460,
       "direction": "traditional",
-      "opened_at": "2026-08-06T02:40:16.852649+00:00",
+      "opened_at": "2026-08-06T03:12:18.257680+00:00",
       "note": "auto",
-      "entry_sell": 1352,
-      "entry_offer": 1414
+      "entry_sell": 2460,
+      "entry_offer": 2572
     }
   ]
 }
