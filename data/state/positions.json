@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 253,
-      "name": "Tarromin",
-      "qty": 87,
-      "buy_price": 193,
+      "id": 1,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 190,
+      "buy_price": 85,
       "direction": "traditional",
-      "opened_at": "2026-08-06T08:54:32.546855+00:00",
+      "opened_at": "2026-08-06T09:22:32.958911+00:00",
       "note": "auto",
-      "entry_sell": 193,
-      "entry_offer": 202
+      "entry_sell": 85,
+      "entry_offer": 89
     }
   ]
 }
