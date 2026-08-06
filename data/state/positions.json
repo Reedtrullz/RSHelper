@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 30068,
+      "name": "Soiled page",
+      "qty": 90,
+      "buy_price": 2600,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T06:04:25.273044+00:00",
+      "note": "auto",
+      "entry_sell": 2600,
+      "entry_offer": 2706
+    },
+    {
+      "id": 2,
+      "item_id": 1777,
+      "name": "Bow string",
+      "qty": 2469,
+      "buy_price": 162,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T06:16:25.547450+00:00",
+      "note": "auto",
+      "entry_sell": 162,
+      "entry_offer": 168
+    }
+  ]
 }
