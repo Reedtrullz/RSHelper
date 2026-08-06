@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 2484,
-      "buy_price": 161,
+      "item_id": 1975,
+      "name": "Chocolate dust",
+      "qty": 445,
+      "buy_price": 54,
       "direction": "traditional",
-      "opened_at": "2026-08-06T12:36:37.273092+00:00",
+      "opened_at": "2026-08-06T13:08:38.062848+00:00",
       "note": "auto",
-      "entry_sell": 161,
-      "entry_offer": 168
+      "entry_sell": 54,
+      "entry_offer": 57
     },
     {
       "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 553,
-      "buy_price": 220,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 203,
+      "buy_price": 1100,
       "direction": "traditional",
-      "opened_at": "2026-08-06T12:44:37.514950+00:00",
+      "opened_at": "2026-08-06T13:08:38.063621+00:00",
       "note": "auto",
-      "entry_sell": 220,
-      "entry_offer": 228
+      "entry_sell": 1100,
+      "entry_offer": 1150
+    },
+    {
+      "id": 3,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 501,
+      "buy_price": 113,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T13:08:38.063910+00:00",
+      "note": "auto",
+      "entry_sell": 113,
+      "entry_offer": 117
     }
   ]
 }
