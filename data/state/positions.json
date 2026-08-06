@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 156,
-      "buy_price": 214,
+      "id": 1,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 451,
+      "buy_price": 44,
       "direction": "traditional",
-      "opened_at": "2026-08-06T16:44:46.064670+00:00",
+      "opened_at": "2026-08-06T17:10:47.940846+00:00",
       "note": "auto",
-      "entry_sell": 214,
-      "entry_offer": 222
+      "entry_sell": 44,
+      "entry_offer": 42
+    },
+    {
+      "id": 2,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 217,
+      "buy_price": 67,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T17:14:47.933918+00:00",
+      "note": "auto",
+      "entry_sell": 67,
+      "entry_offer": 64
+    },
+    {
+      "id": 3,
+      "item_id": 855,
+      "name": "Yew longbow",
+      "qty": 404,
+      "buy_price": 547,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T17:14:47.935222+00:00",
+      "note": "auto",
+      "entry_sell": 547,
+      "entry_offer": 574
     }
   ]
 }
