@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1347,
+      "buy_price": 156,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T08:06:30.661571+00:00",
+      "note": "auto",
+      "entry_sell": 156,
+      "entry_offer": 163
+    }
+  ]
 }
