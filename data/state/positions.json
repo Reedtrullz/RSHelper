@@ -13,28 +13,16 @@
       "entry_offer": 1144
     },
     {
-      "id": 5,
-      "item_id": 253,
-      "name": "Tarromin",
-      "qty": 1054,
-      "buy_price": 192,
+      "id": 4,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 276,
+      "buy_price": 1352,
       "direction": "traditional",
-      "opened_at": "2026-08-06T02:16:15.439523+00:00",
+      "opened_at": "2026-08-06T02:40:16.852649+00:00",
       "note": "auto",
-      "entry_sell": 192,
-      "entry_offer": 202
-    },
-    {
-      "id": 6,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 585,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T02:26:14.869792+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 1352,
+      "entry_offer": 1414
     }
   ]
 }
