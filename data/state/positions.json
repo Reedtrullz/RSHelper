@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 563,
+      "name": "Law rune",
+      "qty": 3278,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T11:38:36.207870+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 129
+    },
+    {
+      "id": 2,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1230,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T11:38:36.209155+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 3,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 210,
+      "buy_price": 177,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T11:38:36.209639+00:00",
+      "note": "auto",
+      "entry_sell": 177,
+      "entry_offer": 185
+    }
+  ]
 }
