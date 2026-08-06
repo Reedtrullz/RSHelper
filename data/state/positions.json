@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31979,
-      "name": "Ironwood repair kit",
-      "qty": 194,
-      "buy_price": 2052,
+      "id": 3,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 597,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-06T04:00:18.904194+00:00",
+      "opened_at": "2026-08-06T04:38:21.209774+00:00",
       "note": "auto",
-      "entry_sell": 2052,
-      "entry_offer": 2139
+      "entry_sell": 101,
+      "entry_offer": 105
     },
     {
-      "id": 3,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 151,
-      "buy_price": 215,
+      "id": 4,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 837,
+      "buy_price": 159,
       "direction": "traditional",
-      "opened_at": "2026-08-06T04:14:20.590796+00:00",
+      "opened_at": "2026-08-06T04:46:21.630659+00:00",
       "note": "auto",
-      "entry_sell": 215,
-      "entry_offer": 205
+      "entry_sell": 159,
+      "entry_offer": 166
     }
   ]
 }
