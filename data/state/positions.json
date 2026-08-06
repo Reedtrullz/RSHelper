@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 208,
-      "buy_price": 321,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T13:44:38.793108+00:00",
-      "note": "auto",
-      "entry_sell": 321,
-      "entry_offer": 306
-    },
-    {
       "id": 2,
       "item_id": 28157,
       "name": "Forester's ration",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 1857,
-      "buy_price": 161,
+      "item_id": 6034,
+      "name": "Supercompost",
+      "qty": 514,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-06T14:08:39.485005+00:00",
+      "opened_at": "2026-08-06T14:18:39.038635+00:00",
       "note": "auto",
-      "entry_sell": 161,
-      "entry_offer": 168
+      "entry_sell": 25,
+      "entry_offer": 26
+    },
+    {
+      "id": 4,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 1498,
+      "buy_price": 113,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T14:24:40.533292+00:00",
+      "note": "auto",
+      "entry_sell": 113,
+      "entry_offer": 117
     }
   ]
 }
