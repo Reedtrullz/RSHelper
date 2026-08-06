@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 2107,
-      "buy_price": 95,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T21:02:53.368184+00:00",
-      "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 100
-    },
-    {
       "id": 2,
-      "item_id": 391,
-      "name": "Manta ray",
-      "qty": 173,
-      "buy_price": 1404,
+      "item_id": 66,
+      "name": "Yew longbow (u)",
+      "qty": 715,
+      "buy_price": 189,
       "direction": "traditional",
-      "opened_at": "2026-08-06T21:02:53.369099+00:00",
+      "opened_at": "2026-08-06T21:14:53.763876+00:00",
       "note": "auto",
-      "entry_sell": 1404,
-      "entry_offer": 1460
+      "entry_sell": 189,
+      "entry_offer": 196
     }
   ]
 }
