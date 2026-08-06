@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 30068,
-      "name": "Soiled page",
-      "qty": 90,
-      "buy_price": 2600,
+      "item_id": 329,
+      "name": "Salmon",
+      "qty": 121,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-06T06:04:25.273044+00:00",
+      "opened_at": "2026-08-06T06:44:26.647770+00:00",
       "note": "auto",
-      "entry_sell": 2600,
-      "entry_offer": 2706
-    },
-    {
-      "id": 2,
-      "item_id": 2349,
-      "name": "Bronze bar",
-      "qty": 102,
-      "buy_price": 63,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T06:32:26.250004+00:00",
-      "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 66
-    },
-    {
-      "id": 3,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 650,
-      "buy_price": 202,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T06:32:26.250884+00:00",
-      "note": "auto",
-      "entry_sell": 202,
-      "entry_offer": 210
+      "entry_sell": 28,
+      "entry_offer": 27
     }
   ]
 }
