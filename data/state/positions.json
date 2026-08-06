@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 13439,
-      "name": "Raw anglerfish",
-      "qty": 192,
-      "buy_price": 2073,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T01:18:12.429731+00:00",
-      "note": "auto",
-      "entry_sell": 2073,
-      "entry_offer": 2155
-    },
-    {
       "id": 2,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 682,
-      "buy_price": 61,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 433,
+      "buy_price": 102,
       "direction": "traditional",
-      "opened_at": "2026-08-06T01:22:12.679511+00:00",
+      "opened_at": "2026-08-06T01:32:13.348207+00:00",
       "note": "auto",
-      "entry_sell": 61,
-      "entry_offer": 64
+      "entry_sell": 102,
+      "entry_offer": 107
     },
     {
       "id": 3,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 344,
-      "buy_price": 225,
+      "item_id": 23733,
+      "name": "Divine ranging potion(4)",
+      "qty": 65,
+      "buy_price": 6100,
       "direction": "traditional",
-      "opened_at": "2026-08-06T01:22:12.680242+00:00",
+      "opened_at": "2026-08-06T01:38:12.436094+00:00",
       "note": "auto",
-      "entry_sell": 225,
-      "entry_offer": 234
+      "entry_sell": 6100,
+      "entry_offer": 6442
     }
   ]
 }
