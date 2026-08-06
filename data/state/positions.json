@@ -14,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 714,
-      "buy_price": 408,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 151,
+      "buy_price": 215,
       "direction": "traditional",
-      "opened_at": "2026-08-06T04:00:18.904828+00:00",
+      "opened_at": "2026-08-06T04:14:20.590796+00:00",
       "note": "auto",
-      "entry_sell": 408,
-      "entry_offer": 426
+      "entry_sell": 215,
+      "entry_offer": 205
+    },
+    {
+      "id": 4,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 4938,
+      "buy_price": 81,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T04:18:20.837900+00:00",
+      "note": "auto",
+      "entry_sell": 81,
+      "entry_offer": 85
     }
   ]
 }
