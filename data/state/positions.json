@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1656,
-      "name": "Sapphire necklace",
-      "qty": 900,
-      "buy_price": 444,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2107,
+      "buy_price": 95,
       "direction": "traditional",
-      "opened_at": "2026-08-06T20:46:52.889492+00:00",
+      "opened_at": "2026-08-06T21:02:53.368184+00:00",
       "note": "auto",
-      "entry_sell": 444,
-      "entry_offer": 463
+      "entry_sell": 95,
+      "entry_offer": 100
+    },
+    {
+      "id": 2,
+      "item_id": 391,
+      "name": "Manta ray",
+      "qty": 173,
+      "buy_price": 1404,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T21:02:53.369099+00:00",
+      "note": "auto",
+      "entry_sell": 1404,
+      "entry_offer": 1460
     }
   ]
 }
