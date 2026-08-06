@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 377,
-      "name": "Raw lobster",
-      "qty": 799,
-      "buy_price": 108,
+      "id": 1,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 1166,
+      "buy_price": 196,
       "direction": "traditional",
-      "opened_at": "2026-08-06T00:22:09.785284+00:00",
+      "opened_at": "2026-08-06T00:50:11.145135+00:00",
       "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 112
+      "entry_sell": 196,
+      "entry_offer": 206
     }
   ]
 }
