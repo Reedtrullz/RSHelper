@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1619,
-      "name": "Uncut ruby",
-      "qty": 363,
-      "buy_price": 1100,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T01:56:14.426504+00:00",
-      "note": "auto",
-      "entry_sell": 1100,
-      "entry_offer": 1144
-    },
-    {
       "id": 4,
       "item_id": 209,
       "name": "Grimy irit leaf",
