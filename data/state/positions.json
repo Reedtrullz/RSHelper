@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 6687,
+      "name": "Saradomin brew(3)",
+      "qty": 84,
+      "buy_price": 4712,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T22:38:55.868688+00:00",
+      "note": "auto",
+      "entry_sell": 4712,
+      "entry_offer": 4950
+    }
+  ]
 }
