@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 898,
-      "buy_price": 72,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T23:02:55.088483+00:00",
-      "note": "auto",
-      "entry_sell": 72,
-      "entry_offer": 75
-    },
-    {
-      "id": 6,
-      "item_id": 960,
-      "name": "Plank",
-      "qty": 490,
-      "buy_price": 120,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T23:14:55.470188+00:00",
-      "note": "auto",
-      "entry_sell": 120,
-      "entry_offer": 126
-    },
-    {
       "id": 7,
-      "item_id": 3016,
-      "name": "Super energy(4)",
-      "qty": 142,
-      "buy_price": 2123,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 283,
+      "buy_price": 82,
       "direction": "traditional",
-      "opened_at": "2026-08-06T23:16:56.724827+00:00",
+      "opened_at": "2026-08-06T23:26:55.830928+00:00",
       "note": "auto",
-      "entry_sell": 2123,
-      "entry_offer": 2237
+      "entry_sell": 82,
+      "entry_offer": 85
     }
   ]
 }
