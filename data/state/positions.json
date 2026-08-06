@@ -13,28 +13,28 @@
       "entry_offer": 1144
     },
     {
-      "id": 3,
-      "item_id": 868,
-      "name": "Rune knife",
-      "qty": 440,
-      "buy_price": 137,
+      "id": 5,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 1054,
+      "buy_price": 192,
       "direction": "traditional",
-      "opened_at": "2026-08-06T02:04:15.067595+00:00",
+      "opened_at": "2026-08-06T02:16:15.439523+00:00",
       "note": "auto",
-      "entry_sell": 137,
-      "entry_offer": 142
+      "entry_sell": 192,
+      "entry_offer": 202
     },
     {
-      "id": 4,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 225,
-      "buy_price": 1770,
+      "id": 6,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 585,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-06T02:08:15.201397+00:00",
+      "opened_at": "2026-08-06T02:26:14.869792+00:00",
       "note": "auto",
-      "entry_sell": 1770,
-      "entry_offer": 1848
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
