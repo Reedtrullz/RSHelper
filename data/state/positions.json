@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 8431,
-      "name": "Bagged plant 1",
-      "qty": 262,
-      "buy_price": 1523,
+      "id": 1,
+      "item_id": 1656,
+      "name": "Sapphire necklace",
+      "qty": 900,
+      "buy_price": 444,
       "direction": "traditional",
-      "opened_at": "2026-08-06T20:22:52.341668+00:00",
+      "opened_at": "2026-08-06T20:46:52.889492+00:00",
       "note": "auto",
-      "entry_sell": 1523,
-      "entry_offer": 1595
-    },
-    {
-      "id": 8,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 362,
-      "buy_price": 152,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T20:30:52.632381+00:00",
-      "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
+      "entry_sell": 444,
+      "entry_offer": 463
     }
   ]
 }
