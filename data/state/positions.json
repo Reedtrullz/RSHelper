@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 1166,
-      "buy_price": 196,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 1382,
+      "buy_price": 110,
       "direction": "traditional",
-      "opened_at": "2026-08-06T00:50:11.145135+00:00",
+      "opened_at": "2026-08-06T01:06:11.991487+00:00",
       "note": "auto",
-      "entry_sell": 196,
-      "entry_offer": 206
+      "entry_sell": 110,
+      "entry_offer": 116
+    },
+    {
+      "id": 2,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 292,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-06T01:06:11.991931+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
