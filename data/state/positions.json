@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 571,
-      "name": "Water orb",
-      "qty": 134,
-      "buy_price": 1640,
+      "id": 1,
+      "item_id": 1617,
+      "name": "Uncut diamond",
+      "qty": 163,
+      "buy_price": 2452,
       "direction": "traditional",
-      "opened_at": "2026-08-05T23:48:08.104123+00:00",
+      "opened_at": "2026-08-06T00:18:09.736154+00:00",
       "note": "auto",
-      "entry_sell": 1640,
-      "entry_offer": 1707
-    },
-    {
-      "id": 3,
-      "item_id": 28991,
-      "name": "Atlatl dart",
-      "qty": 1473,
-      "buy_price": 105,
-      "direction": "traditional",
-      "opened_at": "2026-08-06T00:00:08.873733+00:00",
-      "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 109
+      "entry_sell": 2452,
+      "entry_offer": 2555
     }
   ]
 }
