@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 140,
-      "buy_price": 82,
+      "id": 1,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2702,
+      "buy_price": 148,
       "direction": "traditional",
-      "opened_at": "2026-08-07T13:59:23.381748+00:00",
+      "opened_at": "2026-08-07T14:15:23.917476+00:00",
       "note": "auto",
-      "entry_sell": 82,
-      "entry_offer": 85
+      "entry_sell": 148,
+      "entry_offer": 155
     }
   ]
 }
