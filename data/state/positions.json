@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 30773,
-      "name": "Diabolic worms",
-      "qty": 122,
-      "buy_price": 3266,
+      "id": 3,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 1400,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-07T21:19:37.571351+00:00",
+      "opened_at": "2026-08-07T21:47:38.625465+00:00",
       "note": "auto",
-      "entry_sell": 3266,
-      "entry_offer": 3400
-    },
-    {
-      "id": 8,
-      "item_id": 379,
-      "name": "Lobster",
-      "qty": 277,
-      "buy_price": 91,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T21:41:37.198151+00:00",
-      "note": "auto",
-      "entry_sell": 91,
-      "entry_offer": 95
-    },
-    {
-      "id": 9,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 270,
-      "buy_price": 102,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T21:41:37.198410+00:00",
-      "note": "auto",
-      "entry_sell": 102,
-      "entry_offer": 106
+      "entry_sell": 25,
+      "entry_offer": 24
     }
   ]
 }
