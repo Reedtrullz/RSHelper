@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 95,
-      "buy_price": 205,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T08:09:15.482377+00:00",
-      "note": "auto",
-      "entry_sell": 205,
-      "entry_offer": 215
-    }
-  ]
+  "positions": []
 }
