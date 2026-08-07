@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 11936,
-      "name": "Dark crab",
-      "qty": 177,
-      "buy_price": 1347,
+      "id": 6,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1411,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-07T12:35:21.844059+00:00",
+      "opened_at": "2026-08-07T13:13:21.465014+00:00",
       "note": "auto",
-      "entry_sell": 1347,
-      "entry_offer": 1406
+      "entry_sell": 28,
+      "entry_offer": 29
     },
     {
-      "id": 5,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 2515,
-      "buy_price": 159,
+      "id": 7,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 1232,
+      "buy_price": 59,
       "direction": "traditional",
-      "opened_at": "2026-08-07T12:59:22.338230+00:00",
+      "opened_at": "2026-08-07T13:15:22.725169+00:00",
       "note": "auto",
-      "entry_sell": 159,
-      "entry_offer": 168
+      "entry_sell": 59,
+      "entry_offer": 62
     }
   ]
 }
