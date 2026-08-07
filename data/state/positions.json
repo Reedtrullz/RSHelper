@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 5321,
+      "name": "Watermelon seed",
+      "qty": 116,
+      "buy_price": 226,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T06:07:10.723511+00:00",
+      "note": "auto",
+      "entry_sell": 226,
+      "entry_offer": 215
+    },
+    {
+      "id": 3,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 141,
+      "buy_price": 1340,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T06:09:09.628025+00:00",
+      "note": "auto",
+      "entry_sell": 1340,
+      "entry_offer": 1406
+    }
+  ]
 }
