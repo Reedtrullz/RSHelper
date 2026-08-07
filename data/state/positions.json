@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 172,
-      "buy_price": 2319,
+      "item_id": 29143,
+      "name": "Cooked moonlight antelope",
+      "qty": 111,
+      "buy_price": 3000,
       "direction": "traditional",
-      "opened_at": "2026-08-07T14:55:24.839169+00:00",
+      "opened_at": "2026-08-07T15:15:25.293803+00:00",
       "note": "auto",
-      "entry_sell": 2319,
-      "entry_offer": 2434
+      "entry_sell": 3000,
+      "entry_offer": 3135
     }
   ]
 }
