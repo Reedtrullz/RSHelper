@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 206,
+      "buy_price": 360,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T05:21:08.643753+00:00",
+      "note": "auto",
+      "entry_sell": 360,
+      "entry_offer": 375
+    },
+    {
+      "id": 2,
+      "item_id": 6016,
+      "name": "Cactus spine",
+      "qty": 202,
+      "buy_price": 1566,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T05:27:09.791757+00:00",
+      "note": "auto",
+      "entry_sell": 1566,
+      "entry_offer": 1645
+    }
+  ]
 }
