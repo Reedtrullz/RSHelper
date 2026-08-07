@@ -14,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1385,
-      "buy_price": 190,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 727,
+      "buy_price": 550,
       "direction": "traditional",
-      "opened_at": "2026-08-07T16:59:28.899785+00:00",
+      "opened_at": "2026-08-07T17:11:28.911765+00:00",
       "note": "auto",
-      "entry_sell": 190,
-      "entry_offer": 200
+      "entry_sell": 550,
+      "entry_offer": 571
+    },
+    {
+      "id": 6,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 856,
+      "buy_price": 140,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T17:15:28.918748+00:00",
+      "note": "auto",
+      "entry_sell": 140,
+      "entry_offer": 147
     }
   ]
 }
