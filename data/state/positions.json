@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 205,
       "entry_offer": 215
-    },
-    {
-      "id": 3,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 404,
-      "buy_price": 390,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T08:29:16.830100+00:00",
-      "note": "auto",
-      "entry_sell": 390,
-      "entry_offer": 405
     }
   ]
 }
