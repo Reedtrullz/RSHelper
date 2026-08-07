@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 424,
+      "buy_price": 730,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T11:17:20.266310+00:00",
+      "note": "auto",
+      "entry_sell": 730,
+      "entry_offer": 767
+    },
+    {
+      "id": 2,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 2247,
+      "buy_price": 178,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T11:17:20.267026+00:00",
+      "note": "auto",
+      "entry_sell": 178,
+      "entry_offer": 187
+    },
+    {
+      "id": 3,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 360,
+      "buy_price": 161,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T11:23:19.180117+00:00",
+      "note": "auto",
+      "entry_sell": 161,
+      "entry_offer": 167
+    }
+  ]
 }
