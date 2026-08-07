@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 184,
-      "buy_price": 25,
+      "item_id": 19621,
+      "name": "Fenkenstrain's castle teleport (tablet)",
+      "qty": 112,
+      "buy_price": 3050,
       "direction": "traditional",
-      "opened_at": "2026-08-07T18:15:30.412681+00:00",
+      "opened_at": "2026-08-07T18:23:30.851724+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 3050,
+      "entry_offer": 3182
+    },
+    {
+      "id": 2,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2373,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T18:31:31.100270+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
