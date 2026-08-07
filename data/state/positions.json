@@ -14,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 1609,
-      "name": "Opal",
-      "qty": 211,
-      "buy_price": 123,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1385,
+      "buy_price": 190,
       "direction": "traditional",
-      "opened_at": "2026-08-07T16:39:27.764639+00:00",
+      "opened_at": "2026-08-07T16:59:28.899785+00:00",
       "note": "auto",
-      "entry_sell": 123,
-      "entry_offer": 128
+      "entry_sell": 190,
+      "entry_offer": 200
     }
   ]
 }
