@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 481,
-      "buy_price": 221,
+      "id": 2,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 95,
+      "buy_price": 205,
       "direction": "traditional",
-      "opened_at": "2026-08-07T07:49:14.755521+00:00",
+      "opened_at": "2026-08-07T08:09:15.482377+00:00",
       "note": "auto",
-      "entry_sell": 221,
-      "entry_offer": 232
+      "entry_sell": 205,
+      "entry_offer": 215
     },
     {
       "id": 3,
-      "item_id": 564,
-      "name": "Cosmic rune",
-      "qty": 3340,
-      "buy_price": 119,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 1312,
+      "buy_price": 46,
       "direction": "traditional",
-      "opened_at": "2026-08-07T07:53:14.835907+00:00",
+      "opened_at": "2026-08-07T08:13:15.662121+00:00",
       "note": "auto",
-      "entry_sell": 119,
-      "entry_offer": 124
+      "entry_sell": 46,
+      "entry_offer": 48
+    },
+    {
+      "id": 4,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 110,
+      "buy_price": 1340,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T08:13:15.662584+00:00",
+      "note": "auto",
+      "entry_sell": 1340,
+      "entry_offer": 1401
     }
   ]
 }
