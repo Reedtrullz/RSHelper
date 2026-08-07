@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 349,
-      "buy_price": 227,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 232,
+      "buy_price": 378,
       "direction": "traditional",
-      "opened_at": "2026-08-07T04:11:07.700742+00:00",
+      "opened_at": "2026-08-07T04:27:08.407585+00:00",
       "note": "auto",
-      "entry_sell": 227,
-      "entry_offer": 236
+      "entry_sell": 378,
+      "entry_offer": 399
     }
   ]
 }
