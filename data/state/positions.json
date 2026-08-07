@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 3266,
       "entry_offer": 3400
+    },
+    {
+      "id": 8,
+      "item_id": 379,
+      "name": "Lobster",
+      "qty": 277,
+      "buy_price": 91,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T21:41:37.198151+00:00",
+      "note": "auto",
+      "entry_sell": 91,
+      "entry_offer": 95
+    },
+    {
+      "id": 9,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 270,
+      "buy_price": 102,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T21:41:37.198410+00:00",
+      "note": "auto",
+      "entry_sell": 102,
+      "entry_offer": 106
     }
   ]
 }
