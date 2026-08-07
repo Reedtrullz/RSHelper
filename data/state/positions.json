@@ -14,27 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 101,
-      "name": "Irit potion (unf)",
-      "qty": 198,
-      "buy_price": 1825,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 2515,
+      "buy_price": 159,
       "direction": "traditional",
-      "opened_at": "2026-08-07T12:39:21.984413+00:00",
+      "opened_at": "2026-08-07T12:59:22.338230+00:00",
       "note": "auto",
-      "entry_sell": 1825,
-      "entry_offer": 1910
-    },
-    {
-      "id": 6,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 2666,
-      "buy_price": 150,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T12:45:20.954190+00:00",
-      "note": "auto",
-      "entry_sell": 150,
-      "entry_offer": 156
+      "entry_sell": 159,
+      "entry_offer": 168
     }
   ]
 }
