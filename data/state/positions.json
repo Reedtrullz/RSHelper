@@ -14,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 1044,
-      "buy_price": 383,
+      "item_id": 6018,
+      "name": "Poison ivy berries",
+      "qty": 94,
+      "buy_price": 181,
       "direction": "traditional",
-      "opened_at": "2026-08-07T20:33:35.038175+00:00",
+      "opened_at": "2026-08-07T20:47:36.761417+00:00",
       "note": "auto",
-      "entry_sell": 383,
-      "entry_offer": 405
+      "entry_sell": 181,
+      "entry_offer": 172
+    },
+    {
+      "id": 5,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1489,
+      "buy_price": 142,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T20:53:35.827980+00:00",
+      "note": "auto",
+      "entry_sell": 142,
+      "entry_offer": 147
     }
   ]
 }
