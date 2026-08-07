@@ -26,15 +26,15 @@
     },
     {
       "id": 3,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 360,
-      "buy_price": 161,
+      "item_id": 21944,
+      "name": "Ruby dragon bolts (e)",
+      "qty": 101,
+      "buy_price": 2861,
       "direction": "traditional",
-      "opened_at": "2026-08-07T11:23:19.180117+00:00",
+      "opened_at": "2026-08-07T11:39:19.361840+00:00",
       "note": "auto",
-      "entry_sell": 161,
-      "entry_offer": 167
+      "entry_sell": 2861,
+      "entry_offer": 2967
     }
   ]
 }
