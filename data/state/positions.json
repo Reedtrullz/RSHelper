@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 11092,
-      "name": "Diamond bracelet",
-      "qty": 91,
-      "buy_price": 1840,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T20:23:35.922535+00:00",
-      "note": "auto",
-      "entry_sell": 1840,
-      "entry_offer": 1920
-    },
-    {
       "id": 4,
       "item_id": 6018,
       "name": "Poison ivy berries",
@@ -25,16 +13,28 @@
       "entry_offer": 172
     },
     {
-      "id": 5,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 1489,
-      "buy_price": 142,
+      "id": 6,
+      "item_id": 12775,
+      "name": "Annakarl teleport (tablet)",
+      "qty": 102,
+      "buy_price": 1951,
       "direction": "traditional",
-      "opened_at": "2026-08-07T20:53:35.827980+00:00",
+      "opened_at": "2026-08-07T20:55:37.042833+00:00",
       "note": "auto",
-      "entry_sell": 142,
-      "entry_offer": 147
+      "entry_sell": 1951,
+      "entry_offer": 2020
+    },
+    {
+      "id": 7,
+      "item_id": 1656,
+      "name": "Sapphire necklace",
+      "qty": 340,
+      "buy_price": 432,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T21:09:36.210210+00:00",
+      "note": "auto",
+      "entry_sell": 432,
+      "entry_offer": 456
     }
   ]
 }
