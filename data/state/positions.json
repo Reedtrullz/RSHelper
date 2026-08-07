@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1517,
       "entry_offer": 1577
+    },
+    {
+      "id": 3,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 147,
+      "buy_price": 376,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T19:11:33.206206+00:00",
+      "note": "auto",
+      "entry_sell": 376,
+      "entry_offer": 394
     }
   ]
 }
