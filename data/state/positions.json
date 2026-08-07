@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 424,
-      "buy_price": 730,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T11:17:20.266310+00:00",
-      "note": "auto",
-      "entry_sell": 730,
-      "entry_offer": 767
-    },
-    {
       "id": 2,
       "item_id": 823,
       "name": "Adamant dart tip",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 21944,
-      "name": "Ruby dragon bolts (e)",
-      "qty": 101,
-      "buy_price": 2861,
+      "item_id": 567,
+      "name": "Unpowered orb",
+      "qty": 85,
+      "buy_price": 57,
       "direction": "traditional",
-      "opened_at": "2026-08-07T11:39:19.361840+00:00",
+      "opened_at": "2026-08-07T11:59:20.853531+00:00",
       "note": "auto",
-      "entry_sell": 2861,
-      "entry_offer": 2967
+      "entry_sell": 57,
+      "entry_offer": 60
+    },
+    {
+      "id": 4,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1661,
+      "buy_price": 182,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T11:59:20.854406+00:00",
+      "note": "auto",
+      "entry_sell": 182,
+      "entry_offer": 191
     }
   ]
 }
