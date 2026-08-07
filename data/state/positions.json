@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 952,
-      "buy_price": 420,
+      "id": 4,
+      "item_id": 42,
+      "name": "Mithril arrowtips",
+      "qty": 2005,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-07T16:03:26.755873+00:00",
+      "opened_at": "2026-08-07T16:23:27.357616+00:00",
       "note": "auto",
-      "entry_sell": 420,
-      "entry_offer": 440
+      "entry_sell": 45,
+      "entry_offer": 47
     },
     {
-      "id": 3,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 174,
-      "buy_price": 136,
+      "id": 6,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 1570,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-07T16:15:27.177564+00:00",
+      "opened_at": "2026-08-07T16:27:27.458471+00:00",
       "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 142
+      "entry_sell": 96,
+      "entry_offer": 100
     }
   ]
 }
