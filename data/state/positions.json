@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 3,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 109,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T05:39:10.205140+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    }
-  ]
+  "positions": []
 }
