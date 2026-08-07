@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 373,
-      "name": "Swordfish",
-      "qty": 450,
-      "buy_price": 202,
+      "id": 2,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 2083,
+      "buy_price": 192,
       "direction": "traditional",
-      "opened_at": "2026-08-07T09:29:17.436936+00:00",
+      "opened_at": "2026-08-07T10:25:19.418416+00:00",
       "note": "auto",
-      "entry_sell": 202,
-      "entry_offer": 211
+      "entry_sell": 192,
+      "entry_offer": 203
     },
     {
-      "id": 2,
-      "item_id": 4695,
-      "name": "Mist rune",
-      "qty": 560,
-      "buy_price": 92,
+      "id": 3,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 2352,
+      "buy_price": 170,
       "direction": "traditional",
-      "opened_at": "2026-08-07T09:57:18.415889+00:00",
+      "opened_at": "2026-08-07T10:29:19.283841+00:00",
       "note": "auto",
-      "entry_sell": 92,
-      "entry_offer": 97
+      "entry_sell": 170,
+      "entry_offer": 176
     }
   ]
 }
