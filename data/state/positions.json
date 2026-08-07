@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 2702,
-      "buy_price": 148,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 120,
+      "buy_price": 160,
       "direction": "traditional",
-      "opened_at": "2026-08-07T14:15:23.917476+00:00",
+      "opened_at": "2026-08-07T14:31:23.138930+00:00",
       "note": "auto",
-      "entry_sell": 148,
-      "entry_offer": 155
+      "entry_sell": 160,
+      "entry_offer": 167
+    },
+    {
+      "id": 2,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 84,
+      "buy_price": 2862,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T14:31:23.139563+00:00",
+      "note": "auto",
+      "entry_sell": 2862,
+      "entry_offer": 2996
     }
   ]
 }
