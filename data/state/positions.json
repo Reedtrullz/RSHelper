@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 178,
       "entry_offer": 187
-    },
-    {
-      "id": 3,
-      "item_id": 567,
-      "name": "Unpowered orb",
-      "qty": 85,
-      "buy_price": 57,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T11:59:20.853531+00:00",
-      "note": "auto",
-      "entry_sell": 57,
-      "entry_offer": 60
-    },
-    {
-      "id": 4,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1661,
-      "buy_price": 182,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T11:59:20.854406+00:00",
-      "note": "auto",
-      "entry_sell": 182,
-      "entry_offer": 191
     }
   ]
 }
