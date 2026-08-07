@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 6018,
-      "name": "Poison ivy berries",
-      "qty": 94,
-      "buy_price": 181,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T20:47:36.761417+00:00",
-      "note": "auto",
-      "entry_sell": 181,
-      "entry_offer": 172
-    },
-    {
-      "id": 6,
-      "item_id": 12775,
-      "name": "Annakarl teleport (tablet)",
-      "qty": 102,
-      "buy_price": 1951,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T20:55:37.042833+00:00",
-      "note": "auto",
-      "entry_sell": 1951,
-      "entry_offer": 2020
-    },
-    {
       "id": 7,
-      "item_id": 1656,
-      "name": "Sapphire necklace",
-      "qty": 340,
-      "buy_price": 432,
+      "item_id": 30773,
+      "name": "Diabolic worms",
+      "qty": 122,
+      "buy_price": 3266,
       "direction": "traditional",
-      "opened_at": "2026-08-07T21:09:36.210210+00:00",
+      "opened_at": "2026-08-07T21:19:37.571351+00:00",
       "note": "auto",
-      "entry_sell": 432,
-      "entry_offer": 456
+      "entry_sell": 3266,
+      "entry_offer": 3400
     }
   ]
 }
