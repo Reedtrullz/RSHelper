@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2444,
+      "name": "Ranging potion(4)",
+      "qty": 207,
+      "buy_price": 1931,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T07:41:14.483257+00:00",
+      "note": "auto",
+      "entry_sell": 1931,
+      "entry_offer": 2015
+    }
+  ]
 }
