@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 395,
+      "name": "Raw sea turtle",
+      "qty": 585,
+      "buy_price": 655,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T02:37:03.266884+00:00",
+      "note": "auto",
+      "entry_sell": 655,
+      "entry_offer": 680
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2091,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T02:43:02.107173+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 4,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 401,
+      "buy_price": 467,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T02:49:03.477931+00:00",
+      "note": "auto",
+      "entry_sell": 467,
+      "entry_offer": 486
+    }
+  ]
 }
