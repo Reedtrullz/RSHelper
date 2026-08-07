@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 960,
-      "name": "Plank",
-      "qty": 125,
-      "buy_price": 119,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T00:32:58.327427+00:00",
-      "note": "auto",
-      "entry_sell": 119,
-      "entry_offer": 124
-    },
-    {
       "id": 2,
       "item_id": 7060,
       "name": "Tuna potato",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1337,
       "entry_offer": 1395
+    },
+    {
+      "id": 3,
+      "item_id": 7218,
+      "name": "Summer pie",
+      "qty": 92,
+      "buy_price": 660,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T00:48:58.712077+00:00",
+      "note": "auto",
+      "entry_sell": 660,
+      "entry_offer": 695
+    },
+    {
+      "id": 4,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 3083,
+      "buy_price": 85,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T00:48:58.712693+00:00",
+      "note": "auto",
+      "entry_sell": 85,
+      "entry_offer": 89
     }
   ]
 }
