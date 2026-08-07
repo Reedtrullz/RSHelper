@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 202,
       "entry_offer": 211
+    },
+    {
+      "id": 2,
+      "item_id": 2552,
+      "name": "Ring of dueling(8)",
+      "qty": 126,
+      "buy_price": 881,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T09:45:18.137222+00:00",
+      "note": "auto",
+      "entry_sell": 881,
+      "entry_offer": 914
     }
   ]
 }
