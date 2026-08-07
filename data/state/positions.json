@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 727,
-      "buy_price": 550,
+      "id": 1,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 184,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-07T17:11:28.911765+00:00",
+      "opened_at": "2026-08-07T18:15:30.412681+00:00",
       "note": "auto",
-      "entry_sell": 550,
-      "entry_offer": 571
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
