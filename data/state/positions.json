@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 1337,
       "entry_offer": 1395
-    },
-    {
-      "id": 3,
-      "item_id": 7218,
-      "name": "Summer pie",
-      "qty": 92,
-      "buy_price": 660,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T00:48:58.712077+00:00",
-      "note": "auto",
-      "entry_sell": 660,
-      "entry_offer": 695
-    },
-    {
-      "id": 4,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 3083,
-      "buy_price": 85,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T00:48:58.712693+00:00",
-      "note": "auto",
-      "entry_sell": 85,
-      "entry_offer": 89
     }
   ]
 }
