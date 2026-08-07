@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 234,
-      "buy_price": 1706,
+      "id": 1,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 102,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-07T21:59:39.185073+00:00",
+      "opened_at": "2026-08-07T22:23:39.987398+00:00",
       "note": "auto",
-      "entry_sell": 1706,
-      "entry_offer": 1785
+      "entry_sell": 28,
+      "entry_offer": 27
     },
     {
-      "id": 5,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 696,
-      "buy_price": 140,
+      "id": 2,
+      "item_id": 66,
+      "name": "Yew longbow (u)",
+      "qty": 712,
+      "buy_price": 180,
       "direction": "traditional",
-      "opened_at": "2026-08-07T22:07:39.490442+00:00",
+      "opened_at": "2026-08-07T22:29:38.805151+00:00",
       "note": "auto",
-      "entry_sell": 140,
-      "entry_offer": 147
+      "entry_sell": 180,
+      "entry_offer": 188
     }
   ]
 }
