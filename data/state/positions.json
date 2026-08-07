@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 7060,
-      "name": "Tuna potato",
-      "qty": 236,
-      "buy_price": 1337,
+      "id": 3,
+      "item_id": 4161,
+      "name": "Bag of salt",
+      "qty": 150,
+      "buy_price": 38,
       "direction": "traditional",
-      "opened_at": "2026-08-07T00:32:58.329035+00:00",
+      "opened_at": "2026-08-07T01:08:59.309281+00:00",
       "note": "auto",
-      "entry_sell": 1337,
-      "entry_offer": 1395
+      "entry_sell": 38,
+      "entry_offer": 40
+    },
+    {
+      "id": 5,
+      "item_id": 863,
+      "name": "Iron knife",
+      "qty": 792,
+      "buy_price": 35,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T01:16:59.656568+00:00",
+      "note": "auto",
+      "entry_sell": 35,
+      "entry_offer": 37
+    },
+    {
+      "id": 6,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 298,
+      "buy_price": 152,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T01:18:58.366982+00:00",
+      "note": "auto",
+      "entry_sell": 152,
+      "entry_offer": 159
     }
   ]
 }
