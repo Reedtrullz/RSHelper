@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 3000,
       "entry_offer": 3135
+    },
+    {
+      "id": 2,
+      "item_id": 371,
+      "name": "Raw swordfish",
+      "qty": 334,
+      "buy_price": 195,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T15:45:25.326179+00:00",
+      "note": "auto",
+      "entry_sell": 195,
+      "entry_offer": 204
     }
   ]
 }
