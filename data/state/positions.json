@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 3,
+      "item_id": 11092,
+      "name": "Diamond bracelet",
+      "qty": 91,
+      "buy_price": 1840,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T20:23:35.922535+00:00",
+      "note": "auto",
+      "entry_sell": 1840,
+      "entry_offer": 1920
+    },
+    {
+      "id": 4,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 1044,
+      "buy_price": 383,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T20:33:35.038175+00:00",
+      "note": "auto",
+      "entry_sell": 383,
+      "entry_offer": 405
+    }
+  ]
 }
