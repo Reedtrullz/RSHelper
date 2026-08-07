@@ -26,15 +26,15 @@
     },
     {
       "id": 6,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 298,
-      "buy_price": 152,
+      "item_id": 1121,
+      "name": "Mithril platebody",
+      "qty": 125,
+      "buy_price": 2600,
       "direction": "traditional",
-      "opened_at": "2026-08-07T01:18:58.366982+00:00",
+      "opened_at": "2026-08-07T01:29:00.292723+00:00",
       "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
+      "entry_sell": 2600,
+      "entry_offer": 2717
     }
   ]
 }
