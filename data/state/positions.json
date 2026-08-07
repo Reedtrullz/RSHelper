@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2444,
-      "name": "Ranging potion(4)",
-      "qty": 207,
-      "buy_price": 1931,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 481,
+      "buy_price": 221,
       "direction": "traditional",
-      "opened_at": "2026-08-07T07:41:14.483257+00:00",
+      "opened_at": "2026-08-07T07:49:14.755521+00:00",
       "note": "auto",
-      "entry_sell": 1931,
-      "entry_offer": 2015
+      "entry_sell": 221,
+      "entry_offer": 232
+    },
+    {
+      "id": 3,
+      "item_id": 564,
+      "name": "Cosmic rune",
+      "qty": 3340,
+      "buy_price": 119,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T07:53:14.835907+00:00",
+      "note": "auto",
+      "entry_sell": 119,
+      "entry_offer": 124
     }
   ]
 }
