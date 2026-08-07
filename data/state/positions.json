@@ -13,16 +13,16 @@
       "entry_offer": 47
     },
     {
-      "id": 6,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 1570,
-      "buy_price": 96,
+      "id": 5,
+      "item_id": 1609,
+      "name": "Opal",
+      "qty": 211,
+      "buy_price": 123,
       "direction": "traditional",
-      "opened_at": "2026-08-07T16:27:27.458471+00:00",
+      "opened_at": "2026-08-07T16:39:27.764639+00:00",
       "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
+      "entry_sell": 123,
+      "entry_offer": 128
     }
   ]
 }
