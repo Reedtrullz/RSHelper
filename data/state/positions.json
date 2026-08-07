@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 589,
-      "buy_price": 678,
-      "direction": "traditional",
-      "opened_at": "2026-08-07T01:49:00.973872+00:00",
-      "note": "auto",
-      "entry_sell": 678,
-      "entry_offer": 702
-    }
-  ]
+  "positions": []
 }
