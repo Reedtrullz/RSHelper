@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 337,
-      "buy_price": 536,
+      "id": 1,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 1674,
+      "buy_price": 67,
       "direction": "traditional",
-      "opened_at": "2026-08-07T00:00:57.545212+00:00",
+      "opened_at": "2026-08-07T00:16:58.129148+00:00",
       "note": "auto",
-      "entry_sell": 536,
-      "entry_offer": 560
+      "entry_sell": 67,
+      "entry_offer": 64
     }
   ]
 }
