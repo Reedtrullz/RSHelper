@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 2552,
-      "name": "Ring of dueling(8)",
-      "qty": 126,
-      "buy_price": 881,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 560,
+      "buy_price": 92,
       "direction": "traditional",
-      "opened_at": "2026-08-07T09:45:18.137222+00:00",
+      "opened_at": "2026-08-07T09:57:18.415889+00:00",
       "note": "auto",
-      "entry_sell": 881,
-      "entry_offer": 914
+      "entry_sell": 92,
+      "entry_offer": 97
     }
   ]
 }
