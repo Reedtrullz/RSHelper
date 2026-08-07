@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 823,
-      "name": "Adamant dart tip",
-      "qty": 2247,
-      "buy_price": 178,
+      "id": 4,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 177,
+      "buy_price": 1347,
       "direction": "traditional",
-      "opened_at": "2026-08-07T11:17:20.267026+00:00",
+      "opened_at": "2026-08-07T12:35:21.844059+00:00",
       "note": "auto",
-      "entry_sell": 178,
-      "entry_offer": 187
+      "entry_sell": 1347,
+      "entry_offer": 1406
+    },
+    {
+      "id": 5,
+      "item_id": 101,
+      "name": "Irit potion (unf)",
+      "qty": 198,
+      "buy_price": 1825,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T12:39:21.984413+00:00",
+      "note": "auto",
+      "entry_sell": 1825,
+      "entry_offer": 1910
+    },
+    {
+      "id": 6,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2666,
+      "buy_price": 150,
+      "direction": "traditional",
+      "opened_at": "2026-08-07T12:45:20.954190+00:00",
+      "note": "auto",
+      "entry_sell": 150,
+      "entry_offer": 156
     }
   ]
 }
