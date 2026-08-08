@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 30068,
-      "name": "Soiled page",
-      "qty": 98,
-      "buy_price": 2696,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T02:41:49.954796+00:00",
-      "note": "auto",
-      "entry_sell": 2696,
-      "entry_offer": 2837
-    },
-    {
       "id": 2,
-      "item_id": 70,
-      "name": "Magic longbow (u)",
-      "qty": 544,
-      "buy_price": 735,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 842,
+      "buy_price": 470,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:41:49.955306+00:00",
+      "opened_at": "2026-08-08T02:45:50.036600+00:00",
       "note": "auto",
-      "entry_sell": 735,
-      "entry_offer": 763
+      "entry_sell": 470,
+      "entry_offer": 495
     },
     {
       "id": 3,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 2195,
-      "buy_price": 153,
+      "item_id": 1759,
+      "name": "Ball of wool",
+      "qty": 233,
+      "buy_price": 43,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:41:49.955683+00:00",
+      "opened_at": "2026-08-08T02:57:50.488627+00:00",
       "note": "auto",
-      "entry_sell": 153,
-      "entry_offer": 159
+      "entry_sell": 43,
+      "entry_offer": 45
     }
   ]
 }
