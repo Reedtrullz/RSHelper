@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 868,
-      "name": "Rune knife",
-      "qty": 90,
-      "buy_price": 131,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T20:16:19.530593+00:00",
-      "note": "auto",
-      "entry_sell": 131,
-      "entry_offer": 138
-    }
-  ]
+  "positions": []
 }
