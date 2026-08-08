@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 3921,
-      "buy_price": 102,
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1447,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-08T05:09:55.492275+00:00",
+      "opened_at": "2026-08-08T05:37:56.605061+00:00",
       "note": "auto",
-      "entry_sell": 102,
-      "entry_offer": 107
+      "entry_sell": 29,
+      "entry_offer": 28
     }
   ]
 }
