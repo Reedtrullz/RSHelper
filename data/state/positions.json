@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1686,
       "entry_offer": 1773
+    },
+    {
+      "id": 2,
+      "item_id": 1985,
+      "name": "Cheese",
+      "qty": 2601,
+      "buy_price": 57,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T10:14:05.792636+00:00",
+      "note": "auto",
+      "entry_sell": 57,
+      "entry_offer": 60
     }
   ]
 }
