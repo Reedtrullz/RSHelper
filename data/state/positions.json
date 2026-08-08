@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24621,
-      "name": "Blighted vengeance sack",
-      "qty": 100,
-      "buy_price": 70,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 192,
+      "buy_price": 345,
       "direction": "traditional",
-      "opened_at": "2026-08-08T01:59:47.941004+00:00",
+      "opened_at": "2026-08-08T02:13:47.459790+00:00",
       "note": "auto",
-      "entry_sell": 70,
-      "entry_offer": 74
+      "entry_sell": 345,
+      "entry_offer": 360
     },
     {
       "id": 2,
-      "item_id": 19484,
-      "name": "Dragon javelin",
-      "qty": 566,
-      "buy_price": 588,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 1880,
+      "buy_price": 46,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:07:48.031506+00:00",
+      "opened_at": "2026-08-08T02:25:49.207297+00:00",
       "note": "auto",
-      "entry_sell": 588,
-      "entry_offer": 620
+      "entry_sell": 46,
+      "entry_offer": 48
+    },
+    {
+      "id": 3,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 259,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T02:25:49.207832+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
