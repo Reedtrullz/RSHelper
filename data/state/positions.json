@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 171,
       "entry_offer": 163
+    },
+    {
+      "id": 5,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 5000,
+      "buy_price": 80,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T06:05:57.613481+00:00",
+      "note": "auto",
+      "entry_sell": 80,
+      "entry_offer": 77
     }
   ]
 }
