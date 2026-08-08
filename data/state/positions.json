@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1985,
+      "name": "Cheese",
+      "qty": 1306,
+      "buy_price": 57,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T18:52:16.601752+00:00",
+      "note": "auto",
+      "entry_sell": 57,
+      "entry_offer": 60
+    },
+    {
+      "id": 2,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 139,
+      "buy_price": 2867,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T18:52:16.602550+00:00",
+      "note": "auto",
+      "entry_sell": 2867,
+      "entry_offer": 2992
+    },
+    {
+      "id": 3,
+      "item_id": 3138,
+      "name": "Potato cactus",
+      "qty": 91,
+      "buy_price": 51,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T18:52:16.602852+00:00",
+      "note": "auto",
+      "entry_sell": 51,
+      "entry_offer": 53
+    }
+  ]
 }
