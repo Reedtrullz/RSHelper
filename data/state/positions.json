@@ -14,27 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 4695,
-      "name": "Mist rune",
-      "qty": 472,
-      "buy_price": 88,
+      "item_id": 391,
+      "name": "Manta ray",
+      "qty": 290,
+      "buy_price": 1379,
       "direction": "traditional",
-      "opened_at": "2026-08-08T01:35:46.889664+00:00",
+      "opened_at": "2026-08-08T01:53:46.295483+00:00",
       "note": "auto",
-      "entry_sell": 88,
-      "entry_offer": 92
+      "entry_sell": 1379,
+      "entry_offer": 1440
     },
     {
       "id": 4,
-      "item_id": 4698,
-      "name": "Mud rune",
-      "qty": 1220,
-      "buy_price": 101,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 139,
+      "buy_price": 248,
       "direction": "traditional",
-      "opened_at": "2026-08-08T01:39:47.145119+00:00",
+      "opened_at": "2026-08-08T01:55:47.591509+00:00",
       "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 105
+      "entry_sell": 248,
+      "entry_offer": 260
     }
   ]
 }
