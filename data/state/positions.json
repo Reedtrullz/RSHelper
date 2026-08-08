@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1201,
-      "buy_price": 333,
+      "id": 1,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 1962,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-08T19:04:17.205316+00:00",
+      "opened_at": "2026-08-08T19:12:17.481172+00:00",
       "note": "auto",
-      "entry_sell": 333,
-      "entry_offer": 345
+      "entry_sell": 105,
+      "entry_offer": 110
     }
   ]
 }
