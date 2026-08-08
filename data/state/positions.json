@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 1306,
-      "buy_price": 220,
+      "id": 1,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 992,
+      "buy_price": 403,
       "direction": "traditional",
-      "opened_at": "2026-08-08T08:22:02.234276+00:00",
+      "opened_at": "2026-08-08T08:58:03.782507+00:00",
       "note": "auto",
-      "entry_sell": 220,
-      "entry_offer": 232
-    },
-    {
-      "id": 4,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 2749,
-      "buy_price": 94,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T08:38:02.924560+00:00",
-      "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 98
-    },
-    {
-      "id": 5,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 2424,
-      "buy_price": 165,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T08:50:03.170350+00:00",
-      "note": "auto",
-      "entry_sell": 165,
-      "entry_offer": 173
+      "entry_sell": 403,
+      "entry_offer": 420
     }
   ]
 }
