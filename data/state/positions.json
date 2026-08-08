@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 132,
       "entry_offer": 137
+    },
+    {
+      "id": 2,
+      "item_id": 2436,
+      "name": "Super attack(4)",
+      "qty": 207,
+      "buy_price": 1926,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T07:30:00.681294+00:00",
+      "note": "auto",
+      "entry_sell": 1926,
+      "entry_offer": 1996
     }
   ]
 }
