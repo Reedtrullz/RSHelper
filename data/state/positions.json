@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 231,
-      "buy_price": 1686,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T09:50:05.211917+00:00",
-      "note": "auto",
-      "entry_sell": 1686,
-      "entry_offer": 1773
-    },
-    {
       "id": 2,
       "item_id": 1985,
       "name": "Cheese",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 176,
-      "buy_price": 101,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 457,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-08T10:34:06.165369+00:00",
+      "opened_at": "2026-08-08T10:50:06.493057+00:00",
       "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 106
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 4,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3270,
+      "buy_price": 105,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T10:50:06.493877+00:00",
+      "note": "auto",
+      "entry_sell": 105,
+      "entry_offer": 109
     }
   ]
 }
