@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 2500,
-      "buy_price": 94,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 309,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-08T16:36:14.292870+00:00",
+      "opened_at": "2026-08-08T16:44:13.902640+00:00",
       "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 98
-    },
-    {
-      "id": 2,
-      "item_id": 245,
-      "name": "Wine of zamorak",
-      "qty": 150,
-      "buy_price": 913,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T16:36:14.293712+00:00",
-      "note": "auto",
-      "entry_sell": 913,
-      "entry_offer": 945
+      "entry_sell": 106,
+      "entry_offer": 111
     }
   ]
 }
