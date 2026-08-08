@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 57,
       "entry_offer": 60
+    },
+    {
+      "id": 3,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 176,
+      "buy_price": 101,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T10:34:06.165369+00:00",
+      "note": "auto",
+      "entry_sell": 101,
+      "entry_offer": 106
     }
   ]
 }
