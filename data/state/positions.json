@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 308,
-      "buy_price": 929,
+      "id": 2,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1417,
+      "buy_price": 186,
       "direction": "traditional",
-      "opened_at": "2026-08-08T00:05:42.429220+00:00",
+      "opened_at": "2026-08-08T00:19:44.045141+00:00",
       "note": "auto",
-      "entry_sell": 929,
-      "entry_offer": 970
+      "entry_sell": 186,
+      "entry_offer": 193
     }
   ]
 }
