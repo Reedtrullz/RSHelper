@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 55,
       "entry_offer": 58
+    },
+    {
+      "id": 4,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 166,
+      "buy_price": 225,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T13:36:09.994881+00:00",
+      "note": "auto",
+      "entry_sell": 225,
+      "entry_offer": 235
+    },
+    {
+      "id": 5,
+      "item_id": 2436,
+      "name": "Super attack(4)",
+      "qty": 137,
+      "buy_price": 1903,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T13:36:09.996620+00:00",
+      "note": "auto",
+      "entry_sell": 1903,
+      "entry_offer": 1989
     }
   ]
 }
