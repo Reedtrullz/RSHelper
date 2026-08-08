@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 2313,
-      "buy_price": 91,
+      "id": 2,
+      "item_id": 10033,
+      "name": "Chinchompa",
+      "qty": 234,
+      "buy_price": 910,
       "direction": "traditional",
-      "opened_at": "2026-08-08T14:18:09.817974+00:00",
+      "opened_at": "2026-08-08T14:56:11.568523+00:00",
       "note": "auto",
-      "entry_sell": 91,
-      "entry_offer": 95
+      "entry_sell": 910,
+      "entry_offer": 950
     }
   ]
 }
