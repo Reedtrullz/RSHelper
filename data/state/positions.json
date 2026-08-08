@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 1962,
-      "buy_price": 105,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 525,
+      "buy_price": 93,
       "direction": "traditional",
-      "opened_at": "2026-08-08T19:12:17.481172+00:00",
+      "opened_at": "2026-08-08T19:52:19.041433+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
-    },
-    {
-      "id": 2,
-      "item_id": 329,
-      "name": "Salmon",
-      "qty": 117,
-      "buy_price": 26,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T19:36:18.285456+00:00",
-      "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
-    },
-    {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 5162,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T19:36:18.286080+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 93,
+      "entry_offer": 98
     }
   ]
 }
