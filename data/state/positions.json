@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1745,
+      "name": "Green dragon leather",
+      "qty": 220,
+      "buy_price": 1811,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T15:40:12.514058+00:00",
+      "note": "auto",
+      "entry_sell": 1811,
+      "entry_offer": 1895
+    }
+  ]
 }
