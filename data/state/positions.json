@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 204,
+      "buy_price": 1954,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T07:54:01.484375+00:00",
+      "note": "auto",
+      "entry_sell": 1954,
+      "entry_offer": 2025
+    }
+  ]
 }
