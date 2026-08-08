@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 253,
-      "name": "Tarromin",
-      "qty": 467,
-      "buy_price": 192,
+      "id": 2,
+      "item_id": 5296,
+      "name": "Toadflax seed",
+      "qty": 151,
+      "buy_price": 1096,
       "direction": "traditional",
-      "opened_at": "2026-08-08T01:23:46.288475+00:00",
+      "opened_at": "2026-08-08T01:35:46.888908+00:00",
       "note": "auto",
-      "entry_sell": 192,
-      "entry_offer": 201
+      "entry_sell": 1096,
+      "entry_offer": 1051
+    },
+    {
+      "id": 3,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 472,
+      "buy_price": 88,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T01:35:46.889664+00:00",
+      "note": "auto",
+      "entry_sell": 88,
+      "entry_offer": 92
+    },
+    {
+      "id": 4,
+      "item_id": 4698,
+      "name": "Mud rune",
+      "qty": 1220,
+      "buy_price": 101,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T01:39:47.145119+00:00",
+      "note": "auto",
+      "entry_sell": 101,
+      "entry_offer": 105
     }
   ]
 }
