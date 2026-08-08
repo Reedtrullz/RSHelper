@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1753,
-      "name": "Green dragonhide",
-      "qty": 241,
-      "buy_price": 1511,
+      "id": 5,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 496,
+      "buy_price": 175,
       "direction": "traditional",
-      "opened_at": "2026-08-08T03:15:50.027923+00:00",
+      "opened_at": "2026-08-08T03:55:51.636704+00:00",
       "note": "auto",
-      "entry_sell": 1511,
-      "entry_offer": 1564
+      "entry_sell": 175,
+      "entry_offer": 182
     }
   ]
 }
