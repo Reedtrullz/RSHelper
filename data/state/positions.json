@@ -14,27 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 457,
-      "buy_price": 28,
+      "item_id": 11242,
+      "name": "Gourmet impling jar",
+      "qty": 105,
+      "buy_price": 3797,
       "direction": "traditional",
-      "opened_at": "2026-08-08T10:50:06.493057+00:00",
+      "opened_at": "2026-08-08T10:58:06.544434+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 3797,
+      "entry_offer": 3975
     },
     {
       "id": 4,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 3270,
-      "buy_price": 105,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 318,
+      "buy_price": 156,
       "direction": "traditional",
-      "opened_at": "2026-08-08T10:50:06.493877+00:00",
+      "opened_at": "2026-08-08T11:04:05.632767+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 109
+      "entry_sell": 156,
+      "entry_offer": 163
     }
   ]
 }
