@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1447,
-      "buy_price": 29,
+      "id": 4,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 484,
+      "buy_price": 171,
       "direction": "traditional",
-      "opened_at": "2026-08-08T05:37:56.605061+00:00",
+      "opened_at": "2026-08-08T05:45:56.797046+00:00",
       "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
+      "entry_sell": 171,
+      "entry_offer": 163
     }
   ]
 }
