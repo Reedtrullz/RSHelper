@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 99,
-      "buy_price": 50,
+      "id": 1,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 113,
+      "buy_price": 91,
       "direction": "traditional",
-      "opened_at": "2026-08-08T04:09:53.413216+00:00",
+      "opened_at": "2026-08-08T04:29:54.197190+00:00",
       "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
+      "entry_sell": 91,
+      "entry_offer": 95
+    },
+    {
+      "id": 2,
+      "item_id": 1635,
+      "name": "Gold ring",
+      "qty": 92,
+      "buy_price": 132,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T04:33:54.183788+00:00",
+      "note": "auto",
+      "entry_sell": 132,
+      "entry_offer": 137
+    },
+    {
+      "id": 3,
+      "item_id": 564,
+      "name": "Cosmic rune",
+      "qty": 3050,
+      "buy_price": 120,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T04:33:54.184716+00:00",
+      "note": "auto",
+      "entry_sell": 120,
+      "entry_offer": 126
     }
   ]
 }
