@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 525,
-      "buy_price": 93,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 1436,
+      "buy_price": 87,
       "direction": "traditional",
-      "opened_at": "2026-08-08T19:52:19.041433+00:00",
+      "opened_at": "2026-08-08T20:08:19.222969+00:00",
       "note": "auto",
-      "entry_sell": 93,
-      "entry_offer": 98
+      "entry_sell": 87,
+      "entry_offer": 91
+    },
+    {
+      "id": 2,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 413,
+      "buy_price": 154,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T20:08:19.223937+00:00",
+      "note": "auto",
+      "entry_sell": 154,
+      "entry_offer": 160
     }
   ]
 }
