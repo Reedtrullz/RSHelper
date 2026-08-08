@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19580,
-      "name": "Rune javelin tips",
-      "qty": 992,
-      "buy_price": 403,
+      "item_id": 1731,
+      "name": "Amulet of power",
+      "qty": 125,
+      "buy_price": 2244,
       "direction": "traditional",
-      "opened_at": "2026-08-08T08:58:03.782507+00:00",
+      "opened_at": "2026-08-08T09:18:04.515327+00:00",
       "note": "auto",
-      "entry_sell": 403,
-      "entry_offer": 420
+      "entry_sell": 2244,
+      "entry_offer": 2330
     }
   ]
 }
