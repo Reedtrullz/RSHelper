@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 1511,
       "entry_offer": 1564
-    },
-    {
-      "id": 4,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 565,
-      "buy_price": 29,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T03:25:51.689959+00:00",
-      "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
-    },
-    {
-      "id": 5,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 559,
-      "buy_price": 79,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T03:29:51.585429+00:00",
-      "note": "auto",
-      "entry_sell": 79,
-      "entry_offer": 82
     }
   ]
 }
