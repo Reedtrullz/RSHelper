@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 466,
-      "buy_price": 81,
+      "id": 1,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 467,
+      "buy_price": 192,
       "direction": "traditional",
-      "opened_at": "2026-08-08T00:59:45.406940+00:00",
+      "opened_at": "2026-08-08T01:23:46.288475+00:00",
       "note": "auto",
-      "entry_sell": 81,
-      "entry_offer": 78
+      "entry_sell": 192,
+      "entry_offer": 201
     }
   ]
 }
