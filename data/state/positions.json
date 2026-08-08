@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1963,
-      "name": "Banana",
-      "qty": 105,
-      "buy_price": 50,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2500,
+      "buy_price": 94,
       "direction": "traditional",
-      "opened_at": "2026-08-08T16:20:14.002642+00:00",
+      "opened_at": "2026-08-08T16:36:14.292870+00:00",
       "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
+      "entry_sell": 94,
+      "entry_offer": 98
+    },
+    {
+      "id": 2,
+      "item_id": 245,
+      "name": "Wine of zamorak",
+      "qty": 150,
+      "buy_price": 913,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T16:36:14.293712+00:00",
+      "note": "auto",
+      "entry_sell": 913,
+      "entry_offer": 945
     }
   ]
 }
