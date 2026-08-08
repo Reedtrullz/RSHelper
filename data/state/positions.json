@@ -1,40 +1,28 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 24621,
+      "name": "Blighted vengeance sack",
+      "qty": 100,
+      "buy_price": 70,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T01:59:47.941004+00:00",
+      "note": "auto",
+      "entry_sell": 70,
+      "entry_offer": 74
+    },
+    {
       "id": 2,
-      "item_id": 5296,
-      "name": "Toadflax seed",
-      "qty": 151,
-      "buy_price": 1096,
+      "item_id": 19484,
+      "name": "Dragon javelin",
+      "qty": 566,
+      "buy_price": 588,
       "direction": "traditional",
-      "opened_at": "2026-08-08T01:35:46.888908+00:00",
+      "opened_at": "2026-08-08T02:07:48.031506+00:00",
       "note": "auto",
-      "entry_sell": 1096,
-      "entry_offer": 1051
-    },
-    {
-      "id": 3,
-      "item_id": 391,
-      "name": "Manta ray",
-      "qty": 290,
-      "buy_price": 1379,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T01:53:46.295483+00:00",
-      "note": "auto",
-      "entry_sell": 1379,
-      "entry_offer": 1440
-    },
-    {
-      "id": 4,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 139,
-      "buy_price": 248,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T01:55:47.591509+00:00",
-      "note": "auto",
-      "entry_sell": 248,
-      "entry_offer": 260
+      "entry_sell": 588,
+      "entry_offer": 620
     }
   ]
 }
