@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 32307,
-      "name": "Fine fish offcuts",
-      "qty": 396,
-      "buy_price": 335,
+      "id": 2,
+      "item_id": 25769,
+      "name": "Vile ashes",
+      "qty": 146,
+      "buy_price": 95,
       "direction": "traditional",
-      "opened_at": "2026-08-08T16:56:14.428561+00:00",
+      "opened_at": "2026-08-08T17:12:14.493522+00:00",
       "note": "auto",
-      "entry_sell": 335,
-      "entry_offer": 347
+      "entry_sell": 95,
+      "entry_offer": 100
     }
   ]
 }
