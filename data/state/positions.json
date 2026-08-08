@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1954,
       "entry_offer": 2025
+    },
+    {
+      "id": 3,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 1306,
+      "buy_price": 220,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T08:22:02.234276+00:00",
+      "note": "auto",
+      "entry_sell": 220,
+      "entry_offer": 232
+    },
+    {
+      "id": 4,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1697,
+      "buy_price": 185,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T08:34:02.664368+00:00",
+      "note": "auto",
+      "entry_sell": 185,
+      "entry_offer": 193
     }
   ]
 }
