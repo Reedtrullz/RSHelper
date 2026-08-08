@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 25769,
-      "name": "Vile ashes",
-      "qty": 146,
-      "buy_price": 95,
+      "id": 1,
+      "item_id": 10476,
+      "name": "Purple sweets",
+      "qty": 74,
+      "buy_price": 5405,
       "direction": "traditional",
-      "opened_at": "2026-08-08T17:12:14.493522+00:00",
+      "opened_at": "2026-08-08T17:52:15.119248+00:00",
       "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 100
+      "entry_sell": 5405,
+      "entry_offer": 5600
     }
   ]
 }
