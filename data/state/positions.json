@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 605,
-      "buy_price": 160,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 3921,
+      "buy_price": 102,
       "direction": "traditional",
-      "opened_at": "2026-08-08T05:05:55.370241+00:00",
+      "opened_at": "2026-08-08T05:09:55.492275+00:00",
       "note": "auto",
-      "entry_sell": 160,
-      "entry_offer": 166
-    },
-    {
-      "id": 2,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 947,
-      "buy_price": 73,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T05:05:55.371196+00:00",
-      "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 76
+      "entry_sell": 102,
+      "entry_offer": 107
     }
   ]
 }
