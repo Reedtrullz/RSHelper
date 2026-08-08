@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 3,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 2313,
+      "buy_price": 91,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T14:18:09.817974+00:00",
+      "note": "auto",
+      "entry_sell": 91,
+      "entry_offer": 95
+    }
+  ]
 }
