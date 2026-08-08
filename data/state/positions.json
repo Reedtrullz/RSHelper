@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 1565,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T22:08:24.759151+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
+    },
+    {
+      "id": 2,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 355,
+      "buy_price": 546,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T22:08:24.760116+00:00",
+      "note": "auto",
+      "entry_sell": 546,
+      "entry_offer": 572
+    }
+  ]
 }
