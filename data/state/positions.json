@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 326,
-      "buy_price": 165,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T23:24:27.462060+00:00",
-      "note": "auto",
-      "entry_sell": 165,
-      "entry_offer": 172
-    }
-  ]
+  "positions": []
 }
