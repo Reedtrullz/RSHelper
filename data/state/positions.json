@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 842,
-      "buy_price": 470,
+      "id": 1,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1325,
+      "buy_price": 217,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:45:50.036600+00:00",
+      "opened_at": "2026-08-08T03:13:51.155767+00:00",
       "note": "auto",
-      "entry_sell": 470,
-      "entry_offer": 495
+      "entry_sell": 217,
+      "entry_offer": 229
+    },
+    {
+      "id": 2,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 649,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T03:13:51.157059+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     },
     {
       "id": 3,
-      "item_id": 1759,
-      "name": "Ball of wool",
-      "qty": 233,
-      "buy_price": 43,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 94,
+      "buy_price": 175,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:57:50.488627+00:00",
+      "opened_at": "2026-08-08T03:13:51.157423+00:00",
       "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
+      "entry_sell": 175,
+      "entry_offer": 182
     }
   ]
 }
