@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 30773,
-      "name": "Diabolic worms",
-      "qty": 123,
-      "buy_price": 3113,
+      "id": 1,
+      "item_id": 2349,
+      "name": "Bronze bar",
+      "qty": 121,
+      "buy_price": 62,
       "direction": "traditional",
-      "opened_at": "2026-08-08T12:16:08.389127+00:00",
+      "opened_at": "2026-08-08T12:36:08.950723+00:00",
       "note": "auto",
-      "entry_sell": 3113,
-      "entry_offer": 3250
+      "entry_sell": 62,
+      "entry_offer": 65
     },
     {
-      "id": 3,
-      "item_id": 6685,
-      "name": "Saradomin brew(4)",
-      "qty": 61,
-      "buy_price": 6499,
+      "id": 2,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 4878,
+      "buy_price": 82,
       "direction": "traditional",
-      "opened_at": "2026-08-08T12:20:08.468969+00:00",
+      "opened_at": "2026-08-08T12:36:08.952562+00:00",
       "note": "auto",
-      "entry_sell": 6499,
-      "entry_offer": 6760
+      "entry_sell": 82,
+      "entry_offer": 85
     }
   ]
 }
