@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1535,
-      "buy_price": 28,
+      "id": 1,
+      "item_id": 830,
+      "name": "Rune javelin",
+      "qty": 146,
+      "buy_price": 132,
       "direction": "traditional",
-      "opened_at": "2026-08-08T06:21:57.821586+00:00",
+      "opened_at": "2026-08-08T06:37:58.252165+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
-    },
-    {
-      "id": 3,
-      "item_id": 573,
-      "name": "Air orb",
-      "qty": 212,
-      "buy_price": 1884,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T06:25:57.864016+00:00",
-      "note": "auto",
-      "entry_sell": 1884,
-      "entry_offer": 1960
+      "entry_sell": 132,
+      "entry_offer": 137
     }
   ]
 }
