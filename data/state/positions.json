@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 204,
-      "buy_price": 1954,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T07:54:01.484375+00:00",
-      "note": "auto",
-      "entry_sell": 1954,
-      "entry_offer": 2025
-    },
-    {
       "id": 3,
       "item_id": 28872,
       "name": "Sunlight antler bolts",
@@ -26,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1697,
-      "buy_price": 185,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2749,
+      "buy_price": 94,
       "direction": "traditional",
-      "opened_at": "2026-08-08T08:34:02.664368+00:00",
+      "opened_at": "2026-08-08T08:38:02.924560+00:00",
       "note": "auto",
-      "entry_sell": 185,
-      "entry_offer": 193
+      "entry_sell": 94,
+      "entry_offer": 98
+    },
+    {
+      "id": 5,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 2424,
+      "buy_price": 165,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T08:50:03.170350+00:00",
+      "note": "auto",
+      "entry_sell": 165,
+      "entry_offer": 173
     }
   ]
 }
