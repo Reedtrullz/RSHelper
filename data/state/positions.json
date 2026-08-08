@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 234,
-      "buy_price": 910,
+      "id": 1,
+      "item_id": 66,
+      "name": "Yew longbow (u)",
+      "qty": 1071,
+      "buy_price": 175,
       "direction": "traditional",
-      "opened_at": "2026-08-08T14:56:11.568523+00:00",
+      "opened_at": "2026-08-08T15:20:12.056173+00:00",
       "note": "auto",
-      "entry_sell": 910,
-      "entry_offer": 950
+      "entry_sell": 175,
+      "entry_offer": 183
+    },
+    {
+      "id": 2,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 142,
+      "buy_price": 1950,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T15:20:12.057293+00:00",
+      "note": "auto",
+      "entry_sell": 1950,
+      "entry_offer": 2025
     }
   ]
 }
