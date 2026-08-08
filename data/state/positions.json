@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1325,
-      "buy_price": 217,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T03:13:51.155767+00:00",
-      "note": "auto",
-      "entry_sell": 217,
-      "entry_offer": 229
-    },
-    {
       "id": 2,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 649,
-      "buy_price": 28,
+      "item_id": 1753,
+      "name": "Green dragonhide",
+      "qty": 241,
+      "buy_price": 1511,
       "direction": "traditional",
-      "opened_at": "2026-08-08T03:13:51.157059+00:00",
+      "opened_at": "2026-08-08T03:15:50.027923+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 1511,
+      "entry_offer": 1564
     },
     {
-      "id": 3,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 94,
-      "buy_price": 175,
+      "id": 4,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 565,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-08T03:13:51.157423+00:00",
+      "opened_at": "2026-08-08T03:25:51.689959+00:00",
       "note": "auto",
-      "entry_sell": 175,
-      "entry_offer": 182
+      "entry_sell": 29,
+      "entry_offer": 28
+    },
+    {
+      "id": 5,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 559,
+      "buy_price": 79,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T03:29:51.585429+00:00",
+      "note": "auto",
+      "entry_sell": 79,
+      "entry_offer": 82
     }
   ]
 }
