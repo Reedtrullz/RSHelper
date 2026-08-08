@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 192,
-      "buy_price": 345,
+      "item_id": 30068,
+      "name": "Soiled page",
+      "qty": 98,
+      "buy_price": 2696,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:13:47.459790+00:00",
+      "opened_at": "2026-08-08T02:41:49.954796+00:00",
       "note": "auto",
-      "entry_sell": 345,
-      "entry_offer": 360
+      "entry_sell": 2696,
+      "entry_offer": 2837
     },
     {
       "id": 2,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 1880,
-      "buy_price": 46,
+      "item_id": 70,
+      "name": "Magic longbow (u)",
+      "qty": 544,
+      "buy_price": 735,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:25:49.207297+00:00",
+      "opened_at": "2026-08-08T02:41:49.955306+00:00",
       "note": "auto",
-      "entry_sell": 46,
-      "entry_offer": 48
+      "entry_sell": 735,
+      "entry_offer": 763
     },
     {
       "id": 3,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 259,
-      "buy_price": 25,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 2195,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-08T02:25:49.207832+00:00",
+      "opened_at": "2026-08-08T02:41:49.955683+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 153,
+      "entry_offer": 159
     }
   ]
 }
