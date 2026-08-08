@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 422,
-      "buy_price": 79,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 326,
+      "buy_price": 165,
       "direction": "traditional",
-      "opened_at": "2026-08-08T23:08:26.635677+00:00",
+      "opened_at": "2026-08-08T23:24:27.462060+00:00",
       "note": "auto",
-      "entry_sell": 79,
-      "entry_offer": 82
-    },
-    {
-      "id": 2,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 740,
-      "buy_price": 147,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T23:08:26.636937+00:00",
-      "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 154
-    },
-    {
-      "id": 3,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 440,
-      "buy_price": 909,
-      "direction": "traditional",
-      "opened_at": "2026-08-08T23:08:26.637494+00:00",
-      "note": "auto",
-      "entry_sell": 909,
-      "entry_offer": 950
+      "entry_sell": 165,
+      "entry_offer": 172
     }
   ]
 }
