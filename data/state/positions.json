@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1519,
-      "buy_price": 29,
+      "id": 4,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 466,
+      "buy_price": 81,
       "direction": "traditional",
-      "opened_at": "2026-08-08T00:51:45.195793+00:00",
+      "opened_at": "2026-08-08T00:59:45.406940+00:00",
       "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
+      "entry_sell": 81,
+      "entry_offer": 78
     }
   ]
 }
