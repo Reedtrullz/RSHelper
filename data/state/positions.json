@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 496,
-      "buy_price": 175,
+      "id": 6,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 99,
+      "buy_price": 50,
       "direction": "traditional",
-      "opened_at": "2026-08-08T03:55:51.636704+00:00",
+      "opened_at": "2026-08-08T04:09:53.413216+00:00",
       "note": "auto",
-      "entry_sell": 175,
-      "entry_offer": 182
+      "entry_sell": 50,
+      "entry_offer": 52
     }
   ]
 }
