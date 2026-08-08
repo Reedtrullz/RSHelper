@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 3,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 990,
+      "buy_price": 404,
+      "direction": "traditional",
+      "opened_at": "2026-08-08T22:36:25.613410+00:00",
+      "note": "auto",
+      "entry_sell": 404,
+      "entry_offer": 423
+    }
+  ]
 }
