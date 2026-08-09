@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1159,
-      "buy_price": 345,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T07:06:44.639551+00:00",
-      "note": "auto",
-      "entry_sell": 345,
-      "entry_offer": 363
-    },
-    {
       "id": 4,
       "item_id": 823,
       "name": "Adamant dart tip",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 180,
       "entry_offer": 188
+    },
+    {
+      "id": 5,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 1050,
+      "buy_price": 40,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T08:10:47.293234+00:00",
+      "note": "auto",
+      "entry_sell": 40,
+      "entry_offer": 42
     }
   ]
 }
