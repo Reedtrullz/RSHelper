@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 1450,
-      "buy_price": 172,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 293,
+      "buy_price": 224,
       "direction": "traditional",
-      "opened_at": "2026-08-09T00:08:29.096555+00:00",
+      "opened_at": "2026-08-09T00:24:29.685420+00:00",
       "note": "auto",
-      "entry_sell": 172,
-      "entry_offer": 179
+      "entry_sell": 224,
+      "entry_offer": 233
     },
     {
       "id": 2,
-      "item_id": 1660,
-      "name": "Ruby necklace",
-      "qty": 356,
-      "buy_price": 1122,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 140,
+      "buy_price": 212,
       "direction": "traditional",
-      "opened_at": "2026-08-09T00:08:29.097260+00:00",
+      "opened_at": "2026-08-09T00:24:29.686310+00:00",
       "note": "auto",
-      "entry_sell": 1122,
-      "entry_offer": 1165
-    },
-    {
-      "id": 3,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 520,
-      "buy_price": 675,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T00:08:29.097590+00:00",
-      "note": "auto",
-      "entry_sell": 675,
-      "entry_offer": 699
+      "entry_sell": 212,
+      "entry_offer": 220
     }
   ]
 }
