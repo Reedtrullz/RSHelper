@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 518,
-      "buy_price": 156,
+      "item_id": 5940,
+      "name": "Weapon poison(++)",
+      "qty": 177,
+      "buy_price": 2255,
       "direction": "traditional",
-      "opened_at": "2026-08-09T03:08:34.782590+00:00",
+      "opened_at": "2026-08-09T03:20:35.316585+00:00",
       "note": "auto",
-      "entry_sell": 156,
-      "entry_offer": 162
+      "entry_sell": 2255,
+      "entry_offer": 2382
+    },
+    {
+      "id": 2,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 2167,
+      "buy_price": 128,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T03:24:35.570763+00:00",
+      "note": "auto",
+      "entry_sell": 128,
+      "entry_offer": 133
     }
   ]
 }
