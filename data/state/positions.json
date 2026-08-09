@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 2019,
       "entry_offer": 2099
+    },
+    {
+      "id": 2,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 286,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T12:50:56.720012+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
