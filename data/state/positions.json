@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2353,
-      "name": "Steel bar",
-      "qty": 684,
-      "buy_price": 584,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 247,
+      "buy_price": 223,
       "direction": "traditional",
-      "opened_at": "2026-08-09T15:04:59.255654+00:00",
+      "opened_at": "2026-08-09T15:20:59.468211+00:00",
       "note": "auto",
-      "entry_sell": 584,
-      "entry_offer": 605
-    },
-    {
-      "id": 2,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 202,
-      "buy_price": 1682,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T15:04:59.257022+00:00",
-      "note": "auto",
-      "entry_sell": 1682,
-      "entry_offer": 1746
+      "entry_sell": 223,
+      "entry_offer": 233
     }
   ]
 }
