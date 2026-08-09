@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 9,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 138,
-      "buy_price": 196,
+      "id": 2,
+      "item_id": 13431,
+      "name": "Sandworms",
+      "qty": 2151,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-09T09:54:51.853404+00:00",
+      "opened_at": "2026-08-09T10:26:52.795074+00:00",
       "note": "auto",
-      "entry_sell": 196,
-      "entry_offer": 204
+      "entry_sell": 105,
+      "entry_offer": 110
     },
     {
-      "id": 10,
-      "item_id": 1609,
-      "name": "Opal",
-      "qty": 149,
-      "buy_price": 110,
+      "id": 3,
+      "item_id": 31973,
+      "name": "Mahogany repair kit",
+      "qty": 100,
+      "buy_price": 1056,
       "direction": "traditional",
-      "opened_at": "2026-08-09T10:14:52.630357+00:00",
+      "opened_at": "2026-08-09T10:34:52.955256+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 114
+      "entry_sell": 1056,
+      "entry_offer": 1113
+    },
+    {
+      "id": 4,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 80,
+      "buy_price": 1682,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T10:34:52.956218+00:00",
+      "note": "auto",
+      "entry_sell": 1682,
+      "entry_offer": 1746
     }
   ]
 }
