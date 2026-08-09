@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 43,
-      "name": "Adamant arrowtips",
-      "qty": 2223,
-      "buy_price": 97,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 669,
+      "buy_price": 291,
       "direction": "traditional",
-      "opened_at": "2026-08-09T13:18:57.206637+00:00",
+      "opened_at": "2026-08-09T13:30:57.342775+00:00",
       "note": "auto",
-      "entry_sell": 97,
-      "entry_offer": 102
+      "entry_sell": 291,
+      "entry_offer": 306
+    },
+    {
+      "id": 3,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 149,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T13:34:57.463514+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
