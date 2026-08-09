@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 11212,
+      "name": "Dragon arrow",
+      "qty": 232,
+      "buy_price": 1722,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T06:20:42.549158+00:00",
+      "note": "auto",
+      "entry_sell": 1722,
+      "entry_offer": 1783
+    },
+    {
+      "id": 2,
+      "item_id": 2485,
+      "name": "Grimy lantadyme",
+      "qty": 99,
+      "buy_price": 1113,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T06:34:43.333069+00:00",
+      "note": "auto",
+      "entry_sell": 1113,
+      "entry_offer": 1155
+    },
+    {
+      "id": 3,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 108,
+      "buy_price": 223,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T06:34:43.334682+00:00",
+      "note": "auto",
+      "entry_sell": 223,
+      "entry_offer": 233
+    }
+  ]
 }
