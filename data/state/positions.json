@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 5940,
-      "name": "Weapon poison(++)",
-      "qty": 177,
-      "buy_price": 2255,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T03:20:35.316585+00:00",
-      "note": "auto",
-      "entry_sell": 2255,
-      "entry_offer": 2382
-    },
-    {
       "id": 2,
       "item_id": 41,
       "name": "Steel arrowtips",
@@ -26,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 2485,
-      "name": "Grimy lantadyme",
-      "qty": 176,
-      "buy_price": 1159,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 121,
+      "buy_price": 50,
       "direction": "traditional",
-      "opened_at": "2026-08-09T04:10:36.261274+00:00",
+      "opened_at": "2026-08-09T04:26:36.770512+00:00",
       "note": "auto",
-      "entry_sell": 1159,
-      "entry_offer": 1214
+      "entry_sell": 50,
+      "entry_offer": 52
     }
   ]
 }
