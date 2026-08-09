@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 1926,
-      "buy_price": 112,
+      "id": 1,
+      "item_id": 379,
+      "name": "Lobster",
+      "qty": 382,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-09T22:29:08.350779+00:00",
+      "opened_at": "2026-08-09T23:07:10.654645+00:00",
       "note": "auto",
-      "entry_sell": 112,
-      "entry_offer": 118
+      "entry_sell": 96,
+      "entry_offer": 100
+    },
+    {
+      "id": 2,
+      "item_id": 855,
+      "name": "Yew longbow",
+      "qty": 309,
+      "buy_price": 526,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T23:07:10.656265+00:00",
+      "note": "auto",
+      "entry_sell": 526,
+      "entry_offer": 547
     }
   ]
 }
