@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 286,
-      "buy_price": 28,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 399,
+      "buy_price": 467,
       "direction": "traditional",
-      "opened_at": "2026-08-09T12:50:56.720012+00:00",
+      "opened_at": "2026-08-09T13:04:55.852080+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 467,
+      "entry_offer": 486
+    },
+    {
+      "id": 3,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 317,
+      "buy_price": 1261,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T13:04:55.852348+00:00",
+      "note": "auto",
+      "entry_sell": 1261,
+      "entry_offer": 1309
     }
   ]
 }
