@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 110
-    },
-    {
-      "id": 3,
-      "item_id": 31973,
-      "name": "Mahogany repair kit",
-      "qty": 100,
-      "buy_price": 1056,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T10:34:52.955256+00:00",
-      "note": "auto",
-      "entry_sell": 1056,
-      "entry_offer": 1113
-    },
-    {
-      "id": 4,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 80,
-      "buy_price": 1682,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T10:34:52.956218+00:00",
-      "note": "auto",
-      "entry_sell": 1682,
-      "entry_offer": 1746
     }
   ]
 }
