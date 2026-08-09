@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 392,
+      "buy_price": 468,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T18:17:03.428761+00:00",
+      "note": "auto",
+      "entry_sell": 468,
+      "entry_offer": 486
+    }
+  ]
 }
