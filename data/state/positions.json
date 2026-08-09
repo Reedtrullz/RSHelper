@@ -14,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 463,
-      "buy_price": 28,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 4058,
+      "buy_price": 64,
       "direction": "traditional",
-      "opened_at": "2026-08-09T07:14:44.879320+00:00",
+      "opened_at": "2026-08-09T07:34:45.439919+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 64,
+      "entry_offer": 61
+    },
+    {
+      "id": 4,
+      "item_id": 8780,
+      "name": "Teak plank",
+      "qty": 99,
+      "buy_price": 722,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T07:38:45.865563+00:00",
+      "note": "auto",
+      "entry_sell": 722,
+      "entry_offer": 763
     }
   ]
 }
