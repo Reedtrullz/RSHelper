@@ -13,28 +13,28 @@
       "entry_offer": 1795
     },
     {
-      "id": 2,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 1220,
-      "buy_price": 148,
+      "id": 3,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 115,
+      "buy_price": 1068,
       "direction": "traditional",
-      "opened_at": "2026-08-09T17:37:02.806790+00:00",
+      "opened_at": "2026-08-09T17:49:02.756034+00:00",
       "note": "auto",
-      "entry_sell": 148,
-      "entry_offer": 155
+      "entry_sell": 1068,
+      "entry_offer": 1119
     },
     {
-      "id": 3,
-      "item_id": 823,
-      "name": "Adamant dart tip",
-      "qty": 2272,
-      "buy_price": 176,
+      "id": 4,
+      "item_id": 11230,
+      "name": "Dragon dart",
+      "qty": 363,
+      "buy_price": 1100,
       "direction": "traditional",
-      "opened_at": "2026-08-09T17:37:02.807936+00:00",
+      "opened_at": "2026-08-09T17:51:01.614474+00:00",
       "note": "auto",
-      "entry_sell": 176,
-      "entry_offer": 185
+      "entry_sell": 1100,
+      "entry_offer": 1141
     }
   ]
 }
