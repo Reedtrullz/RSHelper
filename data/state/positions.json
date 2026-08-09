@@ -13,28 +13,16 @@
       "entry_offer": 363
     },
     {
-      "id": 3,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 4058,
-      "buy_price": 64,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T07:34:45.439919+00:00",
-      "note": "auto",
-      "entry_sell": 64,
-      "entry_offer": 61
-    },
-    {
       "id": 4,
-      "item_id": 8780,
-      "name": "Teak plank",
-      "qty": 99,
-      "buy_price": 722,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 168,
+      "buy_price": 180,
       "direction": "traditional",
-      "opened_at": "2026-08-09T07:38:45.865563+00:00",
+      "opened_at": "2026-08-09T07:40:44.768942+00:00",
       "note": "auto",
-      "entry_sell": 722,
-      "entry_offer": 763
+      "entry_sell": 180,
+      "entry_offer": 188
     }
   ]
 }
