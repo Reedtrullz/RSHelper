@@ -13,28 +13,28 @@
       "entry_offer": 2382
     },
     {
-      "id": 3,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 753,
-      "buy_price": 531,
+      "id": 2,
+      "item_id": 41,
+      "name": "Steel arrowtips",
+      "qty": 121,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-09T03:48:36.528517+00:00",
+      "opened_at": "2026-08-09T04:04:37.096872+00:00",
       "note": "auto",
-      "entry_sell": 531,
-      "entry_offer": 555
+      "entry_sell": 29,
+      "entry_offer": 28
     },
     {
-      "id": 4,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1511,
-      "buy_price": 133,
+      "id": 3,
+      "item_id": 2485,
+      "name": "Grimy lantadyme",
+      "qty": 176,
+      "buy_price": 1159,
       "direction": "traditional",
-      "opened_at": "2026-08-09T03:54:35.392199+00:00",
+      "opened_at": "2026-08-09T04:10:36.261274+00:00",
       "note": "auto",
-      "entry_sell": 133,
-      "entry_offer": 138
+      "entry_sell": 1159,
+      "entry_offer": 1214
     }
   ]
 }
