@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2255,
       "entry_offer": 2382
+    },
+    {
+      "id": 3,
+      "item_id": 855,
+      "name": "Yew longbow",
+      "qty": 753,
+      "buy_price": 531,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T03:48:36.528517+00:00",
+      "note": "auto",
+      "entry_sell": 531,
+      "entry_offer": 555
+    },
+    {
+      "id": 4,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1511,
+      "buy_price": 133,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T03:54:35.392199+00:00",
+      "note": "auto",
+      "entry_sell": 133,
+      "entry_offer": 138
     }
   ]
 }
