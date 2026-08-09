@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 41,
-      "name": "Steel arrowtips",
-      "qty": 121,
-      "buy_price": 29,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T04:04:37.096872+00:00",
-      "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
-    },
-    {
       "id": 3,
       "item_id": 21555,
       "name": "Numulite",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 27,
       "entry_offer": 26
+    },
+    {
+      "id": 5,
+      "item_id": 28924,
+      "name": "Sunfire splinters",
+      "qty": 973,
+      "buy_price": 411,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T04:54:38.218162+00:00",
+      "note": "auto",
+      "entry_sell": 411,
+      "entry_offer": 430
     }
   ]
 }
