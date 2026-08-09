@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1658,
-      "name": "Emerald necklace",
-      "qty": 621,
-      "buy_price": 644,
+      "item_id": 863,
+      "name": "Iron knife",
+      "qty": 227,
+      "buy_price": 37,
       "direction": "traditional",
-      "opened_at": "2026-08-09T21:51:08.484465+00:00",
+      "opened_at": "2026-08-09T22:03:08.823289+00:00",
       "note": "auto",
-      "entry_sell": 644,
-      "entry_offer": 671
+      "entry_sell": 37,
+      "entry_offer": 39
+    },
+    {
+      "id": 2,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 256,
+      "buy_price": 1360,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T22:07:08.887386+00:00",
+      "note": "auto",
+      "entry_sell": 1360,
+      "entry_offer": 1422
     }
   ]
 }
