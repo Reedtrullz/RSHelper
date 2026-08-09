@@ -14,27 +14,15 @@
     },
     {
       "id": 9,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 172,
-      "buy_price": 213,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 138,
+      "buy_price": 196,
       "direction": "traditional",
-      "opened_at": "2026-08-09T09:30:50.805689+00:00",
+      "opened_at": "2026-08-09T09:54:51.853404+00:00",
       "note": "auto",
-      "entry_sell": 213,
-      "entry_offer": 222
-    },
-    {
-      "id": 10,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 240,
-      "buy_price": 411,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T09:46:51.445612+00:00",
-      "note": "auto",
-      "entry_sell": 411,
-      "entry_offer": 429
+      "entry_sell": 196,
+      "entry_offer": 204
     }
   ]
 }
