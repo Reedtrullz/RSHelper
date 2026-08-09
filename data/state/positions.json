@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1700,
+      "name": "Diamond amulet",
+      "qty": 198,
+      "buy_price": 2019,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T12:34:56.449690+00:00",
+      "note": "auto",
+      "entry_sell": 2019,
+      "entry_offer": 2099
+    }
+  ]
 }
