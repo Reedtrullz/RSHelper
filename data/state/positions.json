@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11212,
-      "name": "Dragon arrow",
-      "qty": 232,
-      "buy_price": 1722,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 526,
+      "buy_price": 290,
       "direction": "traditional",
-      "opened_at": "2026-08-09T06:20:42.549158+00:00",
+      "opened_at": "2026-08-09T07:06:44.639267+00:00",
       "note": "auto",
-      "entry_sell": 1722,
-      "entry_offer": 1783
+      "entry_sell": 290,
+      "entry_offer": 306
     },
     {
       "id": 2,
-      "item_id": 395,
-      "name": "Raw sea turtle",
-      "qty": 176,
-      "buy_price": 661,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1159,
+      "buy_price": 345,
       "direction": "traditional",
-      "opened_at": "2026-08-09T06:42:43.995740+00:00",
+      "opened_at": "2026-08-09T07:06:44.639551+00:00",
       "note": "auto",
-      "entry_sell": 661,
-      "entry_offer": 698
+      "entry_sell": 345,
+      "entry_offer": 363
+    },
+    {
+      "id": 3,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1053,
+      "buy_price": 142,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T07:06:44.639803+00:00",
+      "note": "auto",
+      "entry_sell": 142,
+      "entry_offer": 148
     }
   ]
 }
