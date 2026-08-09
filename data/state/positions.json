@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 379,
-      "name": "Lobster",
-      "qty": 382,
-      "buy_price": 96,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T23:07:10.654645+00:00",
-      "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
-    },
-    {
       "id": 2,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 309,
-      "buy_price": 526,
+      "item_id": 30773,
+      "name": "Diabolic worms",
+      "qty": 137,
+      "buy_price": 2902,
       "direction": "traditional",
-      "opened_at": "2026-08-09T23:07:10.656265+00:00",
+      "opened_at": "2026-08-09T23:15:10.887841+00:00",
       "note": "auto",
-      "entry_sell": 526,
-      "entry_offer": 547
+      "entry_sell": 2902,
+      "entry_offer": 3024
     }
   ]
 }
