@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 293,
-      "buy_price": 224,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 706,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-09T00:24:29.685420+00:00",
+      "opened_at": "2026-08-09T00:36:30.415011+00:00",
       "note": "auto",
-      "entry_sell": 224,
-      "entry_offer": 233
-    },
-    {
-      "id": 2,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 140,
-      "buy_price": 212,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T00:24:29.686310+00:00",
-      "note": "auto",
-      "entry_sell": 212,
-      "entry_offer": 220
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
