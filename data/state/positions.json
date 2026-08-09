@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 22780,
+      "name": "Wyrm bones",
+      "qty": 230,
+      "buy_price": 1732,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T16:41:01.271158+00:00",
+      "note": "auto",
+      "entry_sell": 1732,
+      "entry_offer": 1795
+    }
+  ]
 }
