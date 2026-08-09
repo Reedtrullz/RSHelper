@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 339,
-      "buy_price": 211,
+      "id": 2,
+      "item_id": 2866,
+      "name": "Ogre arrow",
+      "qty": 127,
+      "buy_price": 166,
       "direction": "traditional",
-      "opened_at": "2026-08-09T14:34:58.663676+00:00",
+      "opened_at": "2026-08-09T14:48:58.829109+00:00",
       "note": "auto",
-      "entry_sell": 211,
-      "entry_offer": 222
+      "entry_sell": 166,
+      "entry_offer": 172
     },
     {
-      "id": 2,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 590,
-      "buy_price": 158,
+      "id": 3,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 208,
+      "buy_price": 295,
       "direction": "traditional",
-      "opened_at": "2026-08-09T14:34:58.664012+00:00",
+      "opened_at": "2026-08-09T14:50:57.892935+00:00",
       "note": "auto",
-      "entry_sell": 158,
-      "entry_offer": 164
+      "entry_sell": 295,
+      "entry_offer": 306
     }
   ]
 }
