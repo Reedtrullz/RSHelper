@@ -14,27 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 211,
-      "buy_price": 42,
+      "item_id": 22783,
+      "name": "Drake bones",
+      "qty": 102,
+      "buy_price": 3900,
       "direction": "traditional",
-      "opened_at": "2026-08-09T20:59:07.307756+00:00",
+      "opened_at": "2026-08-09T21:19:07.893626+00:00",
       "note": "auto",
-      "entry_sell": 42,
-      "entry_offer": 44
+      "entry_sell": 3900,
+      "entry_offer": 4088
     },
     {
       "id": 5,
-      "item_id": 25769,
-      "name": "Vile ashes",
-      "qty": 290,
-      "buy_price": 105,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2084,
+      "buy_price": 133,
       "direction": "traditional",
-      "opened_at": "2026-08-09T21:03:07.525860+00:00",
+      "opened_at": "2026-08-09T21:19:07.894398+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 109
+      "entry_sell": 133,
+      "entry_offer": 138
     }
   ]
 }
