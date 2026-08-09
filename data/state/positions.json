@@ -14,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 1050,
-      "buy_price": 40,
+      "item_id": 3008,
+      "name": "Energy potion(4)",
+      "qty": 825,
+      "buy_price": 164,
       "direction": "traditional",
-      "opened_at": "2026-08-09T08:10:47.293234+00:00",
+      "opened_at": "2026-08-09T08:18:47.665704+00:00",
       "note": "auto",
-      "entry_sell": 40,
-      "entry_offer": 42
+      "entry_sell": 164,
+      "entry_offer": 171
+    },
+    {
+      "id": 6,
+      "item_id": 365,
+      "name": "Bass",
+      "qty": 188,
+      "buy_price": 48,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T08:18:47.667484+00:00",
+      "note": "auto",
+      "entry_sell": 48,
+      "entry_offer": 50
     }
   ]
 }
