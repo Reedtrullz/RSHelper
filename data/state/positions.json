@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 2866,
-      "name": "Ogre arrow",
-      "qty": 127,
-      "buy_price": 166,
+      "id": 1,
+      "item_id": 2353,
+      "name": "Steel bar",
+      "qty": 684,
+      "buy_price": 584,
       "direction": "traditional",
-      "opened_at": "2026-08-09T14:48:58.829109+00:00",
+      "opened_at": "2026-08-09T15:04:59.255654+00:00",
       "note": "auto",
-      "entry_sell": 166,
-      "entry_offer": 172
+      "entry_sell": 584,
+      "entry_offer": 605
     },
     {
-      "id": 3,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 208,
-      "buy_price": 295,
+      "id": 2,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 202,
+      "buy_price": 1682,
       "direction": "traditional",
-      "opened_at": "2026-08-09T14:50:57.892935+00:00",
+      "opened_at": "2026-08-09T15:04:59.257022+00:00",
       "note": "auto",
-      "entry_sell": 295,
-      "entry_offer": 306
+      "entry_sell": 1682,
+      "entry_offer": 1746
     }
   ]
 }
