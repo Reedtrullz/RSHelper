@@ -14,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 121,
-      "buy_price": 50,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 2082,
+      "buy_price": 38,
       "direction": "traditional",
-      "opened_at": "2026-08-09T04:26:36.770512+00:00",
+      "opened_at": "2026-08-09T04:32:38.294876+00:00",
       "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
+      "entry_sell": 38,
+      "entry_offer": 40
+    },
+    {
+      "id": 4,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 274,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T04:32:38.296438+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 26
     }
   ]
 }
