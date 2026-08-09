@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 526,
-      "buy_price": 290,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T07:06:44.639267+00:00",
-      "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 306
-    },
-    {
       "id": 2,
       "item_id": 30771,
       "name": "Aether catalyst",
@@ -26,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 1053,
-      "buy_price": 142,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 463,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-09T07:06:44.639803+00:00",
+      "opened_at": "2026-08-09T07:14:44.879320+00:00",
       "note": "auto",
-      "entry_sell": 142,
-      "entry_offer": 148
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
