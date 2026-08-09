@@ -14,27 +14,27 @@
     },
     {
       "id": 7,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 1394,
-      "buy_price": 202,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 2451,
+      "buy_price": 59,
       "direction": "traditional",
-      "opened_at": "2026-08-09T08:38:48.516912+00:00",
+      "opened_at": "2026-08-09T08:58:49.379513+00:00",
       "note": "auto",
-      "entry_sell": 202,
-      "entry_offer": 211
+      "entry_sell": 59,
+      "entry_offer": 62
     },
     {
       "id": 8,
-      "item_id": 395,
-      "name": "Raw sea turtle",
-      "qty": 147,
-      "buy_price": 666,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 354,
+      "buy_price": 113,
       "direction": "traditional",
-      "opened_at": "2026-08-09T08:42:48.625811+00:00",
+      "opened_at": "2026-08-09T08:58:49.379832+00:00",
       "note": "auto",
-      "entry_sell": 666,
-      "entry_offer": 697
+      "entry_sell": 113,
+      "entry_offer": 119
     }
   ]
 }
