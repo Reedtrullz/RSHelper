@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 37,
       "entry_offer": 39
+    },
+    {
+      "id": 2,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 181,
+      "buy_price": 1902,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T22:27:09.456309+00:00",
+      "note": "auto",
+      "entry_sell": 1902,
+      "entry_offer": 1991
+    },
+    {
+      "id": 3,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 1926,
+      "buy_price": 112,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T22:29:08.350779+00:00",
+      "note": "auto",
+      "entry_sell": 112,
+      "entry_offer": 118
     }
   ]
 }
