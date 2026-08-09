@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 3,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 160,
-      "buy_price": 1850,
+      "item_id": 10033,
+      "name": "Chinchompa",
+      "qty": 199,
+      "buy_price": 917,
       "direction": "traditional",
-      "opened_at": "2026-08-09T20:31:06.573391+00:00",
+      "opened_at": "2026-08-09T20:47:07.150872+00:00",
       "note": "auto",
-      "entry_sell": 1850,
-      "entry_offer": 1939
+      "entry_sell": 917,
+      "entry_offer": 950
     },
     {
       "id": 4,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 178,
-      "buy_price": 44,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 456,
+      "buy_price": 700,
       "direction": "traditional",
-      "opened_at": "2026-08-09T20:35:06.753685+00:00",
+      "opened_at": "2026-08-09T20:51:07.159694+00:00",
       "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 46
+      "entry_sell": 700,
+      "entry_offer": 732
     }
   ]
 }
