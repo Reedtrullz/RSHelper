@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 145,
+      "buy_price": 641,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T06:00:41.756678+00:00",
+      "note": "auto",
+      "entry_sell": 641,
+      "entry_offer": 666
+    }
+  ]
 }
