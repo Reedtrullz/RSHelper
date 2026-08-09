@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 7218,
+      "name": "Summer pie",
+      "qty": 573,
+      "buy_price": 697,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T15:49:00.043457+00:00",
+      "note": "auto",
+      "entry_sell": 697,
+      "entry_offer": 728
+    }
+  ]
 }
