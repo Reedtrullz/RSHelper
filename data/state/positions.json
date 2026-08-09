@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 530,
       "entry_offer": 556
+    },
+    {
+      "id": 9,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 172,
+      "buy_price": 213,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T09:30:50.805689+00:00",
+      "note": "auto",
+      "entry_sell": 213,
+      "entry_offer": 222
+    },
+    {
+      "id": 10,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 144,
+      "buy_price": 225,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T09:30:50.807113+00:00",
+      "note": "auto",
+      "entry_sell": 225,
+      "entry_offer": 233
     }
   ]
 }
