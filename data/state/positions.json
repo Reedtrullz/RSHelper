@@ -14,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 456,
-      "buy_price": 700,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 211,
+      "buy_price": 42,
       "direction": "traditional",
-      "opened_at": "2026-08-09T20:51:07.159694+00:00",
+      "opened_at": "2026-08-09T20:59:07.307756+00:00",
       "note": "auto",
-      "entry_sell": 700,
-      "entry_offer": 732
+      "entry_sell": 42,
+      "entry_offer": 44
+    },
+    {
+      "id": 5,
+      "item_id": 25769,
+      "name": "Vile ashes",
+      "qty": 290,
+      "buy_price": 105,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T21:03:07.525860+00:00",
+      "note": "auto",
+      "entry_sell": 105,
+      "entry_offer": 109
     }
   ]
 }
