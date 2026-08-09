@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 365,
-      "name": "Bass",
-      "qty": 188,
-      "buy_price": 48,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T08:18:47.667484+00:00",
-      "note": "auto",
-      "entry_sell": 48,
-      "entry_offer": 50
-    },
-    {
-      "id": 7,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 2451,
-      "buy_price": 59,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T08:58:49.379513+00:00",
-      "note": "auto",
-      "entry_sell": 59,
-      "entry_offer": 62
-    },
-    {
       "id": 8,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 354,
-      "buy_price": 113,
+      "item_id": 9341,
+      "name": "Dragonstone bolts",
+      "qty": 754,
+      "buy_price": 530,
       "direction": "traditional",
-      "opened_at": "2026-08-09T08:58:49.379832+00:00",
+      "opened_at": "2026-08-09T09:06:49.473742+00:00",
       "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 119
+      "entry_sell": 530,
+      "entry_offer": 556
     }
   ]
 }
