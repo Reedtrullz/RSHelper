@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 477,
       "entry_offer": 499
+    },
+    {
+      "id": 2,
+      "item_id": 2444,
+      "name": "Ranging potion(4)",
+      "qty": 220,
+      "buy_price": 1813,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T11:38:55.026095+00:00",
+      "note": "auto",
+      "entry_sell": 1813,
+      "entry_offer": 1897
+    },
+    {
+      "id": 3,
+      "item_id": 43,
+      "name": "Adamant arrowtips",
+      "qty": 904,
+      "buy_price": 98,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T11:46:55.333687+00:00",
+      "note": "auto",
+      "entry_sell": 98,
+      "entry_offer": 102
     }
   ]
 }
