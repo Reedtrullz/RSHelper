@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 357,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T18:25:03.551545+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
       "id": 2,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 229,
-      "buy_price": 1583,
+      "item_id": 9381,
+      "name": "Runite bolts (unf)",
+      "qty": 495,
+      "buy_price": 127,
       "direction": "traditional",
-      "opened_at": "2026-08-09T18:37:03.842143+00:00",
+      "opened_at": "2026-08-09T18:41:03.683136+00:00",
       "note": "auto",
-      "entry_sell": 1583,
-      "entry_offer": 1659
+      "entry_sell": 127,
+      "entry_offer": 133
     },
     {
       "id": 3,
-      "item_id": 371,
-      "name": "Raw swordfish",
-      "qty": 955,
-      "buy_price": 196,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 3960,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-09T18:37:03.842595+00:00",
+      "opened_at": "2026-08-09T18:41:03.683959+00:00",
       "note": "auto",
-      "entry_sell": 196,
-      "entry_offer": 203
+      "entry_sell": 101,
+      "entry_offer": 105
+    },
+    {
+      "id": 4,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 179,
+      "buy_price": 180,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T18:49:03.912319+00:00",
+      "note": "auto",
+      "entry_sell": 180,
+      "entry_offer": 189
     }
   ]
 }
