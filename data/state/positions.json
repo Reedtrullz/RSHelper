@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 9235,
-      "buy_price": 37,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T19:01:05.216645+00:00",
-      "note": "auto",
-      "entry_sell": 37,
-      "entry_offer": 39
-    },
-    {
       "id": 4,
       "item_id": 30800,
       "name": "Demonic tallow",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 180,
       "entry_offer": 188
+    },
+    {
+      "id": 6,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 184,
+      "buy_price": 139,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T19:09:04.535175+00:00",
+      "note": "auto",
+      "entry_sell": 139,
+      "entry_offer": 145
     }
   ]
 }
