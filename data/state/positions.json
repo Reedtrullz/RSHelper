@@ -13,28 +13,28 @@
       "entry_offer": 161
     },
     {
-      "id": 2,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 582,
-      "buy_price": 371,
+      "id": 3,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1834,
+      "buy_price": 218,
       "direction": "traditional",
-      "opened_at": "2026-08-09T01:24:32.047800+00:00",
+      "opened_at": "2026-08-09T01:36:32.580040+00:00",
       "note": "auto",
-      "entry_sell": 371,
-      "entry_offer": 386
+      "entry_sell": 218,
+      "entry_offer": 230
     },
     {
-      "id": 3,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 2777,
-      "buy_price": 144,
+      "id": 4,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 250,
+      "buy_price": 1355,
       "direction": "traditional",
-      "opened_at": "2026-08-09T01:24:32.049257+00:00",
+      "opened_at": "2026-08-09T01:40:32.611359+00:00",
       "note": "auto",
-      "entry_sell": 144,
-      "entry_offer": 150
+      "entry_sell": 1355,
+      "entry_offer": 1425
     }
   ]
 }
