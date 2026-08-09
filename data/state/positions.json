@@ -13,28 +13,28 @@
       "entry_offer": 1795
     },
     {
-      "id": 3,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 223,
-      "buy_price": 285,
+      "id": 2,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1220,
+      "buy_price": 148,
       "direction": "traditional",
-      "opened_at": "2026-08-09T17:17:02.184818+00:00",
+      "opened_at": "2026-08-09T17:37:02.806790+00:00",
       "note": "auto",
-      "entry_sell": 285,
-      "entry_offer": 299
+      "entry_sell": 148,
+      "entry_offer": 155
     },
     {
-      "id": 4,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 646,
-      "buy_price": 27,
+      "id": 3,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 2272,
+      "buy_price": 176,
       "direction": "traditional",
-      "opened_at": "2026-08-09T17:19:00.944523+00:00",
+      "opened_at": "2026-08-09T17:37:02.807936+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 176,
+      "entry_offer": 185
     }
   ]
 }
