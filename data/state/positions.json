@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 392,
-      "buy_price": 468,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 357,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-09T18:17:03.428761+00:00",
+      "opened_at": "2026-08-09T18:25:03.551545+00:00",
       "note": "auto",
-      "entry_sell": 468,
-      "entry_offer": 486
+      "entry_sell": 27,
+      "entry_offer": 28
+    },
+    {
+      "id": 2,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 229,
+      "buy_price": 1583,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T18:37:03.842143+00:00",
+      "note": "auto",
+      "entry_sell": 1583,
+      "entry_offer": 1659
+    },
+    {
+      "id": 3,
+      "item_id": 371,
+      "name": "Raw swordfish",
+      "qty": 955,
+      "buy_price": 196,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T18:37:03.842595+00:00",
+      "note": "auto",
+      "entry_sell": 196,
+      "entry_offer": 203
     }
   ]
 }
