@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 836,
+      "buy_price": 153,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T01:12:31.507121+00:00",
+      "note": "auto",
+      "entry_sell": 153,
+      "entry_offer": 161
+    },
+    {
+      "id": 2,
+      "item_id": 9193,
+      "name": "Dragonstone bolt tips",
+      "qty": 582,
+      "buy_price": 371,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T01:24:32.047800+00:00",
+      "note": "auto",
+      "entry_sell": 371,
+      "entry_offer": 386
+    },
+    {
+      "id": 3,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2777,
+      "buy_price": 144,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T01:24:32.049257+00:00",
+      "note": "auto",
+      "entry_sell": 144,
+      "entry_offer": 150
+    }
+  ]
 }
