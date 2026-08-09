@@ -26,15 +26,15 @@
     },
     {
       "id": 7,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 1796,
-      "buy_price": 92,
+      "item_id": 1660,
+      "name": "Ruby necklace",
+      "qty": 369,
+      "buy_price": 1083,
       "direction": "traditional",
-      "opened_at": "2026-08-09T19:37:05.042245+00:00",
+      "opened_at": "2026-08-09T19:51:04.199871+00:00",
       "note": "auto",
-      "entry_sell": 92,
-      "entry_offer": 97
+      "entry_sell": 1083,
+      "entry_offer": 1126
     }
   ]
 }
