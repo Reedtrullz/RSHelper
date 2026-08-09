@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1732,
       "entry_offer": 1795
+    },
+    {
+      "id": 3,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 223,
+      "buy_price": 285,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T17:17:02.184818+00:00",
+      "note": "auto",
+      "entry_sell": 285,
+      "entry_offer": 299
+    },
+    {
+      "id": 4,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 646,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-09T17:19:00.944523+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
