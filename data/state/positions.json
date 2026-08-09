@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 13431,
-      "name": "Sandworms",
-      "qty": 2151,
-      "buy_price": 105,
-      "direction": "traditional",
-      "opened_at": "2026-08-09T10:26:52.795074+00:00",
-      "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
-    }
-  ]
+  "positions": []
 }
