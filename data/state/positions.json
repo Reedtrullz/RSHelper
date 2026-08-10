@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 5972,
-      "name": "Papaya fruit",
-      "qty": 169,
-      "buy_price": 1451,
+      "id": 4,
+      "item_id": 145,
+      "name": "Super attack(3)",
+      "qty": 160,
+      "buy_price": 1450,
       "direction": "traditional",
-      "opened_at": "2026-08-10T18:43:47.480713+00:00",
+      "opened_at": "2026-08-10T18:55:47.787863+00:00",
       "note": "auto",
-      "entry_sell": 1451,
-      "entry_offer": 1527
+      "entry_sell": 1450,
+      "entry_offer": 1509
     },
     {
-      "id": 2,
-      "item_id": 2301,
-      "name": "Pineapple pizza",
-      "qty": 523,
-      "buy_price": 705,
+      "id": 5,
+      "item_id": 960,
+      "name": "Plank",
+      "qty": 178,
+      "buy_price": 122,
       "direction": "traditional",
-      "opened_at": "2026-08-10T18:43:47.481667+00:00",
+      "opened_at": "2026-08-10T18:59:48.111448+00:00",
       "note": "auto",
-      "entry_sell": 705,
-      "entry_offer": 735
-    },
-    {
-      "id": 3,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 428,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T18:43:47.482034+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 122,
+      "entry_offer": 127
     }
   ]
 }
