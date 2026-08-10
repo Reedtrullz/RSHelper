@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 912,
       "entry_offer": 961
+    },
+    {
+      "id": 4,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 2253,
+      "buy_price": 166,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T17:51:44.404485+00:00",
+      "note": "auto",
+      "entry_sell": 166,
+      "entry_offer": 175
     }
   ]
 }
