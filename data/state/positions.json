@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 1328,
-      "buy_price": 68,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 270,
+      "buy_price": 126,
       "direction": "traditional",
-      "opened_at": "2026-08-10T00:37:13.077783+00:00",
+      "opened_at": "2026-08-10T00:53:13.540497+00:00",
       "note": "auto",
-      "entry_sell": 68,
-      "entry_offer": 71
+      "entry_sell": 126,
+      "entry_offer": 131
     }
   ]
 }
