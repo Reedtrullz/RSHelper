@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 2574,
-      "buy_price": 42,
+      "id": 1,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1328,
+      "buy_price": 68,
       "direction": "traditional",
-      "opened_at": "2026-08-10T00:21:12.318933+00:00",
+      "opened_at": "2026-08-10T00:37:13.077783+00:00",
       "note": "auto",
-      "entry_sell": 42,
-      "entry_offer": 44
-    },
-    {
-      "id": 3,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 316,
-      "buy_price": 1264,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T00:21:12.319283+00:00",
-      "note": "auto",
-      "entry_sell": 1264,
-      "entry_offer": 1313
+      "entry_sell": 68,
+      "entry_offer": 71
     }
   ]
 }
