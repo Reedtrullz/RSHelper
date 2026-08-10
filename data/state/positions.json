@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 4307,
-      "buy_price": 26,
+      "id": 1,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 1454,
+      "buy_price": 275,
       "direction": "traditional",
-      "opened_at": "2026-08-10T01:33:14.717601+00:00",
+      "opened_at": "2026-08-10T01:53:15.171116+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 25
+      "entry_sell": 275,
+      "entry_offer": 288
     },
     {
-      "id": 3,
-      "item_id": 12695,
-      "name": "Super combat potion(4)",
-      "qty": 34,
-      "buy_price": 11461,
+      "id": 2,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 757,
+      "buy_price": 126,
       "direction": "traditional",
-      "opened_at": "2026-08-10T01:33:14.718105+00:00",
+      "opened_at": "2026-08-10T01:53:15.171922+00:00",
       "note": "auto",
-      "entry_sell": 11461,
-      "entry_offer": 11949
+      "entry_sell": 126,
+      "entry_offer": 131
     }
   ]
 }
