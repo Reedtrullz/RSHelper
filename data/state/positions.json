@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 505,
+      "buy_price": 29,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T09:13:31.480556+00:00",
+      "note": "auto",
+      "entry_sell": 29,
+      "entry_offer": 28
+    },
+    {
+      "id": 2,
+      "item_id": 32307,
+      "name": "Fine fish offcuts",
+      "qty": 401,
+      "buy_price": 411,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T09:17:31.917533+00:00",
+      "note": "auto",
+      "entry_sell": 411,
+      "entry_offer": 431
+    },
+    {
+      "id": 3,
+      "item_id": 2483,
+      "name": "Lantadyme potion (unf)",
+      "qty": 118,
+      "buy_price": 1450,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T09:23:30.819992+00:00",
+      "note": "auto",
+      "entry_sell": 1450,
+      "entry_offer": 1501
+    }
+  ]
 }
