@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 3730,
-      "buy_price": 58,
+      "item_id": 31484,
+      "name": "Pillar coral",
+      "qty": 89,
+      "buy_price": 2033,
       "direction": "traditional",
-      "opened_at": "2026-08-10T13:57:39.663496+00:00",
+      "opened_at": "2026-08-10T14:13:43.062437+00:00",
       "note": "auto",
-      "entry_sell": 58,
-      "entry_offer": 61
+      "entry_sell": 2033,
+      "entry_offer": 2134
     }
   ]
 }
