@@ -14,27 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 157,
-      "name": "Super strength(3)",
-      "qty": 198,
-      "buy_price": 2018,
+      "item_id": 442,
+      "name": "Silver ore",
+      "qty": 488,
+      "buy_price": 60,
       "direction": "traditional",
-      "opened_at": "2026-08-10T12:13:37.106394+00:00",
+      "opened_at": "2026-08-10T12:21:37.153034+00:00",
       "note": "auto",
-      "entry_sell": 2018,
-      "entry_offer": 2100
-    },
-    {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2873,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T12:13:37.107052+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 60,
+      "entry_offer": 63
     }
   ]
 }
