@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 1710,
-      "buy_price": 216,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 262,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-10T22:47:53.820500+00:00",
+      "opened_at": "2026-08-10T23:03:54.070778+00:00",
       "note": "auto",
-      "entry_sell": 216,
-      "entry_offer": 226
+      "entry_sell": 83,
+      "entry_offer": 86
     }
   ]
 }
