@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 301,
-      "buy_price": 1325,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 568,
+      "buy_price": 226,
       "direction": "traditional",
-      "opened_at": "2026-08-10T15:01:41.559746+00:00",
+      "opened_at": "2026-08-10T15:29:42.215617+00:00",
       "note": "auto",
-      "entry_sell": 1325,
-      "entry_offer": 1375
+      "entry_sell": 226,
+      "entry_offer": 235
     }
   ]
 }
