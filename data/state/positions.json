@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 1450,
       "entry_offer": 1501
-    },
-    {
-      "id": 4,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 389,
-      "buy_price": 230,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T10:09:33.936589+00:00",
-      "note": "auto",
-      "entry_sell": 230,
-      "entry_offer": 240
     }
   ]
 }
