@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 84,
       "entry_offer": 87
+    },
+    {
+      "id": 3,
+      "item_id": 1658,
+      "name": "Emerald necklace",
+      "qty": 350,
+      "buy_price": 625,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T14:57:41.360182+00:00",
+      "note": "auto",
+      "entry_sell": 625,
+      "entry_offer": 660
     }
   ]
 }
