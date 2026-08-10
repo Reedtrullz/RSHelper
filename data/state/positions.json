@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 505,
-      "buy_price": 29,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T09:13:31.480556+00:00",
-      "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
-    },
-    {
       "id": 2,
       "item_id": 32307,
       "name": "Fine fish offcuts",
