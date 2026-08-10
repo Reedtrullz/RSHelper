@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1450,
       "entry_offer": 1509
+    },
+    {
+      "id": 5,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1731,
+      "buy_price": 231,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T19:19:48.573211+00:00",
+      "note": "auto",
+      "entry_sell": 231,
+      "entry_offer": 242
+    },
+    {
+      "id": 6,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 5043,
+      "buy_price": 73,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T19:27:49.115109+00:00",
+      "note": "auto",
+      "entry_sell": 73,
+      "entry_offer": 70
     }
   ]
 }
