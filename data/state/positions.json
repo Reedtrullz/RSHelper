@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 160,
-      "buy_price": 2500,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T02:53:16.366673+00:00",
-      "note": "auto",
-      "entry_sell": 2500,
-      "entry_offer": 2589
-    },
-    {
-      "id": 2,
-      "item_id": 11212,
-      "name": "Dragon arrow",
-      "qty": 231,
-      "buy_price": 1727,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T02:53:16.367169+00:00",
-      "note": "auto",
-      "entry_sell": 1727,
-      "entry_offer": 1790
-    }
-  ]
+  "positions": []
 }
