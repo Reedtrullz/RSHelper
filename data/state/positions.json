@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 145,
-      "name": "Super attack(3)",
-      "qty": 160,
-      "buy_price": 1450,
+      "id": 7,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 130,
+      "buy_price": 42,
       "direction": "traditional",
-      "opened_at": "2026-08-10T18:55:47.787863+00:00",
+      "opened_at": "2026-08-10T19:39:49.600517+00:00",
       "note": "auto",
-      "entry_sell": 1450,
-      "entry_offer": 1509
-    },
-    {
-      "id": 5,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1731,
-      "buy_price": 231,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T19:19:48.573211+00:00",
-      "note": "auto",
-      "entry_sell": 231,
-      "entry_offer": 242
-    },
-    {
-      "id": 6,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 5043,
-      "buy_price": 73,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T19:27:49.115109+00:00",
-      "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 70
+      "entry_sell": 42,
+      "entry_offer": 44
     }
   ]
 }
