@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 1371,
-      "buy_price": 159,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1513,
+      "buy_price": 228,
       "direction": "traditional",
-      "opened_at": "2026-08-10T22:13:52.134187+00:00",
+      "opened_at": "2026-08-10T22:19:53.355371+00:00",
       "note": "auto",
-      "entry_sell": 159,
-      "entry_offer": 167
+      "entry_sell": 228,
+      "entry_offer": 240
     }
   ]
 }
