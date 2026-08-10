@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 11994,
-      "name": "Lava scale shard",
-      "qty": 1908,
-      "buy_price": 80,
+      "id": 1,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 3730,
+      "buy_price": 58,
       "direction": "traditional",
-      "opened_at": "2026-08-10T13:13:38.617750+00:00",
+      "opened_at": "2026-08-10T13:57:39.663496+00:00",
       "note": "auto",
-      "entry_sell": 80,
-      "entry_offer": 83
-    },
-    {
-      "id": 3,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 365,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T13:25:38.939948+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 58,
+      "entry_offer": 61
     }
   ]
 }
