@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 157,
-      "buy_price": 1364,
+      "item_id": 23685,
+      "name": "Divine super combat potion(4)",
+      "qty": 22,
+      "buy_price": 18069,
       "direction": "traditional",
-      "opened_at": "2026-08-10T02:21:15.746391+00:00",
+      "opened_at": "2026-08-10T02:37:16.184696+00:00",
       "note": "auto",
-      "entry_sell": 1364,
-      "entry_offer": 1422
+      "entry_sell": 18069,
+      "entry_offer": 18953
+    },
+    {
+      "id": 2,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1201,
+      "buy_price": 333,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T02:37:16.186800+00:00",
+      "note": "auto",
+      "entry_sell": 333,
+      "entry_offer": 346
+    },
+    {
+      "id": 3,
+      "item_id": 1975,
+      "name": "Chocolate dust",
+      "qty": 162,
+      "buy_price": 53,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T02:37:16.187823+00:00",
+      "note": "auto",
+      "entry_sell": 53,
+      "entry_offer": 55
     }
   ]
 }
