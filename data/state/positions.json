@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 157,
-      "buy_price": 218,
+      "id": 3,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 379,
+      "buy_price": 347,
       "direction": "traditional",
-      "opened_at": "2026-08-10T12:05:36.847997+00:00",
+      "opened_at": "2026-08-10T12:37:37.562677+00:00",
       "note": "auto",
-      "entry_sell": 218,
-      "entry_offer": 228
+      "entry_sell": 347,
+      "entry_offer": 365
     },
     {
-      "id": 2,
-      "item_id": 442,
-      "name": "Silver ore",
-      "qty": 488,
-      "buy_price": 60,
+      "id": 5,
+      "item_id": 5321,
+      "name": "Watermelon seed",
+      "qty": 88,
+      "buy_price": 269,
       "direction": "traditional",
-      "opened_at": "2026-08-10T12:21:37.153034+00:00",
+      "opened_at": "2026-08-10T12:41:37.690458+00:00",
       "note": "auto",
-      "entry_sell": 60,
-      "entry_offer": 63
+      "entry_sell": 269,
+      "entry_offer": 279
     }
   ]
 }
