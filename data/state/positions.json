@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 23685,
-      "name": "Divine super combat potion(4)",
-      "qty": 22,
-      "buy_price": 18069,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 160,
+      "buy_price": 2500,
       "direction": "traditional",
-      "opened_at": "2026-08-10T02:37:16.184696+00:00",
+      "opened_at": "2026-08-10T02:53:16.366673+00:00",
       "note": "auto",
-      "entry_sell": 18069,
-      "entry_offer": 18953
+      "entry_sell": 2500,
+      "entry_offer": 2589
     },
     {
       "id": 2,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1201,
-      "buy_price": 333,
+      "item_id": 11212,
+      "name": "Dragon arrow",
+      "qty": 231,
+      "buy_price": 1727,
       "direction": "traditional",
-      "opened_at": "2026-08-10T02:37:16.186800+00:00",
+      "opened_at": "2026-08-10T02:53:16.367169+00:00",
       "note": "auto",
-      "entry_sell": 333,
-      "entry_offer": 346
-    },
-    {
-      "id": 3,
-      "item_id": 1975,
-      "name": "Chocolate dust",
-      "qty": 162,
-      "buy_price": 53,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T02:37:16.187823+00:00",
-      "note": "auto",
-      "entry_sell": 53,
-      "entry_offer": 55
+      "entry_sell": 1727,
+      "entry_offer": 1790
     }
   ]
 }
