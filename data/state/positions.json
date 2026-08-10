@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 2033,
       "entry_offer": 2134
+    },
+    {
+      "id": 2,
+      "item_id": 821,
+      "name": "Steel dart tip",
+      "qty": 800,
+      "buy_price": 84,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T14:37:41.042150+00:00",
+      "note": "auto",
+      "entry_sell": 84,
+      "entry_offer": 87
     }
   ]
 }
