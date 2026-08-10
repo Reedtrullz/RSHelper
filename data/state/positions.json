@@ -1,40 +1,28 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 153,
+      "buy_price": 224,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T22:11:53.239639+00:00",
+      "note": "auto",
+      "entry_sell": 224,
+      "entry_offer": 236
+    },
+    {
       "id": 2,
-      "item_id": 22603,
-      "name": "Basalt",
-      "qty": 184,
-      "buy_price": 645,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 1371,
+      "buy_price": 159,
       "direction": "traditional",
-      "opened_at": "2026-08-10T21:47:52.488365+00:00",
+      "opened_at": "2026-08-10T22:13:52.134187+00:00",
       "note": "auto",
-      "entry_sell": 645,
-      "entry_offer": 671
-    },
-    {
-      "id": 3,
-      "item_id": 1513,
-      "name": "Magic logs",
-      "qty": 512,
-      "buy_price": 780,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T22:03:53.068359+00:00",
-      "note": "auto",
-      "entry_sell": 780,
-      "entry_offer": 814
-    },
-    {
-      "id": 4,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 709,
-      "buy_price": 155,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T22:03:53.068889+00:00",
-      "note": "auto",
-      "entry_sell": 155,
-      "entry_offer": 161
+      "entry_sell": 159,
+      "entry_offer": 167
     }
   ]
 }
