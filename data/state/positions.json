@@ -13,18 +13,6 @@
       "entry_offer": 581
     },
     {
-      "id": 2,
-      "item_id": 377,
-      "name": "Raw lobster",
-      "qty": 249,
-      "buy_price": 106,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T17:05:44.290156+00:00",
-      "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 110
-    },
-    {
       "id": 3,
       "item_id": 10033,
       "name": "Chinchompa",
