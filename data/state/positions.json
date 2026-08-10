@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 3,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 379,
-      "buy_price": 347,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T12:37:37.562677+00:00",
-      "note": "auto",
-      "entry_sell": 347,
-      "entry_offer": 365
-    },
-    {
-      "id": 5,
-      "item_id": 5321,
-      "name": "Watermelon seed",
-      "qty": 88,
-      "buy_price": 269,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T12:41:37.690458+00:00",
-      "note": "auto",
-      "entry_sell": 269,
-      "entry_offer": 279
-    }
-  ]
+  "positions": []
 }
