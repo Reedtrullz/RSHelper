@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1513,
-      "buy_price": 228,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 1710,
+      "buy_price": 216,
       "direction": "traditional",
-      "opened_at": "2026-08-10T22:19:53.355371+00:00",
+      "opened_at": "2026-08-10T22:47:53.820500+00:00",
       "note": "auto",
-      "entry_sell": 228,
-      "entry_offer": 240
+      "entry_sell": 216,
+      "entry_offer": 226
     }
   ]
 }
