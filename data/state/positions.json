@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9340,
+      "name": "Diamond bolts",
+      "qty": 1324,
+      "buy_price": 302,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T16:41:43.971583+00:00",
+      "note": "auto",
+      "entry_sell": 302,
+      "entry_offer": 317
+    }
+  ]
 }
