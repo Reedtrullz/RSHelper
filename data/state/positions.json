@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 139,
+      "buy_price": 365,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T20:51:51.100101+00:00",
+      "note": "auto",
+      "entry_sell": 365,
+      "entry_offer": 380
+    },
+    {
+      "id": 2,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 635,
+      "buy_price": 167,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T21:01:50.265150+00:00",
+      "note": "auto",
+      "entry_sell": 167,
+      "entry_offer": 175
+    }
+  ]
 }
