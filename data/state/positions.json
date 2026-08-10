@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 1450,
       "entry_offer": 1501
-    },
-    {
-      "id": 4,
-      "item_id": 821,
-      "name": "Steel dart tip",
-      "qty": 1126,
-      "buy_price": 84,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T11:13:35.726948+00:00",
-      "note": "auto",
-      "entry_sell": 84,
-      "entry_offer": 87
-    },
-    {
-      "id": 5,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 1261,
-      "buy_price": 63,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T11:13:35.727273+00:00",
-      "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 66
     }
   ]
 }
