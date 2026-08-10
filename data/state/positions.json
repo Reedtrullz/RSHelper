@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 434,
+      "buy_price": 144,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T21:47:52.487588+00:00",
+      "note": "auto",
+      "entry_sell": 144,
+      "entry_offer": 150
+    },
+    {
+      "id": 2,
+      "item_id": 22603,
+      "name": "Basalt",
+      "qty": 184,
+      "buy_price": 645,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T21:47:52.488365+00:00",
+      "note": "auto",
+      "entry_sell": 645,
+      "entry_offer": 671
+    },
+    {
+      "id": 3,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 183,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T21:47:52.488672+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
+    }
+  ]
 }
