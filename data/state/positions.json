@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1759,
+      "name": "Ball of wool",
+      "qty": 519,
+      "buy_price": 38,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T20:31:50.953747+00:00",
+      "note": "auto",
+      "entry_sell": 38,
+      "entry_offer": 40
+    },
+    {
+      "id": 2,
+      "item_id": 66,
+      "name": "Yew longbow (u)",
+      "qty": 1030,
+      "buy_price": 189,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T20:31:50.955196+00:00",
+      "note": "auto",
+      "entry_sell": 189,
+      "entry_offer": 198
+    },
+    {
+      "id": 3,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 1885,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T20:31:50.955623+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
+    }
+  ]
 }
