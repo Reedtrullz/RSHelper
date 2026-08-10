@@ -14,27 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 821,
-      "name": "Steel dart tip",
-      "qty": 800,
-      "buy_price": 84,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 301,
+      "buy_price": 1325,
       "direction": "traditional",
-      "opened_at": "2026-08-10T14:37:41.042150+00:00",
+      "opened_at": "2026-08-10T15:01:41.559746+00:00",
       "note": "auto",
-      "entry_sell": 84,
-      "entry_offer": 87
-    },
-    {
-      "id": 3,
-      "item_id": 1658,
-      "name": "Emerald necklace",
-      "qty": 350,
-      "buy_price": 625,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T14:57:41.360182+00:00",
-      "note": "auto",
-      "entry_sell": 625,
-      "entry_offer": 660
+      "entry_sell": 1325,
+      "entry_offer": 1375
     }
   ]
 }
