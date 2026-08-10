@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 32307,
-      "name": "Fine fish offcuts",
-      "qty": 401,
-      "buy_price": 411,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T09:17:31.917533+00:00",
-      "note": "auto",
-      "entry_sell": 411,
-      "entry_offer": 431
-    },
-    {
       "id": 3,
       "item_id": 2483,
       "name": "Lantadyme potion (unf)",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1450,
       "entry_offer": 1501
+    },
+    {
+      "id": 5,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 216,
+      "buy_price": 671,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T09:53:33.000663+00:00",
+      "note": "auto",
+      "entry_sell": 671,
+      "entry_offer": 698
     }
   ]
 }
