@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 21483,
-      "name": "Ultracompost",
-      "qty": 520,
-      "buy_price": 419,
+      "id": 3,
+      "item_id": 91,
+      "name": "Guam potion (unf)",
+      "qty": 80,
+      "buy_price": 429,
       "direction": "traditional",
-      "opened_at": "2026-08-10T11:29:36.060450+00:00",
+      "opened_at": "2026-08-10T11:45:36.745196+00:00",
       "note": "auto",
-      "entry_sell": 419,
-      "entry_offer": 435
-    },
-    {
-      "id": 2,
-      "item_id": 830,
-      "name": "Rune javelin",
-      "qty": 573,
-      "buy_price": 131,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T11:41:36.219881+00:00",
-      "note": "auto",
-      "entry_sell": 131,
-      "entry_offer": 137
+      "entry_sell": 429,
+      "entry_offer": 450
     }
   ]
 }
