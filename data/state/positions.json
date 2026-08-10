@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 434,
-      "buy_price": 144,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T21:47:52.487588+00:00",
-      "note": "auto",
-      "entry_sell": 144,
-      "entry_offer": 150
-    },
-    {
       "id": 2,
       "item_id": 22603,
       "name": "Basalt",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 183,
-      "buy_price": 25,
+      "item_id": 1513,
+      "name": "Magic logs",
+      "qty": 512,
+      "buy_price": 780,
       "direction": "traditional",
-      "opened_at": "2026-08-10T21:47:52.488672+00:00",
+      "opened_at": "2026-08-10T22:03:53.068359+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 780,
+      "entry_offer": 814
+    },
+    {
+      "id": 4,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 709,
+      "buy_price": 155,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T22:03:53.068889+00:00",
+      "note": "auto",
+      "entry_sell": 155,
+      "entry_offer": 161
     }
   ]
 }
