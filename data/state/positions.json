@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 371,
-      "buy_price": 44,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 329,
+      "buy_price": 178,
       "direction": "traditional",
-      "opened_at": "2026-08-10T03:53:17.616980+00:00",
+      "opened_at": "2026-08-10T04:09:18.184716+00:00",
       "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 46
+      "entry_sell": 178,
+      "entry_offer": 188
     }
   ]
 }
