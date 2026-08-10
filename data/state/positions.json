@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 86,
-      "buy_price": 46,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T13:13:38.617054+00:00",
-      "note": "auto",
-      "entry_sell": 46,
-      "entry_offer": 48
-    },
-    {
       "id": 2,
       "item_id": 11994,
       "name": "Lava scale shard",
@@ -26,12 +14,12 @@
     },
     {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2684,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 365,
       "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-10T13:13:38.618059+00:00",
+      "opened_at": "2026-08-10T13:25:38.939948+00:00",
       "note": "auto",
       "entry_sell": 28,
       "entry_offer": 29
