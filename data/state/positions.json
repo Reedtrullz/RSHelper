@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 130,
-      "buy_price": 42,
+      "id": 2,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 476,
+      "buy_price": 167,
       "direction": "traditional",
-      "opened_at": "2026-08-10T19:39:49.600517+00:00",
+      "opened_at": "2026-08-10T19:59:50.193741+00:00",
       "note": "auto",
-      "entry_sell": 42,
-      "entry_offer": 44
+      "entry_sell": 167,
+      "entry_offer": 175
+    },
+    {
+      "id": 3,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 1457,
+      "buy_price": 88,
+      "direction": "traditional",
+      "opened_at": "2026-08-10T20:01:49.225682+00:00",
+      "note": "auto",
+      "entry_sell": 88,
+      "entry_offer": 84
     }
   ]
 }
