@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 85,
-      "buy_price": 290,
+      "item_id": 2444,
+      "name": "Ranging potion(4)",
+      "qty": 230,
+      "buy_price": 1739,
       "direction": "traditional",
-      "opened_at": "2026-08-11T14:28:17.844116+00:00",
+      "opened_at": "2026-08-11T14:42:17.713376+00:00",
       "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 306
+      "entry_sell": 1739,
+      "entry_offer": 1835
+    },
+    {
+      "id": 2,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 630,
+      "buy_price": 561,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T14:42:17.713713+00:00",
+      "note": "auto",
+      "entry_sell": 561,
+      "entry_offer": 589
     }
   ]
 }
