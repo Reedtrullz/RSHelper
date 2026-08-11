@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2343,
-      "buy_price": 44,
+      "item_id": 203,
+      "name": "Grimy tarromin",
+      "qty": 976,
+      "buy_price": 136,
       "direction": "traditional",
-      "opened_at": "2026-08-11T06:30:06.906283+00:00",
+      "opened_at": "2026-08-11T06:44:07.315057+00:00",
       "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 46
+      "entry_sell": 136,
+      "entry_offer": 143
+    },
+    {
+      "id": 2,
+      "item_id": 2108,
+      "name": "Orange",
+      "qty": 1020,
+      "buy_price": 141,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T06:44:07.315338+00:00",
+      "note": "auto",
+      "entry_sell": 141,
+      "entry_offer": 146
     }
   ]
 }
