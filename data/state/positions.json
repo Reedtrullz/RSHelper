@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 105,
-      "name": "Kwuarm potion (unf)",
-      "qty": 176,
-      "buy_price": 2270,
+      "item_id": 1777,
+      "name": "Bow string",
+      "qty": 222,
+      "buy_price": 162,
       "direction": "traditional",
-      "opened_at": "2026-08-11T22:24:29.174856+00:00",
+      "opened_at": "2026-08-11T22:44:29.980599+00:00",
       "note": "auto",
-      "entry_sell": 2270,
-      "entry_offer": 2350
-    },
-    {
-      "id": 2,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 107,
-      "buy_price": 295,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T22:28:29.326033+00:00",
-      "note": "auto",
-      "entry_sell": 295,
-      "entry_offer": 306
+      "entry_sell": 162,
+      "entry_offer": 168
     }
   ]
 }
