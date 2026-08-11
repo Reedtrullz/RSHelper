@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 694,
-      "buy_price": 147,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2606,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-11T16:58:21.642483+00:00",
+      "opened_at": "2026-08-11T17:06:21.825023+00:00",
       "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 155
+      "entry_sell": 26,
+      "entry_offer": 25
     }
   ]
 }
