@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 25778,
+      "name": "Infernal ashes",
+      "qty": 104,
+      "buy_price": 3817,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T23:24:31.206007+00:00",
+      "note": "auto",
+      "entry_sell": 3817,
+      "entry_offer": 4010
+    }
+  ]
 }
