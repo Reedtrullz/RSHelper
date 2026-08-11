@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 211,
-      "buy_price": 55,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 694,
+      "buy_price": 147,
       "direction": "traditional",
-      "opened_at": "2026-08-11T16:42:21.375763+00:00",
+      "opened_at": "2026-08-11T16:58:21.642483+00:00",
       "note": "auto",
-      "entry_sell": 55,
-      "entry_offer": 58
-    },
-    {
-      "id": 2,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 561,
-      "buy_price": 713,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T16:42:21.377267+00:00",
-      "note": "auto",
-      "entry_sell": 713,
-      "entry_offer": 751
-    },
-    {
-      "id": 3,
-      "item_id": 9339,
-      "name": "Ruby bolts",
-      "qty": 500,
-      "buy_price": 276,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T16:42:21.378523+00:00",
-      "note": "auto",
-      "entry_sell": 276,
-      "entry_offer": 288
+      "entry_sell": 147,
+      "entry_offer": 155
     }
   ]
 }
