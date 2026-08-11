@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 136,
-      "buy_price": 25,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 3809,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-11T03:04:00.904698+00:00",
+      "opened_at": "2026-08-11T03:20:01.345450+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
-      "id": 2,
-      "item_id": 8007,
-      "name": "Varrock teleport (tablet)",
-      "qty": 107,
-      "buy_price": 681,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T03:04:00.905087+00:00",
-      "note": "auto",
-      "entry_sell": 681,
-      "entry_offer": 706
+      "entry_sell": 105,
+      "entry_offer": 110
     }
   ]
 }
