@@ -13,28 +13,28 @@
       "entry_offer": 3053
     },
     {
-      "id": 3,
-      "item_id": 2434,
-      "name": "Prayer potion(4)",
-      "qty": 44,
-      "buy_price": 8936,
+      "id": 4,
+      "item_id": 1637,
+      "name": "Sapphire ring",
+      "qty": 148,
+      "buy_price": 409,
       "direction": "traditional",
-      "opened_at": "2026-08-11T00:57:56.035435+00:00",
+      "opened_at": "2026-08-11T01:11:57.652870+00:00",
       "note": "auto",
-      "entry_sell": 8936,
-      "entry_offer": 9285
+      "entry_sell": 409,
+      "entry_offer": 427
     },
     {
-      "id": 4,
-      "item_id": 1511,
-      "name": "Logs",
-      "qty": 1230,
-      "buy_price": 25,
+      "id": 5,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 107,
+      "buy_price": 222,
       "direction": "traditional",
-      "opened_at": "2026-08-11T01:03:57.489288+00:00",
+      "opened_at": "2026-08-11T01:15:57.658696+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 222,
+      "entry_offer": 232
     }
   ]
 }
