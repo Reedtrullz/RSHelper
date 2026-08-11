@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 1564,
-      "buy_price": 114,
+      "id": 2,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 120,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-11T15:58:20.919563+00:00",
+      "opened_at": "2026-08-11T16:02:20.809099+00:00",
       "note": "auto",
-      "entry_sell": 114,
-      "entry_offer": 120
+      "entry_sell": 83,
+      "entry_offer": 86
     }
   ]
 }
