@@ -14,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 561,
-      "name": "Nature rune",
-      "qty": 2721,
-      "buy_price": 147,
+      "item_id": 1627,
+      "name": "Uncut jade",
+      "qty": 109,
+      "buy_price": 98,
       "direction": "traditional",
-      "opened_at": "2026-08-11T21:28:26.949781+00:00",
+      "opened_at": "2026-08-11T21:44:28.094781+00:00",
       "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 154
+      "entry_sell": 98,
+      "entry_offer": 102
     }
   ]
 }
