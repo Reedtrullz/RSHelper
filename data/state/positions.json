@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 863,
-      "name": "Iron knife",
-      "qty": 87,
-      "buy_price": 36,
+      "id": 1,
+      "item_id": 105,
+      "name": "Kwuarm potion (unf)",
+      "qty": 176,
+      "buy_price": 2270,
       "direction": "traditional",
-      "opened_at": "2026-08-11T21:22:27.744212+00:00",
+      "opened_at": "2026-08-11T22:24:29.174856+00:00",
       "note": "auto",
-      "entry_sell": 36,
-      "entry_offer": 38
+      "entry_sell": 2270,
+      "entry_offer": 2350
+    },
+    {
+      "id": 2,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 107,
+      "buy_price": 295,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T22:28:29.326033+00:00",
+      "note": "auto",
+      "entry_sell": 295,
+      "entry_offer": 306
     }
   ]
 }
