@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 2336,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T12:16:15.497486+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 24
-    }
-  ]
+  "positions": []
 }
