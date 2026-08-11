@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 567,
-      "name": "Unpowered orb",
-      "qty": 294,
-      "buy_price": 77,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2336,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-11T12:08:15.141407+00:00",
+      "opened_at": "2026-08-11T12:16:15.497486+00:00",
       "note": "auto",
-      "entry_sell": 77,
-      "entry_offer": 81
-    },
-    {
-      "id": 2,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 270,
-      "buy_price": 108,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T12:12:15.083931+00:00",
-      "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 112
+      "entry_sell": 25,
+      "entry_offer": 24
     }
   ]
 }
