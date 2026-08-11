@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 225,
       "entry_offer": 217
+    },
+    {
+      "id": 4,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 794,
+      "buy_price": 191,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T18:58:24.344395+00:00",
+      "note": "auto",
+      "entry_sell": 191,
+      "entry_offer": 199
+    },
+    {
+      "id": 5,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2684,
+      "buy_price": 149,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T18:58:24.349298+00:00",
+      "note": "auto",
+      "entry_sell": 149,
+      "entry_offer": 155
     }
   ]
 }
