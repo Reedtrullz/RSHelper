@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 220,
-      "buy_price": 1055,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T15:02:18.718244+00:00",
-      "note": "auto",
-      "entry_sell": 1055,
-      "entry_offer": 1099
-    },
-    {
       "id": 3,
       "item_id": 105,
       "name": "Kwuarm potion (unf)",
