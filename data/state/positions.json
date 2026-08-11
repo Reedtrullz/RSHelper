@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 1133,
-      "buy_price": 83,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 1051,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-10T23:47:55.625268+00:00",
+      "opened_at": "2026-08-11T00:03:55.801200+00:00",
       "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 87
-    },
-    {
-      "id": 2,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 206,
-      "buy_price": 115,
-      "direction": "traditional",
-      "opened_at": "2026-08-10T23:47:55.625921+00:00",
-      "note": "auto",
-      "entry_sell": 115,
-      "entry_offer": 120
+      "entry_sell": 120,
+      "entry_offer": 125
     }
   ]
 }
