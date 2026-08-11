@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 1629,
-      "buy_price": 60,
+      "id": 3,
+      "item_id": 863,
+      "name": "Iron knife",
+      "qty": 87,
+      "buy_price": 36,
       "direction": "traditional",
-      "opened_at": "2026-08-11T21:14:27.501351+00:00",
+      "opened_at": "2026-08-11T21:22:27.744212+00:00",
       "note": "auto",
-      "entry_sell": 60,
-      "entry_offer": 63
+      "entry_sell": 36,
+      "entry_offer": 38
+    },
+    {
+      "id": 4,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 2721,
+      "buy_price": 147,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T21:28:26.949781+00:00",
+      "note": "auto",
+      "entry_sell": 147,
+      "entry_offer": 154
     }
   ]
 }
