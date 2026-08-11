@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 408,
-      "buy_price": 90,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 673,
+      "buy_price": 594,
       "direction": "traditional",
-      "opened_at": "2026-08-11T19:10:24.769736+00:00",
+      "opened_at": "2026-08-11T19:28:28.354042+00:00",
       "note": "auto",
-      "entry_sell": 90,
-      "entry_offer": 95
-    },
-    {
-      "id": 2,
-      "item_id": 32907,
-      "name": "Ironwood logs",
-      "qty": 420,
-      "buy_price": 104,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T19:14:24.666748+00:00",
-      "note": "auto",
-      "entry_sell": 104,
-      "entry_offer": 109
-    },
-    {
-      "id": 3,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 92,
-      "buy_price": 1400,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T19:14:24.669283+00:00",
-      "note": "auto",
-      "entry_sell": 1400,
-      "entry_offer": 1462
+      "entry_sell": 594,
+      "entry_offer": 620
     }
   ]
 }
