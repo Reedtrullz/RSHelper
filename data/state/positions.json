@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 345,
-      "buy_price": 350,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T00:07:55.948134+00:00",
-      "note": "auto",
-      "entry_sell": 350,
-      "entry_offer": 365
-    },
-    {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2870,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T00:15:56.145052+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    }
-  ]
+  "positions": []
 }
