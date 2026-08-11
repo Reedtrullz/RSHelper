@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 2254,
-      "buy_price": 26,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 136,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-11T02:43:59.860309+00:00",
+      "opened_at": "2026-08-11T03:04:00.904698+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 25
+      "entry_sell": 25,
+      "entry_offer": 26
     },
     {
       "id": 2,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 468,
-      "buy_price": 90,
+      "item_id": 8007,
+      "name": "Varrock teleport (tablet)",
+      "qty": 107,
+      "buy_price": 681,
       "direction": "traditional",
-      "opened_at": "2026-08-11T02:48:00.233090+00:00",
+      "opened_at": "2026-08-11T03:04:00.905087+00:00",
       "note": "auto",
-      "entry_sell": 90,
-      "entry_offer": 95
-    },
-    {
-      "id": 3,
-      "item_id": 9380,
-      "name": "Adamant bolts(unf)",
-      "qty": 379,
-      "buy_price": 168,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T02:48:00.234024+00:00",
-      "note": "auto",
-      "entry_sell": 168,
-      "entry_offer": 174
+      "entry_sell": 681,
+      "entry_offer": 706
     }
   ]
 }
