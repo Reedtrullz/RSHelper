@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 863,
-      "name": "Iron knife",
-      "qty": 106,
-      "buy_price": 37,
-      "direction": "traditional",
-      "opened_at": "2026-08-11T00:35:56.714482+00:00",
-      "note": "auto",
-      "entry_sell": 37,
-      "entry_offer": 39
-    },
-    {
       "id": 2,
       "item_id": 30773,
       "name": "Diabolic worms",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 960,
-      "name": "Plank",
-      "qty": 125,
-      "buy_price": 122,
+      "item_id": 2434,
+      "name": "Prayer potion(4)",
+      "qty": 44,
+      "buy_price": 8936,
       "direction": "traditional",
-      "opened_at": "2026-08-11T00:47:56.908693+00:00",
+      "opened_at": "2026-08-11T00:57:56.035435+00:00",
       "note": "auto",
-      "entry_sell": 122,
-      "entry_offer": 127
+      "entry_sell": 8936,
+      "entry_offer": 9285
+    },
+    {
+      "id": 4,
+      "item_id": 1511,
+      "name": "Logs",
+      "qty": 1230,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T01:03:57.489288+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
