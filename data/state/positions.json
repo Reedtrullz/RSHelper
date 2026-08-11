@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 21802,
+      "name": "Revenant cave teleport",
+      "qty": 749,
+      "buy_price": 534,
+      "direction": "traditional",
+      "opened_at": "2026-08-11T02:31:59.564750+00:00",
+      "note": "auto",
+      "entry_sell": 534,
+      "entry_offer": 564
+    }
+  ]
 }
