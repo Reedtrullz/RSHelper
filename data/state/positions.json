@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 25778,
-      "name": "Infernal ashes",
-      "qty": 98,
-      "buy_price": 3675,
+      "id": 5,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 100,
+      "buy_price": 570,
       "direction": "traditional",
-      "opened_at": "2026-08-12T20:15:12.551250+00:00",
+      "opened_at": "2026-08-12T22:03:16.861210+00:00",
       "note": "auto",
-      "entry_sell": 3675,
-      "entry_offer": 3858
+      "entry_sell": 570,
+      "entry_offer": 600
     }
   ]
 }
