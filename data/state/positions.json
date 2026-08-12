@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 127,
-      "buy_price": 75,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 1272,
+      "buy_price": 175,
       "direction": "traditional",
-      "opened_at": "2026-08-12T03:26:39.597858+00:00",
+      "opened_at": "2026-08-12T03:30:39.481353+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 79
+      "entry_sell": 175,
+      "entry_offer": 184
+    },
+    {
+      "id": 2,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 105,
+      "buy_price": 589,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T03:42:39.744393+00:00",
+      "note": "auto",
+      "entry_sell": 589,
+      "entry_offer": 615
+    },
+    {
+      "id": 3,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 644,
+      "buy_price": 103,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T03:42:39.745132+00:00",
+      "note": "auto",
+      "entry_sell": 103,
+      "entry_offer": 107
     }
   ]
 }
