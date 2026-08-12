@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 69,
       "entry_offer": 72
+    },
+    {
+      "id": 3,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 8812,
+      "buy_price": 37,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T19:35:10.899066+00:00",
+      "note": "auto",
+      "entry_sell": 37,
+      "entry_offer": 39
     }
   ]
 }
