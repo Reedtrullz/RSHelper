@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 11090,
-      "name": "Phoenix necklace",
-      "qty": 111,
-      "buy_price": 2131,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T20:03:11.786255+00:00",
-      "note": "auto",
-      "entry_sell": 2131,
-      "entry_offer": 2217
-    },
-    {
-      "id": 2,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1215,
-      "buy_price": 329,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T20:07:11.858997+00:00",
-      "note": "auto",
-      "entry_sell": 329,
-      "entry_offer": 344
-    },
-    {
       "id": 3,
       "item_id": 25778,
       "name": "Infernal ashes",
