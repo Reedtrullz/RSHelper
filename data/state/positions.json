@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 96,
-      "buy_price": 482,
+      "item_id": 563,
+      "name": "Law rune",
+      "qty": 2822,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-12T07:54:48.081381+00:00",
+      "opened_at": "2026-08-12T08:14:48.796070+00:00",
       "note": "auto",
-      "entry_sell": 482,
-      "entry_offer": 500
-    },
-    {
-      "id": 2,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 105,
-      "buy_price": 232,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T07:58:48.500583+00:00",
-      "note": "auto",
-      "entry_sell": 232,
-      "entry_offer": 243
-    },
-    {
-      "id": 3,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 89,
-      "buy_price": 707,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T07:58:48.501345+00:00",
-      "note": "auto",
-      "entry_sell": 707,
-      "entry_offer": 740
+      "entry_sell": 120,
+      "entry_offer": 125
     }
   ]
 }
