@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 37,
       "entry_offer": 39
-    },
-    {
-      "id": 2,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 645,
-      "buy_price": 85,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T08:42:49.715741+00:00",
-      "note": "auto",
-      "entry_sell": 85,
-      "entry_offer": 89
-    },
-    {
-      "id": 3,
-      "item_id": 97,
-      "name": "Harralander potion (unf)",
-      "qty": 729,
-      "buy_price": 548,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T08:42:49.717094+00:00",
-      "note": "auto",
-      "entry_sell": 548,
-      "entry_offer": 570
     }
   ]
 }
