@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 511,
+      "buy_price": 154,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T12:16:59.108402+00:00",
+      "note": "auto",
+      "entry_sell": 154,
+      "entry_offer": 162
+    },
+    {
+      "id": 2,
+      "item_id": 199,
+      "name": "Grimy guam leaf",
+      "qty": 84,
+      "buy_price": 196,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T12:16:59.109285+00:00",
+      "note": "auto",
+      "entry_sell": 196,
+      "entry_offer": 205
+    }
+  ]
 }
