@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 109
-    },
-    {
-      "id": 2,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 1503,
-      "buy_price": 266,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T05:18:42.883520+00:00",
-      "note": "auto",
-      "entry_sell": 266,
-      "entry_offer": 281
-    },
-    {
-      "id": 3,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 1176,
-      "buy_price": 79,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T05:18:42.884697+00:00",
-      "note": "auto",
-      "entry_sell": 79,
-      "entry_offer": 83
     }
   ]
 }
