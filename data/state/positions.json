@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1379,
       "entry_offer": 1432
+    },
+    {
+      "id": 2,
+      "item_id": 960,
+      "name": "Plank",
+      "qty": 205,
+      "buy_price": 126,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T10:46:52.789600+00:00",
+      "note": "auto",
+      "entry_sell": 126,
+      "entry_offer": 132
     }
   ]
 }
