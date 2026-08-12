@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 13441,
+      "name": "Anglerfish",
+      "qty": 195,
+      "buy_price": 2050,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T07:14:46.535100+00:00",
+      "note": "auto",
+      "entry_sell": 2050,
+      "entry_offer": 2153
+    },
+    {
+      "id": 2,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 413,
+      "buy_price": 108,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T07:26:46.803399+00:00",
+      "note": "auto",
+      "entry_sell": 108,
+      "entry_offer": 112
+    }
+  ]
 }
