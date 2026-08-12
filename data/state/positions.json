@@ -13,18 +13,6 @@
       "entry_offer": 176
     },
     {
-      "id": 5,
-      "item_id": 13431,
-      "name": "Sandworms",
-      "qty": 614,
-      "buy_price": 100,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T02:20:37.518458+00:00",
-      "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 105
-    },
-    {
       "id": 6,
       "item_id": 11260,
       "name": "Impling jar",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 357,
       "entry_offer": 374
+    },
+    {
+      "id": 7,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 2008,
+      "buy_price": 185,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T02:54:38.481066+00:00",
+      "note": "auto",
+      "entry_sell": 185,
+      "entry_offer": 194
     }
   ]
 }
