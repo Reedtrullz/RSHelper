@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11875,
-      "name": "Broad bolts",
-      "qty": 216,
-      "buy_price": 52,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 232,
+      "buy_price": 490,
       "direction": "traditional",
-      "opened_at": "2026-08-12T13:01:00.304578+00:00",
+      "opened_at": "2026-08-12T13:33:01.433434+00:00",
       "note": "auto",
-      "entry_sell": 52,
-      "entry_offer": 54
-    },
-    {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2675,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T13:01:00.306262+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
-    },
-    {
-      "id": 4,
-      "item_id": 3138,
-      "name": "Potato cactus",
-      "qty": 294,
-      "buy_price": 53,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T13:17:00.862253+00:00",
-      "note": "auto",
-      "entry_sell": 53,
-      "entry_offer": 56
+      "entry_sell": 490,
+      "entry_offer": 517
     }
   ]
 }
