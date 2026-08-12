@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 4055,
-      "buy_price": 83,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T01:32:35.688913+00:00",
-      "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 86
-    },
-    {
       "id": 4,
       "item_id": 866,
       "name": "Mithril knife",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 100,
       "entry_offer": 105
+    },
+    {
+      "id": 6,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 240,
+      "buy_price": 357,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T02:38:38.131118+00:00",
+      "note": "auto",
+      "entry_sell": 357,
+      "entry_offer": 374
     }
   ]
 }
