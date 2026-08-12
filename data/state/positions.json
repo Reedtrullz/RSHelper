@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 1470,
-      "buy_price": 85,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T14:13:02.265774+00:00",
-      "note": "auto",
-      "entry_sell": 85,
-      "entry_offer": 89
-    },
-    {
       "id": 2,
       "item_id": 29895,
       "name": "Frozen tear",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 260,
       "entry_offer": 270
+    },
+    {
+      "id": 3,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1515,
+      "buy_price": 188,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T14:33:02.890755+00:00",
+      "note": "auto",
+      "entry_sell": 188,
+      "entry_offer": 198
     }
   ]
 }
