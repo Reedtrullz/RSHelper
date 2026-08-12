@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 221,
-      "buy_price": 590,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1043,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-12T04:30:41.376017+00:00",
+      "opened_at": "2026-08-12T04:46:41.976879+00:00",
       "note": "auto",
-      "entry_sell": 590,
-      "entry_offer": 615
+      "entry_sell": 153,
+      "entry_offer": 160
+    },
+    {
+      "id": 3,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 93,
+      "buy_price": 222,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T04:46:41.977859+00:00",
+      "note": "auto",
+      "entry_sell": 222,
+      "entry_offer": 230
     }
   ]
 }
