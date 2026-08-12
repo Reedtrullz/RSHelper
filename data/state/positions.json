@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 207,
+      "buy_price": 1379,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T10:26:52.491204+00:00",
+      "note": "auto",
+      "entry_sell": 1379,
+      "entry_offer": 1432
+    }
+  ]
 }
