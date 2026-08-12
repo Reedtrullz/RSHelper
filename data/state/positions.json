@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 667,
+      "buy_price": 215,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T01:32:35.688393+00:00",
+      "note": "auto",
+      "entry_sell": 215,
+      "entry_offer": 226
+    },
+    {
+      "id": 3,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 4055,
+      "buy_price": 83,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T01:32:35.688913+00:00",
+      "note": "auto",
+      "entry_sell": 83,
+      "entry_offer": 86
+    }
+  ]
 }
