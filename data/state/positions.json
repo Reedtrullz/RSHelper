@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 3675,
       "entry_offer": 3858
-    },
-    {
-      "id": 4,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 2821,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T21:39:16.183661+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
-    },
-    {
-      "id": 5,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 1849,
-      "buy_price": 155,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T21:45:15.164947+00:00",
-      "note": "auto",
-      "entry_sell": 155,
-      "entry_offer": 162
     }
   ]
 }
