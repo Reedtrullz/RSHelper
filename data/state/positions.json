@@ -13,16 +13,28 @@
       "entry_offer": 270
     },
     {
-      "id": 5,
-      "item_id": 28991,
-      "name": "Atlatl dart",
-      "qty": 3174,
-      "buy_price": 126,
+      "id": 4,
+      "item_id": 1607,
+      "name": "Sapphire",
+      "qty": 212,
+      "buy_price": 218,
       "direction": "traditional",
-      "opened_at": "2026-08-12T16:07:04.547794+00:00",
+      "opened_at": "2026-08-12T16:39:05.172360+00:00",
       "note": "auto",
-      "entry_sell": 126,
-      "entry_offer": 132
+      "entry_sell": 218,
+      "entry_offer": 226
+    },
+    {
+      "id": 5,
+      "item_id": 8008,
+      "name": "Lumbridge teleport (tablet)",
+      "qty": 487,
+      "buy_price": 821,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T16:47:05.371420+00:00",
+      "note": "auto",
+      "entry_sell": 821,
+      "entry_offer": 789
     }
   ]
 }
