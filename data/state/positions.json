@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 83,
       "entry_offer": 86
-    },
-    {
-      "id": 5,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 215,
-      "buy_price": 902,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T01:48:36.370966+00:00",
-      "note": "auto",
-      "entry_sell": 902,
-      "entry_offer": 937
     }
   ]
 }
