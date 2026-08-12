@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 2300,
       "entry_offer": 2401
+    },
+    {
+      "id": 5,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 3174,
+      "buy_price": 126,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T16:07:04.547794+00:00",
+      "note": "auto",
+      "entry_sell": 126,
+      "entry_offer": 132
     }
   ]
 }
