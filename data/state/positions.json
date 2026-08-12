@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 2144,
-      "buy_price": 105,
+      "id": 1,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 1446,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-12T00:16:33.460625+00:00",
+      "opened_at": "2026-08-12T00:44:33.972990+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 109
-    },
-    {
-      "id": 3,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 1221,
-      "buy_price": 45,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T00:24:33.505001+00:00",
-      "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 83,
+      "entry_offer": 87
     }
   ]
 }
