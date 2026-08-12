@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 37,
       "entry_offer": 39
+    },
+    {
+      "id": 2,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 2580,
+      "buy_price": 155,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T18:33:07.486076+00:00",
+      "note": "auto",
+      "entry_sell": 155,
+      "entry_offer": 161
     }
   ]
 }
