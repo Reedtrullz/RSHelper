@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 109
+    },
+    {
+      "id": 2,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 221,
+      "buy_price": 590,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T04:30:41.376017+00:00",
+      "note": "auto",
+      "entry_sell": 590,
+      "entry_offer": 615
     }
   ]
 }
