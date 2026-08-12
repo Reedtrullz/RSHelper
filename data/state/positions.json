@@ -26,15 +26,15 @@
     },
     {
       "id": 4,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 3762,
-      "buy_price": 43,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 755,
+      "buy_price": 190,
       "direction": "traditional",
-      "opened_at": "2026-08-12T14:47:04.272667+00:00",
+      "opened_at": "2026-08-12T14:51:03.346223+00:00",
       "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
+      "entry_sell": 190,
+      "entry_offer": 200
     }
   ]
 }
