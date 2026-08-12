@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 866,
-      "name": "Mithril knife",
-      "qty": 343,
-      "buy_price": 169,
+      "id": 1,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 4460,
+      "buy_price": 44,
       "direction": "traditional",
-      "opened_at": "2026-08-12T02:08:37.184836+00:00",
+      "opened_at": "2026-08-12T03:06:38.797383+00:00",
       "note": "auto",
-      "entry_sell": 169,
-      "entry_offer": 176
+      "entry_sell": 44,
+      "entry_offer": 42
     },
     {
-      "id": 6,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 240,
-      "buy_price": 357,
+      "id": 2,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1341,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-12T02:38:38.131118+00:00",
+      "opened_at": "2026-08-12T03:10:38.933868+00:00",
       "note": "auto",
-      "entry_sell": 357,
-      "entry_offer": 374
-    },
-    {
-      "id": 7,
-      "item_id": 13573,
-      "name": "Dynamite",
-      "qty": 2008,
-      "buy_price": 185,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T02:54:38.481066+00:00",
-      "note": "auto",
-      "entry_sell": 185,
-      "entry_offer": 194
+      "entry_sell": 153,
+      "entry_offer": 160
     }
   ]
 }
