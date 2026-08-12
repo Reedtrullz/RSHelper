@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 291,
+      "buy_price": 386,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T06:38:45.368535+00:00",
+      "note": "auto",
+      "entry_sell": 386,
+      "entry_offer": 407
+    },
+    {
+      "id": 2,
+      "item_id": 11230,
+      "name": "Dragon dart",
+      "qty": 384,
+      "buy_price": 1040,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T06:38:45.369426+00:00",
+      "note": "auto",
+      "entry_sell": 1040,
+      "entry_offer": 1085
+    }
+  ]
 }
