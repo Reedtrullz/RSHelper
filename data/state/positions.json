@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 3675,
       "entry_offer": 3858
+    },
+    {
+      "id": 4,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 671,
+      "buy_price": 102,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T21:15:15.159315+00:00",
+      "note": "auto",
+      "entry_sell": 102,
+      "entry_offer": 97
+    },
+    {
+      "id": 5,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 3832,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T21:29:14.413293+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
