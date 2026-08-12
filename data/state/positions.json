@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 3,
+      "item_id": 2485,
+      "name": "Grimy lantadyme",
+      "qty": 105,
+      "buy_price": 1103,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T23:03:18.958373+00:00",
+      "note": "auto",
+      "entry_sell": 1103,
+      "entry_offer": 1149
+    }
+  ]
 }
