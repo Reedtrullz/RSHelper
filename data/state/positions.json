@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 83,
       "entry_offer": 86
+    },
+    {
+      "id": 4,
+      "item_id": 866,
+      "name": "Mithril knife",
+      "qty": 343,
+      "buy_price": 169,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T02:08:37.184836+00:00",
+      "note": "auto",
+      "entry_sell": 169,
+      "entry_offer": 176
+    },
+    {
+      "id": 5,
+      "item_id": 13431,
+      "name": "Sandworms",
+      "qty": 614,
+      "buy_price": 100,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T02:20:37.518458+00:00",
+      "note": "auto",
+      "entry_sell": 100,
+      "entry_offer": 105
     }
   ]
 }
