@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 1470,
+      "buy_price": 85,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T14:13:02.265774+00:00",
+      "note": "auto",
+      "entry_sell": 85,
+      "entry_offer": 89
+    },
+    {
+      "id": 2,
+      "item_id": 29895,
+      "name": "Frozen tear",
+      "qty": 661,
+      "buy_price": 260,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T14:17:02.397672+00:00",
+      "note": "auto",
+      "entry_sell": 260,
+      "entry_offer": 270
+    }
+  ]
 }
