@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 3638,
-      "buy_price": 25,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 216,
+      "buy_price": 52,
       "direction": "traditional",
-      "opened_at": "2026-08-12T12:44:59.808827+00:00",
+      "opened_at": "2026-08-12T13:01:00.304578+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 52,
+      "entry_offer": 54
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2675,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T13:01:00.306262+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
