@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 28,
       "entry_offer": 29
+    },
+    {
+      "id": 4,
+      "item_id": 3138,
+      "name": "Potato cactus",
+      "qty": 294,
+      "buy_price": 53,
+      "direction": "traditional",
+      "opened_at": "2026-08-12T13:17:00.862253+00:00",
+      "note": "auto",
+      "entry_sell": 53,
+      "entry_offer": 56
     }
   ]
 }
