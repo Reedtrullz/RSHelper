@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 96,
-      "buy_price": 401,
+      "id": 1,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 1817,
+      "buy_price": 69,
       "direction": "traditional",
-      "opened_at": "2026-08-12T18:55:09.154159+00:00",
+      "opened_at": "2026-08-12T19:15:10.319693+00:00",
       "note": "auto",
-      "entry_sell": 401,
-      "entry_offer": 419
-    },
-    {
-      "id": 5,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1123,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-12T19:05:08.696902+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 69,
+      "entry_offer": 72
     }
   ]
 }
