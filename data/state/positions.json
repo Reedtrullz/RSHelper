@@ -26,15 +26,15 @@
     },
     {
       "id": 5,
-      "item_id": 960,
-      "name": "Plank",
-      "qty": 91,
-      "buy_price": 124,
+      "item_id": 1607,
+      "name": "Sapphire",
+      "qty": 847,
+      "buy_price": 239,
       "direction": "traditional",
-      "opened_at": "2026-08-13T18:40:00.328726+00:00",
+      "opened_at": "2026-08-13T18:56:00.792714+00:00",
       "note": "auto",
-      "entry_sell": 124,
-      "entry_offer": 131
+      "entry_sell": 239,
+      "entry_offer": 250
     }
   ]
 }
