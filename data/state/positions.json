@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2481,
-      "name": "Lantadyme",
-      "qty": 116,
-      "buy_price": 1125,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 749,
+      "buy_price": 224,
       "direction": "traditional",
-      "opened_at": "2026-08-13T13:29:52.752836+00:00",
+      "opened_at": "2026-08-13T13:57:53.714884+00:00",
       "note": "auto",
-      "entry_sell": 1125,
-      "entry_offer": 1170
+      "entry_sell": 224,
+      "entry_offer": 236
     },
     {
       "id": 2,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 228,
-      "buy_price": 178,
+      "item_id": 12701,
+      "name": "Super combat potion(1)",
+      "qty": 129,
+      "buy_price": 3082,
       "direction": "traditional",
-      "opened_at": "2026-08-13T13:53:53.476030+00:00",
+      "opened_at": "2026-08-13T13:57:53.715182+00:00",
       "note": "auto",
-      "entry_sell": 178,
-      "entry_offer": 185
+      "entry_sell": 3082,
+      "entry_offer": 3200
     },
     {
       "id": 3,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 383,
-      "buy_price": 251,
+      "item_id": 249,
+      "name": "Guam leaf",
+      "qty": 101,
+      "buy_price": 248,
       "direction": "traditional",
-      "opened_at": "2026-08-13T13:53:53.476570+00:00",
+      "opened_at": "2026-08-13T14:09:53.998116+00:00",
       "note": "auto",
-      "entry_sell": 251,
-      "entry_offer": 260
+      "entry_sell": 248,
+      "entry_offer": 261
     }
   ]
 }
