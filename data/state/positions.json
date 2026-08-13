@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 190,
-      "buy_price": 1601,
+      "item_id": 1777,
+      "name": "Bow string",
+      "qty": 100,
+      "buy_price": 161,
       "direction": "traditional",
-      "opened_at": "2026-08-13T07:15:41.155157+00:00",
+      "opened_at": "2026-08-13T07:49:42.992666+00:00",
       "note": "auto",
-      "entry_sell": 1601,
-      "entry_offer": 1687
-    },
-    {
-      "id": 2,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 531,
-      "buy_price": 394,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T07:15:41.156105+00:00",
-      "note": "auto",
-      "entry_sell": 394,
-      "entry_offer": 410
-    },
-    {
-      "id": 3,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 992,
-      "buy_price": 83,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T07:31:42.108905+00:00",
-      "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 86
+      "entry_sell": 161,
+      "entry_offer": 168
     }
   ]
 }
