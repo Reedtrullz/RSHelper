@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 453,
-      "buy_price": 562,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 1885,
+      "buy_price": 82,
       "direction": "traditional",
-      "opened_at": "2026-08-13T03:01:29.111740+00:00",
+      "opened_at": "2026-08-13T03:17:29.686097+00:00",
       "note": "auto",
-      "entry_sell": 562,
-      "entry_offer": 591
-    },
-    {
-      "id": 2,
-      "item_id": 8780,
-      "name": "Teak plank",
-      "qty": 529,
-      "buy_price": 755,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T03:01:29.112005+00:00",
-      "note": "auto",
-      "entry_sell": 755,
-      "entry_offer": 787
+      "entry_sell": 82,
+      "entry_offer": 85
     }
   ]
 }
