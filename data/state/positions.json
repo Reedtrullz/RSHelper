@@ -23,18 +23,6 @@
       "note": "auto",
       "entry_sell": 336,
       "entry_offer": 350
-    },
-    {
-      "id": 3,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 233,
-      "buy_price": 290,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T11:15:48.433253+00:00",
-      "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 301
     }
   ]
 }
