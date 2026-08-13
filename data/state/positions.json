@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 62,
-      "name": "Maple longbow (u)",
-      "qty": 160,
-      "buy_price": 72,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T16:19:57.577782+00:00",
-      "note": "auto",
-      "entry_sell": 72,
-      "entry_offer": 75
-    },
-    {
       "id": 3,
       "item_id": 31910,
       "name": "Mithril cannonball",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 125,
       "entry_offer": 131
+    },
+    {
+      "id": 5,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 158,
+      "buy_price": 352,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T16:39:57.968498+00:00",
+      "note": "auto",
+      "entry_sell": 352,
+      "entry_offer": 369
     }
   ]
 }
