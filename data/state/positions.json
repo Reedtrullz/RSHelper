@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 6034,
+      "name": "Supercompost",
+      "qty": 385,
+      "buy_price": 29,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T12:49:52.027573+00:00",
+      "note": "auto",
+      "entry_sell": 29,
+      "entry_offer": 28
+    }
+  ]
 }
