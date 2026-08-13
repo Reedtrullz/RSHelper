@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 495,
-      "buy_price": 158,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T00:55:23.557452+00:00",
-      "note": "auto",
-      "entry_sell": 158,
-      "entry_offer": 165
-    },
-    {
       "id": 2,
-      "item_id": 6034,
-      "name": "Supercompost",
-      "qty": 320,
-      "buy_price": 28,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 292,
+      "buy_price": 210,
       "direction": "traditional",
-      "opened_at": "2026-08-13T00:55:23.558145+00:00",
+      "opened_at": "2026-08-13T01:07:23.920066+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 210,
+      "entry_offer": 220
     }
   ]
 }
