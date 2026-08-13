@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 190,
+      "buy_price": 1601,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T07:15:41.155157+00:00",
+      "note": "auto",
+      "entry_sell": 1601,
+      "entry_offer": 1687
+    },
+    {
+      "id": 2,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 531,
+      "buy_price": 394,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T07:15:41.156105+00:00",
+      "note": "auto",
+      "entry_sell": 394,
+      "entry_offer": 410
+    }
+  ]
 }
