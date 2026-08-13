@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1619,
-      "name": "Uncut ruby",
-      "qty": 361,
-      "buy_price": 1105,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T18:21:59.108488+00:00",
-      "note": "auto",
-      "entry_sell": 1105,
-      "entry_offer": 1145
-    },
-    {
       "id": 4,
       "item_id": 163,
       "name": "Super defence(3)",
@@ -26,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 1607,
-      "name": "Sapphire",
-      "qty": 847,
-      "buy_price": 239,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 116,
+      "buy_price": 122,
       "direction": "traditional",
-      "opened_at": "2026-08-13T18:56:00.792714+00:00",
+      "opened_at": "2026-08-13T19:08:01.099078+00:00",
       "note": "auto",
-      "entry_sell": 239,
-      "entry_offer": 250
+      "entry_sell": 122,
+      "entry_offer": 128
     }
   ]
 }
