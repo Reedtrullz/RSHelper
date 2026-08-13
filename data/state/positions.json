@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 806,
-      "name": "Bronze dart",
-      "qty": 177,
-      "buy_price": 29,
+      "id": 1,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 453,
+      "buy_price": 562,
       "direction": "traditional",
-      "opened_at": "2026-08-13T01:39:24.749289+00:00",
+      "opened_at": "2026-08-13T03:01:29.111740+00:00",
       "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
+      "entry_sell": 562,
+      "entry_offer": 591
     },
     {
-      "id": 4,
-      "item_id": 2140,
-      "name": "Cooked chicken",
-      "qty": 110,
-      "buy_price": 75,
+      "id": 2,
+      "item_id": 8780,
+      "name": "Teak plank",
+      "qty": 529,
+      "buy_price": 755,
       "direction": "traditional",
-      "opened_at": "2026-08-13T02:15:27.086828+00:00",
+      "opened_at": "2026-08-13T03:01:29.112005+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 78
-    },
-    {
-      "id": 5,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1066,
-      "buy_price": 133,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T02:43:26.640651+00:00",
-      "note": "auto",
-      "entry_sell": 133,
-      "entry_offer": 139
+      "entry_sell": 755,
+      "entry_offer": 787
     }
   ]
 }
