@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 163,
-      "name": "Super defence(3)",
-      "qty": 177,
-      "buy_price": 2251,
+      "id": 1,
+      "item_id": 395,
+      "name": "Raw sea turtle",
+      "qty": 154,
+      "buy_price": 622,
       "direction": "traditional",
-      "opened_at": "2026-08-13T18:32:00.223522+00:00",
+      "opened_at": "2026-08-13T19:20:01.349921+00:00",
       "note": "auto",
-      "entry_sell": 2251,
-      "entry_offer": 2131
-    },
-    {
-      "id": 5,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 116,
-      "buy_price": 122,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T19:08:01.099078+00:00",
-      "note": "auto",
-      "entry_sell": 122,
-      "entry_offer": 128
+      "entry_sell": 622,
+      "entry_offer": 652
     }
   ]
 }
