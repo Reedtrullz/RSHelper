@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 185,
-      "buy_price": 2151,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T20:08:01.552938+00:00",
-      "note": "auto",
-      "entry_sell": 2151,
-      "entry_offer": 2263
-    },
-    {
       "id": 3,
       "item_id": 4694,
       "name": "Steam rune",
@@ -25,16 +13,28 @@
       "entry_offer": 95
     },
     {
-      "id": 4,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1804,
-      "buy_price": 131,
+      "id": 5,
+      "item_id": 91,
+      "name": "Guam potion (unf)",
+      "qty": 236,
+      "buy_price": 416,
       "direction": "traditional",
-      "opened_at": "2026-08-13T20:12:01.441749+00:00",
+      "opened_at": "2026-08-13T20:18:02.638525+00:00",
       "note": "auto",
-      "entry_sell": 131,
-      "entry_offer": 136
+      "entry_sell": 416,
+      "entry_offer": 434
+    },
+    {
+      "id": 6,
+      "item_id": 32907,
+      "name": "Ironwood logs",
+      "qty": 1512,
+      "buy_price": 105,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T20:26:02.962222+00:00",
+      "note": "auto",
+      "entry_sell": 105,
+      "entry_offer": 111
     }
   ]
 }
