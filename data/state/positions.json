@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 98,
-      "buy_price": 209,
+      "id": 3,
+      "item_id": 3138,
+      "name": "Potato cactus",
+      "qty": 180,
+      "buy_price": 58,
       "direction": "traditional",
-      "opened_at": "2026-08-13T04:35:33.411723+00:00",
+      "opened_at": "2026-08-13T04:51:34.244396+00:00",
       "note": "auto",
-      "entry_sell": 209,
-      "entry_offer": 217
+      "entry_sell": 58,
+      "entry_offer": 56
     }
   ]
 }
