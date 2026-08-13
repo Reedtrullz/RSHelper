@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 394,
       "entry_offer": 410
+    },
+    {
+      "id": 3,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 992,
+      "buy_price": 83,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T07:31:42.108905+00:00",
+      "note": "auto",
+      "entry_sell": 83,
+      "entry_offer": 86
     }
   ]
 }
