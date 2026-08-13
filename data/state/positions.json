@@ -13,28 +13,28 @@
       "entry_offer": 236
     },
     {
-      "id": 2,
-      "item_id": 12701,
-      "name": "Super combat potion(1)",
-      "qty": 129,
-      "buy_price": 3082,
+      "id": 3,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 93,
+      "buy_price": 90,
       "direction": "traditional",
-      "opened_at": "2026-08-13T13:57:53.715182+00:00",
+      "opened_at": "2026-08-13T14:13:54.134374+00:00",
       "note": "auto",
-      "entry_sell": 3082,
-      "entry_offer": 3200
+      "entry_sell": 90,
+      "entry_offer": 95
     },
     {
-      "id": 3,
-      "item_id": 249,
-      "name": "Guam leaf",
-      "qty": 101,
-      "buy_price": 248,
+      "id": 4,
+      "item_id": 4822,
+      "name": "Mithril nails",
+      "qty": 390,
+      "buy_price": 70,
       "direction": "traditional",
-      "opened_at": "2026-08-13T14:09:53.998116+00:00",
+      "opened_at": "2026-08-13T14:17:54.048456+00:00",
       "note": "auto",
-      "entry_sell": 248,
-      "entry_offer": 261
+      "entry_sell": 70,
+      "entry_offer": 74
     }
   ]
 }
