@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 130,
-      "buy_price": 287,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T15:03:55.171062+00:00",
-      "note": "auto",
-      "entry_sell": 287,
-      "entry_offer": 301
-    }
-  ]
+  "positions": []
 }
