@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 25853,
-      "name": "Amethyst dart tip",
-      "qty": 911,
-      "buy_price": 336,
+      "item_id": 24621,
+      "name": "Blighted vengeance sack",
+      "qty": 186,
+      "buy_price": 66,
       "direction": "traditional",
-      "opened_at": "2026-08-13T10:55:48.164383+00:00",
+      "opened_at": "2026-08-13T11:53:50.679052+00:00",
       "note": "auto",
-      "entry_sell": 336,
-      "entry_offer": 350
+      "entry_sell": 66,
+      "entry_offer": 69
     }
   ]
 }
