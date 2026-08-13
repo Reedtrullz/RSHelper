@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 3780,
-      "buy_price": 27,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 911,
+      "buy_price": 75,
       "direction": "traditional",
-      "opened_at": "2026-08-13T03:33:30.474367+00:00",
+      "opened_at": "2026-08-13T03:49:31.459093+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 75,
+      "entry_offer": 79
+    },
+    {
+      "id": 2,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 569,
+      "buy_price": 234,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T03:49:31.459996+00:00",
+      "note": "auto",
+      "entry_sell": 234,
+      "entry_offer": 247
     }
   ]
 }
