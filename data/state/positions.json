@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 388,
       "entry_offer": 405
+    },
+    {
+      "id": 2,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2031,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T15:51:56.691785+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 25
+    },
+    {
+      "id": 3,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1500,
+      "buy_price": 248,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T15:51:56.692671+00:00",
+      "note": "auto",
+      "entry_sell": 248,
+      "entry_offer": 260
     }
   ]
 }
