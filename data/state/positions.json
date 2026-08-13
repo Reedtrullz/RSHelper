@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 640,
-      "buy_price": 122,
+      "id": 2,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 574,
+      "buy_price": 97,
       "direction": "traditional",
-      "opened_at": "2026-08-13T23:42:08.029845+00:00",
+      "opened_at": "2026-08-13T23:50:08.248367+00:00",
       "note": "auto",
-      "entry_sell": 122,
-      "entry_offer": 128
+      "entry_sell": 97,
+      "entry_offer": 101
+    },
+    {
+      "id": 3,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 102,
+      "buy_price": 186,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T23:56:07.417832+00:00",
+      "note": "auto",
+      "entry_sell": 186,
+      "entry_offer": 193
+    },
+    {
+      "id": 4,
+      "item_id": 383,
+      "name": "Raw shark",
+      "qty": 563,
+      "buy_price": 710,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T23:56:07.418122+00:00",
+      "note": "auto",
+      "entry_sell": 710,
+      "entry_offer": 735
     }
   ]
 }
