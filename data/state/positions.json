@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 115,
       "entry_offer": 110
+    },
+    {
+      "id": 2,
+      "item_id": 1601,
+      "name": "Diamond",
+      "qty": 82,
+      "buy_price": 1713,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T10:53:49.349132+00:00",
+      "note": "auto",
+      "entry_sell": 1713,
+      "entry_offer": 1795
+    },
+    {
+      "id": 3,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 770,
+      "buy_price": 141,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T10:53:49.349891+00:00",
+      "note": "auto",
+      "entry_sell": 141,
+      "entry_offer": 148
     }
   ]
 }
