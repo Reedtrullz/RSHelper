@@ -26,15 +26,15 @@
     },
     {
       "id": 3,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 131,
-      "buy_price": 51,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 233,
+      "buy_price": 290,
       "direction": "traditional",
-      "opened_at": "2026-08-13T11:09:49.434970+00:00",
+      "opened_at": "2026-08-13T11:15:48.433253+00:00",
       "note": "auto",
-      "entry_sell": 51,
-      "entry_offer": 53
+      "entry_sell": 290,
+      "entry_offer": 301
     }
   ]
 }
