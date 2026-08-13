@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 452,
-      "buy_price": 145,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T16:19:57.579786+00:00",
-      "note": "auto",
-      "entry_sell": 145,
-      "entry_offer": 151
-    },
-    {
       "id": 4,
       "item_id": 868,
       "name": "Rune knife",
@@ -26,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 158,
-      "buy_price": 352,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 293,
+      "buy_price": 494,
       "direction": "traditional",
-      "opened_at": "2026-08-13T16:39:57.968498+00:00",
+      "opened_at": "2026-08-13T16:55:58.459930+00:00",
       "note": "auto",
-      "entry_sell": 352,
-      "entry_offer": 369
+      "entry_sell": 494,
+      "entry_offer": 517
     }
   ]
 }
