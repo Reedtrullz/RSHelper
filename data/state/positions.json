@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 584,
-      "buy_price": 388,
+      "item_id": 62,
+      "name": "Maple longbow (u)",
+      "qty": 160,
+      "buy_price": 72,
       "direction": "traditional",
-      "opened_at": "2026-08-13T15:31:55.881183+00:00",
+      "opened_at": "2026-08-13T16:19:57.577782+00:00",
       "note": "auto",
-      "entry_sell": 388,
-      "entry_offer": 405
+      "entry_sell": 72,
+      "entry_offer": 75
+    },
+    {
+      "id": 3,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 452,
+      "buy_price": 145,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T16:19:57.579786+00:00",
+      "note": "auto",
+      "entry_sell": 145,
+      "entry_offer": 151
+    },
+    {
+      "id": 4,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 103,
+      "buy_price": 125,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T16:23:57.799373+00:00",
+      "note": "auto",
+      "entry_sell": 125,
+      "entry_offer": 131
     }
   ]
 }
