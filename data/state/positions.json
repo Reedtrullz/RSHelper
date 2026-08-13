@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 122,
-      "buy_price": 90,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T20:10:03.198161+00:00",
-      "note": "auto",
-      "entry_sell": 90,
-      "entry_offer": 95
-    },
-    {
       "id": 5,
       "item_id": 91,
       "name": "Guam potion (unf)",
@@ -25,16 +13,28 @@
       "entry_offer": 434
     },
     {
-      "id": 6,
-      "item_id": 32907,
-      "name": "Ironwood logs",
-      "qty": 1512,
-      "buy_price": 105,
+      "id": 7,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 1777,
+      "buy_price": 47,
       "direction": "traditional",
-      "opened_at": "2026-08-13T20:26:02.962222+00:00",
+      "opened_at": "2026-08-13T20:34:03.161474+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 111
+      "entry_sell": 47,
+      "entry_offer": 49
+    },
+    {
+      "id": 8,
+      "item_id": 251,
+      "name": "Marrentill",
+      "qty": 273,
+      "buy_price": 225,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T20:36:01.944689+00:00",
+      "note": "auto",
+      "entry_sell": 225,
+      "entry_offer": 235
     }
   ]
 }
