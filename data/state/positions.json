@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 620,
-      "buy_price": 28,
+      "id": 2,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 185,
+      "buy_price": 2151,
       "direction": "traditional",
-      "opened_at": "2026-08-13T19:48:02.063856+00:00",
+      "opened_at": "2026-08-13T20:08:01.552938+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
+      "entry_sell": 2151,
+      "entry_offer": 2263
+    },
+    {
+      "id": 3,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 122,
+      "buy_price": 90,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T20:10:03.198161+00:00",
+      "note": "auto",
+      "entry_sell": 90,
+      "entry_offer": 95
+    },
+    {
+      "id": 4,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1804,
+      "buy_price": 131,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T20:12:01.441749+00:00",
+      "note": "auto",
+      "entry_sell": 131,
+      "entry_offer": 136
     }
   ]
 }
