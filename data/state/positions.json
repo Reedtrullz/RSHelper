@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 395,
-      "name": "Raw sea turtle",
-      "qty": 154,
-      "buy_price": 622,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T19:20:01.349921+00:00",
-      "note": "auto",
-      "entry_sell": 622,
-      "entry_offer": 652
-    }
-  ]
+  "positions": []
 }
