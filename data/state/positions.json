@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 1601,
-      "name": "Diamond",
-      "qty": 82,
-      "buy_price": 1713,
+      "item_id": 25853,
+      "name": "Amethyst dart tip",
+      "qty": 911,
+      "buy_price": 336,
       "direction": "traditional",
-      "opened_at": "2026-08-13T10:53:49.349132+00:00",
+      "opened_at": "2026-08-13T10:55:48.164383+00:00",
       "note": "auto",
-      "entry_sell": 1713,
-      "entry_offer": 1795
+      "entry_sell": 336,
+      "entry_offer": 350
     },
     {
       "id": 3,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 770,
-      "buy_price": 141,
+      "item_id": 361,
+      "name": "Tuna",
+      "qty": 131,
+      "buy_price": 51,
       "direction": "traditional",
-      "opened_at": "2026-08-13T10:53:49.349891+00:00",
+      "opened_at": "2026-08-13T11:09:49.434970+00:00",
       "note": "auto",
-      "entry_sell": 141,
-      "entry_offer": 148
+      "entry_sell": 51,
+      "entry_offer": 53
     }
   ]
 }
