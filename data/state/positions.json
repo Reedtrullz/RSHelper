@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 127,
-      "buy_price": 2105,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T20:54:03.434705+00:00",
-      "note": "auto",
-      "entry_sell": 2105,
-      "entry_offer": 2186
-    },
-    {
       "id": 5,
       "item_id": 62,
       "name": "Maple longbow (u)",
