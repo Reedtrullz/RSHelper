@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 3138,
-      "name": "Potato cactus",
-      "qty": 180,
-      "buy_price": 58,
+      "id": 4,
+      "item_id": 10034,
+      "name": "Red chinchompa",
+      "qty": 285,
+      "buy_price": 1402,
       "direction": "traditional",
-      "opened_at": "2026-08-13T04:51:34.244396+00:00",
+      "opened_at": "2026-08-13T05:11:35.382043+00:00",
       "note": "auto",
-      "entry_sell": 58,
-      "entry_offer": 56
+      "entry_sell": 1402,
+      "entry_offer": 1475
+    },
+    {
+      "id": 5,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 818,
+      "buy_price": 485,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T05:23:36.249994+00:00",
+      "note": "auto",
+      "entry_sell": 485,
+      "entry_offer": 510
     }
   ]
 }
