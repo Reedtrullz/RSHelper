@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 70,
       "entry_offer": 74
-    },
-    {
-      "id": 6,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 162,
-      "buy_price": 391,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T21:56:04.125474+00:00",
-      "note": "auto",
-      "entry_sell": 391,
-      "entry_offer": 409
     }
   ]
 }
