@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 408,
+      "buy_price": 37,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T23:14:06.882168+00:00",
+      "note": "auto",
+      "entry_sell": 37,
+      "entry_offer": 39
+    },
+    {
+      "id": 2,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 2031,
+      "buy_price": 67,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T23:26:07.500443+00:00",
+      "note": "auto",
+      "entry_sell": 67,
+      "entry_offer": 70
+    }
+  ]
 }
