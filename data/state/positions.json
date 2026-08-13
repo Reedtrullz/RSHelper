@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1125,
       "entry_offer": 1170
+    },
+    {
+      "id": 2,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 228,
+      "buy_price": 178,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T13:53:53.476030+00:00",
+      "note": "auto",
+      "entry_sell": 178,
+      "entry_offer": 185
+    },
+    {
+      "id": 3,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 383,
+      "buy_price": 251,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T13:53:53.476570+00:00",
+      "note": "auto",
+      "entry_sell": 251,
+      "entry_offer": 260
     }
   ]
 }
