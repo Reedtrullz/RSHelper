@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 292,
-      "buy_price": 210,
+      "id": 1,
+      "item_id": 1777,
+      "name": "Bow string",
+      "qty": 1765,
+      "buy_price": 161,
       "direction": "traditional",
-      "opened_at": "2026-08-13T01:07:23.920066+00:00",
+      "opened_at": "2026-08-13T01:23:24.339264+00:00",
       "note": "auto",
-      "entry_sell": 210,
-      "entry_offer": 220
+      "entry_sell": 161,
+      "entry_offer": 168
     }
   ]
 }
