@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 91,
-      "name": "Guam potion (unf)",
-      "qty": 236,
-      "buy_price": 416,
+      "id": 3,
+      "item_id": 1749,
+      "name": "Red dragonhide",
+      "qty": 127,
+      "buy_price": 2105,
       "direction": "traditional",
-      "opened_at": "2026-08-13T20:18:02.638525+00:00",
+      "opened_at": "2026-08-13T20:54:03.434705+00:00",
       "note": "auto",
-      "entry_sell": 416,
-      "entry_offer": 434
-    },
-    {
-      "id": 7,
-      "item_id": 11875,
-      "name": "Broad bolts",
-      "qty": 1777,
-      "buy_price": 47,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T20:34:03.161474+00:00",
-      "note": "auto",
-      "entry_sell": 47,
-      "entry_offer": 49
-    },
-    {
-      "id": 8,
-      "item_id": 251,
-      "name": "Marrentill",
-      "qty": 273,
-      "buy_price": 225,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T20:36:01.944689+00:00",
-      "note": "auto",
-      "entry_sell": 225,
-      "entry_offer": 235
+      "entry_sell": 2105,
+      "entry_offer": 2186
     }
   ]
 }
