@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 115,
       "entry_offer": 110
-    },
-    {
-      "id": 3,
-      "item_id": 2550,
-      "name": "Ring of recoil",
-      "qty": 484,
-      "buy_price": 825,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T10:09:48.512358+00:00",
-      "note": "auto",
-      "entry_sell": 825,
-      "entry_offer": 865
     }
   ]
 }
