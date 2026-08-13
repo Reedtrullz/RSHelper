@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 3149,
-      "buy_price": 127,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T05:59:37.433590+00:00",
-      "note": "auto",
-      "entry_sell": 127,
-      "entry_offer": 133
-    },
-    {
-      "id": 2,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 1400,
-      "buy_price": 160,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T06:03:37.497257+00:00",
-      "note": "auto",
-      "entry_sell": 160,
-      "entry_offer": 168
-    }
-  ]
+  "positions": []
 }
