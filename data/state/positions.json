@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2481,
+      "name": "Lantadyme",
+      "qty": 116,
+      "buy_price": 1125,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T13:29:52.752836+00:00",
+      "note": "auto",
+      "entry_sell": 1125,
+      "entry_offer": 1170
+    }
+  ]
 }
