@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 1777,
-      "name": "Bow string",
-      "qty": 100,
-      "buy_price": 161,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T07:49:42.992666+00:00",
-      "note": "auto",
-      "entry_sell": 161,
-      "entry_offer": 168
-    }
-  ]
+  "positions": []
 }
