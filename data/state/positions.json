@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 70,
       "entry_offer": 74
+    },
+    {
+      "id": 6,
+      "item_id": 11230,
+      "name": "Dragon dart",
+      "qty": 396,
+      "buy_price": 1010,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T22:42:06.097584+00:00",
+      "note": "auto",
+      "entry_sell": 1010,
+      "entry_offer": 1052
+    },
+    {
+      "id": 7,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3773,
+      "buy_price": 106,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T22:42:06.098795+00:00",
+      "note": "auto",
+      "entry_sell": 106,
+      "entry_offer": 110
     }
   ]
 }
