@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 1885,
-      "buy_price": 82,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 3780,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-13T03:17:29.686097+00:00",
+      "opened_at": "2026-08-13T03:33:30.474367+00:00",
       "note": "auto",
-      "entry_sell": 82,
-      "entry_offer": 85
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
