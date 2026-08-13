@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2998,
-      "name": "Toadflax",
-      "qty": 122,
-      "buy_price": 2122,
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 6658,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-13T17:47:59.413458+00:00",
+      "opened_at": "2026-08-13T18:03:59.650865+00:00",
       "note": "auto",
-      "entry_sell": 2122,
-      "entry_offer": 2222
+      "entry_sell": 27,
+      "entry_offer": 28
     },
     {
-      "id": 2,
-      "item_id": 25769,
-      "name": "Vile ashes",
-      "qty": 903,
-      "buy_price": 110,
+      "id": 5,
+      "item_id": 42,
+      "name": "Mithril arrowtips",
+      "qty": 1079,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-13T17:55:59.448931+00:00",
+      "opened_at": "2026-08-13T18:07:59.884713+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 115
+      "entry_sell": 45,
+      "entry_offer": 47
+    },
+    {
+      "id": 6,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 995,
+      "buy_price": 402,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T18:09:58.698960+00:00",
+      "note": "auto",
+      "entry_sell": 402,
+      "entry_offer": 418
     }
   ]
 }
