@@ -13,28 +13,28 @@
       "entry_offer": 2186
     },
     {
-      "id": 4,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 1890,
-      "buy_price": 100,
+      "id": 5,
+      "item_id": 62,
+      "name": "Maple longbow (u)",
+      "qty": 200,
+      "buy_price": 70,
       "direction": "traditional",
-      "opened_at": "2026-08-13T21:42:04.686652+00:00",
+      "opened_at": "2026-08-13T21:54:05.280941+00:00",
       "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 105
+      "entry_sell": 70,
+      "entry_offer": 74
     },
     {
-      "id": 5,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 156,
-      "buy_price": 1334,
+      "id": 6,
+      "item_id": 1637,
+      "name": "Sapphire ring",
+      "qty": 162,
+      "buy_price": 391,
       "direction": "traditional",
-      "opened_at": "2026-08-13T21:42:04.687137+00:00",
+      "opened_at": "2026-08-13T21:56:04.125474+00:00",
       "note": "auto",
-      "entry_sell": 1334,
-      "entry_offer": 1396
+      "entry_sell": 391,
+      "entry_offer": 409
     }
   ]
 }
