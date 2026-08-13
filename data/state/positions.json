@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1329,
-      "name": "Mithril scimitar",
-      "qty": 88,
-      "buy_price": 394,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T01:35:24.810386+00:00",
-      "note": "auto",
-      "entry_sell": 394,
-      "entry_offer": 380
-    },
-    {
       "id": 3,
       "item_id": 806,
       "name": "Bronze dart",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 29,
       "entry_offer": 28
+    },
+    {
+      "id": 4,
+      "item_id": 2140,
+      "name": "Cooked chicken",
+      "qty": 110,
+      "buy_price": 75,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T02:15:27.086828+00:00",
+      "note": "auto",
+      "entry_sell": 75,
+      "entry_offer": 78
     }
   ]
 }
