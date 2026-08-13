@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 1263,
-      "buy_price": 98,
+      "id": 1,
+      "item_id": 9188,
+      "name": "Topaz bolt tips",
+      "qty": 200,
+      "buy_price": 115,
       "direction": "traditional",
-      "opened_at": "2026-08-13T09:13:46.995834+00:00",
+      "opened_at": "2026-08-13T09:37:47.547807+00:00",
       "note": "auto",
-      "entry_sell": 98,
-      "entry_offer": 102
+      "entry_sell": 115,
+      "entry_offer": 110
     }
   ]
 }
