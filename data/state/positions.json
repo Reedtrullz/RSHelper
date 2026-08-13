@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2998,
+      "name": "Toadflax",
+      "qty": 122,
+      "buy_price": 2122,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T17:47:59.413458+00:00",
+      "note": "auto",
+      "entry_sell": 2122,
+      "entry_offer": 2222
+    },
+    {
+      "id": 2,
+      "item_id": 25769,
+      "name": "Vile ashes",
+      "qty": 903,
+      "buy_price": 110,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T17:55:59.448931+00:00",
+      "note": "auto",
+      "entry_sell": 110,
+      "entry_offer": 115
+    }
+  ]
 }
