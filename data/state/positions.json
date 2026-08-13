@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 5,
-      "item_id": 62,
-      "name": "Maple longbow (u)",
-      "qty": 200,
-      "buy_price": 70,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T21:54:05.280941+00:00",
-      "note": "auto",
-      "entry_sell": 70,
-      "entry_offer": 74
-    }
-  ]
+  "positions": []
 }
