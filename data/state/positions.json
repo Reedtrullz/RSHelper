@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2105,
       "entry_offer": 2186
+    },
+    {
+      "id": 5,
+      "item_id": 3008,
+      "name": "Energy potion(4)",
+      "qty": 105,
+      "buy_price": 180,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T20:58:03.490002+00:00",
+      "note": "auto",
+      "entry_sell": 180,
+      "entry_offer": 190
+    },
+    {
+      "id": 6,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 156,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-13T21:10:03.738254+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 128
     }
   ]
 }
