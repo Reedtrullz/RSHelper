@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 911,
-      "buy_price": 75,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 279,
+      "buy_price": 152,
       "direction": "traditional",
-      "opened_at": "2026-08-13T03:49:31.459093+00:00",
+      "opened_at": "2026-08-13T04:05:32.337213+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 79
-    },
-    {
-      "id": 2,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 569,
-      "buy_price": 234,
-      "direction": "traditional",
-      "opened_at": "2026-08-13T03:49:31.459996+00:00",
-      "note": "auto",
-      "entry_sell": 234,
-      "entry_offer": 247
+      "entry_sell": 152,
+      "entry_offer": 160
     }
   ]
 }
