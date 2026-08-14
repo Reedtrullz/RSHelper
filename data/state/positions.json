@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 147,
-      "buy_price": 290,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 483,
+      "buy_price": 199,
       "direction": "traditional",
-      "opened_at": "2026-08-14T01:28:11.380332+00:00",
+      "opened_at": "2026-08-14T01:36:11.531701+00:00",
       "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 301
-    },
-    {
-      "id": 2,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 248,
-      "buy_price": 1251,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T01:28:11.381315+00:00",
-      "note": "auto",
-      "entry_sell": 1251,
-      "entry_offer": 1300
-    },
-    {
-      "id": 3,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 362,
-      "buy_price": 390,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T01:28:11.381839+00:00",
-      "note": "auto",
-      "entry_sell": 390,
-      "entry_offer": 409
+      "entry_sell": 199,
+      "entry_offer": 207
     }
   ]
 }
