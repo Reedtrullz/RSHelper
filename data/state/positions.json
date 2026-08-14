@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 1247,
-      "buy_price": 226,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T23:14:54.340546+00:00",
-      "note": "auto",
-      "entry_sell": 226,
-      "entry_offer": 238
-    },
-    {
-      "id": 2,
-      "item_id": 11212,
-      "name": "Dragon arrow",
-      "qty": 217,
-      "buy_price": 1835,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T23:14:54.341042+00:00",
-      "note": "auto",
-      "entry_sell": 1835,
-      "entry_offer": 1925
-    }
-  ]
+  "positions": []
 }
