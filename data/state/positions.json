@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 365,
-      "name": "Bass",
-      "qty": 115,
-      "buy_price": 45,
+      "id": 3,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 1246,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-14T22:22:52.610320+00:00",
+      "opened_at": "2026-08-14T22:50:53.175245+00:00",
       "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 28,
+      "entry_offer": 27
     },
     {
-      "id": 2,
-      "item_id": 562,
-      "name": "Chaos rune",
-      "qty": 3846,
-      "buy_price": 104,
+      "id": 4,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1144,
+      "buy_price": 141,
       "direction": "traditional",
-      "opened_at": "2026-08-14T22:36:51.819917+00:00",
+      "opened_at": "2026-08-14T22:58:53.502950+00:00",
       "note": "auto",
-      "entry_sell": 104,
-      "entry_offer": 108
+      "entry_sell": 141,
+      "entry_offer": 149
+    },
+    {
+      "id": 5,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 1204,
+      "buy_price": 102,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T22:58:53.503472+00:00",
+      "note": "auto",
+      "entry_sell": 102,
+      "entry_offer": 107
     }
   ]
 }
