@@ -13,28 +13,28 @@
       "entry_offer": 1312
     },
     {
-      "id": 5,
-      "item_id": 335,
-      "name": "Raw trout",
-      "qty": 112,
-      "buy_price": 37,
+      "id": 4,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2028,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-14T04:16:15.757259+00:00",
+      "opened_at": "2026-08-14T04:44:16.657795+00:00",
       "note": "auto",
-      "entry_sell": 37,
-      "entry_offer": 39
+      "entry_sell": 27,
+      "entry_offer": 28
     },
     {
-      "id": 6,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 898,
-      "buy_price": 122,
+      "id": 5,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 1013,
+      "buy_price": 86,
       "direction": "traditional",
-      "opened_at": "2026-08-14T04:28:16.130519+00:00",
+      "opened_at": "2026-08-14T04:44:16.658427+00:00",
       "note": "auto",
-      "entry_sell": 122,
-      "entry_offer": 128
+      "entry_sell": 86,
+      "entry_offer": 90
     }
   ]
 }
