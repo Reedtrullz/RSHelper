@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4823,
-      "name": "Adamantite nails",
-      "qty": 504,
-      "buy_price": 113,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 614,
+      "buy_price": 350,
       "direction": "traditional",
-      "opened_at": "2026-08-14T19:24:47.663017+00:00",
+      "opened_at": "2026-08-14T19:40:48.207529+00:00",
       "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 118
+      "entry_sell": 350,
+      "entry_offer": 369
     }
   ]
 }
