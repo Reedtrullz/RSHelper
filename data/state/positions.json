@@ -14,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 299,
-      "buy_price": 1300,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 108,
+      "buy_price": 318,
       "direction": "traditional",
-      "opened_at": "2026-08-14T13:36:34.687566+00:00",
+      "opened_at": "2026-08-14T13:48:34.806043+00:00",
       "note": "auto",
-      "entry_sell": 1300,
-      "entry_offer": 1349
+      "entry_sell": 318,
+      "entry_offer": 303
     }
   ]
 }
