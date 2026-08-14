@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 859,
-      "name": "Magic longbow",
-      "qty": 348,
-      "buy_price": 1149,
+      "id": 1,
+      "item_id": 13441,
+      "name": "Anglerfish",
+      "qty": 203,
+      "buy_price": 1964,
       "direction": "traditional",
-      "opened_at": "2026-08-14T16:56:41.190485+00:00",
+      "opened_at": "2026-08-14T17:14:41.786187+00:00",
       "note": "auto",
-      "entry_sell": 1149,
-      "entry_offer": 1200
+      "entry_sell": 1964,
+      "entry_offer": 2048
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2051,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T17:14:41.787171+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
