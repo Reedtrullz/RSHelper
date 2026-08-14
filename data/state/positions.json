@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 20849,
-      "name": "Dragon thrownaxe",
-      "qty": 92,
-      "buy_price": 313,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 504,
+      "buy_price": 113,
       "direction": "traditional",
-      "opened_at": "2026-08-14T17:46:43.146157+00:00",
+      "opened_at": "2026-08-14T19:24:47.663017+00:00",
       "note": "auto",
-      "entry_sell": 313,
-      "entry_offer": 326
-    },
-    {
-      "id": 2,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 2003,
-      "buy_price": 132,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T19:08:47.002190+00:00",
-      "note": "auto",
-      "entry_sell": 132,
-      "entry_offer": 138
+      "entry_sell": 113,
+      "entry_offer": 118
     }
   ]
 }
