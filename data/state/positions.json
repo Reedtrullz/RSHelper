@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 567,
+      "name": "Unpowered orb",
+      "qty": 363,
+      "buy_price": 75,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T21:42:51.545661+00:00",
+      "note": "auto",
+      "entry_sell": 75,
+      "entry_offer": 78
+    },
+    {
+      "id": 2,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3636,
+      "buy_price": 110,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T21:42:51.546946+00:00",
+      "note": "auto",
+      "entry_sell": 110,
+      "entry_offer": 114
+    },
+    {
+      "id": 3,
+      "item_id": 824,
+      "name": "Rune dart tip",
+      "qty": 346,
+      "buy_price": 1052,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T21:42:51.547397+00:00",
+      "note": "auto",
+      "entry_sell": 1052,
+      "entry_offer": 1090
+    }
+  ]
 }
