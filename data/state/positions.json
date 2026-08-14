@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 824,
-      "name": "Rune dart tip",
-      "qty": 346,
-      "buy_price": 1052,
+      "id": 1,
+      "item_id": 361,
+      "name": "Tuna",
+      "qty": 88,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-14T21:42:51.547397+00:00",
+      "opened_at": "2026-08-14T22:06:52.207631+00:00",
       "note": "auto",
-      "entry_sell": 1052,
-      "entry_offer": 1090
+      "entry_sell": 49,
+      "entry_offer": 51
+    },
+    {
+      "id": 2,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 1889,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T22:06:52.208187+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 25
+    },
+    {
+      "id": 3,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 589,
+      "buy_price": 213,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T22:10:52.168380+00:00",
+      "note": "auto",
+      "entry_sell": 213,
+      "entry_offer": 221
     }
   ]
 }
