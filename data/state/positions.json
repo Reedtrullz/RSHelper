@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 574,
-      "buy_price": 97,
+      "item_id": 1637,
+      "name": "Sapphire ring",
+      "qty": 105,
+      "buy_price": 391,
       "direction": "traditional",
-      "opened_at": "2026-08-13T23:50:08.248367+00:00",
+      "opened_at": "2026-08-14T00:04:09.107078+00:00",
       "note": "auto",
-      "entry_sell": 97,
-      "entry_offer": 101
+      "entry_sell": 391,
+      "entry_offer": 409
     },
     {
       "id": 3,
-      "item_id": 13573,
-      "name": "Dynamite",
-      "qty": 102,
-      "buy_price": 186,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 110,
+      "buy_price": 164,
       "direction": "traditional",
-      "opened_at": "2026-08-13T23:56:07.417832+00:00",
+      "opened_at": "2026-08-14T00:12:09.364170+00:00",
       "note": "auto",
-      "entry_sell": 186,
-      "entry_offer": 193
+      "entry_sell": 164,
+      "entry_offer": 172
     },
     {
       "id": 4,
-      "item_id": 383,
-      "name": "Raw shark",
-      "qty": 563,
-      "buy_price": 710,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 283,
+      "buy_price": 290,
       "direction": "traditional",
-      "opened_at": "2026-08-13T23:56:07.418122+00:00",
+      "opened_at": "2026-08-14T00:12:09.364693+00:00",
       "note": "auto",
-      "entry_sell": 710,
-      "entry_offer": 735
+      "entry_sell": 290,
+      "entry_offer": 301
     }
   ]
 }
