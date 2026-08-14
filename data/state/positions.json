@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 188,
-      "buy_price": 1250,
+      "id": 1,
+      "item_id": 107,
+      "name": "Cadantine potion (unf)",
+      "qty": 150,
+      "buy_price": 2650,
       "direction": "traditional",
-      "opened_at": "2026-08-14T04:02:15.001795+00:00",
+      "opened_at": "2026-08-14T05:04:17.200099+00:00",
       "note": "auto",
-      "entry_sell": 1250,
-      "entry_offer": 1312
+      "entry_sell": 2650,
+      "entry_offer": 2748
     },
     {
-      "id": 4,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 731,
-      "buy_price": 130,
+      "id": 2,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1176,
+      "buy_price": 340,
       "direction": "traditional",
-      "opened_at": "2026-08-14T05:00:17.240545+00:00",
+      "opened_at": "2026-08-14T05:16:17.546629+00:00",
       "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 136
+      "entry_sell": 340,
+      "entry_offer": 355
     }
   ]
 }
