@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 310,
-      "buy_price": 101,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 837,
+      "buy_price": 107,
       "direction": "traditional",
-      "opened_at": "2026-08-14T07:46:22.361108+00:00",
+      "opened_at": "2026-08-14T08:08:23.588551+00:00",
       "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 97
+      "entry_sell": 107,
+      "entry_offer": 112
     }
   ]
 }
