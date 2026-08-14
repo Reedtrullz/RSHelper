@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 483,
-      "buy_price": 199,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T01:36:11.531701+00:00",
-      "note": "auto",
-      "entry_sell": 199,
-      "entry_offer": 207
-    },
-    {
       "id": 4,
       "item_id": 29784,
       "name": "Araxyte venom sac",
@@ -26,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 3141,
-      "buy_price": 105,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 2567,
+      "buy_price": 140,
       "direction": "traditional",
-      "opened_at": "2026-08-14T01:58:12.024857+00:00",
+      "opened_at": "2026-08-14T02:14:12.258615+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
+      "entry_sell": 140,
+      "entry_offer": 145
     }
   ]
 }
