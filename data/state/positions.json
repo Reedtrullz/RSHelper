@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 443,
-      "buy_price": 131,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 235,
+      "buy_price": 125,
       "direction": "traditional",
-      "opened_at": "2026-08-14T15:56:38.611723+00:00",
+      "opened_at": "2026-08-14T16:08:38.927203+00:00",
       "note": "auto",
-      "entry_sell": 131,
-      "entry_offer": 138
+      "entry_sell": 125,
+      "entry_offer": 131
+    },
+    {
+      "id": 2,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 218,
+      "buy_price": 1476,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T16:12:38.868176+00:00",
+      "note": "auto",
+      "entry_sell": 1476,
+      "entry_offer": 1544
+    },
+    {
+      "id": 3,
+      "item_id": 1539,
+      "name": "Steel nails",
+      "qty": 2242,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T16:12:38.868947+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
