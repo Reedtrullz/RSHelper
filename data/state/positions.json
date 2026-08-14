@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 87,
-      "buy_price": 224,
+      "item_id": 1662,
+      "name": "Diamond necklace",
+      "qty": 207,
+      "buy_price": 1924,
       "direction": "traditional",
-      "opened_at": "2026-08-14T10:36:30.552441+00:00",
+      "opened_at": "2026-08-14T10:52:31.145306+00:00",
       "note": "auto",
-      "entry_sell": 224,
-      "entry_offer": 232
+      "entry_sell": 1924,
+      "entry_offer": 2005
+    },
+    {
+      "id": 2,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1094,
+      "buy_price": 125,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T10:52:31.145800+00:00",
+      "note": "auto",
+      "entry_sell": 125,
+      "entry_offer": 130
     }
   ]
 }
