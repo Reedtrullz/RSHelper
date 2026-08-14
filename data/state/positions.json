@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2866,
-      "name": "Ogre arrow",
-      "qty": 86,
-      "buy_price": 182,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 1363,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-14T12:16:33.425112+00:00",
+      "opened_at": "2026-08-14T12:36:33.951033+00:00",
       "note": "auto",
-      "entry_sell": 182,
-      "entry_offer": 190
+      "entry_sell": 105,
+      "entry_offer": 110
     },
     {
       "id": 2,
-      "item_id": 11875,
-      "name": "Broad bolts",
-      "qty": 200,
-      "buy_price": 49,
+      "item_id": 5974,
+      "name": "Coconut",
+      "qty": 222,
+      "buy_price": 1457,
       "direction": "traditional",
-      "opened_at": "2026-08-14T12:16:33.426040+00:00",
+      "opened_at": "2026-08-14T12:40:34.500295+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 1457,
+      "entry_offer": 1528
     }
   ]
 }
