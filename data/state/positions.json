@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 230,
-      "buy_price": 1000,
+      "item_id": 249,
+      "name": "Guam leaf",
+      "qty": 618,
+      "buy_price": 260,
       "direction": "traditional",
-      "opened_at": "2026-08-14T19:52:48.808720+00:00",
+      "opened_at": "2026-08-14T20:12:49.587166+00:00",
       "note": "auto",
-      "entry_sell": 1000,
-      "entry_offer": 1041
+      "entry_sell": 260,
+      "entry_offer": 273
+    },
+    {
+      "id": 2,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 118,
+      "buy_price": 43,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T20:12:49.587440+00:00",
+      "note": "auto",
+      "entry_sell": 43,
+      "entry_offer": 45
+    },
+    {
+      "id": 3,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 232,
+      "buy_price": 168,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T20:12:49.587699+00:00",
+      "note": "auto",
+      "entry_sell": 168,
+      "entry_offer": 174
     }
   ]
 }
