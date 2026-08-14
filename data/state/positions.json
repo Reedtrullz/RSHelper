@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 105,
-      "buy_price": 391,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T00:04:09.107078+00:00",
-      "note": "auto",
-      "entry_sell": 391,
-      "entry_offer": 409
-    },
-    {
       "id": 3,
       "item_id": 9192,
       "name": "Diamond bolt tips",
@@ -23,18 +11,6 @@
       "note": "auto",
       "entry_sell": 164,
       "entry_offer": 172
-    },
-    {
-      "id": 4,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 283,
-      "buy_price": 290,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T00:12:09.364693+00:00",
-      "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 301
     }
   ]
 }
