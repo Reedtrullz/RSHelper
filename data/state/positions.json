@@ -13,28 +13,16 @@
       "entry_offer": 326
     },
     {
-      "id": 4,
-      "item_id": 97,
-      "name": "Harralander potion (unf)",
-      "qty": 420,
-      "buy_price": 536,
+      "id": 2,
+      "item_id": 2351,
+      "name": "Iron bar",
+      "qty": 2003,
+      "buy_price": 132,
       "direction": "traditional",
-      "opened_at": "2026-08-14T18:42:44.750526+00:00",
+      "opened_at": "2026-08-14T19:08:47.002190+00:00",
       "note": "auto",
-      "entry_sell": 536,
-      "entry_offer": 563
-    },
-    {
-      "id": 5,
-      "item_id": 24615,
-      "name": "Blighted teleport spell sack",
-      "qty": 152,
-      "buy_price": 56,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T18:52:46.320078+00:00",
-      "note": "auto",
-      "entry_sell": 56,
-      "entry_offer": 59
+      "entry_sell": 132,
+      "entry_offer": 138
     }
   ]
 }
