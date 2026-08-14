@@ -14,27 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1176,
-      "buy_price": 340,
+      "item_id": 1607,
+      "name": "Sapphire",
+      "qty": 511,
+      "buy_price": 236,
       "direction": "traditional",
-      "opened_at": "2026-08-14T05:16:17.546629+00:00",
+      "opened_at": "2026-08-14T05:48:18.615726+00:00",
       "note": "auto",
-      "entry_sell": 340,
-      "entry_offer": 355
-    },
-    {
-      "id": 3,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 1911,
-      "buy_price": 106,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T05:32:18.268386+00:00",
-      "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 112
+      "entry_sell": 236,
+      "entry_offer": 248
     }
   ]
 }
