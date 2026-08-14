@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 9381,
-      "name": "Runite bolts (unf)",
-      "qty": 1421,
-      "buy_price": 137,
+      "id": 1,
+      "item_id": 2866,
+      "name": "Ogre arrow",
+      "qty": 86,
+      "buy_price": 182,
       "direction": "traditional",
-      "opened_at": "2026-08-14T11:12:32.192106+00:00",
+      "opened_at": "2026-08-14T12:16:33.425112+00:00",
       "note": "auto",
-      "entry_sell": 137,
-      "entry_offer": 143
+      "entry_sell": 182,
+      "entry_offer": 190
+    },
+    {
+      "id": 2,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 200,
+      "buy_price": 49,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T12:16:33.426040+00:00",
+      "note": "auto",
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
