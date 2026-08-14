@@ -14,27 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 43,
-      "name": "Adamant arrowtips",
-      "qty": 711,
-      "buy_price": 95,
+      "item_id": 385,
+      "name": "Shark",
+      "qty": 416,
+      "buy_price": 960,
       "direction": "traditional",
-      "opened_at": "2026-08-14T18:04:43.873887+00:00",
+      "opened_at": "2026-08-14T18:20:44.786184+00:00",
       "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 99
-    },
-    {
-      "id": 3,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 550,
-      "buy_price": 376,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T18:04:43.874649+00:00",
-      "note": "auto",
-      "entry_sell": 376,
-      "entry_offer": 392
+      "entry_sell": 960,
+      "entry_offer": 998
     }
   ]
 }
