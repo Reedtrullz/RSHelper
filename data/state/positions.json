@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 11951,
-      "name": "Extended antifire(4)",
-      "qty": 80,
-      "buy_price": 275,
+      "id": 1,
+      "item_id": 335,
+      "name": "Raw trout",
+      "qty": 304,
+      "buy_price": 37,
       "direction": "traditional",
-      "opened_at": "2026-08-14T02:38:12.942642+00:00",
+      "opened_at": "2026-08-14T02:58:13.448217+00:00",
       "note": "auto",
-      "entry_sell": 275,
-      "entry_offer": 287
+      "entry_sell": 37,
+      "entry_offer": 39
+    },
+    {
+      "id": 2,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 733,
+      "buy_price": 545,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T02:58:13.449013+00:00",
+      "note": "auto",
+      "entry_sell": 545,
+      "entry_offer": 568
     }
   ]
 }
