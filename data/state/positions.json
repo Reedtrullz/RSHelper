@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 229,
-      "buy_price": 156,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T03:38:14.190380+00:00",
-      "note": "auto",
-      "entry_sell": 156,
-      "entry_offer": 162
-    },
-    {
       "id": 3,
       "item_id": 217,
       "name": "Grimy dwarf weed",
@@ -25,16 +13,28 @@
       "entry_offer": 1312
     },
     {
-      "id": 4,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 116,
-      "buy_price": 895,
+      "id": 5,
+      "item_id": 335,
+      "name": "Raw trout",
+      "qty": 112,
+      "buy_price": 37,
       "direction": "traditional",
-      "opened_at": "2026-08-14T04:08:15.327098+00:00",
+      "opened_at": "2026-08-14T04:16:15.757259+00:00",
       "note": "auto",
-      "entry_sell": 895,
-      "entry_offer": 942
+      "entry_sell": 37,
+      "entry_offer": 39
+    },
+    {
+      "id": 6,
+      "item_id": 4823,
+      "name": "Adamantite nails",
+      "qty": 898,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T04:28:16.130519+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 128
     }
   ]
 }
