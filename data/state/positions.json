@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 310,
+      "buy_price": 101,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T07:46:22.361108+00:00",
+      "note": "auto",
+      "entry_sell": 101,
+      "entry_offer": 97
+    }
+  ]
 }
