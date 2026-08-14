@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 110
+    },
+    {
+      "id": 3,
+      "item_id": 442,
+      "name": "Silver ore",
+      "qty": 2399,
+      "buy_price": 63,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T13:00:34.039067+00:00",
+      "note": "auto",
+      "entry_sell": 63,
+      "entry_offer": 66
     }
   ]
 }
