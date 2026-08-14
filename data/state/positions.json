@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 442,
-      "name": "Silver ore",
-      "qty": 2399,
-      "buy_price": 63,
+      "id": 1,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 161,
+      "buy_price": 99,
       "direction": "traditional",
-      "opened_at": "2026-08-14T13:00:34.039067+00:00",
+      "opened_at": "2026-08-14T14:24:35.622981+00:00",
       "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 66
+      "entry_sell": 99,
+      "entry_offer": 103
     }
   ]
 }
