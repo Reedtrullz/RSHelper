@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2351,
+      "name": "Iron bar",
+      "qty": 443,
+      "buy_price": 131,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T15:56:38.611723+00:00",
+      "note": "auto",
+      "entry_sell": 131,
+      "entry_offer": 138
+    }
+  ]
 }
