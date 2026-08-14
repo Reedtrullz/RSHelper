@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 88,
-      "buy_price": 49,
+      "item_id": 365,
+      "name": "Bass",
+      "qty": 115,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-14T22:06:52.207631+00:00",
+      "opened_at": "2026-08-14T22:22:52.610320+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 45,
+      "entry_offer": 47
     },
     {
       "id": 2,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 1889,
-      "buy_price": 26,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 444,
+      "buy_price": 226,
       "direction": "traditional",
-      "opened_at": "2026-08-14T22:06:52.208187+00:00",
+      "opened_at": "2026-08-14T22:26:52.884124+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 25
-    },
-    {
-      "id": 3,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 589,
-      "buy_price": 213,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T22:10:52.168380+00:00",
-      "note": "auto",
-      "entry_sell": 213,
-      "entry_offer": 221
+      "entry_sell": 226,
+      "entry_offer": 236
     }
   ]
 }
