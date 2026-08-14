@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1207,
       "entry_offer": 1256
+    },
+    {
+      "id": 4,
+      "item_id": 9381,
+      "name": "Runite bolts (unf)",
+      "qty": 1421,
+      "buy_price": 137,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T11:12:32.192106+00:00",
+      "note": "auto",
+      "entry_sell": 137,
+      "entry_offer": 143
     }
   ]
 }
