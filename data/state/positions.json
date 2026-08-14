@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 13441,
-      "name": "Anglerfish",
-      "qty": 203,
-      "buy_price": 1964,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 142,
+      "buy_price": 535,
       "direction": "traditional",
-      "opened_at": "2026-08-14T17:14:41.786187+00:00",
+      "opened_at": "2026-08-14T17:30:42.401029+00:00",
       "note": "auto",
-      "entry_sell": 1964,
-      "entry_offer": 2048
-    },
-    {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2051,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T17:14:41.787171+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 535,
+      "entry_offer": 563
     }
   ]
 }
