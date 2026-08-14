@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 614,
-      "buy_price": 350,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 230,
+      "buy_price": 1000,
       "direction": "traditional",
-      "opened_at": "2026-08-14T19:40:48.207529+00:00",
+      "opened_at": "2026-08-14T19:52:48.808720+00:00",
       "note": "auto",
-      "entry_sell": 350,
-      "entry_offer": 369
+      "entry_sell": 1000,
+      "entry_offer": 1041
     }
   ]
 }
