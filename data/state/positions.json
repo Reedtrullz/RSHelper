@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 199,
       "entry_offer": 207
+    },
+    {
+      "id": 4,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 331,
+      "buy_price": 1207,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T01:56:10.797007+00:00",
+      "note": "auto",
+      "entry_sell": 1207,
+      "entry_offer": 1250
+    },
+    {
+      "id": 5,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3141,
+      "buy_price": 105,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T01:58:12.024857+00:00",
+      "note": "auto",
+      "entry_sell": 105,
+      "entry_offer": 110
     }
   ]
 }
