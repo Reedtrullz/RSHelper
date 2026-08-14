@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 331,
-      "buy_price": 1207,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T10:56:31.219066+00:00",
-      "note": "auto",
-      "entry_sell": 1207,
-      "entry_offer": 1256
-    },
-    {
       "id": 4,
       "item_id": 9381,
       "name": "Runite bolts (unf)",
@@ -23,18 +11,6 @@
       "note": "auto",
       "entry_sell": 137,
       "entry_offer": 143
-    },
-    {
-      "id": 5,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 311,
-      "buy_price": 405,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T11:32:32.371867+00:00",
-      "note": "auto",
-      "entry_sell": 405,
-      "entry_offer": 423
     }
   ]
 }
