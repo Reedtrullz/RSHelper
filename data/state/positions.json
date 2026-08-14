@@ -13,16 +13,28 @@
       "entry_offer": 326
     },
     {
-      "id": 2,
-      "item_id": 385,
-      "name": "Shark",
-      "qty": 416,
-      "buy_price": 960,
+      "id": 3,
+      "item_id": 211,
+      "name": "Grimy avantoe",
+      "qty": 153,
+      "buy_price": 1460,
       "direction": "traditional",
-      "opened_at": "2026-08-14T18:20:44.786184+00:00",
+      "opened_at": "2026-08-14T18:28:45.186262+00:00",
       "note": "auto",
-      "entry_sell": 960,
-      "entry_offer": 998
+      "entry_sell": 1460,
+      "entry_offer": 1514
+    },
+    {
+      "id": 4,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 360,
+      "buy_price": 164,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T18:36:45.663465+00:00",
+      "note": "auto",
+      "entry_sell": 164,
+      "entry_offer": 171
     }
   ]
 }
