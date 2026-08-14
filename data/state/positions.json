@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 107,
-      "name": "Cadantine potion (unf)",
-      "qty": 150,
-      "buy_price": 2650,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T05:04:17.200099+00:00",
-      "note": "auto",
-      "entry_sell": 2650,
-      "entry_offer": 2748
-    },
-    {
       "id": 2,
       "item_id": 9191,
       "name": "Ruby bolt tips",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 110
+    },
+    {
+      "id": 3,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 100,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T06:36:20.887999+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
