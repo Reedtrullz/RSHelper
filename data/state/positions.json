@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1662,
-      "name": "Diamond necklace",
-      "qty": 207,
-      "buy_price": 1924,
+      "id": 3,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 331,
+      "buy_price": 1207,
       "direction": "traditional",
-      "opened_at": "2026-08-14T10:52:31.145306+00:00",
+      "opened_at": "2026-08-14T10:56:31.219066+00:00",
       "note": "auto",
-      "entry_sell": 1924,
-      "entry_offer": 2005
-    },
-    {
-      "id": 2,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1094,
-      "buy_price": 125,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T10:52:31.145800+00:00",
-      "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 130
+      "entry_sell": 1207,
+      "entry_offer": 1256
     }
   ]
 }
