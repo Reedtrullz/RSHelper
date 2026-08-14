@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 335,
-      "name": "Raw trout",
-      "qty": 304,
-      "buy_price": 37,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 512,
+      "buy_price": 102,
       "direction": "traditional",
-      "opened_at": "2026-08-14T02:58:13.448217+00:00",
+      "opened_at": "2026-08-14T03:14:13.776183+00:00",
       "note": "auto",
-      "entry_sell": 37,
-      "entry_offer": 39
-    },
-    {
-      "id": 2,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 733,
-      "buy_price": 545,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T02:58:13.449013+00:00",
-      "note": "auto",
-      "entry_sell": 545,
-      "entry_offer": 568
+      "entry_sell": 102,
+      "entry_offer": 106
     }
   ]
 }
