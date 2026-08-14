@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 868,
-      "name": "Rune knife",
-      "qty": 235,
-      "buy_price": 125,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 117,
+      "buy_price": 536,
       "direction": "traditional",
-      "opened_at": "2026-08-14T16:08:38.927203+00:00",
+      "opened_at": "2026-08-14T16:20:39.242219+00:00",
       "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 131
+      "entry_sell": 536,
+      "entry_offer": 563
     },
     {
       "id": 2,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 218,
-      "buy_price": 1476,
+      "item_id": 8007,
+      "name": "Varrock teleport (tablet)",
+      "qty": 540,
+      "buy_price": 740,
       "direction": "traditional",
-      "opened_at": "2026-08-14T16:12:38.868176+00:00",
+      "opened_at": "2026-08-14T16:28:39.692124+00:00",
       "note": "auto",
-      "entry_sell": 1476,
-      "entry_offer": 1544
-    },
-    {
-      "id": 3,
-      "item_id": 1539,
-      "name": "Steel nails",
-      "qty": 2242,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T16:12:38.868947+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 740,
+      "entry_offer": 768
     }
   ]
 }
