@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 1363,
-      "buy_price": 105,
-      "direction": "traditional",
-      "opened_at": "2026-08-14T12:36:33.951033+00:00",
-      "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
-    },
-    {
       "id": 3,
       "item_id": 442,
       "name": "Silver ore",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 63,
       "entry_offer": 66
+    },
+    {
+      "id": 4,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1659,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T13:20:34.486466+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 5,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 139,
+      "buy_price": 125,
+      "direction": "traditional",
+      "opened_at": "2026-08-14T13:24:34.454779+00:00",
+      "note": "auto",
+      "entry_sell": 125,
+      "entry_offer": 130
     }
   ]
 }
