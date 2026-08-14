@@ -13,28 +13,28 @@
       "entry_offer": 326
     },
     {
-      "id": 3,
-      "item_id": 211,
-      "name": "Grimy avantoe",
-      "qty": 153,
-      "buy_price": 1460,
+      "id": 4,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 420,
+      "buy_price": 536,
       "direction": "traditional",
-      "opened_at": "2026-08-14T18:28:45.186262+00:00",
+      "opened_at": "2026-08-14T18:42:44.750526+00:00",
       "note": "auto",
-      "entry_sell": 1460,
-      "entry_offer": 1514
+      "entry_sell": 536,
+      "entry_offer": 563
     },
     {
-      "id": 4,
-      "item_id": 9192,
-      "name": "Diamond bolt tips",
-      "qty": 360,
-      "buy_price": 164,
+      "id": 5,
+      "item_id": 24615,
+      "name": "Blighted teleport spell sack",
+      "qty": 152,
+      "buy_price": 56,
       "direction": "traditional",
-      "opened_at": "2026-08-14T18:36:45.663465+00:00",
+      "opened_at": "2026-08-14T18:52:46.320078+00:00",
       "note": "auto",
-      "entry_sell": 164,
-      "entry_offer": 171
+      "entry_sell": 56,
+      "entry_offer": 59
     }
   ]
 }
