@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 192,
-      "buy_price": 172,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 87,
+      "buy_price": 224,
       "direction": "traditional",
-      "opened_at": "2026-08-14T10:20:29.839550+00:00",
+      "opened_at": "2026-08-14T10:36:30.552441+00:00",
       "note": "auto",
-      "entry_sell": 172,
-      "entry_offer": 180
+      "entry_sell": 224,
+      "entry_offer": 232
     }
   ]
 }
