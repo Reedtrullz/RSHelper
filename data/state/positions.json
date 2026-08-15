@@ -13,28 +13,28 @@
       "entry_offer": 1505
     },
     {
-      "id": 3,
-      "item_id": 821,
-      "name": "Steel dart tip",
-      "qty": 550,
-      "buy_price": 83,
+      "id": 4,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 250,
+      "buy_price": 81,
       "direction": "traditional",
-      "opened_at": "2026-08-15T18:09:24.248498+00:00",
+      "opened_at": "2026-08-15T18:21:24.623723+00:00",
       "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 86
+      "entry_sell": 81,
+      "entry_offer": 85
     },
     {
-      "id": 4,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 1722,
-      "buy_price": 70,
+      "id": 5,
+      "item_id": 217,
+      "name": "Grimy dwarf weed",
+      "qty": 174,
+      "buy_price": 1235,
       "direction": "traditional",
-      "opened_at": "2026-08-15T18:15:23.277345+00:00",
+      "opened_at": "2026-08-15T18:23:23.452095+00:00",
       "note": "auto",
-      "entry_sell": 70,
-      "entry_offer": 74
+      "entry_sell": 1235,
+      "entry_offer": 1286
     }
   ]
 }
