@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 32907,
-      "name": "Ironwood logs",
-      "qty": 250,
-      "buy_price": 106,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T13:03:18.857793+00:00",
-      "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 111
-    },
-    {
       "id": 6,
       "item_id": 31970,
       "name": "Teak repair kit",
@@ -26,15 +14,27 @@
     },
     {
       "id": 7,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 481,
-      "buy_price": 108,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 4480,
+      "buy_price": 41,
       "direction": "traditional",
-      "opened_at": "2026-08-15T14:17:20.173271+00:00",
+      "opened_at": "2026-08-15T14:31:20.498996+00:00",
       "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 112
+      "entry_sell": 41,
+      "entry_offer": 43
+    },
+    {
+      "id": 8,
+      "item_id": 22593,
+      "name": "Te salt",
+      "qty": 105,
+      "buy_price": 127,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T14:31:20.499791+00:00",
+      "note": "auto",
+      "entry_sell": 127,
+      "entry_offer": 133
     }
   ]
 }
