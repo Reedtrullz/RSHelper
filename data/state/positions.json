@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 190,
+      "buy_price": 73,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T05:05:05.126056+00:00",
+      "note": "auto",
+      "entry_sell": 73,
+      "entry_offer": 77
+    },
+    {
+      "id": 2,
+      "item_id": 391,
+      "name": "Manta ray",
+      "qty": 125,
+      "buy_price": 1352,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T05:05:05.126339+00:00",
+      "note": "auto",
+      "entry_sell": 1352,
+      "entry_offer": 1425
+    }
+  ]
 }
