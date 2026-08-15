@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 5972,
-      "name": "Papaya fruit",
-      "qty": 125,
-      "buy_price": 1406,
+      "id": 1,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 298,
+      "buy_price": 166,
       "direction": "traditional",
-      "opened_at": "2026-08-15T02:39:00.013816+00:00",
+      "opened_at": "2026-08-15T02:59:00.699745+00:00",
       "note": "auto",
-      "entry_sell": 1406,
-      "entry_offer": 1463
+      "entry_sell": 166,
+      "entry_offer": 174
+    },
+    {
+      "id": 2,
+      "item_id": 2499,
+      "name": "Blue d'hide body",
+      "qty": 85,
+      "buy_price": 4700,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T02:59:00.700034+00:00",
+      "note": "auto",
+      "entry_sell": 4700,
+      "entry_offer": 4899
+    },
+    {
+      "id": 3,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 180,
+      "buy_price": 76,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T02:59:00.700314+00:00",
+      "note": "auto",
+      "entry_sell": 76,
+      "entry_offer": 79
     }
   ]
 }
