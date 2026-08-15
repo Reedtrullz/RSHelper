@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 121,
-      "buy_price": 305,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 2649,
+      "buy_price": 151,
       "direction": "traditional",
-      "opened_at": "2026-08-15T04:01:02.638761+00:00",
+      "opened_at": "2026-08-15T04:17:03.326932+00:00",
       "note": "auto",
-      "entry_sell": 305,
-      "entry_offer": 320
+      "entry_sell": 151,
+      "entry_offer": 158
     }
   ]
 }
