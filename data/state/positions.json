@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 938,
-      "buy_price": 196,
+      "id": 1,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 4072,
+      "buy_price": 41,
       "direction": "traditional",
-      "opened_at": "2026-08-15T01:08:56.442648+00:00",
+      "opened_at": "2026-08-15T01:22:58.187460+00:00",
       "note": "auto",
-      "entry_sell": 196,
-      "entry_offer": 206
-    },
-    {
-      "id": 7,
-      "item_id": 31973,
-      "name": "Mahogany repair kit",
-      "qty": 91,
-      "buy_price": 1056,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T01:14:57.663995+00:00",
-      "note": "auto",
-      "entry_sell": 1056,
-      "entry_offer": 1093
+      "entry_sell": 41,
+      "entry_offer": 43
     }
   ]
 }
