@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 2866,
-      "name": "Ogre arrow",
-      "qty": 164,
-      "buy_price": 199,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T00:50:57.023344+00:00",
-      "note": "auto",
-      "entry_sell": 199,
-      "entry_offer": 190
-    },
-    {
-      "id": 5,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 123,
-      "buy_price": 73,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T00:58:57.365360+00:00",
-      "note": "auto",
-      "entry_sell": 73,
-      "entry_offer": 76
-    },
-    {
       "id": 6,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 524,
-      "buy_price": 762,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 938,
+      "buy_price": 196,
       "direction": "traditional",
-      "opened_at": "2026-08-15T00:58:57.365648+00:00",
+      "opened_at": "2026-08-15T01:08:56.442648+00:00",
       "note": "auto",
-      "entry_sell": 762,
-      "entry_offer": 794
+      "entry_sell": 196,
+      "entry_offer": 206
+    },
+    {
+      "id": 7,
+      "item_id": 31973,
+      "name": "Mahogany repair kit",
+      "qty": 91,
+      "buy_price": 1056,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T01:14:57.663995+00:00",
+      "note": "auto",
+      "entry_sell": 1056,
+      "entry_offer": 1093
     }
   ]
 }
