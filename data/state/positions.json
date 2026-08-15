@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 9381,
-      "name": "Runite bolts (unf)",
-      "qty": 1462,
-      "buy_price": 130,
+      "id": 1,
+      "item_id": 169,
+      "name": "Ranging potion(3)",
+      "qty": 124,
+      "buy_price": 1400,
       "direction": "traditional",
-      "opened_at": "2026-08-15T15:21:21.469121+00:00",
+      "opened_at": "2026-08-15T16:01:22.287753+00:00",
       "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 137
-    },
-    {
-      "id": 8,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 362,
-      "buy_price": 45,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T15:33:21.754262+00:00",
-      "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 1400,
+      "entry_offer": 1450
     }
   ]
 }
