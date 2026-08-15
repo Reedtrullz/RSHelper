@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 3636,
-      "buy_price": 110,
+      "id": 2,
+      "item_id": 1637,
+      "name": "Sapphire ring",
+      "qty": 104,
+      "buy_price": 381,
       "direction": "traditional",
-      "opened_at": "2026-08-15T08:21:12.226073+00:00",
+      "opened_at": "2026-08-15T08:33:12.489432+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 114
+      "entry_sell": 381,
+      "entry_offer": 396
+    },
+    {
+      "id": 3,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 1850,
+      "buy_price": 43,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T08:41:12.782133+00:00",
+      "note": "auto",
+      "entry_sell": 43,
+      "entry_offer": 41
     }
   ]
 }
