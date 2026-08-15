@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 32336,
-      "name": "Halibut",
-      "qty": 198,
-      "buy_price": 2012,
+      "id": 5,
+      "item_id": 32907,
+      "name": "Ironwood logs",
+      "qty": 250,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-15T10:15:14.447126+00:00",
+      "opened_at": "2026-08-15T13:03:18.857793+00:00",
       "note": "auto",
-      "entry_sell": 2012,
-      "entry_offer": 2095
+      "entry_sell": 106,
+      "entry_offer": 111
     },
     {
-      "id": 4,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 201,
-      "buy_price": 1000,
+      "id": 6,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 308,
+      "buy_price": 208,
       "direction": "traditional",
-      "opened_at": "2026-08-15T12:53:17.380508+00:00",
+      "opened_at": "2026-08-15T13:15:18.939450+00:00",
       "note": "auto",
-      "entry_sell": 1000,
-      "entry_offer": 1041
+      "entry_sell": 208,
+      "entry_offer": 216
     }
   ]
 }
