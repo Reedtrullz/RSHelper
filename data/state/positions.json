@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 2656,
-      "buy_price": 147,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T10:15:14.446221+00:00",
-      "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 154
-    },
-    {
       "id": 2,
       "item_id": 32336,
       "name": "Halibut",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2012,
       "entry_offer": 2095
+    },
+    {
+      "id": 3,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 2299,
+      "buy_price": 91,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T10:27:14.704996+00:00",
+      "note": "auto",
+      "entry_sell": 91,
+      "entry_offer": 95
+    },
+    {
+      "id": 4,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 1474,
+      "buy_price": 68,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T10:31:14.748184+00:00",
+      "note": "auto",
+      "entry_sell": 68,
+      "entry_offer": 71
     }
   ]
 }
