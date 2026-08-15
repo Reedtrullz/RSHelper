@@ -13,28 +13,16 @@
       "entry_offer": 137
     },
     {
-      "id": 6,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 3043,
-      "buy_price": 109,
+      "id": 8,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 362,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-15T15:29:21.443911+00:00",
+      "opened_at": "2026-08-15T15:33:21.754262+00:00",
       "note": "auto",
-      "entry_sell": 109,
-      "entry_offer": 114
-    },
-    {
-      "id": 7,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 138,
-      "buy_price": 1246,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T15:29:21.444600+00:00",
-      "note": "auto",
-      "entry_sell": 1246,
-      "entry_offer": 1298
+      "entry_sell": 45,
+      "entry_offer": 47
     }
   ]
 }
