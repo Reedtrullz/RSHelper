@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 2120,
+      "buy_price": 112,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T21:39:28.098737+00:00",
+      "note": "auto",
+      "entry_sell": 112,
+      "entry_offer": 116
+    }
+  ]
 }
