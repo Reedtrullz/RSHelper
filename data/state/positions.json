@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 4072,
-      "buy_price": 41,
+      "item_id": 22595,
+      "name": "Efh salt",
+      "qty": 100,
+      "buy_price": 119,
       "direction": "traditional",
-      "opened_at": "2026-08-15T01:22:58.187460+00:00",
+      "opened_at": "2026-08-15T01:42:58.618219+00:00",
       "note": "auto",
-      "entry_sell": 41,
-      "entry_offer": 43
+      "entry_sell": 119,
+      "entry_offer": 124
     }
   ]
 }
