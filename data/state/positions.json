@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 1235,
       "entry_offer": 1286
-    },
-    {
-      "id": 7,
-      "item_id": 32907,
-      "name": "Ironwood logs",
-      "qty": 2048,
-      "buy_price": 111,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T18:49:25.103075+00:00",
-      "note": "auto",
-      "entry_sell": 111,
-      "entry_offer": 116
     }
   ]
 }
