@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 569,
-      "name": "Fire orb",
-      "qty": 111,
-      "buy_price": 1675,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 2305,
+      "buy_price": 109,
       "direction": "traditional",
-      "opened_at": "2026-08-15T19:33:25.975939+00:00",
+      "opened_at": "2026-08-15T19:47:25.227206+00:00",
       "note": "auto",
-      "entry_sell": 1675,
-      "entry_offer": 1754
+      "entry_sell": 109,
+      "entry_offer": 115
     },
     {
       "id": 3,
-      "item_id": 70,
-      "name": "Magic longbow (u)",
-      "qty": 520,
-      "buy_price": 768,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 136,
+      "buy_price": 121,
       "direction": "traditional",
-      "opened_at": "2026-08-15T19:33:25.976435+00:00",
+      "opened_at": "2026-08-15T19:47:25.227561+00:00",
       "note": "auto",
-      "entry_sell": 768,
-      "entry_offer": 795
+      "entry_sell": 121,
+      "entry_offer": 126
     }
   ]
 }
