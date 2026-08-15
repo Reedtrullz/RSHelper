@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 523,
-      "buy_price": 244,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T08:01:11.875341+00:00",
-      "note": "auto",
-      "entry_sell": 244,
-      "entry_offer": 257
-    },
-    {
       "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 787,
-      "buy_price": 27,
+      "item_id": 2444,
+      "name": "Ranging potion(4)",
+      "qty": 208,
+      "buy_price": 1921,
       "direction": "traditional",
-      "opened_at": "2026-08-15T08:01:11.876188+00:00",
+      "opened_at": "2026-08-15T08:13:12.127159+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 1921,
+      "entry_offer": 2025
     }
   ]
 }
