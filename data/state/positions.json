@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 3847,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T19:29:25.975294+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
-    },
-    {
       "id": 2,
-      "item_id": 9075,
-      "name": "Astral rune",
-      "qty": 2305,
-      "buy_price": 109,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 287,
+      "buy_price": 118,
       "direction": "traditional",
-      "opened_at": "2026-08-15T19:47:25.227206+00:00",
+      "opened_at": "2026-08-15T20:01:26.483383+00:00",
       "note": "auto",
-      "entry_sell": 109,
-      "entry_offer": 115
-    },
-    {
-      "id": 3,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 136,
-      "buy_price": 121,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T19:47:25.227561+00:00",
-      "note": "auto",
-      "entry_sell": 121,
-      "entry_offer": 126
+      "entry_sell": 118,
+      "entry_offer": 123
     }
   ]
 }
