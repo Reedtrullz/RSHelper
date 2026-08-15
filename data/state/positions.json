@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 298,
-      "buy_price": 166,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T02:59:00.699745+00:00",
-      "note": "auto",
-      "entry_sell": 166,
-      "entry_offer": 174
-    },
-    {
       "id": 2,
-      "item_id": 2499,
-      "name": "Blue d'hide body",
-      "qty": 85,
-      "buy_price": 4700,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 566,
+      "buy_price": 162,
       "direction": "traditional",
-      "opened_at": "2026-08-15T02:59:00.700034+00:00",
+      "opened_at": "2026-08-15T03:07:00.864699+00:00",
       "note": "auto",
-      "entry_sell": 4700,
-      "entry_offer": 4899
+      "entry_sell": 162,
+      "entry_offer": 154
     },
     {
       "id": 3,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 180,
-      "buy_price": 76,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 465,
+      "buy_price": 383,
       "direction": "traditional",
-      "opened_at": "2026-08-15T02:59:00.700314+00:00",
+      "opened_at": "2026-08-15T03:15:01.146844+00:00",
       "note": "auto",
-      "entry_sell": 76,
-      "entry_offer": 79
+      "entry_sell": 383,
+      "entry_offer": 401
+    },
+    {
+      "id": 4,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 306,
+      "buy_price": 662,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T03:15:01.147155+00:00",
+      "note": "auto",
+      "entry_sell": 662,
+      "entry_offer": 694
     }
   ]
 }
