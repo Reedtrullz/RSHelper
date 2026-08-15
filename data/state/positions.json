@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 308,
-      "buy_price": 1297,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T09:11:13.282344+00:00",
-      "note": "auto",
-      "entry_sell": 1297,
-      "entry_offer": 1360
-    }
-  ]
+  "positions": []
 }
