@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 830,
-      "name": "Rune javelin",
-      "qty": 181,
-      "buy_price": 136,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 425,
+      "buy_price": 142,
       "direction": "traditional",
-      "opened_at": "2026-08-14T23:58:55.658094+00:00",
+      "opened_at": "2026-08-15T00:14:55.922228+00:00",
       "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 141
+      "entry_sell": 142,
+      "entry_offer": 148
     }
   ]
 }
