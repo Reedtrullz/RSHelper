@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 2301,
-      "name": "Pineapple pizza",
-      "qty": 84,
-      "buy_price": 700,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T22:37:30.274998+00:00",
-      "note": "auto",
-      "entry_sell": 700,
-      "entry_offer": 740
-    }
-  ]
+  "positions": []
 }
