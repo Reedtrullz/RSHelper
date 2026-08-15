@@ -26,15 +26,15 @@
     },
     {
       "id": 4,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 1474,
-      "buy_price": 68,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 1400,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-15T10:31:14.748184+00:00",
+      "opened_at": "2026-08-15T10:43:15.002911+00:00",
       "note": "auto",
-      "entry_sell": 68,
-      "entry_offer": 71
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
