@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 22595,
-      "name": "Efh salt",
-      "qty": 100,
-      "buy_price": 119,
+      "id": 2,
+      "item_id": 21350,
+      "name": "Amethyst arrowtips",
+      "qty": 391,
+      "buy_price": 173,
       "direction": "traditional",
-      "opened_at": "2026-08-15T01:42:58.618219+00:00",
+      "opened_at": "2026-08-15T01:54:58.953823+00:00",
       "note": "auto",
-      "entry_sell": 119,
-      "entry_offer": 124
+      "entry_sell": 173,
+      "entry_offer": 180
+    },
+    {
+      "id": 3,
+      "item_id": 1639,
+      "name": "Emerald ring",
+      "qty": 130,
+      "buy_price": 588,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T01:58:59.234100+00:00",
+      "note": "auto",
+      "entry_sell": 588,
+      "entry_offer": 612
+    },
+    {
+      "id": 4,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 749,
+      "buy_price": 340,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T01:58:59.234384+00:00",
+      "note": "auto",
+      "entry_sell": 340,
+      "entry_offer": 356
     }
   ]
 }
