@@ -26,15 +26,15 @@
     },
     {
       "id": 7,
-      "item_id": 1601,
-      "name": "Diamond",
-      "qty": 155,
-      "buy_price": 1640,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 481,
+      "buy_price": 108,
       "direction": "traditional",
-      "opened_at": "2026-08-15T14:01:19.874387+00:00",
+      "opened_at": "2026-08-15T14:17:20.173271+00:00",
       "note": "auto",
-      "entry_sell": 1640,
-      "entry_offer": 1730
+      "entry_sell": 108,
+      "entry_offer": 112
     }
   ]
 }
