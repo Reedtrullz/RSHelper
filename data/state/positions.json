@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 21350,
-      "name": "Amethyst arrowtips",
-      "qty": 391,
-      "buy_price": 173,
+      "id": 3,
+      "item_id": 5972,
+      "name": "Papaya fruit",
+      "qty": 125,
+      "buy_price": 1406,
       "direction": "traditional",
-      "opened_at": "2026-08-15T01:54:58.953823+00:00",
+      "opened_at": "2026-08-15T02:39:00.013816+00:00",
       "note": "auto",
-      "entry_sell": 173,
-      "entry_offer": 180
+      "entry_sell": 1406,
+      "entry_offer": 1463
     }
   ]
 }
