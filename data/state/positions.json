@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 2233,
-      "buy_price": 100,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 121,
+      "buy_price": 305,
       "direction": "traditional",
-      "opened_at": "2026-08-15T03:45:02.369346+00:00",
+      "opened_at": "2026-08-15T04:01:02.638761+00:00",
       "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 105
+      "entry_sell": 305,
+      "entry_offer": 320
     }
   ]
 }
