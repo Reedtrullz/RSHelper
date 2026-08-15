@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 31970,
-      "name": "Teak repair kit",
-      "qty": 936,
-      "buy_price": 427,
+      "id": 1,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 81,
+      "buy_price": 290,
       "direction": "traditional",
-      "opened_at": "2026-08-15T13:39:19.359098+00:00",
+      "opened_at": "2026-08-15T14:47:20.892310+00:00",
       "note": "auto",
-      "entry_sell": 427,
-      "entry_offer": 446
-    },
-    {
-      "id": 7,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 4480,
-      "buy_price": 41,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T14:31:20.498996+00:00",
-      "note": "auto",
-      "entry_sell": 41,
-      "entry_offer": 43
-    },
-    {
-      "id": 8,
-      "item_id": 22593,
-      "name": "Te salt",
-      "qty": 105,
-      "buy_price": 127,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T14:31:20.499791+00:00",
-      "note": "auto",
-      "entry_sell": 127,
-      "entry_offer": 133
+      "entry_sell": 290,
+      "entry_offer": 303
     }
   ]
 }
