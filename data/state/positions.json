@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 104,
-      "buy_price": 381,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 308,
+      "buy_price": 1297,
       "direction": "traditional",
-      "opened_at": "2026-08-15T08:33:12.489432+00:00",
+      "opened_at": "2026-08-15T09:11:13.282344+00:00",
       "note": "auto",
-      "entry_sell": 381,
-      "entry_offer": 396
-    },
-    {
-      "id": 3,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 1850,
-      "buy_price": 43,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T08:41:12.782133+00:00",
-      "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 41
+      "entry_sell": 1297,
+      "entry_offer": 1360
     }
   ]
 }
