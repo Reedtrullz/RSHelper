@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 32336,
-      "name": "Halibut",
-      "qty": 186,
-      "buy_price": 2045,
+      "id": 4,
+      "item_id": 2866,
+      "name": "Ogre arrow",
+      "qty": 164,
+      "buy_price": 199,
       "direction": "traditional",
-      "opened_at": "2026-08-15T00:34:56.650020+00:00",
+      "opened_at": "2026-08-15T00:50:57.023344+00:00",
       "note": "auto",
-      "entry_sell": 2045,
-      "entry_offer": 2121
+      "entry_sell": 199,
+      "entry_offer": 190
+    },
+    {
+      "id": 5,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 123,
+      "buy_price": 73,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T00:58:57.365360+00:00",
+      "note": "auto",
+      "entry_sell": 73,
+      "entry_offer": 76
+    },
+    {
+      "id": 6,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 524,
+      "buy_price": 762,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T00:58:57.365648+00:00",
+      "note": "auto",
+      "entry_sell": 762,
+      "entry_offer": 794
     }
   ]
 }
