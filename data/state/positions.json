@@ -14,15 +14,15 @@
     },
     {
       "id": 6,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 308,
-      "buy_price": 208,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2694,
+      "buy_price": 135,
       "direction": "traditional",
-      "opened_at": "2026-08-15T13:15:18.939450+00:00",
+      "opened_at": "2026-08-15T13:31:19.220911+00:00",
       "note": "auto",
-      "entry_sell": 208,
-      "entry_offer": 216
+      "entry_sell": 135,
+      "entry_offer": 141
     }
   ]
 }
