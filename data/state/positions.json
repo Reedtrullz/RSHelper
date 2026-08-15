@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 32336,
+      "name": "Halibut",
+      "qty": 186,
+      "buy_price": 2045,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T00:34:56.650020+00:00",
+      "note": "auto",
+      "entry_sell": 2045,
+      "entry_offer": 2121
+    }
+  ]
 }
