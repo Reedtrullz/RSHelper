@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 162,
       "entry_offer": 154
-    },
-    {
-      "id": 3,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 465,
-      "buy_price": 383,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T03:15:01.146844+00:00",
-      "note": "auto",
-      "entry_sell": 383,
-      "entry_offer": 401
-    },
-    {
-      "id": 4,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 306,
-      "buy_price": 662,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T03:15:01.147155+00:00",
-      "note": "auto",
-      "entry_sell": 662,
-      "entry_offer": 694
     }
   ]
 }
