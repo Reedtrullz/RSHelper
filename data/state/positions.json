@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 2444,
-      "name": "Ranging potion(4)",
-      "qty": 208,
-      "buy_price": 1921,
+      "id": 1,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3636,
+      "buy_price": 110,
       "direction": "traditional",
-      "opened_at": "2026-08-15T08:13:12.127159+00:00",
+      "opened_at": "2026-08-15T08:21:12.226073+00:00",
       "note": "auto",
-      "entry_sell": 1921,
-      "entry_offer": 2025
+      "entry_sell": 110,
+      "entry_offer": 114
     }
   ]
 }
