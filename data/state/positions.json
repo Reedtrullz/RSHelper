@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 169,
-      "name": "Ranging potion(3)",
-      "qty": 124,
-      "buy_price": 1400,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T16:01:22.287753+00:00",
-      "note": "auto",
-      "entry_sell": 1400,
-      "entry_offer": 1450
-    },
-    {
-      "id": 2,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 413,
-      "buy_price": 99,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T16:17:22.710439+00:00",
-      "note": "auto",
-      "entry_sell": 99,
-      "entry_offer": 104
-    },
-    {
       "id": 3,
       "item_id": 855,
       "name": "Yew longbow",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 527,
       "entry_offer": 552
+    },
+    {
+      "id": 5,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 533,
+      "buy_price": 261,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T16:29:22.860174+00:00",
+      "note": "auto",
+      "entry_sell": 261,
+      "entry_offer": 275
+    },
+    {
+      "id": 6,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 99,
+      "buy_price": 61,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T16:31:21.716689+00:00",
+      "note": "auto",
+      "entry_sell": 61,
+      "entry_offer": 64
     }
   ]
 }
