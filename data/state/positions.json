@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 2012,
       "entry_offer": 2095
+    },
+    {
+      "id": 3,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 233,
+      "buy_price": 254,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T12:31:17.843302+00:00",
+      "note": "auto",
+      "entry_sell": 254,
+      "entry_offer": 265
     }
   ]
 }
