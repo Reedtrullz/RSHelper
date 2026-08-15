@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 118,
       "entry_offer": 123
+    },
+    {
+      "id": 3,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 677,
+      "buy_price": 75,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T20:17:26.812266+00:00",
+      "note": "auto",
+      "entry_sell": 75,
+      "entry_offer": 79
     }
   ]
 }
