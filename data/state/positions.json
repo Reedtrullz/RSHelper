@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 377,
-      "name": "Raw lobster",
-      "qty": 287,
-      "buy_price": 118,
+      "id": 1,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 624,
+      "buy_price": 163,
       "direction": "traditional",
-      "opened_at": "2026-08-15T20:01:26.483383+00:00",
+      "opened_at": "2026-08-15T20:33:27.078242+00:00",
       "note": "auto",
-      "entry_sell": 118,
-      "entry_offer": 123
+      "entry_sell": 163,
+      "entry_offer": 172
+    },
+    {
+      "id": 2,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 628,
+      "buy_price": 440,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T20:33:27.079114+00:00",
+      "note": "auto",
+      "entry_sell": 440,
+      "entry_offer": 460
     },
     {
       "id": 3,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 677,
-      "buy_price": 75,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 746,
+      "buy_price": 536,
       "direction": "traditional",
-      "opened_at": "2026-08-15T20:17:26.812266+00:00",
+      "opened_at": "2026-08-15T20:33:27.079621+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 79
+      "entry_sell": 536,
+      "entry_offer": 562
     }
   ]
 }
