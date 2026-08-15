@@ -14,15 +14,15 @@
     },
     {
       "id": 6,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2694,
-      "buy_price": 135,
+      "item_id": 31970,
+      "name": "Teak repair kit",
+      "qty": 936,
+      "buy_price": 427,
       "direction": "traditional",
-      "opened_at": "2026-08-15T13:31:19.220911+00:00",
+      "opened_at": "2026-08-15T13:39:19.359098+00:00",
       "note": "auto",
-      "entry_sell": 135,
-      "entry_offer": 141
+      "entry_sell": 427,
+      "entry_offer": 446
     }
   ]
 }
