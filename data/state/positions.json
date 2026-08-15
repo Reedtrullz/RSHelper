@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 174,
-      "buy_price": 1235,
+      "id": 1,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 3847,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-15T18:23:23.452095+00:00",
+      "opened_at": "2026-08-15T19:29:25.975294+00:00",
       "note": "auto",
-      "entry_sell": 1235,
-      "entry_offer": 1286
+      "entry_sell": 28,
+      "entry_offer": 27
+    },
+    {
+      "id": 2,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 111,
+      "buy_price": 1675,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T19:33:25.975939+00:00",
+      "note": "auto",
+      "entry_sell": 1675,
+      "entry_offer": 1754
+    },
+    {
+      "id": 3,
+      "item_id": 70,
+      "name": "Magic longbow (u)",
+      "qty": 520,
+      "buy_price": 768,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T19:33:25.976435+00:00",
+      "note": "auto",
+      "entry_sell": 768,
+      "entry_offer": 795
     }
   ]
 }
