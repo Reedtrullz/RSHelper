@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 228,
-      "buy_price": 527,
+      "id": 1,
+      "item_id": 335,
+      "name": "Raw trout",
+      "qty": 156,
+      "buy_price": 36,
       "direction": "traditional",
-      "opened_at": "2026-08-15T16:17:22.711320+00:00",
+      "opened_at": "2026-08-15T16:41:23.225054+00:00",
       "note": "auto",
-      "entry_sell": 527,
-      "entry_offer": 552
-    },
-    {
-      "id": 5,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 533,
-      "buy_price": 261,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T16:29:22.860174+00:00",
-      "note": "auto",
-      "entry_sell": 261,
-      "entry_offer": 275
-    },
-    {
-      "id": 6,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 99,
-      "buy_price": 61,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T16:31:21.716689+00:00",
-      "note": "auto",
-      "entry_sell": 61,
-      "entry_offer": 64
+      "entry_sell": 36,
+      "entry_offer": 38
     }
   ]
 }
