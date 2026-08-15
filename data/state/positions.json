@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 66,
-      "name": "Yew longbow (u)",
-      "qty": 719,
-      "buy_price": 194,
+      "id": 1,
+      "item_id": 1197,
+      "name": "Mithril kiteshield",
+      "qty": 81,
+      "buy_price": 920,
       "direction": "traditional",
-      "opened_at": "2026-08-15T21:01:27.755824+00:00",
+      "opened_at": "2026-08-15T21:17:28.272062+00:00",
       "note": "auto",
-      "entry_sell": 194,
-      "entry_offer": 202
+      "entry_sell": 920,
+      "entry_offer": 961
+    },
+    {
+      "id": 2,
+      "item_id": 31916,
+      "name": "Dragon cannonball",
+      "qty": 202,
+      "buy_price": 1247,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T21:17:28.272395+00:00",
+      "note": "auto",
+      "entry_sell": 1247,
+      "entry_offer": 1300
+    },
+    {
+      "id": 3,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 6153,
+      "buy_price": 65,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T21:17:28.272677+00:00",
+      "note": "auto",
+      "entry_sell": 65,
+      "entry_offer": 68
     }
   ]
 }
