@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 103,
-      "name": "Avantoe potion (unf)",
-      "qty": 88,
-      "buy_price": 1826,
+      "id": 1,
+      "item_id": 2301,
+      "name": "Pineapple pizza",
+      "qty": 84,
+      "buy_price": 700,
       "direction": "traditional",
-      "opened_at": "2026-08-15T22:13:29.496985+00:00",
+      "opened_at": "2026-08-15T22:37:30.274998+00:00",
       "note": "auto",
-      "entry_sell": 1826,
-      "entry_offer": 1925
-    },
-    {
-      "id": 5,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 597,
-      "buy_price": 211,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T22:21:30.501783+00:00",
-      "note": "auto",
-      "entry_sell": 211,
-      "entry_offer": 219
-    },
-    {
-      "id": 6,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 415,
-      "buy_price": 150,
-      "direction": "traditional",
-      "opened_at": "2026-08-15T22:33:29.913856+00:00",
-      "note": "auto",
-      "entry_sell": 150,
-      "entry_offer": 156
+      "entry_sell": 700,
+      "entry_offer": 740
     }
   ]
 }
