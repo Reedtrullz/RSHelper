@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 81,
-      "buy_price": 290,
+      "id": 2,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 145,
+      "buy_price": 218,
       "direction": "traditional",
-      "opened_at": "2026-08-15T14:47:20.892310+00:00",
+      "opened_at": "2026-08-15T14:53:20.764625+00:00",
       "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 303
+      "entry_sell": 218,
+      "entry_offer": 210
+    },
+    {
+      "id": 3,
+      "item_id": 335,
+      "name": "Raw trout",
+      "qty": 103,
+      "buy_price": 37,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T14:57:20.735741+00:00",
+      "note": "auto",
+      "entry_sell": 37,
+      "entry_offer": 39
+    },
+    {
+      "id": 4,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 1429,
+      "buy_price": 112,
+      "direction": "traditional",
+      "opened_at": "2026-08-15T15:01:20.995570+00:00",
+      "note": "auto",
+      "entry_sell": 112,
+      "entry_offer": 118
     }
   ]
 }
