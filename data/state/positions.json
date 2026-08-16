@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 263,
-      "name": "Kwuarm",
-      "qty": 86,
-      "buy_price": 2096,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T20:06:00.819721+00:00",
-      "note": "auto",
-      "entry_sell": 2096,
-      "entry_offer": 2211
-    },
-    {
       "id": 3,
       "item_id": 163,
       "name": "Super defence(3)",
@@ -26,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 686,
-      "buy_price": 217,
+      "item_id": 1611,
+      "name": "Jade",
+      "qty": 157,
+      "buy_price": 298,
       "direction": "traditional",
-      "opened_at": "2026-08-16T20:26:01.368752+00:00",
+      "opened_at": "2026-08-16T20:34:01.655194+00:00",
       "note": "auto",
-      "entry_sell": 217,
-      "entry_offer": 225
+      "entry_sell": 298,
+      "entry_offer": 312
+    },
+    {
+      "id": 5,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 158,
+      "buy_price": 169,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T20:40:00.778566+00:00",
+      "note": "auto",
+      "entry_sell": 169,
+      "entry_offer": 177
     }
   ]
 }
