@@ -23,18 +23,6 @@
       "note": "auto",
       "entry_sell": 116,
       "entry_offer": 111
-    },
-    {
-      "id": 6,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 336,
-      "buy_price": 71,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T05:51:39.144077+00:00",
-      "note": "auto",
-      "entry_sell": 71,
-      "entry_offer": 74
     }
   ]
 }
