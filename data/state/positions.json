@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 263,
       "entry_offer": 277
-    },
-    {
-      "id": 2,
-      "item_id": 12775,
-      "name": "Annakarl teleport (tablet)",
-      "qty": 97,
-      "buy_price": 2501,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T21:58:04.121031+00:00",
-      "note": "auto",
-      "entry_sell": 2501,
-      "entry_offer": 2624
-    },
-    {
-      "id": 3,
-      "item_id": 3138,
-      "name": "Potato cactus",
-      "qty": 599,
-      "buy_price": 63,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T21:58:04.121700+00:00",
-      "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 66
     }
   ]
 }
