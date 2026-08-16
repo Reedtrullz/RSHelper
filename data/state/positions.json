@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 106,
       "entry_offer": 111
+    },
+    {
+      "id": 3,
+      "item_id": 1891,
+      "name": "Cake",
+      "qty": 241,
+      "buy_price": 161,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T10:03:48.376624+00:00",
+      "note": "auto",
+      "entry_sell": 161,
+      "entry_offer": 170
+    },
+    {
+      "id": 4,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1811,
+      "buy_price": 195,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T10:07:48.631648+00:00",
+      "note": "auto",
+      "entry_sell": 195,
+      "entry_offer": 202
     }
   ]
 }
