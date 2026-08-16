@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 214,
-      "buy_price": 222,
+      "id": 3,
+      "item_id": 27629,
+      "name": "Forgotten brew(4)",
+      "qty": 107,
+      "buy_price": 3730,
       "direction": "traditional",
-      "opened_at": "2026-08-15T23:41:31.477403+00:00",
+      "opened_at": "2026-08-15T23:57:31.653765+00:00",
       "note": "auto",
-      "entry_sell": 222,
-      "entry_offer": 232
+      "entry_sell": 3730,
+      "entry_offer": 3900
+    },
+    {
+      "id": 4,
+      "item_id": 1625,
+      "name": "Uncut opal",
+      "qty": 133,
+      "buy_price": 74,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T00:01:31.734931+00:00",
+      "note": "auto",
+      "entry_sell": 74,
+      "entry_offer": 77
     }
   ]
 }
