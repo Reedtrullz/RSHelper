@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 13439,
-      "name": "Raw anglerfish",
-      "qty": 260,
-      "buy_price": 1536,
+      "id": 3,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 240,
+      "buy_price": 98,
       "direction": "traditional",
-      "opened_at": "2026-08-16T00:33:32.430216+00:00",
+      "opened_at": "2026-08-16T00:39:31.529712+00:00",
       "note": "auto",
-      "entry_sell": 1536,
-      "entry_offer": 1597
+      "entry_sell": 98,
+      "entry_offer": 102
+    },
+    {
+      "id": 4,
+      "item_id": 1119,
+      "name": "Steel platebody",
+      "qty": 125,
+      "buy_price": 900,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T00:45:32.485195+00:00",
+      "note": "auto",
+      "entry_sell": 900,
+      "entry_offer": 938
     }
   ]
 }
