@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 2440,
-      "name": "Super strength(4)",
-      "qty": 138,
-      "buy_price": 2878,
+      "id": 1,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 559,
+      "buy_price": 715,
       "direction": "traditional",
-      "opened_at": "2026-08-16T06:33:40.542551+00:00",
+      "opened_at": "2026-08-16T06:55:41.018897+00:00",
       "note": "auto",
-      "entry_sell": 2878,
-      "entry_offer": 2989
-    },
-    {
-      "id": 3,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 504,
-      "buy_price": 90,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T06:39:40.741927+00:00",
-      "note": "auto",
-      "entry_sell": 90,
-      "entry_offer": 95
-    },
-    {
-      "id": 4,
-      "item_id": 21880,
-      "name": "Wrath rune",
-      "qty": 1223,
-      "buy_price": 327,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T06:39:40.742975+00:00",
-      "note": "auto",
-      "entry_sell": 327,
-      "entry_offer": 342
+      "entry_sell": 715,
+      "entry_offer": 754
     }
   ]
 }
