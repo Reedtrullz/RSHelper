@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 485,
-      "buy_price": 79,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 507,
+      "buy_price": 112,
       "direction": "traditional",
-      "opened_at": "2026-08-16T04:49:37.261394+00:00",
+      "opened_at": "2026-08-16T05:01:37.655114+00:00",
       "note": "auto",
-      "entry_sell": 79,
-      "entry_offer": 82
-    },
-    {
-      "id": 2,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 1613,
-      "buy_price": 50,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T04:49:37.262775+00:00",
-      "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
+      "entry_sell": 112,
+      "entry_offer": 116
     }
   ]
 }
