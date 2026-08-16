@@ -13,28 +13,28 @@
       "entry_offer": 277
     },
     {
-      "id": 3,
-      "item_id": 9192,
-      "name": "Diamond bolt tips",
-      "qty": 1098,
-      "buy_price": 170,
+      "id": 4,
+      "item_id": 5935,
+      "name": "Coconut milk",
+      "qty": 180,
+      "buy_price": 218,
       "direction": "traditional",
-      "opened_at": "2026-08-16T22:28:04.166007+00:00",
+      "opened_at": "2026-08-16T22:46:05.094841+00:00",
       "note": "auto",
-      "entry_sell": 170,
-      "entry_offer": 177
+      "entry_sell": 218,
+      "entry_offer": 227
     },
     {
-      "id": 4,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 1828,
-      "buy_price": 71,
+      "id": 5,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 2916,
+      "buy_price": 40,
       "direction": "traditional",
-      "opened_at": "2026-08-16T22:36:03.827482+00:00",
+      "opened_at": "2026-08-16T22:58:05.349215+00:00",
       "note": "auto",
-      "entry_sell": 71,
-      "entry_offer": 74
+      "entry_sell": 40,
+      "entry_offer": 42
     }
   ]
 }
