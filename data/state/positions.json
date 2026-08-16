@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 477,
-      "buy_price": 540,
+      "item_id": 19669,
+      "name": "Redwood logs",
+      "qty": 216,
+      "buy_price": 675,
       "direction": "traditional",
-      "opened_at": "2026-08-16T11:53:50.749353+00:00",
+      "opened_at": "2026-08-16T12:09:51.093050+00:00",
       "note": "auto",
-      "entry_sell": 540,
-      "entry_offer": 559
+      "entry_sell": 675,
+      "entry_offer": 700
     }
   ]
 }
