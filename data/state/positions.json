@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2301,
+      "name": "Pineapple pizza",
+      "qty": 110,
+      "buy_price": 696,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T02:17:34.469754+00:00",
+      "note": "auto",
+      "entry_sell": 696,
+      "entry_offer": 733
+    },
+    {
+      "id": 3,
+      "item_id": 5974,
+      "name": "Coconut",
+      "qty": 255,
+      "buy_price": 1450,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T02:17:34.470346+00:00",
+      "note": "auto",
+      "entry_sell": 1450,
+      "entry_offer": 1507
+    }
+  ]
 }
