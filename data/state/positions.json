@@ -13,16 +13,28 @@
       "entry_offer": 359
     },
     {
-      "id": 4,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 650,
-      "buy_price": 65,
+      "id": 5,
+      "item_id": 32907,
+      "name": "Ironwood logs",
+      "qty": 1779,
+      "buy_price": 116,
       "direction": "traditional",
-      "opened_at": "2026-08-16T05:35:38.375084+00:00",
+      "opened_at": "2026-08-16T05:43:38.730527+00:00",
       "note": "auto",
-      "entry_sell": 65,
-      "entry_offer": 68
+      "entry_sell": 116,
+      "entry_offer": 111
+    },
+    {
+      "id": 6,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 336,
+      "buy_price": 71,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T05:51:39.144077+00:00",
+      "note": "auto",
+      "entry_sell": 71,
+      "entry_offer": 74
     }
   ]
 }
