@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 110,
+      "buy_price": 125,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T14:53:54.677094+00:00",
+      "note": "auto",
+      "entry_sell": 125,
+      "entry_offer": 131
+    },
+    {
+      "id": 2,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 171,
+      "buy_price": 223,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T14:53:54.677431+00:00",
+      "note": "auto",
+      "entry_sell": 223,
+      "entry_offer": 232
+    },
+    {
+      "id": 3,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 6359,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T14:53:54.677714+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 27
+    }
+  ]
 }
