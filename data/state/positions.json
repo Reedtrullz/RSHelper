@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 2030,
       "entry_offer": 2123
-    },
-    {
-      "id": 5,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 233,
-      "buy_price": 1503,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T15:21:55.133376+00:00",
-      "note": "auto",
-      "entry_sell": 1503,
-      "entry_offer": 1585
     }
   ]
 }
