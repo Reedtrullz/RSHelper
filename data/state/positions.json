@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1169,
-      "buy_price": 342,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T05:09:37.897859+00:00",
-      "note": "auto",
-      "entry_sell": 342,
-      "entry_offer": 359
-    },
-    {
       "id": 5,
       "item_id": 32907,
       "name": "Ironwood logs",
