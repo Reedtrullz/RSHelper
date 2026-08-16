@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 559,
-      "buy_price": 715,
+      "item_id": 389,
+      "name": "Raw manta ray",
+      "qty": 150,
+      "buy_price": 999,
       "direction": "traditional",
-      "opened_at": "2026-08-16T06:55:41.018897+00:00",
+      "opened_at": "2026-08-16T07:09:41.559814+00:00",
       "note": "auto",
-      "entry_sell": 715,
-      "entry_offer": 754
+      "entry_sell": 999,
+      "entry_offer": 1040
     }
   ]
 }
