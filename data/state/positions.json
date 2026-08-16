@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 3049,
-      "name": "Grimy toadflax",
-      "qty": 197,
-      "buy_price": 2030,
+      "id": 1,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 573,
+      "buy_price": 698,
       "direction": "traditional",
-      "opened_at": "2026-08-16T15:03:53.751488+00:00",
+      "opened_at": "2026-08-16T15:53:55.897929+00:00",
       "note": "auto",
-      "entry_sell": 2030,
-      "entry_offer": 2123
+      "entry_sell": 698,
+      "entry_offer": 731
+    },
+    {
+      "id": 2,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 165,
+      "buy_price": 52,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T15:53:55.898817+00:00",
+      "note": "auto",
+      "entry_sell": 52,
+      "entry_offer": 54
+    },
+    {
+      "id": 3,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 1237,
+      "buy_price": 235,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T15:53:55.899488+00:00",
+      "note": "auto",
+      "entry_sell": 235,
+      "entry_offer": 247
     }
   ]
 }
