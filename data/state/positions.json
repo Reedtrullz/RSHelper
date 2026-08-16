@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24615,
-      "name": "Blighted teleport spell sack",
-      "qty": 126,
-      "buy_price": 63,
+      "item_id": 261,
+      "name": "Avantoe",
+      "qty": 241,
+      "buy_price": 1659,
       "direction": "traditional",
-      "opened_at": "2026-08-16T00:57:32.749409+00:00",
+      "opened_at": "2026-08-16T01:13:33.106128+00:00",
       "note": "auto",
-      "entry_sell": 63,
-      "entry_offer": 66
+      "entry_sell": 1659,
+      "entry_offer": 1750
+    },
+    {
+      "id": 2,
+      "item_id": 361,
+      "name": "Tuna",
+      "qty": 117,
+      "buy_price": 48,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T01:17:33.121233+00:00",
+      "note": "auto",
+      "entry_sell": 48,
+      "entry_offer": 50
     },
     {
       "id": 3,
-      "item_id": 24613,
-      "name": "Blighted entangle sack",
-      "qty": 203,
-      "buy_price": 49,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 791,
+      "buy_price": 427,
       "direction": "traditional",
-      "opened_at": "2026-08-16T00:57:32.750147+00:00",
+      "opened_at": "2026-08-16T01:19:32.077612+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 427,
+      "entry_offer": 445
     }
   ]
 }
