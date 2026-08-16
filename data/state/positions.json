@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 2029,
+      "buy_price": 106,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T09:39:47.554820+00:00",
+      "note": "auto",
+      "entry_sell": 106,
+      "entry_offer": 111
+    }
+  ]
 }
