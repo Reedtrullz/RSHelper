@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 138,
-      "buy_price": 80,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1527,
+      "buy_price": 257,
       "direction": "traditional",
-      "opened_at": "2026-08-16T03:09:35.489137+00:00",
+      "opened_at": "2026-08-16T03:33:35.920222+00:00",
       "note": "auto",
-      "entry_sell": 80,
-      "entry_offer": 84
+      "entry_sell": 257,
+      "entry_offer": 268
+    },
+    {
+      "id": 2,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 169,
+      "buy_price": 99,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T03:33:35.921048+00:00",
+      "note": "auto",
+      "entry_sell": 99,
+      "entry_offer": 103
     }
   ]
 }
