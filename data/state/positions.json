@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 530,
-      "buy_price": 385,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 168,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-16T03:49:36.205473+00:00",
+      "opened_at": "2026-08-16T03:57:36.265478+00:00",
       "note": "auto",
-      "entry_sell": 385,
-      "entry_offer": 407
+      "entry_sell": 153,
+      "entry_offer": 160
     }
   ]
 }
