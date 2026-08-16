@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 132,
-      "buy_price": 364,
+      "item_id": 2442,
+      "name": "Super defence(4)",
+      "qty": 125,
+      "buy_price": 3187,
       "direction": "traditional",
-      "opened_at": "2026-08-16T17:09:57.503955+00:00",
+      "opened_at": "2026-08-16T17:15:56.178994+00:00",
       "note": "auto",
-      "entry_sell": 364,
-      "entry_offer": 379
+      "entry_sell": 3187,
+      "entry_offer": 3305
     },
     {
       "id": 2,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 753,
-      "buy_price": 111,
+      "item_id": 9739,
+      "name": "Combat potion(4)",
+      "qty": 115,
+      "buy_price": 137,
       "direction": "traditional",
-      "opened_at": "2026-08-16T17:09:57.507697+00:00",
+      "opened_at": "2026-08-16T17:21:57.379325+00:00",
       "note": "auto",
-      "entry_sell": 111,
-      "entry_offer": 116
+      "entry_sell": 137,
+      "entry_offer": 144
     }
   ]
 }
