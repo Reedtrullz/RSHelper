@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 537,
-      "buy_price": 35,
+      "item_id": 2485,
+      "name": "Grimy lantadyme",
+      "qty": 343,
+      "buy_price": 1163,
       "direction": "traditional",
-      "opened_at": "2026-08-16T18:49:59.267863+00:00",
+      "opened_at": "2026-08-16T19:05:59.715617+00:00",
       "note": "auto",
-      "entry_sell": 35,
-      "entry_offer": 37
+      "entry_sell": 1163,
+      "entry_offer": 1212
     },
     {
       "id": 3,
-      "item_id": 8007,
-      "name": "Varrock teleport (tablet)",
-      "qty": 236,
-      "buy_price": 782,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1064,
+      "buy_price": 251,
       "direction": "traditional",
-      "opened_at": "2026-08-16T18:55:58.370182+00:00",
+      "opened_at": "2026-08-16T19:09:59.708732+00:00",
       "note": "auto",
-      "entry_sell": 782,
-      "entry_offer": 820
+      "entry_sell": 251,
+      "entry_offer": 265
     },
     {
       "id": 4,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 547,
-      "buy_price": 730,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 665,
+      "buy_price": 134,
       "direction": "traditional",
-      "opened_at": "2026-08-16T18:55:58.370500+00:00",
+      "opened_at": "2026-08-16T19:09:59.709567+00:00",
       "note": "auto",
-      "entry_sell": 730,
-      "entry_offer": 762
+      "entry_sell": 134,
+      "entry_offer": 141
     }
   ]
 }
