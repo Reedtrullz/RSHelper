@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 868,
-      "name": "Rune knife",
-      "qty": 110,
-      "buy_price": 125,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T14:53:54.677094+00:00",
-      "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 131
-    },
-    {
-      "id": 2,
-      "item_id": 532,
-      "name": "Big bones",
-      "qty": 171,
-      "buy_price": 223,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T14:53:54.677431+00:00",
-      "note": "auto",
-      "entry_sell": 223,
-      "entry_offer": 232
-    },
-    {
       "id": 3,
       "item_id": 810,
       "name": "Adamant dart",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 28,
       "entry_offer": 27
+    },
+    {
+      "id": 4,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 197,
+      "buy_price": 2030,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T15:03:53.751488+00:00",
+      "note": "auto",
+      "entry_sell": 2030,
+      "entry_offer": 2123
+    },
+    {
+      "id": 5,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 1139,
+      "buy_price": 351,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T15:09:54.964042+00:00",
+      "note": "auto",
+      "entry_sell": 351,
+      "entry_offer": 368
     }
   ]
 }
