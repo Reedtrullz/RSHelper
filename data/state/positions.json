@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2919,
-      "buy_price": 137,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 477,
+      "buy_price": 540,
       "direction": "traditional",
-      "opened_at": "2026-08-16T11:37:50.482391+00:00",
+      "opened_at": "2026-08-16T11:53:50.749353+00:00",
       "note": "auto",
-      "entry_sell": 137,
-      "entry_offer": 144
+      "entry_sell": 540,
+      "entry_offer": 559
     }
   ]
 }
