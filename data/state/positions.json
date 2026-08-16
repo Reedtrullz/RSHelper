@@ -13,18 +13,6 @@
       "entry_offer": 2211
     },
     {
-      "id": 2,
-      "item_id": 7060,
-      "name": "Tuna potato",
-      "qty": 276,
-      "buy_price": 1447,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T20:10:00.866237+00:00",
-      "note": "auto",
-      "entry_sell": 1447,
-      "entry_offer": 1507
-    },
-    {
       "id": 3,
       "item_id": 163,
       "name": "Super defence(3)",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 2283,
       "entry_offer": 2383
+    },
+    {
+      "id": 4,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 686,
+      "buy_price": 217,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T20:26:01.368752+00:00",
+      "note": "auto",
+      "entry_sell": 217,
+      "entry_offer": 225
     }
   ]
 }
