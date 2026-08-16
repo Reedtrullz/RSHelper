@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 1396,
+      "buy_price": 101,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T08:45:45.352858+00:00",
+      "note": "auto",
+      "entry_sell": 101,
+      "entry_offer": 105
+    },
+    {
+      "id": 2,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 939,
+      "buy_price": 211,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T08:47:44.489571+00:00",
+      "note": "auto",
+      "entry_sell": 211,
+      "entry_offer": 219
+    }
+  ]
 }
