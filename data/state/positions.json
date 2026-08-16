@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 558,
+      "buy_price": 555,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T13:01:51.884529+00:00",
+      "note": "auto",
+      "entry_sell": 555,
+      "entry_offer": 578
+    },
+    {
+      "id": 2,
+      "item_id": 24615,
+      "name": "Blighted teleport spell sack",
+      "qty": 164,
+      "buy_price": 63,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T13:07:51.073749+00:00",
+      "note": "auto",
+      "entry_sell": 63,
+      "entry_offer": 66
+    },
+    {
+      "id": 3,
+      "item_id": 329,
+      "name": "Salmon",
+      "qty": 517,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T13:09:52.153587+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
+    }
+  ]
 }
