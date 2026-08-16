@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2597,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T08:05:43.963717+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 27
+    },
+    {
+      "id": 2,
+      "item_id": 447,
+      "name": "Mithril ore",
+      "qty": 2451,
+      "buy_price": 139,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T08:13:44.383727+00:00",
+      "note": "auto",
+      "entry_sell": 139,
+      "entry_offer": 145
+    }
+  ]
 }
