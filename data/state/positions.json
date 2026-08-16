@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 186,
-      "buy_price": 2150,
+      "id": 1,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 132,
+      "buy_price": 364,
       "direction": "traditional",
-      "opened_at": "2026-08-16T16:43:55.490824+00:00",
+      "opened_at": "2026-08-16T17:09:57.503955+00:00",
       "note": "auto",
-      "entry_sell": 2150,
-      "entry_offer": 2255
+      "entry_sell": 364,
+      "entry_offer": 379
     },
     {
-      "id": 9,
-      "item_id": 211,
-      "name": "Grimy avantoe",
-      "qty": 254,
-      "buy_price": 1570,
+      "id": 2,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 753,
+      "buy_price": 111,
       "direction": "traditional",
-      "opened_at": "2026-08-16T16:53:56.700721+00:00",
+      "opened_at": "2026-08-16T17:09:57.507697+00:00",
       "note": "auto",
-      "entry_sell": 1570,
-      "entry_offer": 1647
-    },
-    {
-      "id": 10,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 529,
-      "buy_price": 370,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T16:55:55.689511+00:00",
-      "note": "auto",
-      "entry_sell": 370,
-      "entry_offer": 385
+      "entry_sell": 111,
+      "entry_offer": 116
     }
   ]
 }
