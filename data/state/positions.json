@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 253,
-      "name": "Tarromin",
-      "qty": 248,
-      "buy_price": 258,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 273,
+      "buy_price": 102,
       "direction": "traditional",
-      "opened_at": "2026-08-16T18:09:58.505697+00:00",
+      "opened_at": "2026-08-16T18:25:58.836388+00:00",
       "note": "auto",
-      "entry_sell": 258,
-      "entry_offer": 268
+      "entry_sell": 102,
+      "entry_offer": 107
     },
     {
       "id": 2,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 2797,
-      "buy_price": 143,
+      "item_id": 2970,
+      "name": "Mort myre fungus",
+      "qty": 283,
+      "buy_price": 285,
       "direction": "traditional",
-      "opened_at": "2026-08-16T18:09:58.506211+00:00",
+      "opened_at": "2026-08-16T18:25:58.837508+00:00",
       "note": "auto",
-      "entry_sell": 143,
-      "entry_offer": 149
-    },
-    {
-      "id": 3,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 3030,
-      "buy_price": 132,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T18:09:58.506611+00:00",
-      "note": "auto",
-      "entry_sell": 132,
-      "entry_offer": 137
+      "entry_sell": 285,
+      "entry_offer": 300
     }
   ]
 }
