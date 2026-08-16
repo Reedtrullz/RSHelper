@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 9341,
-      "name": "Dragonstone bolts",
-      "qty": 763,
-      "buy_price": 524,
+      "id": 7,
+      "item_id": 1749,
+      "name": "Red dragonhide",
+      "qty": 186,
+      "buy_price": 2150,
       "direction": "traditional",
-      "opened_at": "2026-08-16T16:29:56.509129+00:00",
+      "opened_at": "2026-08-16T16:43:55.490824+00:00",
       "note": "auto",
-      "entry_sell": 524,
-      "entry_offer": 550
+      "entry_sell": 2150,
+      "entry_offer": 2255
     },
     {
-      "id": 5,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 958,
-      "buy_price": 75,
+      "id": 9,
+      "item_id": 211,
+      "name": "Grimy avantoe",
+      "qty": 254,
+      "buy_price": 1570,
       "direction": "traditional",
-      "opened_at": "2026-08-16T16:35:55.343888+00:00",
+      "opened_at": "2026-08-16T16:53:56.700721+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 78
+      "entry_sell": 1570,
+      "entry_offer": 1647
     },
     {
-      "id": 6,
-      "item_id": 830,
-      "name": "Rune javelin",
-      "qty": 560,
-      "buy_price": 136,
+      "id": 10,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 529,
+      "buy_price": 370,
       "direction": "traditional",
-      "opened_at": "2026-08-16T16:37:56.478794+00:00",
+      "opened_at": "2026-08-16T16:55:55.689511+00:00",
       "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 141
+      "entry_sell": 370,
+      "entry_offer": 385
     }
   ]
 }
