@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 573,
-      "buy_price": 698,
+      "item_id": 592,
+      "name": "Ashes",
+      "qty": 218,
+      "buy_price": 38,
       "direction": "traditional",
-      "opened_at": "2026-08-16T15:53:55.897929+00:00",
+      "opened_at": "2026-08-16T16:09:55.899058+00:00",
       "note": "auto",
-      "entry_sell": 698,
-      "entry_offer": 731
+      "entry_sell": 38,
+      "entry_offer": 40
     },
     {
       "id": 2,
-      "item_id": 11875,
-      "name": "Broad bolts",
-      "qty": 165,
-      "buy_price": 52,
+      "item_id": 562,
+      "name": "Chaos rune",
+      "qty": 3960,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-16T15:53:55.898817+00:00",
+      "opened_at": "2026-08-16T16:09:55.900129+00:00",
       "note": "auto",
-      "entry_sell": 52,
-      "entry_offer": 54
+      "entry_sell": 101,
+      "entry_offer": 106
     },
     {
       "id": 3,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 1237,
-      "buy_price": 235,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1152,
+      "buy_price": 347,
       "direction": "traditional",
-      "opened_at": "2026-08-16T15:53:55.899488+00:00",
+      "opened_at": "2026-08-16T16:09:55.900570+00:00",
       "note": "auto",
-      "entry_sell": 235,
-      "entry_offer": 247
+      "entry_sell": 347,
+      "entry_offer": 360
     }
   ]
 }
