@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 248,
+      "buy_price": 258,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:09:58.505697+00:00",
+      "note": "auto",
+      "entry_sell": 258,
+      "entry_offer": 268
+    },
+    {
+      "id": 2,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2797,
+      "buy_price": 143,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:09:58.506211+00:00",
+      "note": "auto",
+      "entry_sell": 143,
+      "entry_offer": 149
+    },
+    {
+      "id": 3,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 3030,
+      "buy_price": 132,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:09:58.506611+00:00",
+      "note": "auto",
+      "entry_sell": 132,
+      "entry_offer": 137
+    }
+  ]
 }
