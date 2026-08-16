@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2301,
-      "name": "Pineapple pizza",
-      "qty": 110,
-      "buy_price": 696,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 582,
+      "buy_price": 98,
       "direction": "traditional",
-      "opened_at": "2026-08-16T02:17:34.469754+00:00",
+      "opened_at": "2026-08-16T02:33:34.746758+00:00",
       "note": "auto",
-      "entry_sell": 696,
-      "entry_offer": 733
+      "entry_sell": 98,
+      "entry_offer": 102
+    },
+    {
+      "id": 2,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 571,
+      "buy_price": 103,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T02:33:34.747684+00:00",
+      "note": "auto",
+      "entry_sell": 103,
+      "entry_offer": 108
     },
     {
       "id": 3,
-      "item_id": 5974,
-      "name": "Coconut",
-      "qty": 255,
-      "buy_price": 1450,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 302,
+      "buy_price": 1324,
       "direction": "traditional",
-      "opened_at": "2026-08-16T02:17:34.470346+00:00",
+      "opened_at": "2026-08-16T02:33:34.752177+00:00",
       "note": "auto",
-      "entry_sell": 1450,
-      "entry_offer": 1507
+      "entry_sell": 1324,
+      "entry_offer": 1372
     }
   ]
 }
