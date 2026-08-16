@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 3,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 2163,
-      "buy_price": 143,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T08:57:45.852306+00:00",
-      "note": "auto",
-      "entry_sell": 143,
-      "entry_offer": 149
-    },
-    {
-      "id": 6,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 484,
-      "buy_price": 555,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T09:13:46.439819+00:00",
-      "note": "auto",
-      "entry_sell": 555,
-      "entry_offer": 582
-    }
-  ]
+  "positions": []
 }
