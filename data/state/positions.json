@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 168,
-      "buy_price": 153,
+      "item_id": 560,
+      "name": "Death rune",
+      "qty": 2061,
+      "buy_price": 194,
       "direction": "traditional",
-      "opened_at": "2026-08-16T03:57:36.265478+00:00",
+      "opened_at": "2026-08-16T04:17:36.769155+00:00",
       "note": "auto",
-      "entry_sell": 153,
-      "entry_offer": 160
+      "entry_sell": 194,
+      "entry_offer": 202
     }
   ]
 }
