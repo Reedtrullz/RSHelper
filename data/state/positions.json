@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1527,
-      "buy_price": 257,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 942,
+      "buy_price": 36,
       "direction": "traditional",
-      "opened_at": "2026-08-16T03:33:35.920222+00:00",
+      "opened_at": "2026-08-16T03:45:36.116908+00:00",
       "note": "auto",
-      "entry_sell": 257,
-      "entry_offer": 268
+      "entry_sell": 36,
+      "entry_offer": 38
     },
     {
       "id": 2,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 169,
-      "buy_price": 99,
+      "item_id": 9244,
+      "name": "Dragonstone bolts (e)",
+      "qty": 530,
+      "buy_price": 385,
       "direction": "traditional",
-      "opened_at": "2026-08-16T03:33:35.921048+00:00",
+      "opened_at": "2026-08-16T03:49:36.205473+00:00",
       "note": "auto",
-      "entry_sell": 99,
-      "entry_offer": 103
+      "entry_sell": 385,
+      "entry_offer": 407
     }
   ]
 }
