@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 6359,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T14:53:54.677714+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
-    },
-    {
       "id": 4,
       "item_id": 3049,
       "name": "Grimy toadflax",
@@ -26,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 24607,
-      "name": "Blighted ancient ice sack",
-      "qty": 1139,
-      "buy_price": 351,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 233,
+      "buy_price": 1503,
       "direction": "traditional",
-      "opened_at": "2026-08-16T15:09:54.964042+00:00",
+      "opened_at": "2026-08-16T15:21:55.133376+00:00",
       "note": "auto",
-      "entry_sell": 351,
-      "entry_offer": 368
+      "entry_sell": 1503,
+      "entry_offer": 1585
     }
   ]
 }
