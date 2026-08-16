@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 537,
+      "buy_price": 35,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:49:59.267863+00:00",
+      "note": "auto",
+      "entry_sell": 35,
+      "entry_offer": 37
+    },
+    {
+      "id": 3,
+      "item_id": 8007,
+      "name": "Varrock teleport (tablet)",
+      "qty": 236,
+      "buy_price": 782,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:55:58.370182+00:00",
+      "note": "auto",
+      "entry_sell": 782,
+      "entry_offer": 820
+    },
+    {
+      "id": 4,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 547,
+      "buy_price": 730,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T18:55:58.370500+00:00",
+      "note": "auto",
+      "entry_sell": 730,
+      "entry_offer": 762
+    }
+  ]
 }
