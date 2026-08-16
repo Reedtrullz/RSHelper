@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 592,
-      "name": "Ashes",
-      "qty": 218,
-      "buy_price": 38,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T16:09:55.899058+00:00",
-      "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
-    },
-    {
-      "id": 2,
-      "item_id": 562,
-      "name": "Chaos rune",
-      "qty": 3960,
-      "buy_price": 101,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T16:09:55.900129+00:00",
-      "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 106
-    },
-    {
       "id": 3,
       "item_id": 30771,
       "name": "Aether catalyst",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 347,
       "entry_offer": 360
+    },
+    {
+      "id": 6,
+      "item_id": 31912,
+      "name": "Adamant cannonball",
+      "qty": 724,
+      "buy_price": 211,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T16:19:55.196195+00:00",
+      "note": "auto",
+      "entry_sell": 211,
+      "entry_offer": 219
+    },
+    {
+      "id": 7,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 1145,
+      "buy_price": 120,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T16:23:55.113535+00:00",
+      "note": "auto",
+      "entry_sell": 120,
+      "entry_offer": 126
     }
   ]
 }
