@@ -13,28 +13,28 @@
       "entry_offer": 111
     },
     {
-      "id": 3,
-      "item_id": 1891,
-      "name": "Cake",
-      "qty": 241,
-      "buy_price": 161,
+      "id": 4,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 2259,
+      "buy_price": 177,
       "direction": "traditional",
-      "opened_at": "2026-08-16T10:03:48.376624+00:00",
+      "opened_at": "2026-08-16T10:17:47.852523+00:00",
       "note": "auto",
-      "entry_sell": 161,
-      "entry_offer": 170
+      "entry_sell": 177,
+      "entry_offer": 184
     },
     {
-      "id": 4,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1811,
-      "buy_price": 195,
+      "id": 5,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 9137,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-16T10:07:48.631648+00:00",
+      "opened_at": "2026-08-16T10:23:49.066064+00:00",
       "note": "auto",
-      "entry_sell": 195,
-      "entry_offer": 202
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
