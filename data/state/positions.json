@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19669,
-      "name": "Redwood logs",
-      "qty": 216,
-      "buy_price": 675,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 453,
+      "buy_price": 297,
       "direction": "traditional",
-      "opened_at": "2026-08-16T12:09:51.093050+00:00",
+      "opened_at": "2026-08-16T12:21:51.274097+00:00",
       "note": "auto",
-      "entry_sell": 675,
-      "entry_offer": 700
+      "entry_sell": 297,
+      "entry_offer": 311
     }
   ]
 }
