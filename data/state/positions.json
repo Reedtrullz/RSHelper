@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 194,
       "entry_offer": 202
+    },
+    {
+      "id": 2,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 250,
+      "buy_price": 138,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T19:50:00.554376+00:00",
+      "note": "auto",
+      "entry_sell": 138,
+      "entry_offer": 143
     }
   ]
 }
