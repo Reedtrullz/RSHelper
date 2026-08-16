@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 7418,
+      "name": "Mole skin",
+      "qty": 50,
+      "buy_price": 4728,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T23:54:06.369019+00:00",
+      "note": "auto",
+      "entry_sell": 4728,
+      "entry_offer": 4500
+    },
+    {
+      "id": 2,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 500,
+      "buy_price": 110,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T23:58:06.480267+00:00",
+      "note": "auto",
+      "entry_sell": 110,
+      "entry_offer": 114
+    }
+  ]
 }
