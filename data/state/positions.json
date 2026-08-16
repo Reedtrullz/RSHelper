@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11951,
-      "name": "Extended antifire(4)",
-      "qty": 177,
-      "buy_price": 263,
+      "item_id": 571,
+      "name": "Water orb",
+      "qty": 263,
+      "buy_price": 1470,
       "direction": "traditional",
-      "opened_at": "2026-08-16T21:54:04.040703+00:00",
+      "opened_at": "2026-08-16T23:14:05.702342+00:00",
       "note": "auto",
-      "entry_sell": 263,
-      "entry_offer": 277
+      "entry_sell": 1470,
+      "entry_offer": 1524
     },
     {
-      "id": 4,
-      "item_id": 5935,
-      "name": "Coconut milk",
-      "qty": 180,
-      "buy_price": 218,
+      "id": 2,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 217,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-16T22:46:05.094841+00:00",
+      "opened_at": "2026-08-16T23:14:05.702980+00:00",
       "note": "auto",
-      "entry_sell": 218,
-      "entry_offer": 227
-    },
-    {
-      "id": 5,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2916,
-      "buy_price": 40,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T22:58:05.349215+00:00",
-      "note": "auto",
-      "entry_sell": 40,
-      "entry_offer": 42
+      "entry_sell": 83,
+      "entry_offer": 86
     }
   ]
 }
