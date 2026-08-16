@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 27629,
-      "name": "Forgotten brew(4)",
-      "qty": 107,
-      "buy_price": 3730,
+      "id": 5,
+      "item_id": 169,
+      "name": "Ranging potion(3)",
+      "qty": 290,
+      "buy_price": 1375,
       "direction": "traditional",
-      "opened_at": "2026-08-15T23:57:31.653765+00:00",
+      "opened_at": "2026-08-16T00:05:31.754191+00:00",
       "note": "auto",
-      "entry_sell": 3730,
-      "entry_offer": 3900
+      "entry_sell": 1375,
+      "entry_offer": 1450
     },
     {
-      "id": 4,
-      "item_id": 1625,
-      "name": "Uncut opal",
-      "qty": 133,
-      "buy_price": 74,
+      "id": 6,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 220,
+      "buy_price": 121,
       "direction": "traditional",
-      "opened_at": "2026-08-16T00:01:31.734931+00:00",
+      "opened_at": "2026-08-16T00:17:32.017531+00:00",
       "note": "auto",
-      "entry_sell": 74,
-      "entry_offer": 77
+      "entry_sell": 121,
+      "entry_offer": 126
+    },
+    {
+      "id": 7,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 645,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T00:17:32.018349+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
