@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 21622,
+      "name": "Volcanic ash",
+      "qty": 138,
+      "buy_price": 80,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T03:09:35.489137+00:00",
+      "note": "auto",
+      "entry_sell": 80,
+      "entry_offer": 84
+    }
+  ]
 }
