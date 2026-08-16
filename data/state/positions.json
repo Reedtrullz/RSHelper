@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2442,
-      "name": "Super defence(4)",
-      "qty": 125,
-      "buy_price": 3187,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T17:15:56.178994+00:00",
-      "note": "auto",
-      "entry_sell": 3187,
-      "entry_offer": 3305
-    },
-    {
       "id": 2,
       "item_id": 9739,
       "name": "Combat potion(4)",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 137,
       "entry_offer": 144
+    },
+    {
+      "id": 3,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 455,
+      "buy_price": 700,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T17:39:56.948544+00:00",
+      "note": "auto",
+      "entry_sell": 700,
+      "entry_offer": 726
+    },
+    {
+      "id": 4,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 746,
+      "buy_price": 536,
+      "direction": "traditional",
+      "opened_at": "2026-08-16T17:39:56.949014+00:00",
+      "note": "auto",
+      "entry_sell": 536,
+      "entry_offer": 558
     }
   ]
 }
