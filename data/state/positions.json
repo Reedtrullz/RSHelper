@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 169,
-      "name": "Ranging potion(3)",
-      "qty": 290,
-      "buy_price": 1375,
+      "id": 1,
+      "item_id": 13439,
+      "name": "Raw anglerfish",
+      "qty": 260,
+      "buy_price": 1536,
       "direction": "traditional",
-      "opened_at": "2026-08-16T00:05:31.754191+00:00",
+      "opened_at": "2026-08-16T00:33:32.430216+00:00",
       "note": "auto",
-      "entry_sell": 1375,
-      "entry_offer": 1450
-    },
-    {
-      "id": 6,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 220,
-      "buy_price": 121,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T00:17:32.017531+00:00",
-      "note": "auto",
-      "entry_sell": 121,
-      "entry_offer": 126
-    },
-    {
-      "id": 7,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 645,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-16T00:17:32.018349+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 1536,
+      "entry_offer": 1597
     }
   ]
 }
