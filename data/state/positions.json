@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 440,
-      "name": "Iron ore",
-      "qty": 2376,
-      "buy_price": 71,
+      "id": 1,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 584,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-17T03:44:11.231103+00:00",
+      "opened_at": "2026-08-17T04:14:13.820252+00:00",
       "note": "auto",
-      "entry_sell": 71,
-      "entry_offer": 74
-    },
-    {
-      "id": 4,
-      "item_id": 261,
-      "name": "Avantoe",
-      "qty": 236,
-      "buy_price": 1694,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T03:58:13.148730+00:00",
-      "note": "auto",
-      "entry_sell": 1694,
-      "entry_offer": 1756
+      "entry_sell": 101,
+      "entry_offer": 105
     }
   ]
 }
