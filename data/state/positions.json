@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 811,
-      "name": "Rune dart",
-      "qty": 1606,
-      "buy_price": 249,
+      "item_id": 2301,
+      "name": "Pineapple pizza",
+      "qty": 116,
+      "buy_price": 695,
       "direction": "traditional",
-      "opened_at": "2026-08-17T17:10:37.470240+00:00",
+      "opened_at": "2026-08-17T17:26:37.685661+00:00",
       "note": "auto",
-      "entry_sell": 249,
-      "entry_offer": 263
-    },
-    {
-      "id": 2,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1875,
-      "buy_price": 194,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T17:10:37.471321+00:00",
-      "note": "auto",
-      "entry_sell": 194,
-      "entry_offer": 203
+      "entry_sell": 695,
+      "entry_offer": 720
     }
   ]
 }
