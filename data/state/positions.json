@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 3684,
       "entry_offer": 3850
+    },
+    {
+      "id": 2,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 1613,
+      "buy_price": 151,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T15:10:34.306982+00:00",
+      "note": "auto",
+      "entry_sell": 151,
+      "entry_offer": 159
+    },
+    {
+      "id": 3,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 199,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T15:10:34.309869+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
