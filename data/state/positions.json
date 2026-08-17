@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1562,
+      "buy_price": 256,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T20:18:43.666911+00:00",
+      "note": "auto",
+      "entry_sell": 256,
+      "entry_offer": 270
+    },
+    {
+      "id": 2,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 136,
+      "buy_price": 114,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T20:30:44.352899+00:00",
+      "note": "auto",
+      "entry_sell": 114,
+      "entry_offer": 120
+    }
+  ]
 }
