@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 121,
-      "buy_price": 283,
+      "id": 1,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 178,
+      "buy_price": 90,
       "direction": "traditional",
-      "opened_at": "2026-08-17T04:34:14.738931+00:00",
+      "opened_at": "2026-08-17T05:02:15.760345+00:00",
       "note": "auto",
-      "entry_sell": 283,
-      "entry_offer": 299
+      "entry_sell": 90,
+      "entry_offer": 95
+    },
+    {
+      "id": 2,
+      "item_id": 11237,
+      "name": "Dragon arrowtips",
+      "qty": 209,
+      "buy_price": 1910,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T05:10:15.985632+00:00",
+      "note": "auto",
+      "entry_sell": 1910,
+      "entry_offer": 2000
     }
   ]
 }
