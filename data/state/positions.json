@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 472,
-      "buy_price": 349,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 1116,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-17T17:38:37.847908+00:00",
+      "opened_at": "2026-08-17T17:46:38.118657+00:00",
       "note": "auto",
-      "entry_sell": 349,
-      "entry_offer": 366
+      "entry_sell": 101,
+      "entry_offer": 106
+    },
+    {
+      "id": 2,
+      "item_id": 101,
+      "name": "Irit potion (unf)",
+      "qty": 150,
+      "buy_price": 1759,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T17:54:38.057446+00:00",
+      "note": "auto",
+      "entry_sell": 1759,
+      "entry_offer": 1845
     }
   ]
 }
