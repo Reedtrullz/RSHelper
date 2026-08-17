@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 103,
       "entry_offer": 107
+    },
+    {
+      "id": 5,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 3039,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T00:56:07.027079+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
