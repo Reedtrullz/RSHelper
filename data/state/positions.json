@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 25,
       "entry_offer": 26
-    },
-    {
-      "id": 4,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 3306,
-      "buy_price": 94,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T18:54:41.230007+00:00",
-      "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 99
     }
   ]
 }
