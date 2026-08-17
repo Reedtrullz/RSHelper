@@ -13,28 +13,16 @@
       "entry_offer": 236
     },
     {
-      "id": 6,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 403,
-      "buy_price": 236,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T01:44:09.320992+00:00",
-      "note": "auto",
-      "entry_sell": 236,
-      "entry_offer": 249
-    },
-    {
       "id": 7,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 1419,
-      "buy_price": 113,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 3773,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-17T01:44:09.321510+00:00",
+      "opened_at": "2026-08-17T01:52:09.607195+00:00",
       "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 117
+      "entry_sell": 106,
+      "entry_offer": 111
     }
   ]
 }
