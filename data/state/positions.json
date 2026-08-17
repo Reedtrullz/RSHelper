@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 738,
-      "buy_price": 542,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 1606,
+      "buy_price": 249,
       "direction": "traditional",
-      "opened_at": "2026-08-17T16:50:37.122886+00:00",
+      "opened_at": "2026-08-17T17:10:37.470240+00:00",
       "note": "auto",
-      "entry_sell": 542,
-      "entry_offer": 570
+      "entry_sell": 249,
+      "entry_offer": 263
+    },
+    {
+      "id": 2,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1875,
+      "buy_price": 194,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T17:10:37.471321+00:00",
+      "note": "auto",
+      "entry_sell": 194,
+      "entry_offer": 203
     }
   ]
 }
