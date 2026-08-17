@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2150,
-      "buy_price": 132,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T00:24:05.859144+00:00",
-      "note": "auto",
-      "entry_sell": 132,
-      "entry_offer": 138
-    },
-    {
-      "id": 2,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 323,
-      "buy_price": 1238,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T00:24:05.859437+00:00",
-      "note": "auto",
-      "entry_sell": 1238,
-      "entry_offer": 1288
-    },
-    {
       "id": 3,
-      "item_id": 383,
-      "name": "Raw shark",
-      "qty": 470,
-      "buy_price": 672,
+      "item_id": 1679,
+      "name": "Ruby amulet (u)",
+      "qty": 259,
+      "buy_price": 1018,
       "direction": "traditional",
-      "opened_at": "2026-08-17T00:28:05.886956+00:00",
+      "opened_at": "2026-08-17T00:34:07.441310+00:00",
       "note": "auto",
-      "entry_sell": 672,
-      "entry_offer": 704
+      "entry_sell": 1018,
+      "entry_offer": 1067
+    },
+    {
+      "id": 4,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 279,
+      "buy_price": 103,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T00:40:06.471388+00:00",
+      "note": "auto",
+      "entry_sell": 103,
+      "entry_offer": 107
     }
   ]
 }
