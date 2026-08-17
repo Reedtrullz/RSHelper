@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 9240,
-      "name": "Sapphire bolts (e)",
-      "qty": 99,
-      "buy_price": 25,
+      "id": 1,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 1183,
+      "buy_price": 149,
       "direction": "traditional",
-      "opened_at": "2026-08-17T18:34:40.178389+00:00",
+      "opened_at": "2026-08-17T19:42:42.171275+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
-      "id": 4,
-      "item_id": 2301,
-      "name": "Pineapple pizza",
-      "qty": 101,
-      "buy_price": 695,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T19:20:40.644637+00:00",
-      "note": "auto",
-      "entry_sell": 695,
-      "entry_offer": 720
-    },
-    {
-      "id": 5,
-      "item_id": 13511,
-      "name": "Ensouled dragon head",
-      "qty": 72,
-      "buy_price": 5500,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T19:26:41.597561+00:00",
-      "note": "auto",
-      "entry_sell": 5500,
-      "entry_offer": 5739
+      "entry_sell": 149,
+      "entry_offer": 155
     }
   ]
 }
