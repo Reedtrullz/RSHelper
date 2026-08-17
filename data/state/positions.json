@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 607,
+      "buy_price": 560,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T11:38:27.684814+00:00",
+      "note": "auto",
+      "entry_sell": 560,
+      "entry_offer": 584
+    }
+  ]
 }
