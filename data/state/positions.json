@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1679,
-      "name": "Ruby amulet (u)",
-      "qty": 259,
-      "buy_price": 1018,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T00:34:07.441310+00:00",
-      "note": "auto",
-      "entry_sell": 1018,
-      "entry_offer": 1067
-    },
-    {
-      "id": 4,
-      "item_id": 1601,
-      "name": "Diamond",
-      "qty": 246,
-      "buy_price": 1625,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T01:14:08.331556+00:00",
-      "note": "auto",
-      "entry_sell": 1625,
-      "entry_offer": 1693
-    },
-    {
       "id": 5,
-      "item_id": 1747,
-      "name": "Black dragonhide",
-      "qty": 92,
-      "buy_price": 3623,
+      "item_id": 44,
+      "name": "Rune arrowtips",
+      "qty": 555,
+      "buy_price": 247,
       "direction": "traditional",
-      "opened_at": "2026-08-17T01:14:08.332099+00:00",
+      "opened_at": "2026-08-17T01:22:08.724194+00:00",
       "note": "auto",
-      "entry_sell": 3623,
-      "entry_offer": 3761
+      "entry_sell": 247,
+      "entry_offer": 236
+    },
+    {
+      "id": 6,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 560,
+      "buy_price": 110,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T01:24:07.581712+00:00",
+      "note": "auto",
+      "entry_sell": 110,
+      "entry_offer": 114
+    },
+    {
+      "id": 7,
+      "item_id": 4694,
+      "name": "Steam rune",
+      "qty": 1009,
+      "buy_price": 89,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T01:26:08.794239+00:00",
+      "note": "auto",
+      "entry_sell": 89,
+      "entry_offer": 94
     }
   ]
 }
