@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 322,
-      "buy_price": 95,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 1073,
+      "buy_price": 108,
       "direction": "traditional",
-      "opened_at": "2026-08-17T21:20:44.953749+00:00",
+      "opened_at": "2026-08-17T21:30:46.338240+00:00",
       "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 99
+      "entry_sell": 108,
+      "entry_offer": 114
     },
     {
       "id": 3,
-      "item_id": 1965,
-      "name": "Cabbage",
-      "qty": 601,
-      "buy_price": 25,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 874,
+      "buy_price": 191,
       "direction": "traditional",
-      "opened_at": "2026-08-17T21:20:44.954091+00:00",
+      "opened_at": "2026-08-17T21:36:45.283166+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 191,
+      "entry_offer": 200
     }
   ]
 }
