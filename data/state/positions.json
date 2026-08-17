@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 106,
       "entry_offer": 111
+    },
+    {
+      "id": 8,
+      "item_id": 805,
+      "name": "Rune thrownaxe",
+      "qty": 110,
+      "buy_price": 163,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T02:12:10.209487+00:00",
+      "note": "auto",
+      "entry_sell": 163,
+      "entry_offer": 155
     }
   ]
 }
