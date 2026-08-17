@@ -13,16 +13,16 @@
       "entry_offer": 2000
     },
     {
-      "id": 4,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 11000,
-      "buy_price": 28,
+      "id": 3,
+      "item_id": 21946,
+      "name": "Diamond dragon bolts (e)",
+      "qty": 145,
+      "buy_price": 2758,
       "direction": "traditional",
-      "opened_at": "2026-08-17T05:30:16.690654+00:00",
+      "opened_at": "2026-08-17T06:00:16.187730+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
+      "entry_sell": 2758,
+      "entry_offer": 2862
     }
   ]
 }
