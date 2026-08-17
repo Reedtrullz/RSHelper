@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 44,
-      "name": "Rune arrowtips",
-      "qty": 555,
-      "buy_price": 247,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T01:22:08.724194+00:00",
-      "note": "auto",
-      "entry_sell": 247,
-      "entry_offer": 236
-    },
-    {
       "id": 9,
       "item_id": 2505,
       "name": "Blue dragon leather",
@@ -26,15 +14,15 @@
     },
     {
       "id": 10,
-      "item_id": 10476,
-      "name": "Purple sweets",
-      "qty": 73,
-      "buy_price": 5406,
+      "item_id": 2501,
+      "name": "Red d'hide body",
+      "qty": 70,
+      "buy_price": 5500,
       "direction": "traditional",
-      "opened_at": "2026-08-17T02:28:10.433225+00:00",
+      "opened_at": "2026-08-17T02:44:10.882651+00:00",
       "note": "auto",
-      "entry_sell": 5406,
-      "entry_offer": 5600
+      "entry_sell": 5500,
+      "entry_offer": 5752
     }
   ]
 }
