@@ -14,27 +14,27 @@
     },
     {
       "id": 6,
-      "item_id": 377,
-      "name": "Raw lobster",
-      "qty": 560,
-      "buy_price": 110,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 403,
+      "buy_price": 236,
       "direction": "traditional",
-      "opened_at": "2026-08-17T01:24:07.581712+00:00",
+      "opened_at": "2026-08-17T01:44:09.320992+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 114
+      "entry_sell": 236,
+      "entry_offer": 249
     },
     {
       "id": 7,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 1009,
-      "buy_price": 89,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 1419,
+      "buy_price": 113,
       "direction": "traditional",
-      "opened_at": "2026-08-17T01:26:08.794239+00:00",
+      "opened_at": "2026-08-17T01:44:09.321510+00:00",
       "note": "auto",
-      "entry_sell": 89,
-      "entry_offer": 94
+      "entry_sell": 113,
+      "entry_offer": 117
     }
   ]
 }
