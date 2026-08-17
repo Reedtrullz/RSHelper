@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 3016,
-      "name": "Super energy(4)",
-      "qty": 185,
-      "buy_price": 2155,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 241,
+      "buy_price": 124,
       "direction": "traditional",
-      "opened_at": "2026-08-17T14:22:32.666961+00:00",
+      "opened_at": "2026-08-17T14:38:33.278404+00:00",
       "note": "auto",
-      "entry_sell": 2155,
-      "entry_offer": 2255
+      "entry_sell": 124,
+      "entry_offer": 130
+    },
+    {
+      "id": 2,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 632,
+      "buy_price": 431,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T14:38:33.279792+00:00",
+      "note": "auto",
+      "entry_sell": 431,
+      "entry_offer": 449
     }
   ]
 }
