@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 10,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 647,
-      "buy_price": 71,
+      "id": 1,
+      "item_id": 5970,
+      "name": "Curry leaf",
+      "qty": 409,
+      "buy_price": 52,
       "direction": "traditional",
-      "opened_at": "2026-08-17T02:50:10.030510+00:00",
+      "opened_at": "2026-08-17T03:12:11.573734+00:00",
       "note": "auto",
-      "entry_sell": 71,
-      "entry_offer": 74
+      "entry_sell": 52,
+      "entry_offer": 50
+    },
+    {
+      "id": 2,
+      "item_id": 371,
+      "name": "Raw swordfish",
+      "qty": 380,
+      "buy_price": 191,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T03:12:11.576742+00:00",
+      "note": "auto",
+      "entry_sell": 191,
+      "entry_offer": 199
     }
   ]
 }
