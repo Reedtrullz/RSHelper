@@ -13,16 +13,16 @@
       "entry_offer": 270
     },
     {
-      "id": 2,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 136,
-      "buy_price": 114,
+      "id": 3,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 9429,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-17T20:30:44.352899+00:00",
+      "opened_at": "2026-08-17T20:46:44.826176+00:00",
       "note": "auto",
-      "entry_sell": 114,
-      "entry_offer": 120
+      "entry_sell": 28,
+      "entry_offer": 27
     }
   ]
 }
