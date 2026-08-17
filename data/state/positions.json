@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 66,
+      "name": "Yew longbow (u)",
+      "qty": 949,
+      "buy_price": 193,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T12:22:29.363339+00:00",
+      "note": "auto",
+      "entry_sell": 193,
+      "entry_offer": 203
+    }
+  ]
 }
