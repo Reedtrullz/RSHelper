@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 241,
-      "buy_price": 124,
+      "item_id": 32352,
+      "name": "Marlin",
+      "qty": 89,
+      "buy_price": 3684,
       "direction": "traditional",
-      "opened_at": "2026-08-17T14:38:33.278404+00:00",
+      "opened_at": "2026-08-17T14:54:33.923059+00:00",
       "note": "auto",
-      "entry_sell": 124,
-      "entry_offer": 130
-    },
-    {
-      "id": 2,
-      "item_id": 3144,
-      "name": "Cooked karambwan",
-      "qty": 632,
-      "buy_price": 431,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T14:38:33.279792+00:00",
-      "note": "auto",
-      "entry_sell": 431,
-      "entry_offer": 449
+      "entry_sell": 3684,
+      "entry_offer": 3850
     }
   ]
 }
