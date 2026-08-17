@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 21802,
-      "name": "Revenant cave teleport",
-      "qty": 147,
-      "buy_price": 564,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 1426,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-17T13:18:30.846881+00:00",
+      "opened_at": "2026-08-17T13:34:31.263225+00:00",
       "note": "auto",
-      "entry_sell": 564,
-      "entry_offer": 592
+      "entry_sell": 106,
+      "entry_offer": 111
+    },
+    {
+      "id": 3,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 90,
+      "buy_price": 125,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T13:34:31.264100+00:00",
+      "note": "auto",
+      "entry_sell": 125,
+      "entry_offer": 130
     }
   ]
 }
