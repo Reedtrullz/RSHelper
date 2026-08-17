@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 3051,
-      "name": "Grimy snapdragon",
-      "qty": 53,
-      "buy_price": 7423,
+      "item_id": 3016,
+      "name": "Super energy(4)",
+      "qty": 185,
+      "buy_price": 2155,
       "direction": "traditional",
-      "opened_at": "2026-08-17T13:14:30.910421+00:00",
+      "opened_at": "2026-08-17T14:22:32.666961+00:00",
       "note": "auto",
-      "entry_sell": 7423,
-      "entry_offer": 7800
+      "entry_sell": 2155,
+      "entry_offer": 2255
     }
   ]
 }
