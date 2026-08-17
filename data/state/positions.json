@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1562,
-      "buy_price": 256,
+      "id": 2,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 530,
+      "buy_price": 285,
       "direction": "traditional",
-      "opened_at": "2026-08-17T20:18:43.666911+00:00",
+      "opened_at": "2026-08-17T21:02:45.377297+00:00",
       "note": "auto",
-      "entry_sell": 256,
-      "entry_offer": 270
-    },
-    {
-      "id": 3,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 9429,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T20:46:44.826176+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
+      "entry_sell": 285,
+      "entry_offer": 297
     }
   ]
 }
