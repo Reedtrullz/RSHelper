@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 1283,
-      "buy_price": 151,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 357,
+      "buy_price": 1120,
       "direction": "traditional",
-      "opened_at": "2026-08-17T22:24:47.578445+00:00",
+      "opened_at": "2026-08-17T22:40:48.404258+00:00",
       "note": "auto",
-      "entry_sell": 151,
-      "entry_offer": 159
+      "entry_sell": 1120,
+      "entry_offer": 1177
+    },
+    {
+      "id": 2,
+      "item_id": 847,
+      "name": "Willow longbow",
+      "qty": 100,
+      "buy_price": 102,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T22:40:48.405225+00:00",
+      "note": "auto",
+      "entry_sell": 102,
+      "entry_offer": 107
     }
   ]
 }
