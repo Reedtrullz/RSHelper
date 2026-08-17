@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 361,
-      "name": "Tuna",
-      "qty": 202,
-      "buy_price": 49,
+      "item_id": 2315,
+      "name": "Pie shell",
+      "qty": 188,
+      "buy_price": 300,
       "direction": "traditional",
-      "opened_at": "2026-08-17T23:08:49.460658+00:00",
+      "opened_at": "2026-08-17T23:24:50.215507+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 300,
+      "entry_offer": 313
     },
     {
       "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 5838,
-      "buy_price": 26,
+      "item_id": 24615,
+      "name": "Blighted teleport spell sack",
+      "qty": 191,
+      "buy_price": 64,
       "direction": "traditional",
-      "opened_at": "2026-08-17T23:12:49.575338+00:00",
+      "opened_at": "2026-08-17T23:28:50.182945+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
-    },
-    {
-      "id": 3,
-      "item_id": 4824,
-      "name": "Rune nails",
-      "qty": 501,
-      "buy_price": 798,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T23:12:49.576486+00:00",
-      "note": "auto",
-      "entry_sell": 798,
-      "entry_offer": 830
+      "entry_sell": 64,
+      "entry_offer": 67
     }
   ]
 }
