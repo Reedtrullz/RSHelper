@@ -14,27 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 24589,
-      "name": "Blighted manta ray",
-      "qty": 279,
-      "buy_price": 103,
+      "item_id": 1601,
+      "name": "Diamond",
+      "qty": 246,
+      "buy_price": 1625,
       "direction": "traditional",
-      "opened_at": "2026-08-17T00:40:06.471388+00:00",
+      "opened_at": "2026-08-17T01:14:08.331556+00:00",
       "note": "auto",
-      "entry_sell": 103,
-      "entry_offer": 107
+      "entry_sell": 1625,
+      "entry_offer": 1693
     },
     {
       "id": 5,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 3039,
-      "buy_price": 26,
+      "item_id": 1747,
+      "name": "Black dragonhide",
+      "qty": 92,
+      "buy_price": 3623,
       "direction": "traditional",
-      "opened_at": "2026-08-17T00:56:07.027079+00:00",
+      "opened_at": "2026-08-17T01:14:08.332099+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 3623,
+      "entry_offer": 3761
     }
   ]
 }
