@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 847,
-      "name": "Willow longbow",
-      "qty": 100,
-      "buy_price": 102,
+      "id": 1,
+      "item_id": 361,
+      "name": "Tuna",
+      "qty": 202,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-17T22:40:48.405225+00:00",
+      "opened_at": "2026-08-17T23:08:49.460658+00:00",
       "note": "auto",
-      "entry_sell": 102,
-      "entry_offer": 107
+      "entry_sell": 49,
+      "entry_offer": 51
+    },
+    {
+      "id": 2,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 5838,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T23:12:49.575338+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     },
     {
       "id": 3,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 713,
-      "buy_price": 38,
+      "item_id": 4824,
+      "name": "Rune nails",
+      "qty": 501,
+      "buy_price": 798,
       "direction": "traditional",
-      "opened_at": "2026-08-17T22:56:48.970377+00:00",
+      "opened_at": "2026-08-17T23:12:49.576486+00:00",
       "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
-    },
-    {
-      "id": 4,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 1460,
-      "buy_price": 27,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T22:56:48.970701+00:00",
-      "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
+      "entry_sell": 798,
+      "entry_offer": 830
     }
   ]
 }
