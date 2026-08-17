@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 388,
       "entry_offer": 408
+    },
+    {
+      "id": 2,
+      "item_id": 215,
+      "name": "Grimy cadantine",
+      "qty": 148,
+      "buy_price": 2060,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T09:46:24.173652+00:00",
+      "note": "auto",
+      "entry_sell": 2060,
+      "entry_offer": 2143
     }
   ]
 }
