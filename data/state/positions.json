@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2301,
-      "name": "Pineapple pizza",
-      "qty": 116,
-      "buy_price": 695,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 472,
+      "buy_price": 349,
       "direction": "traditional",
-      "opened_at": "2026-08-17T17:26:37.685661+00:00",
+      "opened_at": "2026-08-17T17:38:37.847908+00:00",
       "note": "auto",
-      "entry_sell": 695,
-      "entry_offer": 720
+      "entry_sell": 349,
+      "entry_offer": 366
     }
   ]
 }
