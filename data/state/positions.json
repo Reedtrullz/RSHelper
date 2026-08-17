@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 208,
-      "buy_price": 53,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T11:54:28.412630+00:00",
-      "note": "auto",
-      "entry_sell": 53,
-      "entry_offer": 51
-    }
-  ]
+  "positions": []
 }
