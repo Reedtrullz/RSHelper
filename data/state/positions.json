@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 562,
-      "buy_price": 711,
+      "id": 3,
+      "item_id": 11936,
+      "name": "Dark crab",
+      "qty": 282,
+      "buy_price": 1325,
       "direction": "traditional",
-      "opened_at": "2026-08-17T12:46:30.297580+00:00",
+      "opened_at": "2026-08-17T12:58:30.396493+00:00",
       "note": "auto",
-      "entry_sell": 711,
-      "entry_offer": 743
+      "entry_sell": 1325,
+      "entry_offer": 1372
+    },
+    {
+      "id": 4,
+      "item_id": 361,
+      "name": "Tuna",
+      "qty": 350,
+      "buy_price": 50,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T13:02:30.449016+00:00",
+      "note": "auto",
+      "entry_sell": 50,
+      "entry_offer": 52
+    },
+    {
+      "id": 5,
+      "item_id": 532,
+      "name": "Big bones",
+      "qty": 158,
+      "buy_price": 224,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T13:02:30.449906+00:00",
+      "note": "auto",
+      "entry_sell": 224,
+      "entry_offer": 233
     }
   ]
 }
