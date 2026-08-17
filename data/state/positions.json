@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 595,
-      "buy_price": 151,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T16:10:36.494841+00:00",
-      "note": "auto",
-      "entry_sell": 151,
-      "entry_offer": 159
-    },
-    {
       "id": 2,
       "item_id": 11237,
       "name": "Dragon arrowtips",
@@ -23,18 +11,6 @@
       "note": "auto",
       "entry_sell": 1916,
       "entry_offer": 2000
-    },
-    {
-      "id": 3,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 1771,
-      "buy_price": 110,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T16:10:36.495678+00:00",
-      "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 114
     }
   ]
 }
