@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 1116,
-      "buy_price": 101,
+      "item_id": 6333,
+      "name": "Teak logs",
+      "qty": 107,
+      "buy_price": 114,
       "direction": "traditional",
-      "opened_at": "2026-08-17T17:46:38.118657+00:00",
+      "opened_at": "2026-08-17T18:26:39.864280+00:00",
       "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 106
+      "entry_sell": 114,
+      "entry_offer": 120
     },
     {
       "id": 2,
-      "item_id": 101,
-      "name": "Irit potion (unf)",
-      "qty": 150,
-      "buy_price": 1759,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 4132,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-17T17:54:38.057446+00:00",
+      "opened_at": "2026-08-17T18:26:39.866417+00:00",
       "note": "auto",
-      "entry_sell": 1759,
-      "entry_offer": 1845
+      "entry_sell": 27,
+      "entry_offer": 28
     },
     {
       "id": 3,
-      "item_id": 1953,
-      "name": "Pastry dough",
-      "qty": 110,
-      "buy_price": 130,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2548,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-17T18:10:39.075332+00:00",
+      "opened_at": "2026-08-17T18:26:39.867200+00:00",
       "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 137
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
