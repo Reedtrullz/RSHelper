@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 584,
-      "buy_price": 101,
+      "id": 3,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2312,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-17T04:14:13.820252+00:00",
+      "opened_at": "2026-08-17T04:22:14.114260+00:00",
       "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 105
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
