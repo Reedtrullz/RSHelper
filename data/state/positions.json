@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 102,
-      "buy_price": 282,
+      "item_id": 1658,
+      "name": "Emerald necklace",
+      "qty": 484,
+      "buy_price": 664,
       "direction": "traditional",
-      "opened_at": "2026-08-17T15:38:35.123120+00:00",
+      "opened_at": "2026-08-17T15:54:35.945451+00:00",
       "note": "auto",
-      "entry_sell": 282,
-      "entry_offer": 296
-    },
-    {
-      "id": 3,
-      "item_id": 12625,
-      "name": "Stamina potion(4)",
-      "qty": 110,
-      "buy_price": 3634,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T15:38:35.124129+00:00",
-      "note": "auto",
-      "entry_sell": 3634,
-      "entry_offer": 3771
+      "entry_sell": 664,
+      "entry_offer": 689
     }
   ]
 }
