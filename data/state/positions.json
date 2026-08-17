@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 31973,
-      "name": "Mahogany repair kit",
-      "qty": 383,
-      "buy_price": 1043,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T06:54:18.823143+00:00",
-      "note": "auto",
-      "entry_sell": 1043,
-      "entry_offer": 1092
-    },
-    {
-      "id": 2,
-      "item_id": 2351,
-      "name": "Iron bar",
-      "qty": 203,
-      "buy_price": 140,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T06:58:18.849994+00:00",
-      "note": "auto",
-      "entry_sell": 140,
-      "entry_offer": 146
-    }
-  ]
+  "positions": []
 }
