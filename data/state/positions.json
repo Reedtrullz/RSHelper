@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 1183,
-      "buy_price": 149,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T19:42:42.171275+00:00",
-      "note": "auto",
-      "entry_sell": 149,
-      "entry_offer": 155
-    }
-  ]
+  "positions": []
 }
