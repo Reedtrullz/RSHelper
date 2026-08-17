@@ -26,15 +26,15 @@
     },
     {
       "id": 3,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 874,
-      "buy_price": 191,
+      "item_id": 253,
+      "name": "Tarromin",
+      "qty": 445,
+      "buy_price": 261,
       "direction": "traditional",
-      "opened_at": "2026-08-17T21:36:45.283166+00:00",
+      "opened_at": "2026-08-17T21:50:45.786766+00:00",
       "note": "auto",
-      "entry_sell": 191,
-      "entry_offer": 200
+      "entry_sell": 261,
+      "entry_offer": 274
     }
   ]
 }
