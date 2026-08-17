@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 12625,
-      "name": "Stamina potion(4)",
-      "qty": 110,
-      "buy_price": 3255,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2150,
+      "buy_price": 132,
       "direction": "traditional",
-      "opened_at": "2026-08-17T00:14:06.672130+00:00",
+      "opened_at": "2026-08-17T00:24:05.859144+00:00",
       "note": "auto",
-      "entry_sell": 3255,
-      "entry_offer": 3389
+      "entry_sell": 132,
+      "entry_offer": 138
     },
     {
       "id": 2,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 275,
-      "buy_price": 80,
+      "item_id": 217,
+      "name": "Grimy dwarf weed",
+      "qty": 323,
+      "buy_price": 1238,
       "direction": "traditional",
-      "opened_at": "2026-08-17T00:14:06.672777+00:00",
+      "opened_at": "2026-08-17T00:24:05.859437+00:00",
       "note": "auto",
-      "entry_sell": 80,
-      "entry_offer": 84
+      "entry_sell": 1238,
+      "entry_offer": 1288
+    },
+    {
+      "id": 3,
+      "item_id": 383,
+      "name": "Raw shark",
+      "qty": 470,
+      "buy_price": 672,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T00:28:05.886956+00:00",
+      "note": "auto",
+      "entry_sell": 672,
+      "entry_offer": 704
     }
   ]
 }
