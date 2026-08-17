@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 530,
-      "buy_price": 285,
+      "id": 1,
+      "item_id": 847,
+      "name": "Willow longbow",
+      "qty": 141,
+      "buy_price": 102,
       "direction": "traditional",
-      "opened_at": "2026-08-17T21:02:45.377297+00:00",
+      "opened_at": "2026-08-17T21:14:45.645853+00:00",
       "note": "auto",
-      "entry_sell": 285,
-      "entry_offer": 297
+      "entry_sell": 102,
+      "entry_offer": 107
+    },
+    {
+      "id": 2,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 322,
+      "buy_price": 95,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T21:20:44.953749+00:00",
+      "note": "auto",
+      "entry_sell": 95,
+      "entry_offer": 99
+    },
+    {
+      "id": 3,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 601,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T21:20:44.954091+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
