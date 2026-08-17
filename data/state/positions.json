@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 105,
       "entry_offer": 110
+    },
+    {
+      "id": 3,
+      "item_id": 5952,
+      "name": "Antidote++(4)",
+      "qty": 52,
+      "buy_price": 7566,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T08:56:21.546392+00:00",
+      "note": "auto",
+      "entry_sell": 7566,
+      "entry_offer": 7888
     }
   ]
 }
