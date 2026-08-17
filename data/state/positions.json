@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 1759,
       "entry_offer": 1845
+    },
+    {
+      "id": 3,
+      "item_id": 1953,
+      "name": "Pastry dough",
+      "qty": 110,
+      "buy_price": 130,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T18:10:39.075332+00:00",
+      "note": "auto",
+      "entry_sell": 130,
+      "entry_offer": 137
     }
   ]
 }
