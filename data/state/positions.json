@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1283,
+      "buy_price": 151,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T22:24:47.578445+00:00",
+      "note": "auto",
+      "entry_sell": 151,
+      "entry_offer": 159
+    }
+  ]
 }
