@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 24615,
-      "name": "Blighted teleport spell sack",
-      "qty": 191,
-      "buy_price": 64,
+      "item_id": 32050,
+      "name": "Mahogany hull parts",
+      "qty": 100,
+      "buy_price": 3588,
       "direction": "traditional",
-      "opened_at": "2026-08-17T23:28:50.182945+00:00",
+      "opened_at": "2026-08-17T23:32:50.274865+00:00",
       "note": "auto",
-      "entry_sell": 64,
-      "entry_offer": 67
+      "entry_sell": 3588,
+      "entry_offer": 3410
+    },
+    {
+      "id": 3,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2371,
+      "buy_price": 29,
+      "direction": "traditional",
+      "opened_at": "2026-08-17T23:44:50.943096+00:00",
+      "note": "auto",
+      "entry_sell": 29,
+      "entry_offer": 28
     }
   ]
 }
