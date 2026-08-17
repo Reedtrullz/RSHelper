@@ -13,28 +13,28 @@
       "entry_offer": 236
     },
     {
-      "id": 7,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 3773,
-      "buy_price": 106,
+      "id": 9,
+      "item_id": 2505,
+      "name": "Blue dragon leather",
+      "qty": 198,
+      "buy_price": 2020,
       "direction": "traditional",
-      "opened_at": "2026-08-17T01:52:09.607195+00:00",
+      "opened_at": "2026-08-17T02:16:10.362821+00:00",
       "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 111
+      "entry_sell": 2020,
+      "entry_offer": 2092
     },
     {
-      "id": 8,
-      "item_id": 805,
-      "name": "Rune thrownaxe",
-      "qty": 110,
-      "buy_price": 163,
+      "id": 10,
+      "item_id": 10476,
+      "name": "Purple sweets",
+      "qty": 73,
+      "buy_price": 5406,
       "direction": "traditional",
-      "opened_at": "2026-08-17T02:12:10.209487+00:00",
+      "opened_at": "2026-08-17T02:28:10.433225+00:00",
       "note": "auto",
-      "entry_sell": 163,
-      "entry_offer": 155
+      "entry_sell": 5406,
+      "entry_offer": 5600
     }
   ]
 }
