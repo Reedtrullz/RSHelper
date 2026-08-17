@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 6333,
-      "name": "Teak logs",
-      "qty": 107,
-      "buy_price": 114,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T18:26:39.864280+00:00",
-      "note": "auto",
-      "entry_sell": 114,
-      "entry_offer": 120
-    },
-    {
       "id": 3,
       "item_id": 9240,
       "name": "Sapphire bolts (e)",
@@ -26,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 307,
-      "buy_price": 1300,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 3306,
+      "buy_price": 94,
       "direction": "traditional",
-      "opened_at": "2026-08-17T18:40:39.123814+00:00",
+      "opened_at": "2026-08-17T18:54:41.230007+00:00",
       "note": "auto",
-      "entry_sell": 1300,
-      "entry_offer": 1360
+      "entry_sell": 94,
+      "entry_offer": 99
     }
   ]
 }
