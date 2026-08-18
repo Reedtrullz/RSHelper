@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 489,
-      "buy_price": 351,
+      "id": 2,
+      "item_id": 861,
+      "name": "Magic shortbow",
+      "qty": 518,
+      "buy_price": 769,
       "direction": "traditional",
-      "opened_at": "2026-08-18T19:45:54.713803+00:00",
+      "opened_at": "2026-08-18T19:57:55.035368+00:00",
       "note": "auto",
-      "entry_sell": 351,
-      "entry_offer": 368
+      "entry_sell": 769,
+      "entry_offer": 807
+    },
+    {
+      "id": 3,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 491,
+      "buy_price": 192,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T20:01:55.136864+00:00",
+      "note": "auto",
+      "entry_sell": 192,
+      "entry_offer": 200
     }
   ]
 }
