@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 2114,
-      "name": "Pineapple",
-      "qty": 177,
-      "buy_price": 160,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T22:43:59.538219+00:00",
-      "note": "auto",
-      "entry_sell": 160,
-      "entry_offer": 166
-    },
-    {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 361,
-      "buy_price": 25,
+      "item_id": 9339,
+      "name": "Ruby bolts",
+      "qty": 218,
+      "buy_price": 259,
       "direction": "traditional",
-      "opened_at": "2026-08-18T23:00:00.326729+00:00",
+      "opened_at": "2026-08-18T23:08:00.686951+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 259,
+      "entry_offer": 269
     },
     {
-      "id": 4,
-      "item_id": 2361,
-      "name": "Adamantite bar",
-      "qty": 212,
-      "buy_price": 1878,
+      "id": 5,
+      "item_id": 569,
+      "name": "Fire orb",
+      "qty": 115,
+      "buy_price": 1712,
       "direction": "traditional",
-      "opened_at": "2026-08-18T23:05:59.280636+00:00",
+      "opened_at": "2026-08-18T23:12:00.551417+00:00",
       "note": "auto",
-      "entry_sell": 1878,
-      "entry_offer": 1948
+      "entry_sell": 1712,
+      "entry_offer": 1780
+    },
+    {
+      "id": 6,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 531,
+      "buy_price": 420,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T23:21:59.772658+00:00",
+      "note": "auto",
+      "entry_sell": 420,
+      "entry_offer": 436
     }
   ]
 }
