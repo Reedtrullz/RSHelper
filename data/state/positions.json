@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 110,
       "entry_offer": 114
-    },
-    {
-      "id": 2,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 105,
-      "buy_price": 570,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T16:17:48.620333+00:00",
-      "note": "auto",
-      "entry_sell": 570,
-      "entry_offer": 597
-    },
-    {
-      "id": 3,
-      "item_id": 24607,
-      "name": "Blighted ancient ice sack",
-      "qty": 909,
-      "buy_price": 364,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T16:17:48.620850+00:00",
-      "note": "auto",
-      "entry_sell": 364,
-      "entry_offer": 379
     }
   ]
 }
