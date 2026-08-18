@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 2049,
-      "buy_price": 108,
+      "item_id": 823,
+      "name": "Adamant dart tip",
+      "qty": 1228,
+      "buy_price": 180,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:18:55.555423+00:00",
+      "opened_at": "2026-08-18T02:20:54.307068+00:00",
       "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 114
+      "entry_sell": 180,
+      "entry_offer": 187
     },
     {
       "id": 2,
-      "item_id": 24592,
-      "name": "Blighted anglerfish",
-      "qty": 222,
-      "buy_price": 86,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 291,
+      "buy_price": 342,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:18:55.556195+00:00",
+      "opened_at": "2026-08-18T02:34:56.012554+00:00",
       "note": "auto",
-      "entry_sell": 86,
-      "entry_offer": 90
+      "entry_sell": 342,
+      "entry_offer": 360
     },
     {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1206,
-      "buy_price": 26,
+      "item_id": 373,
+      "name": "Swordfish",
+      "qty": 168,
+      "buy_price": 193,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:18:55.556764+00:00",
+      "opened_at": "2026-08-18T02:34:56.013280+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 193,
+      "entry_offer": 201
     }
   ]
 }
