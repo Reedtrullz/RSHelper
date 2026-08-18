@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 823,
-      "name": "Adamant dart tip",
-      "qty": 1228,
-      "buy_price": 180,
+      "item_id": 329,
+      "name": "Salmon",
+      "qty": 84,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:20:54.307068+00:00",
+      "opened_at": "2026-08-18T03:18:57.850468+00:00",
       "note": "auto",
-      "entry_sell": 180,
-      "entry_offer": 187
-    },
-    {
-      "id": 2,
-      "item_id": 22595,
-      "name": "Efh salt",
-      "qty": 150,
-      "buy_price": 123,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T02:54:56.534171+00:00",
-      "note": "auto",
-      "entry_sell": 123,
-      "entry_offer": 129
-    },
-    {
-      "id": 3,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 1099,
-      "buy_price": 49,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T03:02:56.691033+00:00",
-      "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
