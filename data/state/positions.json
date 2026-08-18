@@ -26,15 +26,15 @@
     },
     {
       "id": 4,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 115,
-      "buy_price": 26,
+      "item_id": 444,
+      "name": "Gold ore",
+      "qty": 2666,
+      "buy_price": 150,
       "direction": "traditional",
-      "opened_at": "2026-08-18T14:45:44.280668+00:00",
+      "opened_at": "2026-08-18T14:53:44.489256+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 150,
+      "entry_offer": 157
     }
   ]
 }
