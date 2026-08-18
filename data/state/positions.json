@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 11876,
-      "name": "Unfinished broad bolts",
-      "qty": 280,
-      "buy_price": 55,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T12:05:11.644840+00:00",
-      "note": "auto",
-      "entry_sell": 55,
-      "entry_offer": 58
-    },
-    {
-      "id": 3,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 376,
-      "buy_price": 1063,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T14:45:44.280383+00:00",
-      "note": "auto",
-      "entry_sell": 1063,
-      "entry_offer": 1109
-    },
-    {
       "id": 4,
       "item_id": 444,
       "name": "Gold ore",
