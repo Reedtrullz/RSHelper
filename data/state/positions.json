@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 32050,
-      "name": "Mahogany hull parts",
-      "qty": 100,
-      "buy_price": 3588,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T23:32:50.274865+00:00",
-      "note": "auto",
-      "entry_sell": 3588,
-      "entry_offer": 3410
-    },
-    {
-      "id": 3,
-      "item_id": 21555,
-      "name": "Numulite",
-      "qty": 1489,
-      "buy_price": 38,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T23:52:51.420500+00:00",
-      "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
-    },
-    {
       "id": 4,
-      "item_id": 2355,
-      "name": "Silver bar",
-      "qty": 933,
-      "buy_price": 91,
+      "item_id": 11943,
+      "name": "Lava dragon bones",
+      "qty": 79,
+      "buy_price": 5044,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:00:51.388042+00:00",
+      "opened_at": "2026-08-18T00:12:51.906887+00:00",
       "note": "auto",
-      "entry_sell": 91,
-      "entry_offer": 95
+      "entry_sell": 5044,
+      "entry_offer": 5300
+    },
+    {
+      "id": 5,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1787,
+      "buy_price": 138,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T00:16:52.139273+00:00",
+      "note": "auto",
+      "entry_sell": 138,
+      "entry_offer": 145
+    },
+    {
+      "id": 6,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 326,
+      "buy_price": 403,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T00:16:52.139621+00:00",
+      "note": "auto",
+      "entry_sell": 403,
+      "entry_offer": 420
     }
   ]
 }
