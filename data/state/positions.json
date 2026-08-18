@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 97,
-      "buy_price": 43,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T19:13:54.099503+00:00",
-      "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
-    }
-  ]
+  "positions": []
 }
