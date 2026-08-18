@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 823,
-      "buy_price": 486,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T01:04:53.299655+00:00",
-      "note": "auto",
-      "entry_sell": 486,
-      "entry_offer": 510
-    },
-    {
       "id": 3,
       "item_id": 217,
       "name": "Grimy dwarf weed",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 812,
       "entry_offer": 849
+    },
+    {
+      "id": 5,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 1263,
+      "buy_price": 156,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T01:50:08.282589+00:00",
+      "note": "auto",
+      "entry_sell": 156,
+      "entry_offer": 162
     }
   ]
 }
