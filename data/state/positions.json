@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 536,
-      "name": "Dragon bones",
-      "qty": 130,
-      "buy_price": 3075,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T01:04:53.299052+00:00",
-      "note": "auto",
-      "entry_sell": 3075,
-      "entry_offer": 3207
-    },
-    {
       "id": 2,
       "item_id": 1621,
       "name": "Uncut emerald",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 486,
       "entry_offer": 510
+    },
+    {
+      "id": 3,
+      "item_id": 3051,
+      "name": "Grimy snapdragon",
+      "qty": 53,
+      "buy_price": 7420,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T01:18:52.515933+00:00",
+      "note": "auto",
+      "entry_sell": 7420,
+      "entry_offer": 7788
     }
   ]
 }
