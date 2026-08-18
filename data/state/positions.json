@@ -26,15 +26,15 @@
     },
     {
       "id": 7,
-      "item_id": 5974,
-      "name": "Coconut",
-      "qty": 260,
-      "buy_price": 1360,
+      "item_id": 5972,
+      "name": "Papaya fruit",
+      "qty": 262,
+      "buy_price": 1522,
       "direction": "traditional",
-      "opened_at": "2026-08-18T08:25:07.454399+00:00",
+      "opened_at": "2026-08-18T08:41:07.758086+00:00",
       "note": "auto",
-      "entry_sell": 1360,
-      "entry_offer": 1423
+      "entry_sell": 1522,
+      "entry_offer": 1597
     }
   ]
 }
