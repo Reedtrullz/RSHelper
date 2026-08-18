@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2315,
-      "name": "Pie shell",
-      "qty": 188,
-      "buy_price": 300,
-      "direction": "traditional",
-      "opened_at": "2026-08-17T23:24:50.215507+00:00",
-      "note": "auto",
-      "entry_sell": 300,
-      "entry_offer": 313
-    },
-    {
       "id": 2,
       "item_id": 32050,
       "name": "Mahogany hull parts",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 2371,
-      "buy_price": 29,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 1489,
+      "buy_price": 38,
       "direction": "traditional",
-      "opened_at": "2026-08-17T23:44:50.943096+00:00",
+      "opened_at": "2026-08-17T23:52:51.420500+00:00",
       "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
+      "entry_sell": 38,
+      "entry_offer": 40
+    },
+    {
+      "id": 4,
+      "item_id": 2355,
+      "name": "Silver bar",
+      "qty": 933,
+      "buy_price": 91,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T00:00:51.388042+00:00",
+      "note": "auto",
+      "entry_sell": 91,
+      "entry_offer": 95
     }
   ]
 }
