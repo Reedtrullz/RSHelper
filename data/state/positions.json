@@ -13,28 +13,28 @@
       "entry_offer": 1835
     },
     {
-      "id": 4,
-      "item_id": 97,
-      "name": "Harralander potion (unf)",
-      "qty": 140,
-      "buy_price": 572,
+      "id": 5,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 113,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-18T03:52:59.024262+00:00",
+      "opened_at": "2026-08-18T03:56:58.976423+00:00",
       "note": "auto",
-      "entry_sell": 572,
-      "entry_offer": 600
+      "entry_sell": 25,
+      "entry_offer": 24
     },
     {
-      "id": 5,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 84,
-      "buy_price": 2825,
+      "id": 6,
+      "item_id": 31970,
+      "name": "Teak repair kit",
+      "qty": 183,
+      "buy_price": 463,
       "direction": "traditional",
-      "opened_at": "2026-08-18T03:52:59.024601+00:00",
+      "opened_at": "2026-08-18T04:08:59.751331+00:00",
       "note": "auto",
-      "entry_sell": 2825,
-      "entry_offer": 2940
+      "entry_sell": 463,
+      "entry_offer": 486
     }
   ]
 }
