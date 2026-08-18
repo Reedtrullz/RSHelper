@@ -13,28 +13,28 @@
       "entry_offer": 1835
     },
     {
-      "id": 5,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 113,
-      "buy_price": 25,
+      "id": 6,
+      "item_id": 2442,
+      "name": "Super defence(4)",
+      "qty": 125,
+      "buy_price": 3200,
       "direction": "traditional",
-      "opened_at": "2026-08-18T03:56:58.976423+00:00",
+      "opened_at": "2026-08-18T04:10:58.505015+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 24
+      "entry_sell": 3200,
+      "entry_offer": 3323
     },
     {
-      "id": 6,
-      "item_id": 31970,
-      "name": "Teak repair kit",
-      "qty": 183,
-      "buy_price": 463,
+      "id": 7,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2609,
+      "buy_price": 140,
       "direction": "traditional",
-      "opened_at": "2026-08-18T04:08:59.751331+00:00",
+      "opened_at": "2026-08-18T04:25:00.318613+00:00",
       "note": "auto",
-      "entry_sell": 463,
-      "entry_offer": 486
+      "entry_sell": 140,
+      "entry_offer": 145
     }
   ]
 }
