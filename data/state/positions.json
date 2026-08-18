@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 491,
+      "id": 2,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 349,
+      "buy_price": 25,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T04:49:00.951323+00:00",
+      "note": "auto",
+      "entry_sell": 25,
+      "entry_offer": 26
+    },
+    {
+      "id": 3,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 6153,
       "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-18T04:41:00.993230+00:00",
+      "opened_at": "2026-08-18T04:57:01.264701+00:00",
       "note": "auto",
       "entry_sell": 65,
       "entry_offer": 68
+    },
+    {
+      "id": 4,
+      "item_id": 2970,
+      "name": "Mort myre fungus",
+      "qty": 281,
+      "buy_price": 260,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T04:57:01.265075+00:00",
+      "note": "auto",
+      "entry_sell": 260,
+      "entry_offer": 270
     }
   ]
 }
