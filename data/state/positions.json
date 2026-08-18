@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 556,
-      "buy_price": 124,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T03:30:58.204480+00:00",
-      "note": "auto",
-      "entry_sell": 124,
-      "entry_offer": 130
-    },
-    {
       "id": 3,
       "item_id": 101,
       "name": "Irit potion (unf)",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1738,
       "entry_offer": 1835
+    },
+    {
+      "id": 4,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 140,
+      "buy_price": 572,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T03:52:59.024262+00:00",
+      "note": "auto",
+      "entry_sell": 572,
+      "entry_offer": 600
+    },
+    {
+      "id": 5,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 84,
+      "buy_price": 2825,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T03:52:59.024601+00:00",
+      "note": "auto",
+      "entry_sell": 2825,
+      "entry_offer": 2940
     }
   ]
 }
