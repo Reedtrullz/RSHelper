@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 674,
-      "buy_price": 153,
+      "item_id": 22595,
+      "name": "Efh salt",
+      "qty": 150,
+      "buy_price": 123,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:46:56.206944+00:00",
+      "opened_at": "2026-08-18T02:54:56.534171+00:00",
       "note": "auto",
-      "entry_sell": 153,
-      "entry_offer": 160
+      "entry_sell": 123,
+      "entry_offer": 129
     },
     {
       "id": 3,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 1044,
-      "buy_price": 383,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 1099,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:46:56.207274+00:00",
+      "opened_at": "2026-08-18T03:02:56.691033+00:00",
       "note": "auto",
-      "entry_sell": 383,
-      "entry_offer": 400
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
