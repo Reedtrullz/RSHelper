@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 28991,
-      "name": "Atlatl dart",
-      "qty": 1276,
-      "buy_price": 129,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 112,
+      "buy_price": 207,
       "direction": "traditional",
-      "opened_at": "2026-08-18T17:17:50.750457+00:00",
+      "opened_at": "2026-08-18T17:33:51.160899+00:00",
       "note": "auto",
-      "entry_sell": 129,
-      "entry_offer": 136
-    },
-    {
-      "id": 2,
-      "item_id": 1741,
-      "name": "Leather",
-      "qty": 91,
-      "buy_price": 170,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T17:17:50.751270+00:00",
-      "note": "auto",
-      "entry_sell": 170,
-      "entry_offer": 178
+      "entry_sell": 207,
+      "entry_offer": 215
     }
   ]
 }
