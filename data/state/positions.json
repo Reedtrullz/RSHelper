@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 2010,
-      "buy_price": 192,
+      "item_id": 31432,
+      "name": "Camphor plank",
+      "qty": 135,
+      "buy_price": 2950,
       "direction": "traditional",
-      "opened_at": "2026-08-18T05:29:02.341716+00:00",
+      "opened_at": "2026-08-18T05:45:02.483805+00:00",
       "note": "auto",
-      "entry_sell": 192,
-      "entry_offer": 200
-    },
-    {
-      "id": 2,
-      "item_id": 6016,
-      "name": "Cactus spine",
-      "qty": 187,
-      "buy_price": 1536,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T05:29:02.342086+00:00",
-      "note": "auto",
-      "entry_sell": 1536,
-      "entry_offer": 1595
+      "entry_sell": 2950,
+      "entry_offer": 3100
     }
   ]
 }
