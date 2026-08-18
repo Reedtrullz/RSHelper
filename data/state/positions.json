@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 188,
-      "buy_price": 1567,
+      "id": 1,
+      "item_id": 863,
+      "name": "Iron knife",
+      "qty": 690,
+      "buy_price": 35,
       "direction": "traditional",
-      "opened_at": "2026-08-18T10:59:10.928775+00:00",
+      "opened_at": "2026-08-18T11:27:11.557122+00:00",
       "note": "auto",
-      "entry_sell": 1567,
-      "entry_offer": 1635
+      "entry_sell": 35,
+      "entry_offer": 37
     }
   ]
 }
