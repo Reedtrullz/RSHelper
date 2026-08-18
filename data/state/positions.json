@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 519,
-      "buy_price": 27,
+      "id": 1,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 367,
+      "buy_price": 110,
       "direction": "traditional",
-      "opened_at": "2026-08-18T08:09:07.304448+00:00",
+      "opened_at": "2026-08-18T08:57:10.107188+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
-      "id": 6,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 257,
-      "buy_price": 43,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T08:15:06.179199+00:00",
-      "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
-    },
-    {
-      "id": 7,
-      "item_id": 5972,
-      "name": "Papaya fruit",
-      "qty": 262,
-      "buy_price": 1522,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T08:41:07.758086+00:00",
-      "note": "auto",
-      "entry_sell": 1522,
-      "entry_offer": 1597
+      "entry_sell": 110,
+      "entry_offer": 115
     }
   ]
 }
