@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 27,
       "entry_offer": 28
+    },
+    {
+      "id": 3,
+      "item_id": 12625,
+      "name": "Stamina potion(4)",
+      "qty": 87,
+      "buy_price": 3700,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T22:17:58.703079+00:00",
+      "note": "auto",
+      "entry_sell": 3700,
+      "entry_offer": 3853
     }
   ]
 }
