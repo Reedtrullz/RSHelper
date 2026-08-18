@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21802,
-      "name": "Revenant cave teleport",
-      "qty": 238,
-      "buy_price": 568,
+      "item_id": 536,
+      "name": "Dragon bones",
+      "qty": 130,
+      "buy_price": 3075,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:48:52.776195+00:00",
+      "opened_at": "2026-08-18T01:04:53.299052+00:00",
       "note": "auto",
-      "entry_sell": 568,
-      "entry_offer": 592
+      "entry_sell": 3075,
+      "entry_offer": 3207
     },
     {
       "id": 2,
-      "item_id": 1965,
-      "name": "Cabbage",
-      "qty": 1248,
-      "buy_price": 25,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 823,
+      "buy_price": 486,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:48:52.776927+00:00",
+      "opened_at": "2026-08-18T01:04:53.299655+00:00",
       "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
+      "entry_sell": 486,
+      "entry_offer": 510
     }
   ]
 }
