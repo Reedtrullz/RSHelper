@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 313,
-      "buy_price": 186,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T10:51:10.635452+00:00",
-      "note": "auto",
-      "entry_sell": 186,
-      "entry_offer": 195
-    },
-    {
-      "id": 3,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 1132,
-      "buy_price": 44,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T10:55:10.756541+00:00",
-      "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 42
-    },
-    {
       "id": 4,
-      "item_id": 1656,
-      "name": "Sapphire necklace",
-      "qty": 594,
-      "buy_price": 487,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 188,
+      "buy_price": 1567,
       "direction": "traditional",
-      "opened_at": "2026-08-18T10:57:09.697851+00:00",
+      "opened_at": "2026-08-18T10:59:10.928775+00:00",
       "note": "auto",
-      "entry_sell": 487,
-      "entry_offer": 511
+      "entry_sell": 1567,
+      "entry_offer": 1635
     }
   ]
 }
