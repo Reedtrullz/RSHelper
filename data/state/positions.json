@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 806,
-      "name": "Bronze dart",
-      "qty": 350,
-      "buy_price": 27,
+      "id": 1,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 190,
+      "buy_price": 286,
       "direction": "traditional",
-      "opened_at": "2026-08-18T21:57:58.221421+00:00",
+      "opened_at": "2026-08-18T22:31:59.140415+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
-      "id": 3,
-      "item_id": 12625,
-      "name": "Stamina potion(4)",
-      "qty": 87,
-      "buy_price": 3700,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T22:17:58.703079+00:00",
-      "note": "auto",
-      "entry_sell": 3700,
-      "entry_offer": 3853
+      "entry_sell": 286,
+      "entry_offer": 300
     }
   ]
 }
