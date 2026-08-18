@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 7418,
-      "name": "Mole skin",
-      "qty": 50,
-      "buy_price": 5141,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T07:37:06.107030+00:00",
-      "note": "auto",
-      "entry_sell": 5141,
-      "entry_offer": 4867
-    },
-    {
       "id": 5,
       "item_id": 890,
       "name": "Adamant arrow",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 27,
       "entry_offer": 28
+    },
+    {
+      "id": 6,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 257,
+      "buy_price": 43,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T08:15:06.179199+00:00",
+      "note": "auto",
+      "entry_sell": 43,
+      "entry_offer": 45
+    },
+    {
+      "id": 7,
+      "item_id": 5974,
+      "name": "Coconut",
+      "qty": 260,
+      "buy_price": 1360,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T08:25:07.454399+00:00",
+      "note": "auto",
+      "entry_sell": 1360,
+      "entry_offer": 1423
     }
   ]
 }
