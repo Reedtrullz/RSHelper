@@ -1,40 +1,40 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 592,
+      "name": "Ashes",
+      "qty": 113,
+      "buy_price": 38,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T01:58:55.149091+00:00",
+      "note": "auto",
+      "entry_sell": 38,
+      "entry_offer": 40
+    },
+    {
+      "id": 2,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 1391,
+      "buy_price": 197,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T01:58:55.149367+00:00",
+      "note": "auto",
+      "entry_sell": 197,
+      "entry_offer": 206
+    },
+    {
       "id": 3,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 122,
-      "buy_price": 1223,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 1104,
+      "buy_price": 353,
       "direction": "traditional",
-      "opened_at": "2026-08-18T01:30:52.959396+00:00",
+      "opened_at": "2026-08-18T02:04:53.793446+00:00",
       "note": "auto",
-      "entry_sell": 1223,
-      "entry_offer": 1267
-    },
-    {
-      "id": 4,
-      "item_id": 22603,
-      "name": "Basalt",
-      "qty": 200,
-      "buy_price": 812,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T01:32:54.041412+00:00",
-      "note": "auto",
-      "entry_sell": 812,
-      "entry_offer": 849
-    },
-    {
-      "id": 5,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 1263,
-      "buy_price": 156,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T01:50:08.282589+00:00",
-      "note": "auto",
-      "entry_sell": 156,
-      "entry_offer": 162
+      "entry_sell": 353,
+      "entry_offer": 368
     }
   ]
 }
