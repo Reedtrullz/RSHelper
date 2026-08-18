@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 863,
-      "name": "Iron knife",
-      "qty": 690,
-      "buy_price": 35,
+      "item_id": 13441,
+      "name": "Anglerfish",
+      "qty": 211,
+      "buy_price": 1890,
       "direction": "traditional",
-      "opened_at": "2026-08-18T11:27:11.557122+00:00",
+      "opened_at": "2026-08-18T11:57:12.210372+00:00",
       "note": "auto",
-      "entry_sell": 35,
-      "entry_offer": 37
+      "entry_sell": 1890,
+      "entry_offer": 1967
     }
   ]
 }
