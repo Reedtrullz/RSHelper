@@ -14,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 3051,
-      "name": "Grimy snapdragon",
-      "qty": 53,
-      "buy_price": 7420,
+      "item_id": 217,
+      "name": "Grimy dwarf weed",
+      "qty": 122,
+      "buy_price": 1223,
       "direction": "traditional",
-      "opened_at": "2026-08-18T01:18:52.515933+00:00",
+      "opened_at": "2026-08-18T01:30:52.959396+00:00",
       "note": "auto",
-      "entry_sell": 7420,
-      "entry_offer": 7788
+      "entry_sell": 1223,
+      "entry_offer": 1267
+    },
+    {
+      "id": 4,
+      "item_id": 22603,
+      "name": "Basalt",
+      "qty": 200,
+      "buy_price": 812,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T01:32:54.041412+00:00",
+      "note": "auto",
+      "entry_sell": 812,
+      "entry_offer": 849
     }
   ]
 }
