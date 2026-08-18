@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2941,
+      "buy_price": 95,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T21:33:57.431310+00:00",
+      "note": "auto",
+      "entry_sell": 95,
+      "entry_offer": 99
+    }
+  ]
 }
