@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 291,
-      "buy_price": 342,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 674,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:34:56.012554+00:00",
+      "opened_at": "2026-08-18T02:46:56.206944+00:00",
       "note": "auto",
-      "entry_sell": 342,
-      "entry_offer": 360
+      "entry_sell": 153,
+      "entry_offer": 160
     },
     {
       "id": 3,
-      "item_id": 373,
-      "name": "Swordfish",
-      "qty": 168,
-      "buy_price": 193,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 1044,
+      "buy_price": 383,
       "direction": "traditional",
-      "opened_at": "2026-08-18T02:34:56.013280+00:00",
+      "opened_at": "2026-08-18T02:46:56.207274+00:00",
       "note": "auto",
-      "entry_sell": 193,
-      "entry_offer": 201
+      "entry_sell": 383,
+      "entry_offer": 400
     }
   ]
 }
