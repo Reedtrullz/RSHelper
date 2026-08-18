@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 100,
-      "buy_price": 906,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T05:49:02.455550+00:00",
-      "note": "auto",
-      "entry_sell": 906,
-      "entry_offer": 940
-    },
-    {
       "id": 4,
       "item_id": 7418,
       "name": "Mole skin",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 5141,
       "entry_offer": 4867
+    },
+    {
+      "id": 5,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 519,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T08:09:07.304448+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
