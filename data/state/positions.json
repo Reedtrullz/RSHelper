@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 55,
       "entry_offer": 58
-    },
-    {
-      "id": 3,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 714,
-      "buy_price": 560,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T13:37:42.236138+00:00",
-      "note": "auto",
-      "entry_sell": 560,
-      "entry_offer": 592
-    },
-    {
-      "id": 4,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 126,
-      "buy_price": 1244,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T13:45:42.420240+00:00",
-      "note": "auto",
-      "entry_sell": 1244,
-      "entry_offer": 1291
     }
   ]
 }
