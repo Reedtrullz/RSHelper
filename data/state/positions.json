@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4698,
-      "name": "Mud rune",
-      "qty": 647,
-      "buy_price": 110,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 4712,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-18T16:13:48.352058+00:00",
+      "opened_at": "2026-08-18T17:01:50.379923+00:00",
       "note": "auto",
-      "entry_sell": 110,
-      "entry_offer": 114
+      "entry_sell": 28,
+      "entry_offer": 29
+    },
+    {
+      "id": 2,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 148,
+      "buy_price": 286,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T17:01:50.380229+00:00",
+      "note": "auto",
+      "entry_sell": 286,
+      "entry_offer": 300
     }
   ]
 }
