@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 13441,
-      "name": "Anglerfish",
-      "qty": 211,
-      "buy_price": 1890,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1692,
+      "buy_price": 190,
       "direction": "traditional",
-      "opened_at": "2026-08-18T11:57:12.210372+00:00",
+      "opened_at": "2026-08-18T11:59:11.701709+00:00",
       "note": "auto",
-      "entry_sell": 1890,
-      "entry_offer": 1967
+      "entry_sell": 190,
+      "entry_offer": 199
+    },
+    {
+      "id": 2,
+      "item_id": 11876,
+      "name": "Unfinished broad bolts",
+      "qty": 280,
+      "buy_price": 55,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T12:05:11.644840+00:00",
+      "note": "auto",
+      "entry_sell": 55,
+      "entry_offer": 58
     }
   ]
 }
