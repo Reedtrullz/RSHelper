@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1692,
-      "buy_price": 190,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T11:59:11.701709+00:00",
-      "note": "auto",
-      "entry_sell": 190,
-      "entry_offer": 199
-    },
-    {
       "id": 2,
       "item_id": 11876,
       "name": "Unfinished broad bolts",
