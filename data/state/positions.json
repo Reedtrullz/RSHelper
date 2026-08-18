@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 906,
       "entry_offer": 940
+    },
+    {
+      "id": 4,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 262,
+      "buy_price": 176,
+      "direction": "traditional",
+      "opened_at": "2026-08-18T07:21:05.671308+00:00",
+      "note": "auto",
+      "entry_sell": 176,
+      "entry_offer": 184
     }
   ]
 }
