@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 5287,
-      "name": "Pineapple seed",
-      "qty": 163,
-      "buy_price": 65,
+      "id": 1,
+      "item_id": 21802,
+      "name": "Revenant cave teleport",
+      "qty": 238,
+      "buy_price": 568,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:28:52.394584+00:00",
+      "opened_at": "2026-08-18T00:48:52.776195+00:00",
       "note": "auto",
-      "entry_sell": 65,
-      "entry_offer": 68
+      "entry_sell": 568,
+      "entry_offer": 592
     },
     {
-      "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1405,
-      "buy_price": 26,
+      "id": 2,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 1248,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:30:51.228940+00:00",
+      "opened_at": "2026-08-18T00:48:52.776927+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
