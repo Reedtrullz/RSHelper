@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 906,
       "entry_offer": 940
-    },
-    {
-      "id": 4,
-      "item_id": 395,
-      "name": "Raw sea turtle",
-      "qty": 541,
-      "buy_price": 610,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T05:53:02.876320+00:00",
-      "note": "auto",
-      "entry_sell": 610,
-      "entry_offer": 640
     }
   ]
 }
