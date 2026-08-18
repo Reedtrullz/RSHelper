@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 11943,
-      "name": "Lava dragon bones",
-      "qty": 79,
-      "buy_price": 5044,
+      "id": 2,
+      "item_id": 5287,
+      "name": "Pineapple seed",
+      "qty": 163,
+      "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:12:51.906887+00:00",
+      "opened_at": "2026-08-18T00:28:52.394584+00:00",
       "note": "auto",
-      "entry_sell": 5044,
-      "entry_offer": 5300
+      "entry_sell": 65,
+      "entry_offer": 68
     },
     {
-      "id": 5,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1787,
-      "buy_price": 138,
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1405,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-18T00:16:52.139273+00:00",
+      "opened_at": "2026-08-18T00:30:51.228940+00:00",
       "note": "auto",
-      "entry_sell": 138,
-      "entry_offer": 145
-    },
-    {
-      "id": 6,
-      "item_id": 21483,
-      "name": "Ultracompost",
-      "qty": 326,
-      "buy_price": 403,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T00:16:52.139621+00:00",
-      "note": "auto",
-      "entry_sell": 403,
-      "entry_offer": 420
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
