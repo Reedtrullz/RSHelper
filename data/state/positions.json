@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1521,
-      "name": "Oak logs",
-      "qty": 111,
-      "buy_price": 36,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 339,
+      "buy_price": 165,
       "direction": "traditional",
-      "opened_at": "2026-08-19T06:20:18.391433+00:00",
+      "opened_at": "2026-08-19T06:36:19.156019+00:00",
       "note": "auto",
-      "entry_sell": 36,
-      "entry_offer": 38
+      "entry_sell": 165,
+      "entry_offer": 172
+    },
+    {
+      "id": 2,
+      "item_id": 2434,
+      "name": "Prayer potion(4)",
+      "qty": 44,
+      "buy_price": 9010,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T06:36:19.157115+00:00",
+      "note": "auto",
+      "entry_sell": 9010,
+      "entry_offer": 9351
+    },
+    {
+      "id": 3,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 82,
+      "buy_price": 287,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T06:36:19.157760+00:00",
+      "note": "auto",
+      "entry_sell": 287,
+      "entry_offer": 298
     }
   ]
 }
