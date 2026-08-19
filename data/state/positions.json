@@ -14,27 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 2434,
-      "name": "Prayer potion(4)",
-      "qty": 44,
-      "buy_price": 9010,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 229,
+      "buy_price": 113,
       "direction": "traditional",
-      "opened_at": "2026-08-19T06:36:19.157115+00:00",
+      "opened_at": "2026-08-19T06:52:19.660175+00:00",
       "note": "auto",
-      "entry_sell": 9010,
-      "entry_offer": 9351
-    },
-    {
-      "id": 3,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 82,
-      "buy_price": 287,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T06:36:19.157760+00:00",
-      "note": "auto",
-      "entry_sell": 287,
-      "entry_offer": 298
+      "entry_sell": 113,
+      "entry_offer": 117
     }
   ]
 }
