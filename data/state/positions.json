@@ -14,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1213,
-      "buy_price": 26,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 178,
+      "buy_price": 1613,
       "direction": "traditional",
-      "opened_at": "2026-08-19T08:04:22.884818+00:00",
+      "opened_at": "2026-08-19T08:28:23.776780+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 1613,
+      "entry_offer": 1700
+    },
+    {
+      "id": 4,
+      "item_id": 2442,
+      "name": "Super defence(4)",
+      "qty": 126,
+      "buy_price": 3170,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T08:28:23.777539+00:00",
+      "note": "auto",
+      "entry_sell": 3170,
+      "entry_offer": 3299
     }
   ]
 }
