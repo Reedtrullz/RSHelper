@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 440,
+      "name": "Iron ore",
+      "qty": 1250,
+      "buy_price": 69,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T18:16:37.684697+00:00",
+      "note": "auto",
+      "entry_sell": 69,
+      "entry_offer": 72
+    },
+    {
+      "id": 2,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 110,
+      "buy_price": 96,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T18:16:37.685327+00:00",
+      "note": "auto",
+      "entry_sell": 96,
+      "entry_offer": 100
+    },
+    {
+      "id": 3,
+      "item_id": 830,
+      "name": "Rune javelin",
+      "qty": 390,
+      "buy_price": 140,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T18:16:37.685691+00:00",
+      "note": "auto",
+      "entry_sell": 140,
+      "entry_offer": 146
+    }
+  ]
 }
