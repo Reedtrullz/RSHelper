@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 9339,
-      "name": "Ruby bolts",
-      "qty": 218,
-      "buy_price": 259,
-      "direction": "traditional",
-      "opened_at": "2026-08-18T23:08:00.686951+00:00",
-      "note": "auto",
-      "entry_sell": 259,
-      "entry_offer": 269
-    },
-    {
-      "id": 4,
-      "item_id": 31111,
-      "name": "Demon tear",
-      "qty": 1562,
-      "buy_price": 256,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T00:08:01.721761+00:00",
-      "note": "auto",
-      "entry_sell": 256,
-      "entry_offer": 269
-    },
-    {
       "id": 5,
       "item_id": 890,
       "name": "Adamant arrow",
@@ -35,6 +11,30 @@
       "note": "auto",
       "entry_sell": 27,
       "entry_offer": 28
+    },
+    {
+      "id": 6,
+      "item_id": 2436,
+      "name": "Super attack(4)",
+      "qty": 194,
+      "buy_price": 2060,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T00:22:03.301665+00:00",
+      "note": "auto",
+      "entry_sell": 2060,
+      "entry_offer": 2160
+    },
+    {
+      "id": 7,
+      "item_id": 32011,
+      "name": "Adamant keel parts",
+      "qty": 75,
+      "buy_price": 5294,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T00:22:03.302123+00:00",
+      "note": "auto",
+      "entry_sell": 5294,
+      "entry_offer": 5485
     }
   ]
 }
