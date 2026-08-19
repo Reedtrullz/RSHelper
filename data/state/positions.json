@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2600,
+      "buy_price": 29,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T01:24:04.707781+00:00",
+      "note": "auto",
+      "entry_sell": 29,
+      "entry_offer": 28
+    },
+    {
+      "id": 2,
+      "item_id": 22597,
+      "name": "Urt salt",
+      "qty": 2117,
+      "buy_price": 130,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T01:28:04.737260+00:00",
+      "note": "auto",
+      "entry_sell": 130,
+      "entry_offer": 135
+    },
+    {
+      "id": 3,
+      "item_id": 21177,
+      "name": "Expeditious bracelet",
+      "qty": 123,
+      "buy_price": 1143,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T01:32:04.898848+00:00",
+      "note": "auto",
+      "entry_sell": 1143,
+      "entry_offer": 1200
+    }
+  ]
 }
