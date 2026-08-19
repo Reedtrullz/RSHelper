@@ -13,16 +13,28 @@
       "entry_offer": 51
     },
     {
-      "id": 6,
-      "item_id": 31916,
-      "name": "Dragon cannonball",
-      "qty": 302,
-      "buy_price": 1321,
+      "id": 5,
+      "item_id": 1654,
+      "name": "Gold necklace",
+      "qty": 1180,
+      "buy_price": 139,
       "direction": "traditional",
-      "opened_at": "2026-08-19T02:24:07.270130+00:00",
+      "opened_at": "2026-08-19T02:52:08.292717+00:00",
       "note": "auto",
-      "entry_sell": 1321,
-      "entry_offer": 1377
+      "entry_sell": 139,
+      "entry_offer": 145
+    },
+    {
+      "id": 6,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 214,
+      "buy_price": 193,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T02:52:08.293349+00:00",
+      "note": "auto",
+      "entry_sell": 193,
+      "entry_offer": 201
     }
   ]
 }
