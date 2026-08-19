@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 3422,
-      "name": "Olive oil(4)",
-      "qty": 1000,
-      "buy_price": 49,
+      "id": 1,
+      "item_id": 573,
+      "name": "Air orb",
+      "qty": 222,
+      "buy_price": 1800,
       "direction": "traditional",
-      "opened_at": "2026-08-19T01:40:05.448129+00:00",
+      "opened_at": "2026-08-19T04:44:13.198153+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 1800,
+      "entry_offer": 1897
     },
     {
-      "id": 5,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 707,
-      "buy_price": 565,
+      "id": 2,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 3910,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-19T04:28:12.603275+00:00",
+      "opened_at": "2026-08-19T04:44:13.199131+00:00",
       "note": "auto",
-      "entry_sell": 565,
-      "entry_offer": 594
-    },
-    {
-      "id": 6,
-      "item_id": 7946,
-      "name": "Monkfish",
-      "qty": 815,
-      "buy_price": 156,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T04:28:12.604246+00:00",
-      "note": "auto",
-      "entry_sell": 156,
-      "entry_offer": 164
+      "entry_sell": 28,
+      "entry_offer": 27
     }
   ]
 }
