@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1092,
-      "buy_price": 26,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 1055,
+      "buy_price": 379,
       "direction": "traditional",
-      "opened_at": "2026-08-19T07:24:20.989519+00:00",
+      "opened_at": "2026-08-19T07:32:21.408952+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 379,
+      "entry_offer": 396
     }
   ]
 }
