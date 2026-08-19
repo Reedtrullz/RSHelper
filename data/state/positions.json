@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 1066,
+      "buy_price": 375,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T14:16:32.319177+00:00",
+      "note": "auto",
+      "entry_sell": 375,
+      "entry_offer": 394
+    },
+    {
+      "id": 2,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 1659,
+      "buy_price": 241,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T14:16:32.320008+00:00",
+      "note": "auto",
+      "entry_sell": 241,
+      "entry_offer": 252
+    }
+  ]
 }
