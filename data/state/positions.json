@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 859,
-      "name": "Magic longbow",
-      "qty": 361,
-      "buy_price": 1106,
+      "item_id": 2361,
+      "name": "Adamantite bar",
+      "qty": 211,
+      "buy_price": 1890,
       "direction": "traditional",
-      "opened_at": "2026-08-19T13:00:30.289843+00:00",
+      "opened_at": "2026-08-19T13:12:30.559620+00:00",
       "note": "auto",
-      "entry_sell": 1106,
-      "entry_offer": 1145
+      "entry_sell": 1890,
+      "entry_offer": 1959
     }
   ]
 }
