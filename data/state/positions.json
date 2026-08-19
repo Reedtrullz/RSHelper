@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2114,
-      "name": "Pineapple",
-      "qty": 923,
-      "buy_price": 174,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 1007,
+      "buy_price": 130,
       "direction": "traditional",
-      "opened_at": "2026-08-19T23:20:46.004714+00:00",
+      "opened_at": "2026-08-19T23:48:47.010597+00:00",
       "note": "auto",
-      "entry_sell": 174,
-      "entry_offer": 166
-    },
-    {
-      "id": 3,
-      "item_id": 383,
-      "name": "Raw shark",
-      "qty": 589,
-      "buy_price": 678,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T23:32:46.272582+00:00",
-      "note": "auto",
-      "entry_sell": 678,
-      "entry_offer": 702
+      "entry_sell": 130,
+      "entry_offer": 135
     }
   ]
 }
