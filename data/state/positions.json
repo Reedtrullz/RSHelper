@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 447,
-      "name": "Mithril ore",
-      "qty": 312,
-      "buy_price": 152,
+      "id": 1,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 90,
+      "buy_price": 51,
       "direction": "traditional",
-      "opened_at": "2026-08-19T08:32:24.175157+00:00",
+      "opened_at": "2026-08-19T09:44:25.688813+00:00",
       "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
+      "entry_sell": 51,
+      "entry_offer": 53
     }
   ]
 }
