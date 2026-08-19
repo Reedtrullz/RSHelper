@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 937,
+      "buy_price": 108,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T20:12:40.416899+00:00",
+      "note": "auto",
+      "entry_sell": 108,
+      "entry_offer": 114
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2058,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T20:16:40.758656+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
+    },
+    {
+      "id": 4,
+      "item_id": 811,
+      "name": "Rune dart",
+      "qty": 1626,
+      "buy_price": 246,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T20:16:40.758957+00:00",
+      "note": "auto",
+      "entry_sell": 246,
+      "entry_offer": 255
+    }
+  ]
 }
