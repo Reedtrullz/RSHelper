@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1963,
-      "buy_price": 27,
+      "id": 1,
+      "item_id": 892,
+      "name": "Rune arrow",
+      "qty": 3155,
+      "buy_price": 41,
       "direction": "traditional",
-      "opened_at": "2026-08-19T00:08:01.722035+00:00",
+      "opened_at": "2026-08-19T00:38:03.825161+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
-      "id": 6,
-      "item_id": 2436,
-      "name": "Super attack(4)",
-      "qty": 194,
-      "buy_price": 2060,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T00:22:03.301665+00:00",
-      "note": "auto",
-      "entry_sell": 2060,
-      "entry_offer": 2160
-    },
-    {
-      "id": 7,
-      "item_id": 32011,
-      "name": "Adamant keel parts",
-      "qty": 75,
-      "buy_price": 5294,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T00:22:03.302123+00:00",
-      "note": "auto",
-      "entry_sell": 5294,
-      "entry_offer": 5485
+      "entry_sell": 41,
+      "entry_offer": 43
     }
   ]
 }
