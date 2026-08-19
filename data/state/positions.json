@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 389,
-      "name": "Raw manta ray",
-      "qty": 83,
-      "buy_price": 970,
+      "id": 1,
+      "item_id": 859,
+      "name": "Magic longbow",
+      "qty": 361,
+      "buy_price": 1106,
       "direction": "traditional",
-      "opened_at": "2026-08-19T12:28:29.700576+00:00",
+      "opened_at": "2026-08-19T13:00:30.289843+00:00",
       "note": "auto",
-      "entry_sell": 970,
-      "entry_offer": 1013
+      "entry_sell": 1106,
+      "entry_offer": 1145
     }
   ]
 }
