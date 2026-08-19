@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 138,
+      "buy_price": 150,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T22:28:44.644139+00:00",
+      "note": "auto",
+      "entry_sell": 150,
+      "entry_offer": 156
+    },
+    {
+      "id": 2,
+      "item_id": 1603,
+      "name": "Ruby",
+      "qty": 157,
+      "buy_price": 749,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T22:32:44.702879+00:00",
+      "note": "auto",
+      "entry_sell": 749,
+      "entry_offer": 779
+    },
+    {
+      "id": 3,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 720,
+      "buy_price": 152,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T22:32:44.704012+00:00",
+      "note": "auto",
+      "entry_sell": 152,
+      "entry_offer": 159
+    }
+  ]
 }
