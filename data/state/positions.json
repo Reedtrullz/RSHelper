@@ -13,28 +13,28 @@
       "entry_offer": 51
     },
     {
-      "id": 7,
-      "item_id": 211,
-      "name": "Grimy avantoe",
-      "qty": 252,
-      "buy_price": 1583,
+      "id": 5,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 707,
+      "buy_price": 565,
       "direction": "traditional",
-      "opened_at": "2026-08-19T03:50:10.886476+00:00",
+      "opened_at": "2026-08-19T04:28:12.603275+00:00",
       "note": "auto",
-      "entry_sell": 1583,
-      "entry_offer": 1661
+      "entry_sell": 565,
+      "entry_offer": 594
     },
     {
-      "id": 8,
-      "item_id": 571,
-      "name": "Water orb",
-      "qty": 96,
-      "buy_price": 1457,
+      "id": 6,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 815,
+      "buy_price": 156,
       "direction": "traditional",
-      "opened_at": "2026-08-19T03:56:10.002263+00:00",
+      "opened_at": "2026-08-19T04:28:12.604246+00:00",
       "note": "auto",
-      "entry_sell": 1457,
-      "entry_offer": 1508
+      "entry_sell": 156,
+      "entry_offer": 164
     }
   ]
 }
