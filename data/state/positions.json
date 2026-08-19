@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31912,
-      "name": "Adamant cannonball",
-      "qty": 125,
-      "buy_price": 233,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T07:56:22.790621+00:00",
-      "note": "auto",
-      "entry_sell": 233,
-      "entry_offer": 244
-    },
-    {
       "id": 3,
       "item_id": 575,
       "name": "Earth orb",
@@ -26,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 2442,
-      "name": "Super defence(4)",
-      "qty": 126,
-      "buy_price": 3170,
+      "item_id": 447,
+      "name": "Mithril ore",
+      "qty": 312,
+      "buy_price": 152,
       "direction": "traditional",
-      "opened_at": "2026-08-19T08:28:23.777539+00:00",
+      "opened_at": "2026-08-19T08:32:24.175157+00:00",
       "note": "auto",
-      "entry_sell": 3170,
-      "entry_offer": 3299
+      "entry_sell": 152,
+      "entry_offer": 159
     }
   ]
 }
