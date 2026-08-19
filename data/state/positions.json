@@ -13,16 +13,16 @@
       "entry_offer": 51
     },
     {
-      "id": 5,
-      "item_id": 6016,
-      "name": "Cactus spine",
-      "qty": 188,
-      "buy_price": 1578,
+      "id": 6,
+      "item_id": 31916,
+      "name": "Dragon cannonball",
+      "qty": 302,
+      "buy_price": 1321,
       "direction": "traditional",
-      "opened_at": "2026-08-19T02:22:06.038911+00:00",
+      "opened_at": "2026-08-19T02:24:07.270130+00:00",
       "note": "auto",
-      "entry_sell": 1578,
-      "entry_offer": 1656
+      "entry_sell": 1321,
+      "entry_offer": 1377
     }
   ]
 }
