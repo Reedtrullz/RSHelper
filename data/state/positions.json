@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 573,
-      "name": "Air orb",
-      "qty": 222,
-      "buy_price": 1800,
+      "id": 3,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 155,
+      "buy_price": 43,
       "direction": "traditional",
-      "opened_at": "2026-08-19T04:44:13.198153+00:00",
+      "opened_at": "2026-08-19T04:54:13.858980+00:00",
       "note": "auto",
-      "entry_sell": 1800,
-      "entry_offer": 1897
-    },
-    {
-      "id": 2,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 3910,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T04:44:13.199131+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
+      "entry_sell": 43,
+      "entry_offer": 45
     }
   ]
 }
