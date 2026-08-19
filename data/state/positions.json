@@ -14,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 778,
-      "buy_price": 81,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 1051,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-19T22:48:45.601563+00:00",
+      "opened_at": "2026-08-19T23:04:45.666034+00:00",
       "note": "auto",
-      "entry_sell": 81,
-      "entry_offer": 85
+      "entry_sell": 96,
+      "entry_offer": 100
     }
   ]
 }
