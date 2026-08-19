@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 3230,
-      "buy_price": 96,
+      "id": 3,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 717,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-19T11:52:28.832034+00:00",
+      "opened_at": "2026-08-19T12:08:29.182919+00:00",
       "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
