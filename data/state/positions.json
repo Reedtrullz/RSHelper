@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1521,
+      "name": "Oak logs",
+      "qty": 111,
+      "buy_price": 36,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T06:20:18.391433+00:00",
+      "note": "auto",
+      "entry_sell": 36,
+      "entry_offer": 38
+    }
+  ]
 }
