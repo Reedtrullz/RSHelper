@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 22597,
-      "name": "Urt salt",
-      "qty": 2117,
-      "buy_price": 130,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T01:28:04.737260+00:00",
-      "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 135
-    },
-    {
       "id": 4,
       "item_id": 3422,
       "name": "Olive oil(4)",
@@ -26,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 2382,
-      "buy_price": 86,
+      "item_id": 21946,
+      "name": "Diamond dragon bolts (e)",
+      "qty": 138,
+      "buy_price": 2898,
       "direction": "traditional",
-      "opened_at": "2026-08-19T01:46:04.498119+00:00",
+      "opened_at": "2026-08-19T02:08:06.828560+00:00",
       "note": "auto",
-      "entry_sell": 86,
-      "entry_offer": 90
+      "entry_sell": 2898,
+      "entry_offer": 3019
+    },
+    {
+      "id": 6,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 2016,
+      "buy_price": 101,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T02:08:06.828851+00:00",
+      "note": "auto",
+      "entry_sell": 101,
+      "entry_offer": 105
     }
   ]
 }
