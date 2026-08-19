@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 21316,
-      "name": "Amethyst broad bolts",
-      "qty": 1011,
-      "buy_price": 192,
+      "id": 4,
+      "item_id": 1654,
+      "name": "Gold necklace",
+      "qty": 123,
+      "buy_price": 141,
       "direction": "traditional",
-      "opened_at": "2026-08-19T19:08:39.080281+00:00",
+      "opened_at": "2026-08-19T19:24:39.520314+00:00",
       "note": "auto",
-      "entry_sell": 192,
-      "entry_offer": 202
+      "entry_sell": 141,
+      "entry_offer": 146
     },
     {
       "id": 5,
-      "item_id": 859,
-      "name": "Magic longbow",
-      "qty": 357,
-      "buy_price": 1118,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 2394,
+      "buy_price": 29,
       "direction": "traditional",
-      "opened_at": "2026-08-19T19:14:38.112000+00:00",
+      "opened_at": "2026-08-19T19:32:39.659923+00:00",
       "note": "auto",
-      "entry_sell": 1118,
-      "entry_offer": 1162
+      "entry_sell": 29,
+      "entry_offer": 28
     }
   ]
 }
