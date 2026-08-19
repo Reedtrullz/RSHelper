@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2485,
-      "name": "Grimy lantadyme",
-      "qty": 333,
-      "buy_price": 1201,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 3230,
+      "buy_price": 96,
       "direction": "traditional",
-      "opened_at": "2026-08-19T11:08:27.913831+00:00",
+      "opened_at": "2026-08-19T11:52:28.832034+00:00",
       "note": "auto",
-      "entry_sell": 1201,
-      "entry_offer": 1269
+      "entry_sell": 96,
+      "entry_offer": 100
     }
   ]
 }
