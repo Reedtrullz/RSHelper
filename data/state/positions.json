@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 21978,
+      "name": "Super antifire potion(4)",
+      "qty": 21,
+      "buy_price": 18931,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T18:52:38.649328+00:00",
+      "note": "auto",
+      "entry_sell": 18931,
+      "entry_offer": 19696
+    },
+    {
+      "id": 2,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1183,
+      "buy_price": 338,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T18:56:38.649654+00:00",
+      "note": "auto",
+      "entry_sell": 338,
+      "entry_offer": 353
+    }
+  ]
 }
