@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 5,
-      "item_id": 31979,
-      "name": "Ironwood repair kit",
-      "qty": 145,
-      "buy_price": 2001,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T19:36:39.878067+00:00",
-      "note": "auto",
-      "entry_sell": 2001,
-      "entry_offer": 2084
-    }
-  ]
+  "positions": []
 }
