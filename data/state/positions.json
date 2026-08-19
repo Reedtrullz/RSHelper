@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 44,
-      "name": "Rune arrowtips",
-      "qty": 108,
-      "buy_price": 230,
+      "id": 1,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 876,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-19T22:44:45.231163+00:00",
+      "opened_at": "2026-08-19T23:16:46.025799+00:00",
       "note": "auto",
-      "entry_sell": 230,
-      "entry_offer": 241
-    },
-    {
-      "id": 3,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 1051,
-      "buy_price": 96,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T23:04:45.666034+00:00",
-      "note": "auto",
-      "entry_sell": 96,
-      "entry_offer": 100
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
