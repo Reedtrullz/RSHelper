@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 138,
-      "buy_price": 150,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T22:28:44.644139+00:00",
-      "note": "auto",
-      "entry_sell": 150,
-      "entry_offer": 156
-    },
-    {
       "id": 2,
-      "item_id": 1603,
-      "name": "Ruby",
-      "qty": 157,
-      "buy_price": 749,
+      "item_id": 44,
+      "name": "Rune arrowtips",
+      "qty": 108,
+      "buy_price": 230,
       "direction": "traditional",
-      "opened_at": "2026-08-19T22:32:44.702879+00:00",
+      "opened_at": "2026-08-19T22:44:45.231163+00:00",
       "note": "auto",
-      "entry_sell": 749,
-      "entry_offer": 779
+      "entry_sell": 230,
+      "entry_offer": 241
     },
     {
       "id": 3,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 720,
-      "buy_price": 152,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 778,
+      "buy_price": 81,
       "direction": "traditional",
-      "opened_at": "2026-08-19T22:32:44.704012+00:00",
+      "opened_at": "2026-08-19T22:48:45.601563+00:00",
       "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
+      "entry_sell": 81,
+      "entry_offer": 85
     }
   ]
 }
