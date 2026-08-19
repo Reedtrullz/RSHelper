@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 49,
       "entry_offer": 51
+    },
+    {
+      "id": 5,
+      "item_id": 868,
+      "name": "Rune knife",
+      "qty": 135,
+      "buy_price": 124,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T03:26:09.795631+00:00",
+      "note": "auto",
+      "entry_sell": 124,
+      "entry_offer": 130
+    },
+    {
+      "id": 6,
+      "item_id": 261,
+      "name": "Avantoe",
+      "qty": 243,
+      "buy_price": 1644,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T03:34:10.018700+00:00",
+      "note": "auto",
+      "entry_sell": 1644,
+      "entry_offer": 1727
     }
   ]
 }
