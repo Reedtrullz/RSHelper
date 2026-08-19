@@ -14,27 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 21946,
-      "name": "Diamond dragon bolts (e)",
-      "qty": 138,
-      "buy_price": 2898,
+      "item_id": 6016,
+      "name": "Cactus spine",
+      "qty": 188,
+      "buy_price": 1578,
       "direction": "traditional",
-      "opened_at": "2026-08-19T02:08:06.828560+00:00",
+      "opened_at": "2026-08-19T02:22:06.038911+00:00",
       "note": "auto",
-      "entry_sell": 2898,
-      "entry_offer": 3019
-    },
-    {
-      "id": 6,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 2016,
-      "buy_price": 101,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T02:08:06.828851+00:00",
-      "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 105
+      "entry_sell": 1578,
+      "entry_offer": 1656
     }
   ]
 }
