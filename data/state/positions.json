@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 28991,
-      "name": "Atlatl dart",
-      "qty": 943,
-      "buy_price": 126,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T07:56:22.790347+00:00",
-      "note": "auto",
-      "entry_sell": 126,
-      "entry_offer": 132
-    },
-    {
       "id": 2,
       "item_id": 31912,
       "name": "Adamant cannonball",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 233,
       "entry_offer": 244
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1213,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T08:04:22.884818+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
