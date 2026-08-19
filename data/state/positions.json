@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 2501,
-      "name": "Red d'hide body",
-      "qty": 70,
-      "buy_price": 5500,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T21:32:43.003002+00:00",
-      "note": "auto",
-      "entry_sell": 5500,
-      "entry_offer": 5734
-    }
-  ]
+  "positions": []
 }
