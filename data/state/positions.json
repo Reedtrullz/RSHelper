@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 229,
-      "buy_price": 113,
+      "item_id": 1753,
+      "name": "Green dragonhide",
+      "qty": 265,
+      "buy_price": 1509,
       "direction": "traditional",
-      "opened_at": "2026-08-19T06:52:19.660175+00:00",
+      "opened_at": "2026-08-19T07:04:20.201126+00:00",
       "note": "auto",
-      "entry_sell": 113,
-      "entry_offer": 117
+      "entry_sell": 1509,
+      "entry_offer": 1565
+    },
+    {
+      "id": 3,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 180,
+      "buy_price": 287,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T07:08:20.384520+00:00",
+      "note": "auto",
+      "entry_sell": 287,
+      "entry_offer": 298
     }
   ]
 }
