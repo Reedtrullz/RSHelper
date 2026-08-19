@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 25,
       "entry_offer": 26
+    },
+    {
+      "id": 4,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1961,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T12:28:29.699756+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 25
+    },
+    {
+      "id": 5,
+      "item_id": 389,
+      "name": "Raw manta ray",
+      "qty": 83,
+      "buy_price": 970,
+      "direction": "traditional",
+      "opened_at": "2026-08-19T12:28:29.700576+00:00",
+      "note": "auto",
+      "entry_sell": 970,
+      "entry_offer": 1013
     }
   ]
 }
