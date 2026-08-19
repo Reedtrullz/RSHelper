@@ -2,39 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 5194,
-      "buy_price": 77,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 1831,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-19T20:32:40.939645+00:00",
+      "opened_at": "2026-08-19T20:44:41.345316+00:00",
       "note": "auto",
-      "entry_sell": 77,
-      "entry_offer": 80
-    },
-    {
-      "id": 2,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 138,
-      "buy_price": 252,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T20:32:40.940621+00:00",
-      "note": "auto",
-      "entry_sell": 252,
-      "entry_offer": 261
-    },
-    {
-      "id": 3,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 559,
-      "buy_price": 705,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T20:32:40.941141+00:00",
-      "note": "auto",
-      "entry_sell": 705,
-      "entry_offer": 730
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
