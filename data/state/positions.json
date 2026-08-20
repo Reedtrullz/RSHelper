@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 1104,
-      "buy_price": 98,
+      "item_id": 5952,
+      "name": "Antidote++(4)",
+      "qty": 43,
+      "buy_price": 9301,
       "direction": "traditional",
-      "opened_at": "2026-08-20T14:27:14.814093+00:00",
+      "opened_at": "2026-08-20T15:01:15.110412+00:00",
       "note": "auto",
-      "entry_sell": 98,
-      "entry_offer": 103
+      "entry_sell": 9301,
+      "entry_offer": 9749
     }
   ]
 }
