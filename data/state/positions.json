@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 169,
-      "name": "Ranging potion(3)",
-      "qty": 200,
-      "buy_price": 1364,
+      "id": 3,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 544,
+      "buy_price": 734,
       "direction": "traditional",
-      "opened_at": "2026-08-20T01:36:51.684915+00:00",
+      "opened_at": "2026-08-20T02:00:52.418067+00:00",
       "note": "auto",
-      "entry_sell": 1364,
-      "entry_offer": 1418
+      "entry_sell": 734,
+      "entry_offer": 768
     },
     {
-      "id": 5,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 372,
-      "buy_price": 286,
+      "id": 4,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 1666,
+      "buy_price": 240,
       "direction": "traditional",
-      "opened_at": "2026-08-20T01:48:51.994330+00:00",
+      "opened_at": "2026-08-20T02:02:51.516790+00:00",
       "note": "auto",
-      "entry_sell": 286,
-      "entry_offer": 298
+      "entry_sell": 240,
+      "entry_offer": 250
     }
   ]
 }
