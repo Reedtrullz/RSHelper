@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 567,
-      "name": "Unpowered orb",
-      "qty": 3426,
-      "buy_price": 54,
+      "item_id": 11876,
+      "name": "Unfinished broad bolts",
+      "qty": 1400,
+      "buy_price": 56,
       "direction": "traditional",
-      "opened_at": "2026-08-20T20:05:23.151190+00:00",
+      "opened_at": "2026-08-20T20:13:23.299182+00:00",
       "note": "auto",
-      "entry_sell": 54,
-      "entry_offer": 57
+      "entry_sell": 56,
+      "entry_offer": 59
+    },
+    {
+      "id": 3,
+      "item_id": 447,
+      "name": "Mithril ore",
+      "qty": 1353,
+      "buy_price": 155,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T20:13:23.300164+00:00",
+      "note": "auto",
+      "entry_sell": 155,
+      "entry_offer": 161
     }
   ]
 }
