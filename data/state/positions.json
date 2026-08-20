@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 1007,
-      "buy_price": 130,
-      "direction": "traditional",
-      "opened_at": "2026-08-19T23:48:47.010597+00:00",
-      "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 135
-    }
-  ]
+  "positions": []
 }
