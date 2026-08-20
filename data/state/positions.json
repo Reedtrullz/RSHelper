@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 105,
-      "name": "Kwuarm potion (unf)",
-      "qty": 162,
-      "buy_price": 2461,
+      "item_id": 4698,
+      "name": "Mud rune",
+      "qty": 2059,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-20T07:57:06.159335+00:00",
+      "opened_at": "2026-08-20T08:09:06.364884+00:00",
       "note": "auto",
-      "entry_sell": 2461,
-      "entry_offer": 2568
-    },
-    {
-      "id": 2,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 722,
-      "buy_price": 130,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T07:57:06.159773+00:00",
-      "note": "auto",
-      "entry_sell": 130,
-      "entry_offer": 135
+      "entry_sell": 120,
+      "entry_offer": 125
     }
   ]
 }
