@@ -14,15 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 1521,
-      "name": "Oak logs",
-      "qty": 101,
-      "buy_price": 36,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 241,
+      "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-20T06:37:02.991657+00:00",
+      "opened_at": "2026-08-20T06:45:03.368566+00:00",
       "note": "auto",
-      "entry_sell": 36,
-      "entry_offer": 38
+      "entry_sell": 65,
+      "entry_offer": 68
+    },
+    {
+      "id": 3,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 604,
+      "buy_price": 662,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T06:45:03.369774+00:00",
+      "note": "auto",
+      "entry_sell": 662,
+      "entry_offer": 696
     }
   ]
 }
