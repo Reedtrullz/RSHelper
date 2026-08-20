@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 112,
-      "buy_price": 51,
+      "id": 3,
+      "item_id": 821,
+      "name": "Steel dart tip",
+      "qty": 200,
+      "buy_price": 82,
       "direction": "traditional",
-      "opened_at": "2026-08-20T15:29:15.873480+00:00",
+      "opened_at": "2026-08-20T16:17:20.236483+00:00",
       "note": "auto",
-      "entry_sell": 51,
-      "entry_offer": 49
-    },
-    {
-      "id": 4,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 100,
-      "buy_price": 317,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T16:01:17.055700+00:00",
-      "note": "auto",
-      "entry_sell": 317,
-      "entry_offer": 330
+      "entry_sell": 82,
+      "entry_offer": 86
     }
   ]
 }
