@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 24621,
-      "name": "Blighted vengeance sack",
-      "qty": 170,
-      "buy_price": 76,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T11:33:11.287676+00:00",
-      "note": "auto",
-      "entry_sell": 76,
-      "entry_offer": 80
-    },
-    {
       "id": 4,
       "item_id": 1115,
       "name": "Iron platebody",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 50,
       "entry_offer": 52
+    },
+    {
+      "id": 5,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 1226,
+      "buy_price": 115,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T12:17:12.133381+00:00",
+      "note": "auto",
+      "entry_sell": 115,
+      "entry_offer": 120
     }
   ]
 }
