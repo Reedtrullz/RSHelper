@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24613,
-      "name": "Blighted entangle sack",
-      "qty": 162,
-      "buy_price": 45,
+      "item_id": 24615,
+      "name": "Blighted teleport spell sack",
+      "qty": 213,
+      "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-20T00:16:48.566444+00:00",
+      "opened_at": "2026-08-20T00:32:49.359599+00:00",
       "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
+      "entry_sell": 65,
+      "entry_offer": 62
     },
     {
       "id": 2,
-      "item_id": 1521,
-      "name": "Oak logs",
-      "qty": 209,
-      "buy_price": 36,
+      "item_id": 534,
+      "name": "Babydragon bones",
+      "qty": 173,
+      "buy_price": 818,
       "direction": "traditional",
-      "opened_at": "2026-08-20T00:20:48.920337+00:00",
+      "opened_at": "2026-08-20T00:32:49.360553+00:00",
       "note": "auto",
-      "entry_sell": 36,
-      "entry_offer": 38
-    },
-    {
-      "id": 3,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 746,
-      "buy_price": 536,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T00:20:48.920632+00:00",
-      "note": "auto",
-      "entry_sell": 536,
-      "entry_offer": 556
+      "entry_sell": 818,
+      "entry_offer": 852
     }
   ]
 }
