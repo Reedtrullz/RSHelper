@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 383,
-      "name": "Raw shark",
-      "qty": 421,
-      "buy_price": 677,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 1038,
+      "buy_price": 153,
       "direction": "traditional",
-      "opened_at": "2026-08-20T05:49:00.969762+00:00",
+      "opened_at": "2026-08-20T06:05:01.769940+00:00",
       "note": "auto",
-      "entry_sell": 677,
-      "entry_offer": 701
+      "entry_sell": 153,
+      "entry_offer": 159
     }
   ]
 }
