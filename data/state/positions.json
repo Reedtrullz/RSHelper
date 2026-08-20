@@ -2,27 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 453,
-      "name": "Coal",
-      "qty": 2721,
-      "buy_price": 147,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 1144,
+      "buy_price": 68,
       "direction": "traditional",
-      "opened_at": "2026-08-20T11:17:10.953971+00:00",
+      "opened_at": "2026-08-20T11:33:11.286655+00:00",
       "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 154
+      "entry_sell": 68,
+      "entry_offer": 71
     },
     {
       "id": 2,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 744,
-      "buy_price": 537,
+      "item_id": 21802,
+      "name": "Revenant cave teleport",
+      "qty": 80,
+      "buy_price": 639,
       "direction": "traditional",
-      "opened_at": "2026-08-20T11:17:10.954659+00:00",
+      "opened_at": "2026-08-20T11:33:11.287240+00:00",
       "note": "auto",
-      "entry_sell": 537,
-      "entry_offer": 556
+      "entry_sell": 639,
+      "entry_offer": 674
+    },
+    {
+      "id": 3,
+      "item_id": 24621,
+      "name": "Blighted vengeance sack",
+      "qty": 170,
+      "buy_price": 76,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T11:33:11.287676+00:00",
+      "note": "auto",
+      "entry_sell": 76,
+      "entry_offer": 80
     }
   ]
 }
