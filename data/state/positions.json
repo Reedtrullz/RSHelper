@@ -13,28 +13,16 @@
       "entry_offer": 717
     },
     {
-      "id": 2,
-      "item_id": 1975,
-      "name": "Chocolate dust",
-      "qty": 116,
-      "buy_price": 50,
+      "id": 4,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 664,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-20T13:51:14.114280+00:00",
+      "opened_at": "2026-08-20T14:09:13.199402+00:00",
       "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
-    },
-    {
-      "id": 3,
-      "item_id": 1759,
-      "name": "Ball of wool",
-      "qty": 730,
-      "buy_price": 50,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T13:55:14.075197+00:00",
-      "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 48
+      "entry_sell": 49,
+      "entry_offer": 51
     }
   ]
 }
