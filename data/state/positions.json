@@ -2,27 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 439,
-      "buy_price": 734,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 973,
+      "buy_price": 187,
       "direction": "traditional",
-      "opened_at": "2026-08-20T21:37:24.848353+00:00",
+      "opened_at": "2026-08-20T22:49:26.618136+00:00",
       "note": "auto",
-      "entry_sell": 734,
-      "entry_offer": 769
+      "entry_sell": 187,
+      "entry_offer": 197
     },
     {
-      "id": 3,
-      "item_id": 13511,
-      "name": "Ensouled dragon head",
-      "qty": 59,
-      "buy_price": 5740,
+      "id": 2,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 719,
+      "buy_price": 380,
       "direction": "traditional",
-      "opened_at": "2026-08-20T22:25:25.997167+00:00",
+      "opened_at": "2026-08-20T22:49:26.620773+00:00",
       "note": "auto",
-      "entry_sell": 5740,
-      "entry_offer": 6008
+      "entry_sell": 380,
+      "entry_offer": 396
     }
   ]
 }
