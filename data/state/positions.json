@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 1879,
       "entry_offer": 1950
-    },
-    {
-      "id": 6,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 572,
-      "buy_price": 321,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T03:06:54.062495+00:00",
-      "note": "auto",
-      "entry_sell": 321,
-      "entry_offer": 335
-    },
-    {
-      "id": 7,
-      "item_id": 21946,
-      "name": "Diamond dragon bolts (e)",
-      "qty": 138,
-      "buy_price": 2880,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T03:08:55.330770+00:00",
-      "note": "auto",
-      "entry_sell": 2880,
-      "entry_offer": 3011
     }
   ]
 }
