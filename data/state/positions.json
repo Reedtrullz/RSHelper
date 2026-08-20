@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 19582,
+      "name": "Dragon javelin tips",
+      "qty": 439,
+      "buy_price": 734,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T21:37:24.848353+00:00",
+      "note": "auto",
+      "entry_sell": 734,
+      "entry_offer": 769
+    },
+    {
+      "id": 2,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 1462,
+      "buy_price": 49,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T21:49:25.085107+00:00",
+      "note": "auto",
+      "entry_sell": 49,
+      "entry_offer": 51
+    }
+  ]
 }
