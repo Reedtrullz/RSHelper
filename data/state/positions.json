@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1658,
-      "name": "Emerald necklace",
-      "qty": 568,
-      "buy_price": 704,
+      "id": 1,
+      "item_id": 1775,
+      "name": "Molten glass",
+      "qty": 1050,
+      "buy_price": 88,
       "direction": "traditional",
-      "opened_at": "2026-08-20T12:31:11.524423+00:00",
+      "opened_at": "2026-08-20T13:03:13.086644+00:00",
       "note": "auto",
-      "entry_sell": 704,
-      "entry_offer": 730
+      "entry_sell": 88,
+      "entry_offer": 92
     },
     {
-      "id": 5,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 2547,
-      "buy_price": 85,
+      "id": 2,
+      "item_id": 9193,
+      "name": "Dragonstone bolt tips",
+      "qty": 330,
+      "buy_price": 401,
       "direction": "traditional",
-      "opened_at": "2026-08-20T12:47:12.718508+00:00",
+      "opened_at": "2026-08-20T13:03:13.087648+00:00",
       "note": "auto",
-      "entry_sell": 85,
-      "entry_offer": 89
+      "entry_sell": 401,
+      "entry_offer": 416
     }
   ]
 }
