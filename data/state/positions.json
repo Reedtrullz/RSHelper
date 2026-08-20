@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 65,
       "entry_offer": 62
-    },
-    {
-      "id": 2,
-      "item_id": 534,
-      "name": "Babydragon bones",
-      "qty": 173,
-      "buy_price": 818,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T00:32:49.360553+00:00",
-      "note": "auto",
-      "entry_sell": 818,
-      "entry_offer": 852
     }
   ]
 }
