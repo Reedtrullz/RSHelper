@@ -23,18 +23,6 @@
       "note": "auto",
       "entry_sell": 45,
       "entry_offer": 43
-    },
-    {
-      "id": 4,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 2941,
-      "buy_price": 136,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T15:33:15.934694+00:00",
-      "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 141
     }
   ]
 }
