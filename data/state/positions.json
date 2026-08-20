@@ -13,28 +13,16 @@
       "entry_offer": 496
     },
     {
-      "id": 2,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 241,
-      "buy_price": 65,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T06:45:03.368566+00:00",
-      "note": "auto",
-      "entry_sell": 65,
-      "entry_offer": 68
-    },
-    {
       "id": 3,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 604,
-      "buy_price": 662,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1886,
+      "buy_price": 137,
       "direction": "traditional",
-      "opened_at": "2026-08-20T06:45:03.369774+00:00",
+      "opened_at": "2026-08-20T06:59:02.680310+00:00",
       "note": "auto",
-      "entry_sell": 662,
-      "entry_offer": 696
+      "entry_sell": 137,
+      "entry_offer": 142
     }
   ]
 }
