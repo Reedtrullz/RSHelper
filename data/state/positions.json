@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2452,
+      "name": "Antifire potion(4)",
+      "qty": 101,
+      "buy_price": 685,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T13:27:13.701078+00:00",
+      "note": "auto",
+      "entry_sell": 685,
+      "entry_offer": 717
+    }
+  ]
 }
