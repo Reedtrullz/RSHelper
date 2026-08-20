@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 373,
-      "name": "Swordfish",
-      "qty": 515,
-      "buy_price": 198,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T10:45:10.491661+00:00",
-      "note": "auto",
-      "entry_sell": 198,
-      "entry_offer": 205
-    }
-  ]
+  "positions": []
 }
