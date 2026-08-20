@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1038,
-      "buy_price": 153,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 461,
+      "buy_price": 470,
       "direction": "traditional",
-      "opened_at": "2026-08-20T06:05:01.769940+00:00",
+      "opened_at": "2026-08-20T06:17:02.448851+00:00",
       "note": "auto",
-      "entry_sell": 153,
-      "entry_offer": 159
+      "entry_sell": 470,
+      "entry_offer": 496
+    },
+    {
+      "id": 2,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 701,
+      "buy_price": 109,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T06:17:02.449559+00:00",
+      "note": "auto",
+      "entry_sell": 109,
+      "entry_offer": 113
+    },
+    {
+      "id": 3,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 102,
+      "buy_price": 90,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T06:21:02.412524+00:00",
+      "note": "auto",
+      "entry_sell": 90,
+      "entry_offer": 95
     }
   ]
 }
