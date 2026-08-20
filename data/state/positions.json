@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 453,
+      "name": "Coal",
+      "qty": 2721,
+      "buy_price": 147,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T11:17:10.953971+00:00",
+      "note": "auto",
+      "entry_sell": 147,
+      "entry_offer": 154
+    },
+    {
+      "id": 2,
+      "item_id": 855,
+      "name": "Yew longbow",
+      "qty": 744,
+      "buy_price": 537,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T11:17:10.954659+00:00",
+      "note": "auto",
+      "entry_sell": 537,
+      "entry_offer": 556
+    }
+  ]
 }
