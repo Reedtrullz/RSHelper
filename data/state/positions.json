@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 377,
+      "name": "Raw lobster",
+      "qty": 1725,
+      "buy_price": 110,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T19:37:22.451013+00:00",
+      "note": "auto",
+      "entry_sell": 110,
+      "entry_offer": 116
+    },
+    {
+      "id": 2,
+      "item_id": 31976,
+      "name": "Camphor repair kit",
+      "qty": 150,
+      "buy_price": 1660,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T19:49:22.652213+00:00",
+      "note": "auto",
+      "entry_sell": 1660,
+      "entry_offer": 1736
+    }
+  ]
 }
