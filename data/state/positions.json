@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 461,
-      "buy_price": 470,
+      "id": 4,
+      "item_id": 9341,
+      "name": "Dragonstone bolts",
+      "qty": 757,
+      "buy_price": 528,
       "direction": "traditional",
-      "opened_at": "2026-08-20T06:17:02.448851+00:00",
+      "opened_at": "2026-08-20T07:13:04.237488+00:00",
       "note": "auto",
-      "entry_sell": 470,
-      "entry_offer": 496
+      "entry_sell": 528,
+      "entry_offer": 552
     },
     {
-      "id": 3,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1886,
-      "buy_price": 137,
+      "id": 5,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 983,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-20T06:59:02.680310+00:00",
+      "opened_at": "2026-08-20T07:25:05.129042+00:00",
       "note": "auto",
-      "entry_sell": 137,
-      "entry_offer": 142
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
