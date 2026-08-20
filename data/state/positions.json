@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1115,
-      "name": "Iron platebody",
-      "qty": 125,
-      "buy_price": 50,
+      "id": 3,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 131,
+      "buy_price": 2012,
       "direction": "traditional",
-      "opened_at": "2026-08-20T11:57:11.612358+00:00",
+      "opened_at": "2026-08-20T12:29:12.552877+00:00",
       "note": "auto",
-      "entry_sell": 50,
-      "entry_offer": 52
+      "entry_sell": 2012,
+      "entry_offer": 2085
     },
     {
-      "id": 5,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 1226,
-      "buy_price": 115,
+      "id": 4,
+      "item_id": 1658,
+      "name": "Emerald necklace",
+      "qty": 568,
+      "buy_price": 704,
       "direction": "traditional",
-      "opened_at": "2026-08-20T12:17:12.133381+00:00",
+      "opened_at": "2026-08-20T12:31:11.524423+00:00",
       "note": "auto",
-      "entry_sell": 115,
-      "entry_offer": 120
+      "entry_sell": 704,
+      "entry_offer": 730
     }
   ]
 }
