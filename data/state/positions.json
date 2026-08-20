@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9193,
+      "name": "Dragonstone bolt tips",
+      "qty": 997,
+      "buy_price": 401,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T17:05:19.472743+00:00",
+      "note": "auto",
+      "entry_sell": 401,
+      "entry_offer": 416
+    }
+  ]
 }
