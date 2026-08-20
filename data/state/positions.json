@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 19582,
-      "name": "Dragon javelin tips",
-      "qty": 544,
-      "buy_price": 734,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T02:00:52.418067+00:00",
-      "note": "auto",
-      "entry_sell": 734,
-      "entry_offer": 768
-    },
-    {
       "id": 4,
       "item_id": 2361,
       "name": "Adamantite bar",
@@ -26,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 31111,
-      "name": "Demon tear",
-      "qty": 832,
-      "buy_price": 243,
+      "item_id": 960,
+      "name": "Plank",
+      "qty": 286,
+      "buy_price": 124,
       "direction": "traditional",
-      "opened_at": "2026-08-20T02:36:54.120946+00:00",
+      "opened_at": "2026-08-20T02:52:54.486735+00:00",
       "note": "auto",
-      "entry_sell": 243,
-      "entry_offer": 254
+      "entry_sell": 124,
+      "entry_offer": 130
+    },
+    {
+      "id": 6,
+      "item_id": 19580,
+      "name": "Rune javelin tips",
+      "qty": 1038,
+      "buy_price": 385,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T02:52:54.487831+00:00",
+      "note": "auto",
+      "entry_sell": 385,
+      "entry_offer": 400
     }
   ]
 }
