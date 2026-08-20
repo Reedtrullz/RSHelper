@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 5952,
-      "name": "Antidote++(4)",
-      "qty": 43,
-      "buy_price": 9301,
+      "item_id": 1749,
+      "name": "Red dragonhide",
+      "qty": 178,
+      "buy_price": 2243,
       "direction": "traditional",
-      "opened_at": "2026-08-20T15:01:15.110412+00:00",
+      "opened_at": "2026-08-20T15:17:15.567345+00:00",
       "note": "auto",
-      "entry_sell": 9301,
-      "entry_offer": 9749
+      "entry_sell": 2243,
+      "entry_offer": 2330
     }
   ]
 }
