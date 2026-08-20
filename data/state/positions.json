@@ -14,27 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 855,
-      "name": "Yew longbow",
-      "qty": 128,
-      "buy_price": 535,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 2030,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-20T01:16:50.768091+00:00",
+      "opened_at": "2026-08-20T01:36:51.684635+00:00",
       "note": "auto",
-      "entry_sell": 535,
-      "entry_offer": 556
+      "entry_sell": 83,
+      "entry_offer": 87
     },
     {
       "id": 4,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 2285,
-      "buy_price": 175,
+      "item_id": 169,
+      "name": "Ranging potion(3)",
+      "qty": 200,
+      "buy_price": 1364,
       "direction": "traditional",
-      "opened_at": "2026-08-20T01:18:49.643163+00:00",
+      "opened_at": "2026-08-20T01:36:51.684915+00:00",
       "note": "auto",
-      "entry_sell": 175,
-      "entry_offer": 182
+      "entry_sell": 1364,
+      "entry_offer": 1418
     }
   ]
 }
