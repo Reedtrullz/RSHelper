@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 734,
       "entry_offer": 768
+    },
+    {
+      "id": 4,
+      "item_id": 2361,
+      "name": "Adamantite bar",
+      "qty": 212,
+      "buy_price": 1879,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T02:34:52.887570+00:00",
+      "note": "auto",
+      "entry_sell": 1879,
+      "entry_offer": 1950
+    },
+    {
+      "id": 5,
+      "item_id": 31111,
+      "name": "Demon tear",
+      "qty": 832,
+      "buy_price": 243,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T02:36:54.120946+00:00",
+      "note": "auto",
+      "entry_sell": 243,
+      "entry_offer": 254
     }
   ]
 }
