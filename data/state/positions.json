@@ -13,16 +13,16 @@
       "entry_offer": 49
     },
     {
-      "id": 3,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 201,
-      "buy_price": 45,
+      "id": 4,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 100,
+      "buy_price": 317,
       "direction": "traditional",
-      "opened_at": "2026-08-20T15:33:15.934127+00:00",
+      "opened_at": "2026-08-20T16:01:17.055700+00:00",
       "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 43
+      "entry_sell": 317,
+      "entry_offer": 330
     }
   ]
 }
