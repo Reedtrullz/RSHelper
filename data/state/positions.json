@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 2361,
-      "name": "Adamantite bar",
-      "qty": 212,
-      "buy_price": 1879,
+      "id": 1,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 384,
+      "buy_price": 381,
       "direction": "traditional",
-      "opened_at": "2026-08-20T02:34:52.887570+00:00",
+      "opened_at": "2026-08-20T03:40:56.551668+00:00",
       "note": "auto",
-      "entry_sell": 1879,
-      "entry_offer": 1950
+      "entry_sell": 381,
+      "entry_offer": 396
     }
   ]
 }
