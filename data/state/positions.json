@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 98,
       "entry_offer": 103
-    },
-    {
-      "id": 2,
-      "item_id": 5974,
-      "name": "Coconut",
-      "qty": 282,
-      "buy_price": 1416,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T14:33:13.909749+00:00",
-      "note": "auto",
-      "entry_sell": 1416,
-      "entry_offer": 1471
-    },
-    {
-      "id": 3,
-      "item_id": 385,
-      "name": "Shark",
-      "qty": 411,
-      "buy_price": 971,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T14:33:13.910037+00:00",
-      "note": "auto",
-      "entry_sell": 971,
-      "entry_offer": 1007
     }
   ]
 }
