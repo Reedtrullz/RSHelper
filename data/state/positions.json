@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 291,
-      "buy_price": 132,
+      "id": 1,
+      "item_id": 383,
+      "name": "Raw shark",
+      "qty": 421,
+      "buy_price": 677,
       "direction": "traditional",
-      "opened_at": "2026-08-20T05:25:00.331407+00:00",
+      "opened_at": "2026-08-20T05:49:00.969762+00:00",
       "note": "auto",
-      "entry_sell": 132,
-      "entry_offer": 126
+      "entry_sell": 677,
+      "entry_offer": 701
     }
   ]
 }
