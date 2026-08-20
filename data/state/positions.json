@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 1462,
-      "buy_price": 49,
+      "item_id": 1521,
+      "name": "Oak logs",
+      "qty": 146,
+      "buy_price": 37,
       "direction": "traditional",
-      "opened_at": "2026-08-20T21:49:25.085107+00:00",
+      "opened_at": "2026-08-20T22:05:25.474365+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 37,
+      "entry_offer": 39
     }
   ]
 }
