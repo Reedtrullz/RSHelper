@@ -14,15 +14,15 @@
     },
     {
       "id": 2,
-      "item_id": 3142,
-      "name": "Raw karambwan",
-      "qty": 1300,
-      "buy_price": 248,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 2498,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-20T04:44:58.962971+00:00",
+      "opened_at": "2026-08-20T05:00:59.373948+00:00",
       "note": "auto",
-      "entry_sell": 248,
-      "entry_offer": 260
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
