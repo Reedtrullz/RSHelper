@@ -13,16 +13,16 @@
       "entry_offer": 59
     },
     {
-      "id": 3,
-      "item_id": 447,
-      "name": "Mithril ore",
-      "qty": 1353,
-      "buy_price": 155,
+      "id": 2,
+      "item_id": 3008,
+      "name": "Energy potion(4)",
+      "qty": 102,
+      "buy_price": 175,
       "direction": "traditional",
-      "opened_at": "2026-08-20T20:13:23.300164+00:00",
+      "opened_at": "2026-08-20T20:25:23.632903+00:00",
       "note": "auto",
-      "entry_sell": 155,
-      "entry_offer": 161
+      "entry_sell": 175,
+      "entry_offer": 185
     }
   ]
 }
