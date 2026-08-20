@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 249,
-      "name": "Guam leaf",
-      "qty": 209,
-      "buy_price": 290,
+      "id": 1,
+      "item_id": 1704,
+      "name": "Amulet of glory",
+      "qty": 34,
+      "buy_price": 11664,
       "direction": "traditional",
-      "opened_at": "2026-08-20T16:21:18.237925+00:00",
+      "opened_at": "2026-08-20T16:49:18.964936+00:00",
       "note": "auto",
-      "entry_sell": 290,
-      "entry_offer": 304
+      "entry_sell": 11664,
+      "entry_offer": 12243
     },
     {
-      "id": 5,
-      "item_id": 335,
-      "name": "Raw trout",
-      "qty": 106,
-      "buy_price": 38,
+      "id": 2,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1265,
+      "buy_price": 136,
       "direction": "traditional",
-      "opened_at": "2026-08-20T16:33:18.418507+00:00",
+      "opened_at": "2026-08-20T16:49:18.965895+00:00",
       "note": "auto",
-      "entry_sell": 38,
-      "entry_offer": 40
+      "entry_sell": 136,
+      "entry_offer": 142
     }
   ]
 }
