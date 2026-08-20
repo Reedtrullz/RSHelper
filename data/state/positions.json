@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1513,
-      "name": "Magic logs",
-      "qty": 515,
-      "buy_price": 776,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 1013,
+      "buy_price": 109,
       "direction": "traditional",
-      "opened_at": "2026-08-20T08:29:07.260301+00:00",
+      "opened_at": "2026-08-20T08:45:07.507236+00:00",
       "note": "auto",
-      "entry_sell": 776,
-      "entry_offer": 813
+      "entry_sell": 109,
+      "entry_offer": 115
     }
   ]
 }
