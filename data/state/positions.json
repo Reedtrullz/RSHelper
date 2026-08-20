@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 261,
+      "name": "Avantoe",
+      "qty": 222,
+      "buy_price": 1606,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T10:33:10.087391+00:00",
+      "note": "auto",
+      "entry_sell": 1606,
+      "entry_offer": 1688
+    },
+    {
+      "id": 2,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 92,
+      "buy_price": 107,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T10:33:10.088534+00:00",
+      "note": "auto",
+      "entry_sell": 107,
+      "entry_offer": 112
+    },
+    {
+      "id": 3,
+      "item_id": 573,
+      "name": "Air orb",
+      "qty": 228,
+      "buy_price": 1754,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T10:33:10.089035+00:00",
+      "note": "auto",
+      "entry_sell": 1754,
+      "entry_offer": 1840
+    }
+  ]
 }
