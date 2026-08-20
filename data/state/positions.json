@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 178,
-      "buy_price": 2243,
+      "id": 2,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 112,
+      "buy_price": 51,
       "direction": "traditional",
-      "opened_at": "2026-08-20T15:17:15.567345+00:00",
+      "opened_at": "2026-08-20T15:29:15.873480+00:00",
       "note": "auto",
-      "entry_sell": 2243,
-      "entry_offer": 2330
+      "entry_sell": 51,
+      "entry_offer": 49
+    },
+    {
+      "id": 3,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 201,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T15:33:15.934127+00:00",
+      "note": "auto",
+      "entry_sell": 45,
+      "entry_offer": 43
+    },
+    {
+      "id": 4,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 2941,
+      "buy_price": 136,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T15:33:15.934694+00:00",
+      "note": "auto",
+      "entry_sell": 136,
+      "entry_offer": 141
     }
   ]
 }
