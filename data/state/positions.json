@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 1704,
-      "name": "Amulet of glory",
-      "qty": 34,
-      "buy_price": 11664,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T16:49:18.964936+00:00",
-      "note": "auto",
-      "entry_sell": 11664,
-      "entry_offer": 12243
-    },
-    {
-      "id": 2,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 1265,
-      "buy_price": 136,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T16:49:18.965895+00:00",
-      "note": "auto",
-      "entry_sell": 136,
-      "entry_offer": 142
-    }
-  ]
+  "positions": []
 }
