@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 131,
-      "buy_price": 2012,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T12:29:12.552877+00:00",
-      "note": "auto",
-      "entry_sell": 2012,
-      "entry_offer": 2085
-    },
-    {
       "id": 4,
       "item_id": 1658,
       "name": "Emerald necklace",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 704,
       "entry_offer": 730
+    },
+    {
+      "id": 5,
+      "item_id": 2357,
+      "name": "Gold bar",
+      "qty": 2547,
+      "buy_price": 85,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T12:47:12.718508+00:00",
+      "note": "auto",
+      "entry_sell": 85,
+      "entry_offer": 89
     }
   ]
 }
