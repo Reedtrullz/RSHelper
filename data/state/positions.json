@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 384,
-      "buy_price": 381,
+      "item_id": 21555,
+      "name": "Numulite",
+      "qty": 11428,
+      "buy_price": 35,
       "direction": "traditional",
-      "opened_at": "2026-08-20T03:40:56.551668+00:00",
+      "opened_at": "2026-08-20T03:52:56.903997+00:00",
       "note": "auto",
-      "entry_sell": 381,
-      "entry_offer": 396
+      "entry_sell": 35,
+      "entry_offer": 37
+    },
+    {
+      "id": 2,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 142,
+      "buy_price": 2811,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T03:56:57.021757+00:00",
+      "note": "auto",
+      "entry_sell": 2811,
+      "entry_offer": 2922
     }
   ]
 }
