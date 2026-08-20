@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9191,
-      "name": "Ruby bolt tips",
-      "qty": 1058,
-      "buy_price": 94,
+      "id": 2,
+      "item_id": 6034,
+      "name": "Supercompost",
+      "qty": 346,
+      "buy_price": 36,
       "direction": "traditional",
-      "opened_at": "2026-08-20T17:33:20.029032+00:00",
+      "opened_at": "2026-08-20T17:37:20.238128+00:00",
       "note": "auto",
-      "entry_sell": 94,
-      "entry_offer": 99
+      "entry_sell": 36,
+      "entry_offer": 38
     },
     {
-      "id": 2,
-      "item_id": 2444,
-      "name": "Ranging potion(4)",
-      "qty": 82,
-      "buy_price": 2003,
+      "id": 3,
+      "item_id": 1965,
+      "name": "Cabbage",
+      "qty": 602,
+      "buy_price": 25,
       "direction": "traditional",
-      "opened_at": "2026-08-20T17:33:20.029873+00:00",
+      "opened_at": "2026-08-20T17:49:20.348713+00:00",
       "note": "auto",
-      "entry_sell": 2003,
-      "entry_offer": 2105
+      "entry_sell": 25,
+      "entry_offer": 26
     }
   ]
 }
