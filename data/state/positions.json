@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 2311,
-      "buy_price": 107,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T01:04:50.181561+00:00",
-      "note": "auto",
-      "entry_sell": 107,
-      "entry_offer": 112
-    },
-    {
-      "id": 3,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 2030,
-      "buy_price": 83,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T01:36:51.684635+00:00",
-      "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 87
-    },
-    {
       "id": 4,
       "item_id": 169,
       "name": "Ranging potion(3)",
@@ -35,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1364,
       "entry_offer": 1418
+    },
+    {
+      "id": 5,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 372,
+      "buy_price": 286,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T01:48:51.994330+00:00",
+      "note": "auto",
+      "entry_sell": 286,
+      "entry_offer": 298
     }
   ]
 }
