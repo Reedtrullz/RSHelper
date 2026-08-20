@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 734,
       "entry_offer": 768
-    },
-    {
-      "id": 4,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 1666,
-      "buy_price": 240,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T02:02:51.516790+00:00",
-      "note": "auto",
-      "entry_sell": 240,
-      "entry_offer": 250
     }
   ]
 }
