@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 1846,
-      "buy_price": 41,
+      "item_id": 1749,
+      "name": "Red dragonhide",
+      "qty": 178,
+      "buy_price": 2244,
       "direction": "traditional",
-      "opened_at": "2026-08-20T04:28:58.388598+00:00",
+      "opened_at": "2026-08-20T04:32:58.503166+00:00",
       "note": "auto",
-      "entry_sell": 41,
-      "entry_offer": 43
+      "entry_sell": 2244,
+      "entry_offer": 2330
+    },
+    {
+      "id": 2,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1300,
+      "buy_price": 248,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T04:44:58.962971+00:00",
+      "note": "auto",
+      "entry_sell": 248,
+      "entry_offer": 260
     }
   ]
 }
