@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 11232,
-      "name": "Dragon dart tip",
-      "qty": 209,
-      "buy_price": 1310,
+      "id": 2,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 291,
+      "buy_price": 132,
       "direction": "traditional",
-      "opened_at": "2026-08-20T05:08:59.730576+00:00",
+      "opened_at": "2026-08-20T05:25:00.331407+00:00",
       "note": "auto",
-      "entry_sell": 1310,
-      "entry_offer": 1362
+      "entry_sell": 132,
+      "entry_offer": 126
     }
   ]
 }
