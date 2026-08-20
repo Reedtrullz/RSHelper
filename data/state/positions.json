@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 1775,
-      "name": "Molten glass",
-      "qty": 1050,
-      "buy_price": 88,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T13:03:13.086644+00:00",
-      "note": "auto",
-      "entry_sell": 88,
-      "entry_offer": 92
-    },
-    {
-      "id": 2,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 330,
-      "buy_price": 401,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T13:03:13.087648+00:00",
-      "note": "auto",
-      "entry_sell": 401,
-      "entry_offer": 416
-    }
-  ]
+  "positions": []
 }
