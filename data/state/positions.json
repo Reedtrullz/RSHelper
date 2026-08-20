@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 178,
-      "buy_price": 2244,
+      "id": 3,
+      "item_id": 11232,
+      "name": "Dragon dart tip",
+      "qty": 209,
+      "buy_price": 1310,
       "direction": "traditional",
-      "opened_at": "2026-08-20T04:32:58.503166+00:00",
+      "opened_at": "2026-08-20T05:08:59.730576+00:00",
       "note": "auto",
-      "entry_sell": 2244,
-      "entry_offer": 2330
-    },
-    {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2498,
-      "buy_price": 26,
-      "direction": "traditional",
-      "opened_at": "2026-08-20T05:00:59.373948+00:00",
-      "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 1310,
+      "entry_offer": 1362
     }
   ]
 }
