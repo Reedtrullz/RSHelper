@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24615,
-      "name": "Blighted teleport spell sack",
-      "qty": 213,
-      "buy_price": 65,
+      "item_id": 13573,
+      "name": "Dynamite",
+      "qty": 1479,
+      "buy_price": 165,
       "direction": "traditional",
-      "opened_at": "2026-08-20T00:32:49.359599+00:00",
+      "opened_at": "2026-08-20T00:52:49.968978+00:00",
       "note": "auto",
-      "entry_sell": 65,
-      "entry_offer": 62
+      "entry_sell": 165,
+      "entry_offer": 172
+    },
+    {
+      "id": 2,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 2311,
+      "buy_price": 107,
+      "direction": "traditional",
+      "opened_at": "2026-08-20T01:04:50.181561+00:00",
+      "note": "auto",
+      "entry_sell": 107,
+      "entry_offer": 112
     }
   ]
 }
