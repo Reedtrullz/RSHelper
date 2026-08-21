@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 391,
-      "buy_price": 1022,
+      "id": 3,
+      "item_id": 5321,
+      "name": "Watermelon seed",
+      "qty": 138,
+      "buy_price": 246,
       "direction": "traditional",
-      "opened_at": "2026-08-21T15:13:52.353149+00:00",
+      "opened_at": "2026-08-21T15:37:52.922119+00:00",
       "note": "auto",
-      "entry_sell": 1022,
-      "entry_offer": 1060
+      "entry_sell": 246,
+      "entry_offer": 235
     }
   ]
 }
