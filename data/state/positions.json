@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 1600,
-      "buy_price": 165,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 3883,
+      "buy_price": 103,
       "direction": "traditional",
-      "opened_at": "2026-08-20T23:49:27.489580+00:00",
+      "opened_at": "2026-08-21T00:05:27.881576+00:00",
       "note": "auto",
-      "entry_sell": 165,
-      "entry_offer": 172
+      "entry_sell": 103,
+      "entry_offer": 107
     }
   ]
 }
