@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 562,
-      "name": "Chaos rune",
-      "qty": 3883,
-      "buy_price": 103,
+      "item_id": 806,
+      "name": "Bronze dart",
+      "qty": 300,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-21T00:49:28.514441+00:00",
+      "opened_at": "2026-08-21T00:53:28.514188+00:00",
       "note": "auto",
-      "entry_sell": 103,
-      "entry_offer": 107
+      "entry_sell": 26,
+      "entry_offer": 25
     }
   ]
 }
