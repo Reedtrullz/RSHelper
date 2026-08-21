@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 540,
-      "buy_price": 317,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 165,
+      "buy_price": 487,
       "direction": "traditional",
-      "opened_at": "2026-08-21T11:45:48.343072+00:00",
+      "opened_at": "2026-08-21T12:09:48.966101+00:00",
       "note": "auto",
-      "entry_sell": 317,
-      "entry_offer": 332
-    },
-    {
-      "id": 3,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 115,
-      "buy_price": 97,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T11:49:48.471604+00:00",
-      "note": "auto",
-      "entry_sell": 97,
-      "entry_offer": 92
+      "entry_sell": 487,
+      "entry_offer": 463
     }
   ]
 }
