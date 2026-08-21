@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 1241,
-      "buy_price": 108,
+      "item_id": 3142,
+      "name": "Raw karambwan",
+      "qty": 1120,
+      "buy_price": 261,
       "direction": "traditional",
-      "opened_at": "2026-08-21T18:41:56.599366+00:00",
+      "opened_at": "2026-08-21T18:57:57.033923+00:00",
       "note": "auto",
-      "entry_sell": 108,
-      "entry_offer": 114
+      "entry_sell": 261,
+      "entry_offer": 275
+    },
+    {
+      "id": 2,
+      "item_id": 259,
+      "name": "Irit leaf",
+      "qty": 274,
+      "buy_price": 1458,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T18:57:57.034507+00:00",
+      "note": "auto",
+      "entry_sell": 1458,
+      "entry_offer": 1525
+    },
+    {
+      "id": 3,
+      "item_id": 2349,
+      "name": "Bronze bar",
+      "qty": 163,
+      "buy_price": 61,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T18:57:57.034891+00:00",
+      "note": "auto",
+      "entry_sell": 61,
+      "entry_offer": 64
     }
   ]
 }
