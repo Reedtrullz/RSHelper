@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 597,
-      "buy_price": 122,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T21:10:00.750360+00:00",
-      "note": "auto",
-      "entry_sell": 122,
-      "entry_offer": 127
-    },
-    {
       "id": 3,
       "item_id": 1621,
       "name": "Uncut emerald",
@@ -26,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 376,
-      "buy_price": 26,
+      "item_id": 3016,
+      "name": "Super energy(4)",
+      "qty": 171,
+      "buy_price": 2328,
       "direction": "traditional",
-      "opened_at": "2026-08-21T21:14:00.910947+00:00",
+      "opened_at": "2026-08-21T21:22:01.181850+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 2328,
+      "entry_offer": 2444
+    },
+    {
+      "id": 5,
+      "item_id": 7946,
+      "name": "Monkfish",
+      "qty": 572,
+      "buy_price": 152,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T21:26:01.106020+00:00",
+      "note": "auto",
+      "entry_sell": 152,
+      "entry_offer": 160
     }
   ]
 }
