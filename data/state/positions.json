@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 249,
+      "name": "Guam leaf",
+      "qty": 101,
+      "buy_price": 280,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T00:33:28.110535+00:00",
+      "note": "auto",
+      "entry_sell": 280,
+      "entry_offer": 292
+    }
+  ]
 }
