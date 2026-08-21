@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 2117,
-      "buy_price": 107,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 739,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-21T14:57:52.087650+00:00",
+      "opened_at": "2026-08-21T15:05:52.406657+00:00",
       "note": "auto",
-      "entry_sell": 107,
-      "entry_offer": 111
+      "entry_sell": 27,
+      "entry_offer": 26
     }
   ]
 }
