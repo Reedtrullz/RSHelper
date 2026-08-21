@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 571,
-      "name": "Water orb",
-      "qty": 295,
-      "buy_price": 1354,
+      "item_id": 5974,
+      "name": "Coconut",
+      "qty": 289,
+      "buy_price": 1383,
       "direction": "traditional",
-      "opened_at": "2026-08-21T21:58:01.978857+00:00",
+      "opened_at": "2026-08-21T22:14:02.493150+00:00",
       "note": "auto",
-      "entry_sell": 1354,
-      "entry_offer": 1420
-    },
-    {
-      "id": 2,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 601,
-      "buy_price": 29,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T21:58:01.979445+00:00",
-      "note": "auto",
-      "entry_sell": 29,
-      "entry_offer": 28
+      "entry_sell": 1383,
+      "entry_offer": 1460
     }
   ]
 }
