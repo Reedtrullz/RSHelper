@@ -1,40 +1,40 @@
 {
   "positions": [
     {
+      "id": 1,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 597,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T21:10:00.750360+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 127
+    },
+    {
+      "id": 3,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 454,
+      "buy_price": 465,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T21:10:00.751357+00:00",
+      "note": "auto",
+      "entry_sell": 465,
+      "entry_offer": 482
+    },
+    {
       "id": 4,
-      "item_id": 28878,
-      "name": "Moonlight antler bolts",
-      "qty": 842,
-      "buy_price": 283,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 376,
+      "buy_price": 26,
       "direction": "traditional",
-      "opened_at": "2026-08-21T20:54:00.247383+00:00",
+      "opened_at": "2026-08-21T21:14:00.910947+00:00",
       "note": "auto",
-      "entry_sell": 283,
-      "entry_offer": 295
-    },
-    {
-      "id": 5,
-      "item_id": 12934,
-      "name": "Zulrah's scales",
-      "qty": 2739,
-      "buy_price": 146,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T20:58:00.537280+00:00",
-      "note": "auto",
-      "entry_sell": 146,
-      "entry_offer": 154
-    },
-    {
-      "id": 6,
-      "item_id": 2501,
-      "name": "Red d'hide body",
-      "qty": 65,
-      "buy_price": 5500,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T20:58:00.538035+00:00",
-      "note": "auto",
-      "entry_sell": 5500,
-      "entry_offer": 5797
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
