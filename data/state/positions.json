@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 383,
-      "name": "Raw shark",
-      "qty": 600,
-      "buy_price": 666,
+      "item_id": 21316,
+      "name": "Amethyst broad bolts",
+      "qty": 228,
+      "buy_price": 195,
       "direction": "traditional",
-      "opened_at": "2026-08-21T15:57:53.418858+00:00",
+      "opened_at": "2026-08-21T16:09:53.605455+00:00",
       "note": "auto",
-      "entry_sell": 666,
-      "entry_offer": 691
+      "entry_sell": 195,
+      "entry_offer": 205
+    },
+    {
+      "id": 2,
+      "item_id": 4695,
+      "name": "Mist rune",
+      "qty": 185,
+      "buy_price": 92,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T16:09:53.606765+00:00",
+      "note": "auto",
+      "entry_sell": 92,
+      "entry_offer": 97
     }
   ]
 }
