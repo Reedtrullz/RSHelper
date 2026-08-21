@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2349,
-      "name": "Bronze bar",
-      "qty": 143,
-      "buy_price": 61,
+      "item_id": 8007,
+      "name": "Varrock teleport (tablet)",
+      "qty": 579,
+      "buy_price": 690,
       "direction": "traditional",
-      "opened_at": "2026-08-21T23:14:03.847493+00:00",
+      "opened_at": "2026-08-21T23:18:04.244676+00:00",
       "note": "auto",
-      "entry_sell": 61,
-      "entry_offer": 64
-    },
-    {
-      "id": 2,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 622,
-      "buy_price": 147,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T23:14:03.848028+00:00",
-      "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 154
+      "entry_sell": 690,
+      "entry_offer": 719
     }
   ]
 }
