@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 561,
-      "name": "Nature rune",
-      "qty": 2836,
-      "buy_price": 141,
+      "item_id": 235,
+      "name": "Unicorn horn dust",
+      "qty": 689,
+      "buy_price": 580,
       "direction": "traditional",
-      "opened_at": "2026-08-21T03:05:32.410454+00:00",
+      "opened_at": "2026-08-21T03:13:32.947567+00:00",
       "note": "auto",
-      "entry_sell": 141,
-      "entry_offer": 147
+      "entry_sell": 580,
+      "entry_offer": 610
+    },
+    {
+      "id": 2,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 1328,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T03:21:33.298327+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 127
+    },
+    {
+      "id": 3,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 1627,
+      "buy_price": 134,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T03:21:33.298720+00:00",
+      "note": "auto",
+      "entry_sell": 134,
+      "entry_offer": 139
     }
   ]
 }
