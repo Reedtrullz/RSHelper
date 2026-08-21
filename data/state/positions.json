@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 22786,
+      "name": "Hydra bones",
+      "qty": 52,
+      "buy_price": 7605,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T02:01:30.396689+00:00",
+      "note": "auto",
+      "entry_sell": 7605,
+      "entry_offer": 7900
+    },
+    {
+      "id": 2,
+      "item_id": 5296,
+      "name": "Toadflax seed",
+      "qty": 100,
+      "buy_price": 904,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T02:05:30.524802+00:00",
+      "note": "auto",
+      "entry_sell": 904,
+      "entry_offer": 950
+    }
+  ]
 }
