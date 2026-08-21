@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 4695,
-      "name": "Mist rune",
-      "qty": 1476,
-      "buy_price": 84,
+      "item_id": 28872,
+      "name": "Sunlight antler bolts",
+      "qty": 260,
+      "buy_price": 195,
       "direction": "traditional",
-      "opened_at": "2026-08-21T05:33:37.866218+00:00",
+      "opened_at": "2026-08-21T05:53:38.505055+00:00",
       "note": "auto",
-      "entry_sell": 84,
-      "entry_offer": 88
-    },
-    {
-      "id": 2,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 285,
-      "buy_price": 663,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T05:37:38.271665+00:00",
-      "note": "auto",
-      "entry_sell": 663,
-      "entry_offer": 692
+      "entry_sell": 195,
+      "entry_offer": 202
     }
   ]
 }
