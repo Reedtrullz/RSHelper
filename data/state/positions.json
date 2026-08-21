@@ -1,28 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 3049,
-      "name": "Grimy toadflax",
-      "qty": 113,
-      "buy_price": 2081,
+      "id": 4,
+      "item_id": 28878,
+      "name": "Moonlight antler bolts",
+      "qty": 842,
+      "buy_price": 283,
       "direction": "traditional",
-      "opened_at": "2026-08-21T20:17:59.230643+00:00",
+      "opened_at": "2026-08-21T20:54:00.247383+00:00",
       "note": "auto",
-      "entry_sell": 2081,
-      "entry_offer": 2200
+      "entry_sell": 283,
+      "entry_offer": 295
     },
     {
-      "id": 3,
-      "item_id": 821,
-      "name": "Steel dart tip",
-      "qty": 1033,
-      "buy_price": 86,
+      "id": 5,
+      "item_id": 12934,
+      "name": "Zulrah's scales",
+      "qty": 2739,
+      "buy_price": 146,
       "direction": "traditional",
-      "opened_at": "2026-08-21T20:29:59.629215+00:00",
+      "opened_at": "2026-08-21T20:58:00.537280+00:00",
       "note": "auto",
-      "entry_sell": 86,
-      "entry_offer": 90
+      "entry_sell": 146,
+      "entry_offer": 154
+    },
+    {
+      "id": 6,
+      "item_id": 2501,
+      "name": "Red d'hide body",
+      "qty": 65,
+      "buy_price": 5500,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T20:58:00.538035+00:00",
+      "note": "auto",
+      "entry_sell": 5500,
+      "entry_offer": 5797
     }
   ]
 }
