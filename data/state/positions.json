@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 2,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 113,
+      "buy_price": 2081,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T20:17:59.230643+00:00",
+      "note": "auto",
+      "entry_sell": 2081,
+      "entry_offer": 2200
+    },
+    {
+      "id": 3,
+      "item_id": 29174,
+      "name": "Moonlight antelope fur",
+      "qty": 111,
+      "buy_price": 420,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T20:21:59.450407+00:00",
+      "note": "auto",
+      "entry_sell": 420,
+      "entry_offer": 441
+    }
+  ]
 }
