@@ -1,30 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 454,
-      "buy_price": 465,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T21:10:00.751357+00:00",
-      "note": "auto",
-      "entry_sell": 465,
-      "entry_offer": 482
-    },
-    {
-      "id": 4,
-      "item_id": 3016,
-      "name": "Super energy(4)",
-      "qty": 171,
-      "buy_price": 2328,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T21:22:01.181850+00:00",
-      "note": "auto",
-      "entry_sell": 2328,
-      "entry_offer": 2444
-    },
-    {
       "id": 5,
       "item_id": 7946,
       "name": "Monkfish",
