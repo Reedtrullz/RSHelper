@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 442,
-      "name": "Silver ore",
-      "qty": 678,
-      "buy_price": 64,
+      "id": 1,
+      "item_id": 2434,
+      "name": "Prayer potion(4)",
+      "qty": 44,
+      "buy_price": 8926,
       "direction": "traditional",
-      "opened_at": "2026-08-21T11:13:47.638937+00:00",
+      "opened_at": "2026-08-21T11:41:48.203046+00:00",
       "note": "auto",
-      "entry_sell": 64,
-      "entry_offer": 67
+      "entry_sell": 8926,
+      "entry_offer": 9265
     }
   ]
 }
