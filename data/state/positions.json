@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 8007,
-      "name": "Varrock teleport (tablet)",
-      "qty": 579,
-      "buy_price": 690,
+      "id": 2,
+      "item_id": 810,
+      "name": "Adamant dart",
+      "qty": 6608,
+      "buy_price": 28,
       "direction": "traditional",
-      "opened_at": "2026-08-21T23:18:04.244676+00:00",
+      "opened_at": "2026-08-21T23:30:04.209171+00:00",
       "note": "auto",
-      "entry_sell": 690,
-      "entry_offer": 719
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
