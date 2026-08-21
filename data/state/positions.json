@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 337,
+      "buy_price": 43,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T08:01:42.302555+00:00",
+      "note": "auto",
+      "entry_sell": 43,
+      "entry_offer": 45
+    },
+    {
+      "id": 2,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 393,
+      "buy_price": 115,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T08:01:42.303317+00:00",
+      "note": "auto",
+      "entry_sell": 115,
+      "entry_offer": 120
+    }
+  ]
 }
