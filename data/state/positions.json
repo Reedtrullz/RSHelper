@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 5974,
-      "name": "Coconut",
-      "qty": 289,
-      "buy_price": 1383,
+      "id": 3,
+      "item_id": 564,
+      "name": "Cosmic rune",
+      "qty": 1257,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-21T22:14:02.493150+00:00",
+      "opened_at": "2026-08-21T22:20:01.715954+00:00",
       "note": "auto",
-      "entry_sell": 1383,
-      "entry_offer": 1460
+      "entry_sell": 105,
+      "entry_offer": 110
     }
   ]
 }
