@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21316,
-      "name": "Amethyst broad bolts",
-      "qty": 228,
-      "buy_price": 195,
+      "item_id": 567,
+      "name": "Unpowered orb",
+      "qty": 100,
+      "buy_price": 59,
       "direction": "traditional",
-      "opened_at": "2026-08-21T16:09:53.605455+00:00",
+      "opened_at": "2026-08-21T16:41:54.216094+00:00",
       "note": "auto",
-      "entry_sell": 195,
-      "entry_offer": 205
+      "entry_sell": 59,
+      "entry_offer": 62
     }
   ]
 }
