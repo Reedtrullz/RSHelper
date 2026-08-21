@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 398,
       "entry_offer": 415
+    },
+    {
+      "id": 4,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 293,
+      "buy_price": 230,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T04:29:35.826485+00:00",
+      "note": "auto",
+      "entry_sell": 230,
+      "entry_offer": 243
+    },
+    {
+      "id": 5,
+      "item_id": 536,
+      "name": "Dragon bones",
+      "qty": 132,
+      "buy_price": 3030,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T04:37:36.108195+00:00",
+      "note": "auto",
+      "entry_sell": 3030,
+      "entry_offer": 3189
     }
   ]
 }
