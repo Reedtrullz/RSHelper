@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 676,
-      "buy_price": 146,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T10:09:46.485134+00:00",
-      "note": "auto",
-      "entry_sell": 146,
-      "entry_offer": 154
-    },
-    {
       "id": 3,
-      "item_id": 1987,
-      "name": "Grapes",
-      "qty": 2695,
-      "buy_price": 66,
+      "item_id": 824,
+      "name": "Rune dart tip",
+      "qty": 140,
+      "buy_price": 1050,
       "direction": "traditional",
-      "opened_at": "2026-08-21T10:25:46.771906+00:00",
+      "opened_at": "2026-08-21T10:37:46.930549+00:00",
       "note": "auto",
-      "entry_sell": 66,
-      "entry_offer": 69
+      "entry_sell": 1050,
+      "entry_offer": 1097
     }
   ]
 }
