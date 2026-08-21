@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 810,
-      "name": "Adamant dart",
-      "qty": 6608,
-      "buy_price": 28,
+      "id": 3,
+      "item_id": 1973,
+      "name": "Chocolate bar",
+      "qty": 1300,
+      "buy_price": 35,
       "direction": "traditional",
-      "opened_at": "2026-08-21T23:30:04.209171+00:00",
+      "opened_at": "2026-08-21T23:46:04.548529+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 35,
+      "entry_offer": 37
+    },
+    {
+      "id": 4,
+      "item_id": 4698,
+      "name": "Mud rune",
+      "qty": 3773,
+      "buy_price": 106,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T23:54:04.768942+00:00",
+      "note": "auto",
+      "entry_sell": 106,
+      "entry_offer": 110
+    },
+    {
+      "id": 5,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 754,
+      "buy_price": 530,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T23:58:04.846769+00:00",
+      "note": "auto",
+      "entry_sell": 530,
+      "entry_offer": 555
     }
   ]
 }
