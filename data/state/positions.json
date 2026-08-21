@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 2357,
-      "name": "Gold bar",
-      "qty": 1160,
-      "buy_price": 83,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T06:25:39.374083+00:00",
-      "note": "auto",
-      "entry_sell": 83,
-      "entry_offer": 86
-    }
-  ]
+  "positions": []
 }
