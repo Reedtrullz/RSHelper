@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 3,
-      "item_id": 564,
-      "name": "Cosmic rune",
-      "qty": 1257,
-      "buy_price": 105,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T22:20:01.715954+00:00",
-      "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 110
-    }
-  ]
+  "positions": []
 }
