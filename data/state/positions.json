@@ -2,39 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 374,
-      "buy_price": 97,
+      "item_id": 2349,
+      "name": "Bronze bar",
+      "qty": 143,
+      "buy_price": 61,
       "direction": "traditional",
-      "opened_at": "2026-08-21T22:46:03.124691+00:00",
+      "opened_at": "2026-08-21T23:14:03.847493+00:00",
       "note": "auto",
-      "entry_sell": 97,
-      "entry_offer": 101
+      "entry_sell": 61,
+      "entry_offer": 64
     },
     {
       "id": 2,
-      "item_id": 1621,
-      "name": "Uncut emerald",
-      "qty": 647,
-      "buy_price": 461,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 622,
+      "buy_price": 147,
       "direction": "traditional",
-      "opened_at": "2026-08-21T22:58:03.505539+00:00",
+      "opened_at": "2026-08-21T23:14:03.848028+00:00",
       "note": "auto",
-      "entry_sell": 461,
-      "entry_offer": 482
-    },
-    {
-      "id": 3,
-      "item_id": 24607,
-      "name": "Blighted ancient ice sack",
-      "qty": 1020,
-      "buy_price": 392,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T22:58:03.506044+00:00",
-      "note": "auto",
-      "entry_sell": 392,
-      "entry_offer": 407
+      "entry_sell": 147,
+      "entry_offer": 154
     }
   ]
 }
