@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 1958,
-      "buy_price": 44,
+      "id": 2,
+      "item_id": 1944,
+      "name": "Egg",
+      "qty": 6244,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-21T03:33:33.739358+00:00",
+      "opened_at": "2026-08-21T04:01:35.302381+00:00",
       "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 42
+      "entry_sell": 27,
+      "entry_offer": 28
+    },
+    {
+      "id": 3,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 117,
+      "buy_price": 398,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T04:05:35.361929+00:00",
+      "note": "auto",
+      "entry_sell": 398,
+      "entry_offer": 415
+    },
+    {
+      "id": 4,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 1920,
+      "buy_price": 124,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T04:07:34.154651+00:00",
+      "note": "auto",
+      "entry_sell": 124,
+      "entry_offer": 130
     }
   ]
 }
