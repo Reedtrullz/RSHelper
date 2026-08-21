@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 28872,
-      "name": "Sunlight antler bolts",
-      "qty": 260,
-      "buy_price": 195,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 1095,
+      "buy_price": 73,
       "direction": "traditional",
-      "opened_at": "2026-08-21T05:53:38.505055+00:00",
+      "opened_at": "2026-08-21T06:09:38.879084+00:00",
       "note": "auto",
-      "entry_sell": 195,
-      "entry_offer": 202
+      "entry_sell": 73,
+      "entry_offer": 77
     }
   ]
 }
