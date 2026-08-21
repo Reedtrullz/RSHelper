@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 2349,
+      "name": "Bronze bar",
+      "qty": 811,
+      "buy_price": 61,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T07:29:40.908991+00:00",
+      "note": "auto",
+      "entry_sell": 61,
+      "entry_offer": 64
+    },
+    {
+      "id": 2,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 110,
+      "buy_price": 370,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T07:29:40.909582+00:00",
+      "note": "auto",
+      "entry_sell": 370,
+      "entry_offer": 387
+    },
+    {
+      "id": 3,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 109,
+      "buy_price": 122,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T07:29:40.909945+00:00",
+      "note": "auto",
+      "entry_sell": 122,
+      "entry_offer": 127
+    }
+  ]
 }
