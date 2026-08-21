@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 10033,
-      "name": "Chinchompa",
-      "qty": 152,
-      "buy_price": 892,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T01:13:28.788195+00:00",
-      "note": "auto",
-      "entry_sell": 892,
-      "entry_offer": 933
-    }
-  ]
+  "positions": []
 }
