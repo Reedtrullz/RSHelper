@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 255,
-      "name": "Harralander",
-      "qty": 117,
-      "buy_price": 398,
+      "id": 1,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1190,
+      "buy_price": 336,
       "direction": "traditional",
-      "opened_at": "2026-08-21T04:05:35.361929+00:00",
+      "opened_at": "2026-08-21T04:53:36.574058+00:00",
       "note": "auto",
-      "entry_sell": 398,
-      "entry_offer": 415
+      "entry_sell": 336,
+      "entry_offer": 350
     },
     {
-      "id": 4,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 293,
-      "buy_price": 230,
+      "id": 2,
+      "item_id": 573,
+      "name": "Air orb",
+      "qty": 129,
+      "buy_price": 1926,
       "direction": "traditional",
-      "opened_at": "2026-08-21T04:29:35.826485+00:00",
+      "opened_at": "2026-08-21T04:53:36.574967+00:00",
       "note": "auto",
-      "entry_sell": 230,
-      "entry_offer": 243
-    },
-    {
-      "id": 5,
-      "item_id": 536,
-      "name": "Dragon bones",
-      "qty": 132,
-      "buy_price": 3030,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T04:37:36.108195+00:00",
-      "note": "auto",
-      "entry_sell": 3030,
-      "entry_offer": 3189
+      "entry_sell": 1926,
+      "entry_offer": 1995
     }
   ]
 }
