@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 806,
-      "name": "Bronze dart",
-      "qty": 300,
-      "buy_price": 26,
+      "id": 2,
+      "item_id": 10033,
+      "name": "Chinchompa",
+      "qty": 152,
+      "buy_price": 892,
       "direction": "traditional",
-      "opened_at": "2026-08-21T00:53:28.514188+00:00",
+      "opened_at": "2026-08-21T01:13:28.788195+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 25
+      "entry_sell": 892,
+      "entry_offer": 933
     }
   ]
 }
