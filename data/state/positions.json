@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 22786,
-      "name": "Hydra bones",
-      "qty": 52,
-      "buy_price": 7605,
+      "item_id": 561,
+      "name": "Nature rune",
+      "qty": 2836,
+      "buy_price": 141,
       "direction": "traditional",
-      "opened_at": "2026-08-21T02:01:30.396689+00:00",
+      "opened_at": "2026-08-21T03:05:32.410454+00:00",
       "note": "auto",
-      "entry_sell": 7605,
-      "entry_offer": 7900
+      "entry_sell": 141,
+      "entry_offer": 147
     }
   ]
 }
