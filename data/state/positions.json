@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 146,
       "entry_offer": 154
+    },
+    {
+      "id": 3,
+      "item_id": 1987,
+      "name": "Grapes",
+      "qty": 2695,
+      "buy_price": 66,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T10:25:46.771906+00:00",
+      "note": "auto",
+      "entry_sell": 66,
+      "entry_offer": 69
     }
   ]
 }
