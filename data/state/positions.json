@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 2434,
-      "name": "Prayer potion(4)",
-      "qty": 44,
-      "buy_price": 8926,
+      "item_id": 11260,
+      "name": "Impling jar",
+      "qty": 540,
+      "buy_price": 317,
       "direction": "traditional",
-      "opened_at": "2026-08-21T11:41:48.203046+00:00",
+      "opened_at": "2026-08-21T11:45:48.343072+00:00",
       "note": "auto",
-      "entry_sell": 8926,
-      "entry_offer": 9265
+      "entry_sell": 317,
+      "entry_offer": 332
+    },
+    {
+      "id": 3,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 115,
+      "buy_price": 97,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T11:49:48.471604+00:00",
+      "note": "auto",
+      "entry_sell": 97,
+      "entry_offer": 92
     }
   ]
 }
