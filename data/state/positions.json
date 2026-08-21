@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 824,
-      "name": "Rune dart tip",
-      "qty": 140,
-      "buy_price": 1050,
+      "id": 4,
+      "item_id": 442,
+      "name": "Silver ore",
+      "qty": 678,
+      "buy_price": 64,
       "direction": "traditional",
-      "opened_at": "2026-08-21T10:37:46.930549+00:00",
+      "opened_at": "2026-08-21T11:13:47.638937+00:00",
       "note": "auto",
-      "entry_sell": 1050,
-      "entry_offer": 1097
+      "entry_sell": 64,
+      "entry_offer": 67
     }
   ]
 }
