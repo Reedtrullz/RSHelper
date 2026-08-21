@@ -14,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 29174,
-      "name": "Moonlight antelope fur",
-      "qty": 111,
-      "buy_price": 420,
+      "item_id": 821,
+      "name": "Steel dart tip",
+      "qty": 1033,
+      "buy_price": 86,
       "direction": "traditional",
-      "opened_at": "2026-08-21T20:21:59.450407+00:00",
+      "opened_at": "2026-08-21T20:29:59.629215+00:00",
       "note": "auto",
-      "entry_sell": 420,
-      "entry_offer": 441
+      "entry_sell": 86,
+      "entry_offer": 90
     }
   ]
 }
