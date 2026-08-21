@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 1625,
-      "buy_price": 43,
+      "id": 3,
+      "item_id": 567,
+      "name": "Unpowered orb",
+      "qty": 312,
+      "buy_price": 65,
       "direction": "traditional",
-      "opened_at": "2026-08-21T13:25:50.264385+00:00",
+      "opened_at": "2026-08-21T13:29:50.559805+00:00",
       "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
+      "entry_sell": 65,
+      "entry_offer": 62
+    },
+    {
+      "id": 4,
+      "item_id": 592,
+      "name": "Ashes",
+      "qty": 1302,
+      "buy_price": 38,
+      "direction": "traditional",
+      "opened_at": "2026-08-21T13:41:50.430310+00:00",
+      "note": "auto",
+      "entry_sell": 38,
+      "entry_offer": 40
     }
   ]
 }
