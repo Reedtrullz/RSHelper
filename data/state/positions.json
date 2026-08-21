@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 7605,
       "entry_offer": 7900
-    },
-    {
-      "id": 3,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 183,
-      "buy_price": 1605,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T02:33:31.040445+00:00",
-      "note": "auto",
-      "entry_sell": 1605,
-      "entry_offer": 1680
-    },
-    {
-      "id": 4,
-      "item_id": 2444,
-      "name": "Ranging potion(4)",
-      "qty": 151,
-      "buy_price": 2049,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T02:35:30.042468+00:00",
-      "note": "auto",
-      "entry_sell": 2049,
-      "entry_offer": 2146
     }
   ]
 }
