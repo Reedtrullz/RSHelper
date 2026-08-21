@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 5321,
-      "name": "Watermelon seed",
-      "qty": 138,
-      "buy_price": 246,
+      "id": 1,
+      "item_id": 383,
+      "name": "Raw shark",
+      "qty": 600,
+      "buy_price": 666,
       "direction": "traditional",
-      "opened_at": "2026-08-21T15:37:52.922119+00:00",
+      "opened_at": "2026-08-21T15:57:53.418858+00:00",
       "note": "auto",
-      "entry_sell": 246,
-      "entry_offer": 235
+      "entry_sell": 666,
+      "entry_offer": 691
     }
   ]
 }
