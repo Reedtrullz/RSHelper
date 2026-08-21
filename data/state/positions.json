@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 739,
-      "buy_price": 27,
+      "id": 2,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 391,
+      "buy_price": 1022,
       "direction": "traditional",
-      "opened_at": "2026-08-21T15:05:52.406657+00:00",
+      "opened_at": "2026-08-21T15:13:52.353149+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 26
+      "entry_sell": 1022,
+      "entry_offer": 1060
     }
   ]
 }
