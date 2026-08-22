@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 114,
-      "buy_price": 1022,
+      "id": 4,
+      "item_id": 2454,
+      "name": "Antifire potion(3)",
+      "qty": 186,
+      "buy_price": 426,
       "direction": "traditional",
-      "opened_at": "2026-08-22T19:58:45.011526+00:00",
+      "opened_at": "2026-08-22T20:38:46.968721+00:00",
       "note": "auto",
-      "entry_sell": 1022,
-      "entry_offer": 1080
+      "entry_sell": 426,
+      "entry_offer": 448
     },
     {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 2367,
-      "buy_price": 27,
+      "id": 5,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 171,
+      "buy_price": 126,
       "direction": "traditional",
-      "opened_at": "2026-08-22T20:28:45.400343+00:00",
+      "opened_at": "2026-08-22T20:46:47.293749+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 28
-    },
-    {
-      "id": 3,
-      "item_id": 2970,
-      "name": "Mort myre fungus",
-      "qty": 241,
-      "buy_price": 255,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T20:32:45.475729+00:00",
-      "note": "auto",
-      "entry_sell": 255,
-      "entry_offer": 265
+      "entry_sell": 126,
+      "entry_offer": 120
     }
   ]
 }
