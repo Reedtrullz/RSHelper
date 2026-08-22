@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 114,
+      "buy_price": 1022,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T19:58:45.011526+00:00",
+      "note": "auto",
+      "entry_sell": 1022,
+      "entry_offer": 1080
+    }
+  ]
 }
