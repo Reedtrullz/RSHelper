@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 11260,
-      "name": "Impling jar",
-      "qty": 111,
-      "buy_price": 316,
+      "id": 3,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 192,
+      "buy_price": 2077,
       "direction": "traditional",
-      "opened_at": "2026-08-22T16:14:35.551707+00:00",
+      "opened_at": "2026-08-22T16:22:35.666232+00:00",
       "note": "auto",
-      "entry_sell": 316,
-      "entry_offer": 329
+      "entry_sell": 2077,
+      "entry_offer": 2162
+    },
+    {
+      "id": 4,
+      "item_id": 9381,
+      "name": "Runite bolts (unf)",
+      "qty": 508,
+      "buy_price": 123,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T16:26:35.997082+00:00",
+      "note": "auto",
+      "entry_sell": 123,
+      "entry_offer": 130
+    },
+    {
+      "id": 5,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 766,
+      "buy_price": 522,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T16:32:34.859720+00:00",
+      "note": "auto",
+      "entry_sell": 522,
+      "entry_offer": 548
     }
   ]
 }
