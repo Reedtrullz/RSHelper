@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 21622,
-      "name": "Volcanic ash",
-      "qty": 408,
-      "buy_price": 106,
+      "item_id": 6332,
+      "name": "Mahogany logs",
+      "qty": 2666,
+      "buy_price": 150,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:02:11.907745+00:00",
+      "opened_at": "2026-08-22T04:18:12.489131+00:00",
       "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 112
-    },
-    {
-      "id": 2,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 631,
-      "buy_price": 633,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T04:02:11.908664+00:00",
-      "note": "auto",
-      "entry_sell": 633,
-      "entry_offer": 658
+      "entry_sell": 150,
+      "entry_offer": 158
     }
   ]
 }
