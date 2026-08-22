@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 126,
       "entry_offer": 120
+    },
+    {
+      "id": 6,
+      "item_id": 4697,
+      "name": "Smoke rune",
+      "qty": 5954,
+      "buy_price": 60,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T21:00:46.264312+00:00",
+      "note": "auto",
+      "entry_sell": 60,
+      "entry_offer": 63
     }
   ]
 }
