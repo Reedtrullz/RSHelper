@@ -13,18 +13,6 @@
       "entry_offer": 1368
     },
     {
-      "id": 8,
-      "item_id": 359,
-      "name": "Raw tuna",
-      "qty": 480,
-      "buy_price": 45,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T00:54:07.031474+00:00",
-      "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 43
-    },
-    {
       "id": 9,
       "item_id": 449,
       "name": "Adamantite ore",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 528,
       "entry_offer": 555
+    },
+    {
+      "id": 10,
+      "item_id": 564,
+      "name": "Cosmic rune",
+      "qty": 2911,
+      "buy_price": 109,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T01:14:07.565937+00:00",
+      "note": "auto",
+      "entry_sell": 109,
+      "entry_offer": 115
     }
   ]
 }
