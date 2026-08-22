@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 6,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 277,
-      "buy_price": 49,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T15:08:31.057366+00:00",
-      "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
-    },
-    {
-      "id": 7,
-      "item_id": 22804,
-      "name": "Dragon knife",
-      "qty": 115,
-      "buy_price": 3470,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T15:10:32.715682+00:00",
-      "note": "auto",
-      "entry_sell": 3470,
-      "entry_offer": 3624
-    }
-  ]
+  "positions": []
 }
