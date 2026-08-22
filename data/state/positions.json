@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 35,
       "entry_offer": 37
-    },
-    {
-      "id": 4,
-      "item_id": 4698,
-      "name": "Mud rune",
-      "qty": 3773,
-      "buy_price": 106,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T23:54:04.768942+00:00",
-      "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 110
-    },
-    {
-      "id": 5,
-      "item_id": 29784,
-      "name": "Araxyte venom sac",
-      "qty": 141,
-      "buy_price": 1013,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T00:10:05.473704+00:00",
-      "note": "auto",
-      "entry_sell": 1013,
-      "entry_offer": 1053
     }
   ]
 }
