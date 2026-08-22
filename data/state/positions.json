@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 244,
-      "buy_price": 282,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T05:06:13.978690+00:00",
-      "note": "auto",
-      "entry_sell": 282,
-      "entry_offer": 296
-    },
-    {
       "id": 2,
       "item_id": 31916,
       "name": "Dragon cannonball",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 226,
-      "buy_price": 185,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 152,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-22T05:06:13.980449+00:00",
+      "opened_at": "2026-08-22T05:10:14.350159+00:00",
       "note": "auto",
-      "entry_sell": 185,
-      "entry_offer": 192
+      "entry_sell": 27,
+      "entry_offer": 26
+    },
+    {
+      "id": 4,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 172,
+      "buy_price": 955,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T05:22:14.916063+00:00",
+      "note": "auto",
+      "entry_sell": 955,
+      "entry_offer": 1000
     }
   ]
 }
