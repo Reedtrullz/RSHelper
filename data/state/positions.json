@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 13441,
-      "name": "Anglerfish",
-      "qty": 228,
-      "buy_price": 1751,
+      "id": 2,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 121,
+      "buy_price": 2012,
       "direction": "traditional",
-      "opened_at": "2026-08-22T01:30:08.116104+00:00",
+      "opened_at": "2026-08-22T01:38:08.465509+00:00",
       "note": "auto",
-      "entry_sell": 1751,
-      "entry_offer": 1835
+      "entry_sell": 2012,
+      "entry_offer": 2087
+    },
+    {
+      "id": 3,
+      "item_id": 6034,
+      "name": "Supercompost",
+      "qty": 377,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T01:46:08.494890+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 29
     }
   ]
 }
