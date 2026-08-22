@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 636,
+      "buy_price": 628,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T06:42:17.931844+00:00",
+      "note": "auto",
+      "entry_sell": 628,
+      "entry_offer": 658
+    }
+  ]
 }
