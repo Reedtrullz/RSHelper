@@ -26,15 +26,15 @@
     },
     {
       "id": 8,
-      "item_id": 4698,
-      "name": "Mud rune",
-      "qty": 2002,
-      "buy_price": 95,
+      "item_id": 1635,
+      "name": "Gold ring",
+      "qty": 99,
+      "buy_price": 142,
       "direction": "traditional",
-      "opened_at": "2026-08-22T21:18:48.426273+00:00",
+      "opened_at": "2026-08-22T21:36:47.973436+00:00",
       "note": "auto",
-      "entry_sell": 95,
-      "entry_offer": 100
+      "entry_sell": 142,
+      "entry_offer": 148
     }
   ]
 }
