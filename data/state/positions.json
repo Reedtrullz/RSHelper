@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1975,
+      "name": "Chocolate dust",
+      "qty": 117,
+      "buy_price": 46,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T22:22:51.179929+00:00",
+      "note": "auto",
+      "entry_sell": 46,
+      "entry_offer": 48
+    }
+  ]
 }
