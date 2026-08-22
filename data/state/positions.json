@@ -14,15 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 385,
-      "name": "Shark",
-      "qty": 400,
-      "buy_price": 1000,
+      "item_id": 822,
+      "name": "Mithril dart tip",
+      "qty": 3960,
+      "buy_price": 101,
       "direction": "traditional",
-      "opened_at": "2026-08-22T07:46:19.857789+00:00",
+      "opened_at": "2026-08-22T08:02:20.515623+00:00",
       "note": "auto",
-      "entry_sell": 1000,
-      "entry_offer": 1035
+      "entry_sell": 101,
+      "entry_offer": 105
     }
   ]
 }
