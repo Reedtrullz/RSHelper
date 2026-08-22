@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 198,
-      "buy_price": 2015,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T06:10:17.048889+00:00",
-      "note": "auto",
-      "entry_sell": 2015,
-      "entry_offer": 2087
-    }
-  ]
+  "positions": []
 }
