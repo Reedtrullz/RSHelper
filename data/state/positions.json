@@ -2,39 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1761,
-      "name": "Soft clay",
-      "qty": 1642,
-      "buy_price": 116,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 244,
+      "buy_price": 282,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:50:13.619784+00:00",
+      "opened_at": "2026-08-22T05:06:13.978690+00:00",
       "note": "auto",
-      "entry_sell": 116,
-      "entry_offer": 122
+      "entry_sell": 282,
+      "entry_offer": 296
     },
     {
       "id": 2,
-      "item_id": 21326,
-      "name": "Amethyst arrow",
-      "qty": 3007,
-      "buy_price": 133,
+      "item_id": 31916,
+      "name": "Dragon cannonball",
+      "qty": 240,
+      "buy_price": 1280,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:50:13.620227+00:00",
+      "opened_at": "2026-08-22T05:06:13.979938+00:00",
       "note": "auto",
-      "entry_sell": 133,
-      "entry_offer": 140
+      "entry_sell": 1280,
+      "entry_offer": 1327
     },
     {
       "id": 3,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1769,
-      "buy_price": 26,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 226,
+      "buy_price": 185,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:50:13.620559+00:00",
+      "opened_at": "2026-08-22T05:06:13.980449+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 185,
+      "entry_offer": 192
     }
   ]
 }
