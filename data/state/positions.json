@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 1749,
-      "name": "Red dragonhide",
-      "qty": 93,
-      "buy_price": 2141,
+      "id": 6,
+      "item_id": 24595,
+      "name": "Blighted karambwan",
+      "qty": 277,
+      "buy_price": 49,
       "direction": "traditional",
-      "opened_at": "2026-08-22T14:32:30.587160+00:00",
+      "opened_at": "2026-08-22T15:08:31.057366+00:00",
       "note": "auto",
-      "entry_sell": 2141,
-      "entry_offer": 2252
+      "entry_sell": 49,
+      "entry_offer": 51
     },
     {
-      "id": 5,
-      "item_id": 1656,
-      "name": "Sapphire necklace",
-      "qty": 82,
-      "buy_price": 444,
+      "id": 7,
+      "item_id": 22804,
+      "name": "Dragon knife",
+      "qty": 115,
+      "buy_price": 3470,
       "direction": "traditional",
-      "opened_at": "2026-08-22T14:54:32.943237+00:00",
+      "opened_at": "2026-08-22T15:10:32.715682+00:00",
       "note": "auto",
-      "entry_sell": 444,
-      "entry_offer": 463
+      "entry_sell": 3470,
+      "entry_offer": 3624
     }
   ]
 }
