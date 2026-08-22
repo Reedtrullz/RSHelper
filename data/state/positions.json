@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 105,
-      "name": "Kwuarm potion (unf)",
-      "qty": 160,
-      "buy_price": 2410,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 1731,
+      "buy_price": 231,
       "direction": "traditional",
-      "opened_at": "2026-08-22T13:04:27.824229+00:00",
+      "opened_at": "2026-08-22T13:24:28.186476+00:00",
       "note": "auto",
-      "entry_sell": 2410,
-      "entry_offer": 2535
+      "entry_sell": 231,
+      "entry_offer": 244
+    },
+    {
+      "id": 2,
+      "item_id": 573,
+      "name": "Air orb",
+      "qty": 85,
+      "buy_price": 1808,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T13:24:28.187367+00:00",
+      "note": "auto",
+      "entry_sell": 1808,
+      "entry_offer": 1895
+    },
+    {
+      "id": 3,
+      "item_id": 255,
+      "name": "Harralander",
+      "qty": 80,
+      "buy_price": 400,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T13:24:28.187847+00:00",
+      "note": "auto",
+      "entry_sell": 400,
+      "entry_offer": 423
     }
   ]
 }
