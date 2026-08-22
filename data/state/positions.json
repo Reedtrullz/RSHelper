@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31970,
-      "name": "Teak repair kit",
-      "qty": 109,
-      "buy_price": 475,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T07:26:19.241703+00:00",
-      "note": "auto",
-      "entry_sell": 475,
-      "entry_offer": 498
-    },
-    {
       "id": 3,
       "item_id": 822,
       "name": "Mithril dart tip",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 101,
       "entry_offer": 105
+    },
+    {
+      "id": 4,
+      "item_id": 239,
+      "name": "White berries",
+      "qty": 125,
+      "buy_price": 610,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T08:46:22.156105+00:00",
+      "note": "auto",
+      "entry_sell": 610,
+      "entry_offer": 640
     }
   ]
 }
