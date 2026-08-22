@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 140,
       "entry_offer": 145
+    },
+    {
+      "id": 2,
+      "item_id": 99,
+      "name": "Ranarr potion (unf)",
+      "qty": 66,
+      "buy_price": 6022,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T02:32:08.434588+00:00",
+      "note": "auto",
+      "entry_sell": 6022,
+      "entry_offer": 6239
     }
   ]
 }
