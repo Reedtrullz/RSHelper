@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 31916,
-      "name": "Dragon cannonball",
-      "qty": 240,
-      "buy_price": 1280,
+      "id": 1,
+      "item_id": 213,
+      "name": "Grimy kwuarm",
+      "qty": 198,
+      "buy_price": 2015,
       "direction": "traditional",
-      "opened_at": "2026-08-22T05:06:13.979938+00:00",
+      "opened_at": "2026-08-22T06:10:17.048889+00:00",
       "note": "auto",
-      "entry_sell": 1280,
-      "entry_offer": 1327
+      "entry_sell": 2015,
+      "entry_offer": 2087
     }
   ]
 }
