@@ -13,28 +13,28 @@
       "entry_offer": 448
     },
     {
-      "id": 5,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 171,
-      "buy_price": 126,
+      "id": 7,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 318,
+      "buy_price": 145,
       "direction": "traditional",
-      "opened_at": "2026-08-22T20:46:47.293749+00:00",
+      "opened_at": "2026-08-22T21:10:48.073774+00:00",
       "note": "auto",
-      "entry_sell": 126,
-      "entry_offer": 120
+      "entry_sell": 145,
+      "entry_offer": 153
     },
     {
-      "id": 6,
-      "item_id": 4697,
-      "name": "Smoke rune",
-      "qty": 5954,
-      "buy_price": 60,
+      "id": 8,
+      "item_id": 4698,
+      "name": "Mud rune",
+      "qty": 2002,
+      "buy_price": 95,
       "direction": "traditional",
-      "opened_at": "2026-08-22T21:00:46.264312+00:00",
+      "opened_at": "2026-08-22T21:18:48.426273+00:00",
       "note": "auto",
-      "entry_sell": 60,
-      "entry_offer": 63
+      "entry_sell": 95,
+      "entry_offer": 100
     }
   ]
 }
