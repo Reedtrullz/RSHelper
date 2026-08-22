@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 213,
-      "name": "Grimy kwuarm",
-      "qty": 121,
-      "buy_price": 2012,
+      "id": 1,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1487,
+      "buy_price": 140,
       "direction": "traditional",
-      "opened_at": "2026-08-22T01:38:08.465509+00:00",
+      "opened_at": "2026-08-22T02:14:09.650073+00:00",
       "note": "auto",
-      "entry_sell": 2012,
-      "entry_offer": 2087
-    },
-    {
-      "id": 3,
-      "item_id": 6034,
-      "name": "Supercompost",
-      "qty": 377,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T01:46:08.494890+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
+      "entry_sell": 140,
+      "entry_offer": 145
     }
   ]
 }
