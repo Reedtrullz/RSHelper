@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2297,
-      "name": "Anchovy pizza",
-      "qty": 100,
-      "buy_price": 485,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T06:54:18.363417+00:00",
-      "note": "auto",
-      "entry_sell": 485,
-      "entry_offer": 509
-    },
-    {
       "id": 2,
       "item_id": 31970,
       "name": "Teak repair kit",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 475,
       "entry_offer": 498
+    },
+    {
+      "id": 3,
+      "item_id": 385,
+      "name": "Shark",
+      "qty": 400,
+      "buy_price": 1000,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T07:46:19.857789+00:00",
+      "note": "auto",
+      "entry_sell": 1000,
+      "entry_offer": 1035
     }
   ]
 }
