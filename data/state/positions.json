@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 830,
+      "name": "Rune javelin",
+      "qty": 582,
+      "buy_price": 141,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T03:26:10.804391+00:00",
+      "note": "auto",
+      "entry_sell": 141,
+      "entry_offer": 148
+    },
+    {
+      "id": 3,
+      "item_id": 207,
+      "name": "Grimy ranarr weed",
+      "qty": 71,
+      "buy_price": 5606,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T03:30:11.320245+00:00",
+      "note": "auto",
+      "entry_sell": 5606,
+      "entry_offer": 5813
+    }
+  ]
 }
