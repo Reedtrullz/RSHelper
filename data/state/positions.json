@@ -13,28 +13,16 @@
       "entry_offer": 640
     },
     {
-      "id": 5,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 371,
-      "buy_price": 396,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T09:22:23.437963+00:00",
-      "note": "auto",
-      "entry_sell": 396,
-      "entry_offer": 414
-    },
-    {
       "id": 6,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 747,
-      "buy_price": 535,
+      "item_id": 9142,
+      "name": "Mithril bolts",
+      "qty": 410,
+      "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-22T09:22:23.438922+00:00",
+      "opened_at": "2026-08-22T09:26:23.654462+00:00",
       "note": "auto",
-      "entry_sell": 535,
-      "entry_offer": 556
+      "entry_sell": 27,
+      "entry_offer": 26
     }
   ]
 }
