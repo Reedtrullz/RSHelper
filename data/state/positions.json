@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 35,
       "entry_offer": 37
+    },
+    {
+      "id": 5,
+      "item_id": 30771,
+      "name": "Aether catalyst",
+      "qty": 1212,
+      "buy_price": 330,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T00:38:06.172169+00:00",
+      "note": "auto",
+      "entry_sell": 330,
+      "entry_offer": 344
+    },
+    {
+      "id": 6,
+      "item_id": 24598,
+      "name": "Blighted super restore(4)",
+      "qty": 147,
+      "buy_price": 2716,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T00:44:05.192012+00:00",
+      "note": "auto",
+      "entry_sell": 2716,
+      "entry_offer": 2849
     }
   ]
 }
