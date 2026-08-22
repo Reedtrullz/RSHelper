@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 217,
-      "name": "Grimy dwarf weed",
-      "qty": 86,
-      "buy_price": 1245,
+      "item_id": 1761,
+      "name": "Soft clay",
+      "qty": 1642,
+      "buy_price": 116,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:34:13.084829+00:00",
+      "opened_at": "2026-08-22T04:50:13.619784+00:00",
       "note": "auto",
-      "entry_sell": 1245,
-      "entry_offer": 1305
+      "entry_sell": 116,
+      "entry_offer": 122
+    },
+    {
+      "id": 2,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 3007,
+      "buy_price": 133,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T04:50:13.620227+00:00",
+      "note": "auto",
+      "entry_sell": 133,
+      "entry_offer": 140
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1769,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T04:50:13.620559+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
