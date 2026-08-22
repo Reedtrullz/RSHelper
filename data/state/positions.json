@@ -1,40 +1,40 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 1973,
-      "name": "Chocolate bar",
-      "qty": 1300,
-      "buy_price": 35,
-      "direction": "traditional",
-      "opened_at": "2026-08-21T23:46:04.548529+00:00",
-      "note": "auto",
-      "entry_sell": 35,
-      "entry_offer": 37
-    },
-    {
-      "id": 5,
-      "item_id": 30771,
-      "name": "Aether catalyst",
-      "qty": 1212,
-      "buy_price": 330,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T00:38:06.172169+00:00",
-      "note": "auto",
-      "entry_sell": 330,
-      "entry_offer": 344
-    },
-    {
       "id": 6,
-      "item_id": 24598,
-      "name": "Blighted super restore(4)",
-      "qty": 147,
-      "buy_price": 2716,
+      "item_id": 2481,
+      "name": "Lantadyme",
+      "qty": 215,
+      "buy_price": 1316,
       "direction": "traditional",
-      "opened_at": "2026-08-22T00:44:05.192012+00:00",
+      "opened_at": "2026-08-22T00:48:05.366916+00:00",
       "note": "auto",
-      "entry_sell": 2716,
-      "entry_offer": 2849
+      "entry_sell": 1316,
+      "entry_offer": 1368
+    },
+    {
+      "id": 8,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 480,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T00:54:07.031474+00:00",
+      "note": "auto",
+      "entry_sell": 45,
+      "entry_offer": 43
+    },
+    {
+      "id": 9,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 757,
+      "buy_price": 528,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T01:00:05.922207+00:00",
+      "note": "auto",
+      "entry_sell": 528,
+      "entry_offer": 555
     }
   ]
 }
