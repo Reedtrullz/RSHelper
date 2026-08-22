@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 239,
-      "name": "White berries",
-      "qty": 125,
-      "buy_price": 610,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T08:46:22.156105+00:00",
-      "note": "auto",
-      "entry_sell": 610,
-      "entry_offer": 640
-    },
-    {
       "id": 6,
       "item_id": 9142,
       "name": "Mithril bolts",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 27,
       "entry_offer": 26
+    },
+    {
+      "id": 7,
+      "item_id": 1521,
+      "name": "Oak logs",
+      "qty": 184,
+      "buy_price": 40,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T09:54:24.305487+00:00",
+      "note": "auto",
+      "entry_sell": 40,
+      "entry_offer": 42
+    },
+    {
+      "id": 8,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 242,
+      "buy_price": 131,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T09:54:24.306443+00:00",
+      "note": "auto",
+      "entry_sell": 131,
+      "entry_offer": 138
     }
   ]
 }
