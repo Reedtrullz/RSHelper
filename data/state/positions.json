@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 1731,
-      "buy_price": 231,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T13:24:28.186476+00:00",
-      "note": "auto",
-      "entry_sell": 231,
-      "entry_offer": 244
-    },
-    {
       "id": 2,
       "item_id": 573,
       "name": "Air orb",
@@ -35,6 +23,18 @@
       "note": "auto",
       "entry_sell": 400,
       "entry_offer": 423
+    },
+    {
+      "id": 4,
+      "item_id": 31916,
+      "name": "Dragon cannonball",
+      "qty": 181,
+      "buy_price": 1312,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T13:38:27.350790+00:00",
+      "note": "auto",
+      "entry_sell": 1312,
+      "entry_offer": 1366
     }
   ]
 }
