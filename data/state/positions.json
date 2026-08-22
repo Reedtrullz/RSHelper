@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 410,
+      "id": 2,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 1169,
       "buy_price": 27,
       "direction": "traditional",
-      "opened_at": "2026-08-22T09:26:23.654462+00:00",
+      "opened_at": "2026-08-22T10:22:25.017700+00:00",
       "note": "auto",
       "entry_sell": 27,
-      "entry_offer": 26
+      "entry_offer": 28
     }
   ]
 }
