@@ -14,27 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 9142,
-      "name": "Mithril bolts",
-      "qty": 152,
-      "buy_price": 27,
+      "item_id": 21326,
+      "name": "Amethyst arrow",
+      "qty": 1805,
+      "buy_price": 138,
       "direction": "traditional",
-      "opened_at": "2026-08-22T05:10:14.350159+00:00",
+      "opened_at": "2026-08-22T05:38:15.488075+00:00",
       "note": "auto",
-      "entry_sell": 27,
-      "entry_offer": 26
+      "entry_sell": 138,
+      "entry_offer": 145
     },
     {
       "id": 4,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 172,
-      "buy_price": 955,
+      "item_id": 10033,
+      "name": "Chinchompa",
+      "qty": 117,
+      "buy_price": 883,
       "direction": "traditional",
-      "opened_at": "2026-08-22T05:22:14.916063+00:00",
+      "opened_at": "2026-08-22T05:38:15.489042+00:00",
       "note": "auto",
-      "entry_sell": 955,
-      "entry_offer": 1000
+      "entry_sell": 883,
+      "entry_offer": 917
     }
   ]
 }
