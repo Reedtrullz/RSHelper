@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 2666,
-      "buy_price": 150,
+      "item_id": 217,
+      "name": "Grimy dwarf weed",
+      "qty": 86,
+      "buy_price": 1245,
       "direction": "traditional",
-      "opened_at": "2026-08-22T04:18:12.489131+00:00",
+      "opened_at": "2026-08-22T04:34:13.084829+00:00",
       "note": "auto",
-      "entry_sell": 150,
-      "entry_offer": 158
+      "entry_sell": 1245,
+      "entry_offer": 1305
     }
   ]
 }
