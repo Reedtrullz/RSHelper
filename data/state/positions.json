@@ -14,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 1521,
-      "name": "Oak logs",
-      "qty": 123,
-      "buy_price": 40,
+      "item_id": 1656,
+      "name": "Sapphire necklace",
+      "qty": 82,
+      "buy_price": 444,
       "direction": "traditional",
-      "opened_at": "2026-08-22T14:40:31.106687+00:00",
+      "opened_at": "2026-08-22T14:54:32.943237+00:00",
       "note": "auto",
-      "entry_sell": 40,
-      "entry_offer": 42
+      "entry_sell": 444,
+      "entry_offer": 463
     }
   ]
 }
