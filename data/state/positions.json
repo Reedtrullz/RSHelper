@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 2251,
       "entry_offer": 2340
+    },
+    {
+      "id": 6,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 840,
+      "buy_price": 220,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T12:14:26.990136+00:00",
+      "note": "auto",
+      "entry_sell": 220,
+      "entry_offer": 230
+    },
+    {
+      "id": 7,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 528,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T12:20:25.801968+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
