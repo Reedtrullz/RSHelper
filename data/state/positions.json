@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24595,
-      "name": "Blighted karambwan",
-      "qty": 315,
-      "buy_price": 49,
+      "item_id": 9191,
+      "name": "Ruby bolt tips",
+      "qty": 798,
+      "buy_price": 86,
       "direction": "traditional",
-      "opened_at": "2026-08-22T18:18:40.802200+00:00",
+      "opened_at": "2026-08-22T18:38:41.851894+00:00",
       "note": "auto",
-      "entry_sell": 49,
-      "entry_offer": 51
+      "entry_sell": 86,
+      "entry_offer": 90
+    },
+    {
+      "id": 2,
+      "item_id": 6018,
+      "name": "Poison ivy berries",
+      "qty": 134,
+      "buy_price": 195,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T18:38:41.852155+00:00",
+      "note": "auto",
+      "entry_sell": 195,
+      "entry_offer": 186
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1916,
+      "buy_price": 27,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T18:40:40.506091+00:00",
+      "note": "auto",
+      "entry_sell": 27,
+      "entry_offer": 28
     }
   ]
 }
