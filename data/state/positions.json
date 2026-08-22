@@ -11,30 +11,6 @@
       "note": "auto",
       "entry_sell": 2251,
       "entry_offer": 2340
-    },
-    {
-      "id": 5,
-      "item_id": 1965,
-      "name": "Cabbage",
-      "qty": 105,
-      "buy_price": 25,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T11:38:26.240139+00:00",
-      "note": "auto",
-      "entry_sell": 25,
-      "entry_offer": 26
-    },
-    {
-      "id": 6,
-      "item_id": 6034,
-      "name": "Supercompost",
-      "qty": 248,
-      "buy_price": 28,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T11:38:26.241094+00:00",
-      "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 29
     }
   ]
 }
