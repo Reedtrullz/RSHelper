@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 196,
       "entry_offer": 204
+    },
+    {
+      "id": 4,
+      "item_id": 2998,
+      "name": "Toadflax",
+      "qty": 156,
+      "buy_price": 2251,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T11:22:26.137144+00:00",
+      "note": "auto",
+      "entry_sell": 2251,
+      "entry_offer": 2340
     }
   ]
 }
