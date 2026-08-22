@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 636,
-      "buy_price": 628,
+      "item_id": 2297,
+      "name": "Anchovy pizza",
+      "qty": 100,
+      "buy_price": 485,
       "direction": "traditional",
-      "opened_at": "2026-08-22T06:42:17.931844+00:00",
+      "opened_at": "2026-08-22T06:54:18.363417+00:00",
       "note": "auto",
-      "entry_sell": 628,
-      "entry_offer": 658
+      "entry_sell": 485,
+      "entry_offer": 509
+    },
+    {
+      "id": 2,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 3044,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T06:58:18.434054+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
