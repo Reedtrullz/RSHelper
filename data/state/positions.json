@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 3960,
-      "buy_price": 101,
-      "direction": "traditional",
-      "opened_at": "2026-08-22T08:02:20.515623+00:00",
-      "note": "auto",
-      "entry_sell": 101,
-      "entry_offer": 105
-    },
-    {
       "id": 4,
       "item_id": 239,
       "name": "White berries",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 610,
       "entry_offer": 640
+    },
+    {
+      "id": 5,
+      "item_id": 21880,
+      "name": "Wrath rune",
+      "qty": 1230,
+      "buy_price": 325,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T09:06:23.063589+00:00",
+      "note": "auto",
+      "entry_sell": 325,
+      "entry_offer": 342
+    },
+    {
+      "id": 6,
+      "item_id": 28991,
+      "name": "Atlatl dart",
+      "qty": 404,
+      "buy_price": 120,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T09:06:23.064517+00:00",
+      "note": "auto",
+      "entry_sell": 120,
+      "entry_offer": 126
     }
   ]
 }
