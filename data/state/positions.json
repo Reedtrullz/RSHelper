@@ -13,16 +13,28 @@
       "entry_offer": 509
     },
     {
-      "id": 2,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 3044,
-      "buy_price": 26,
+      "id": 3,
+      "item_id": 24589,
+      "name": "Blighted manta ray",
+      "qty": 81,
+      "buy_price": 105,
       "direction": "traditional",
-      "opened_at": "2026-08-22T06:58:18.434054+00:00",
+      "opened_at": "2026-08-22T07:02:18.409572+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 105,
+      "entry_offer": 100
+    },
+    {
+      "id": 4,
+      "item_id": 23733,
+      "name": "Divine ranging potion(4)",
+      "qty": 63,
+      "buy_price": 6277,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T07:14:18.720605+00:00",
+      "note": "auto",
+      "entry_sell": 6277,
+      "entry_offer": 6600
     }
   ]
 }
