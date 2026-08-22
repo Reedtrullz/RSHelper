@@ -1,16 +1,40 @@
 {
   "positions": [
     {
-      "id": 4,
-      "item_id": 31916,
-      "name": "Dragon cannonball",
-      "qty": 181,
-      "buy_price": 1312,
+      "id": 1,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 959,
+      "buy_price": 118,
       "direction": "traditional",
-      "opened_at": "2026-08-22T13:38:27.350790+00:00",
+      "opened_at": "2026-08-22T14:24:30.449353+00:00",
       "note": "auto",
-      "entry_sell": 1312,
-      "entry_offer": 1366
+      "entry_sell": 118,
+      "entry_offer": 124
+    },
+    {
+      "id": 2,
+      "item_id": 4824,
+      "name": "Rune nails",
+      "qty": 529,
+      "buy_price": 756,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T14:24:30.449618+00:00",
+      "note": "auto",
+      "entry_sell": 756,
+      "entry_offer": 788
+    },
+    {
+      "id": 3,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 660,
+      "buy_price": 528,
+      "direction": "traditional",
+      "opened_at": "2026-08-22T14:24:30.449869+00:00",
+      "note": "auto",
+      "entry_sell": 528,
+      "entry_offer": 548
     }
   ]
 }
