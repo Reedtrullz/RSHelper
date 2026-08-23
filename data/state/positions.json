@@ -13,16 +13,28 @@
       "entry_offer": 284
     },
     {
-      "id": 4,
-      "item_id": 32907,
-      "name": "Ironwood logs",
-      "qty": 1931,
-      "buy_price": 125,
+      "id": 5,
+      "item_id": 575,
+      "name": "Earth orb",
+      "qty": 92,
+      "buy_price": 1434,
       "direction": "traditional",
-      "opened_at": "2026-08-23T20:03:28.361696+00:00",
+      "opened_at": "2026-08-23T20:15:28.558603+00:00",
       "note": "auto",
-      "entry_sell": 125,
-      "entry_offer": 130
+      "entry_sell": 1434,
+      "entry_offer": 1497
+    },
+    {
+      "id": 6,
+      "item_id": 2,
+      "name": "Steel cannonball",
+      "qty": 1666,
+      "buy_price": 240,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T20:19:28.987467+00:00",
+      "note": "auto",
+      "entry_sell": 240,
+      "entry_offer": 252
     }
   ]
 }
