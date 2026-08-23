@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 824,
-      "buy_price": 106,
+      "item_id": 11875,
+      "name": "Broad bolts",
+      "qty": 1023,
+      "buy_price": 54,
       "direction": "traditional",
-      "opened_at": "2026-08-23T04:59:03.976321+00:00",
+      "opened_at": "2026-08-23T05:03:03.910005+00:00",
       "note": "auto",
-      "entry_sell": 106,
-      "entry_offer": 110
+      "entry_sell": 54,
+      "entry_offer": 57
+    },
+    {
+      "id": 2,
+      "item_id": 9242,
+      "name": "Ruby bolts (e)",
+      "qty": 850,
+      "buy_price": 147,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T05:15:04.284684+00:00",
+      "note": "auto",
+      "entry_sell": 147,
+      "entry_offer": 153
+    },
+    {
+      "id": 3,
+      "item_id": 4699,
+      "name": "Lava rune",
+      "qty": 540,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T05:15:04.286226+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
