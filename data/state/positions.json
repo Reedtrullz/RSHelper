@@ -14,27 +14,15 @@
     },
     {
       "id": 8,
-      "item_id": 851,
-      "name": "Maple longbow",
-      "qty": 183,
-      "buy_price": 269,
+      "item_id": 2483,
+      "name": "Lantadyme potion (unf)",
+      "qty": 199,
+      "buy_price": 1524,
       "direction": "traditional",
-      "opened_at": "2026-08-23T15:19:21.861584+00:00",
+      "opened_at": "2026-08-23T16:19:23.421556+00:00",
       "note": "auto",
-      "entry_sell": 269,
-      "entry_offer": 284
-    },
-    {
-      "id": 9,
-      "item_id": 6332,
-      "name": "Mahogany logs",
-      "qty": 2194,
-      "buy_price": 150,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T16:03:22.955178+00:00",
-      "note": "auto",
-      "entry_sell": 150,
-      "entry_offer": 157
+      "entry_sell": 1524,
+      "entry_offer": 1580
     }
   ]
 }
