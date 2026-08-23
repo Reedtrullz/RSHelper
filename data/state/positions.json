@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 107,
-      "name": "Cadantine potion (unf)",
-      "qty": 153,
-      "buy_price": 2601,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T06:45:05.855649+00:00",
-      "note": "auto",
-      "entry_sell": 2601,
-      "entry_offer": 2697
-    },
-    {
       "id": 4,
       "item_id": 4740,
       "name": "Bolt rack",
@@ -26,15 +14,15 @@
     },
     {
       "id": 5,
-      "item_id": 397,
-      "name": "Sea turtle",
-      "qty": 384,
-      "buy_price": 1039,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 952,
+      "buy_price": 173,
       "direction": "traditional",
-      "opened_at": "2026-08-23T07:23:08.442126+00:00",
+      "opened_at": "2026-08-23T07:39:09.251052+00:00",
       "note": "auto",
-      "entry_sell": 1039,
-      "entry_offer": 1088
+      "entry_sell": 173,
+      "entry_offer": 180
     }
   ]
 }
