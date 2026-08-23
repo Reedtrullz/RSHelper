@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 225,
-      "name": "Limpwurt root",
-      "qty": 196,
-      "buy_price": 218,
+      "item_id": 24613,
+      "name": "Blighted entangle sack",
+      "qty": 905,
+      "buy_price": 45,
       "direction": "traditional",
-      "opened_at": "2026-08-23T18:49:27.391902+00:00",
+      "opened_at": "2026-08-23T19:05:30.789363+00:00",
       "note": "auto",
-      "entry_sell": 218,
-      "entry_offer": 230
+      "entry_sell": 45,
+      "entry_offer": 47
+    },
+    {
+      "id": 2,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 798,
+      "buy_price": 501,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T19:05:30.816317+00:00",
+      "note": "auto",
+      "entry_sell": 501,
+      "entry_offer": 521
     }
   ]
 }
