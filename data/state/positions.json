@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 44,
       "entry_offer": 46
+    },
+    {
+      "id": 7,
+      "item_id": 11876,
+      "name": "Unfinished broad bolts",
+      "qty": 701,
+      "buy_price": 57,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T13:51:19.762286+00:00",
+      "note": "auto",
+      "entry_sell": 57,
+      "entry_offer": 60
     }
   ]
 }
