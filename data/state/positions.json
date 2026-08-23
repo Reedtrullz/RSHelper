@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 82,
-      "buy_price": 100,
+      "item_id": 31910,
+      "name": "Mithril cannonball",
+      "qty": 962,
+      "buy_price": 152,
       "direction": "traditional",
-      "opened_at": "2026-08-23T22:11:31.755954+00:00",
+      "opened_at": "2026-08-23T22:57:34.308131+00:00",
       "note": "auto",
-      "entry_sell": 100,
-      "entry_offer": 95
+      "entry_sell": 152,
+      "entry_offer": 159
+    },
+    {
+      "id": 3,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1459,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T23:01:34.404312+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
