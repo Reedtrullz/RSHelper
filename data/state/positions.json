@@ -2,15 +2,39 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 211,
-      "name": "Grimy avantoe",
-      "qty": 183,
-      "buy_price": 1518,
+      "item_id": 2351,
+      "name": "Iron bar",
+      "qty": 179,
+      "buy_price": 155,
       "direction": "traditional",
-      "opened_at": "2026-08-23T21:49:32.182218+00:00",
+      "opened_at": "2026-08-23T22:05:32.800069+00:00",
       "note": "auto",
-      "entry_sell": 1518,
-      "entry_offer": 1578
+      "entry_sell": 155,
+      "entry_offer": 163
+    },
+    {
+      "id": 2,
+      "item_id": 3144,
+      "name": "Cooked karambwan",
+      "qty": 220,
+      "buy_price": 420,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T22:05:32.800698+00:00",
+      "note": "auto",
+      "entry_sell": 420,
+      "entry_offer": 436
+    },
+    {
+      "id": 3,
+      "item_id": 1621,
+      "name": "Uncut emerald",
+      "qty": 720,
+      "buy_price": 452,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T22:05:32.801049+00:00",
+      "note": "auto",
+      "entry_sell": 452,
+      "entry_offer": 469
     }
   ]
 }
