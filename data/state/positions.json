@@ -1,28 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 2,
-      "item_id": 1119,
-      "name": "Steel platebody",
-      "qty": 121,
-      "buy_price": 925,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T08:27:11.141274+00:00",
-      "note": "auto",
-      "entry_sell": 925,
-      "entry_offer": 961
-    },
-    {
-      "id": 3,
-      "item_id": 2970,
-      "name": "Mort myre fungus",
-      "qty": 313,
-      "buy_price": 277,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T08:43:11.820828+00:00",
-      "note": "auto",
-      "entry_sell": 277,
-      "entry_offer": 291
-    }
-  ]
+  "positions": []
 }
