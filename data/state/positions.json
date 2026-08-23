@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 44,
       "entry_offer": 46
-    },
-    {
-      "id": 7,
-      "item_id": 851,
-      "name": "Maple longbow",
-      "qty": 99,
-      "buy_price": 273,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T12:11:17.787264+00:00",
-      "note": "auto",
-      "entry_sell": 273,
-      "entry_offer": 286
     }
   ]
 }
