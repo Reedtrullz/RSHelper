@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1637,
-      "name": "Sapphire ring",
-      "qty": 118,
-      "buy_price": 404,
+      "id": 3,
+      "item_id": 24592,
+      "name": "Blighted anglerfish",
+      "qty": 117,
+      "buy_price": 83,
       "direction": "traditional",
-      "opened_at": "2026-08-23T00:22:55.605119+00:00",
+      "opened_at": "2026-08-23T00:38:55.683119+00:00",
       "note": "auto",
-      "entry_sell": 404,
-      "entry_offer": 423
+      "entry_sell": 83,
+      "entry_offer": 87
     },
     {
-      "id": 3,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 138,
-      "buy_price": 1340,
+      "id": 4,
+      "item_id": 1395,
+      "name": "Water battlestaff",
+      "qty": 47,
+      "buy_price": 8354,
       "direction": "traditional",
-      "opened_at": "2026-08-23T00:26:55.615899+00:00",
+      "opened_at": "2026-08-23T00:38:55.684052+00:00",
       "note": "auto",
-      "entry_sell": 1340,
-      "entry_offer": 1394
+      "entry_sell": 8354,
+      "entry_offer": 8770
     }
   ]
 }
