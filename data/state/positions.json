@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 318,
-      "buy_price": 163,
+      "item_id": 5295,
+      "name": "Ranarr seed",
+      "qty": 13,
+      "buy_price": 29342,
       "direction": "traditional",
-      "opened_at": "2026-08-23T09:31:12.949449+00:00",
+      "opened_at": "2026-08-23T09:47:13.841851+00:00",
       "note": "auto",
-      "entry_sell": 163,
-      "entry_offer": 172
+      "entry_sell": 29342,
+      "entry_offer": 30644
+    },
+    {
+      "id": 2,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 91,
+      "buy_price": 1340,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T09:47:13.842172+00:00",
+      "note": "auto",
+      "entry_sell": 1340,
+      "entry_offer": 1394
     }
   ]
 }
