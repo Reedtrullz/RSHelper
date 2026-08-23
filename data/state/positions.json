@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 6,
-      "item_id": 819,
-      "name": "Bronze dart tip",
-      "qty": 223,
-      "buy_price": 44,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T11:43:17.320784+00:00",
-      "note": "auto",
-      "entry_sell": 44,
-      "entry_offer": 46
-    },
-    {
       "id": 7,
       "item_id": 11876,
       "name": "Unfinished broad bolts",
@@ -26,15 +14,27 @@
     },
     {
       "id": 8,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2199,
-      "buy_price": 42,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 588,
+      "buy_price": 225,
       "direction": "traditional",
-      "opened_at": "2026-08-23T14:19:20.670279+00:00",
+      "opened_at": "2026-08-23T14:29:19.795517+00:00",
       "note": "auto",
-      "entry_sell": 42,
-      "entry_offer": 44
+      "entry_sell": 225,
+      "entry_offer": 233
+    },
+    {
+      "id": 9,
+      "item_id": 249,
+      "name": "Guam leaf",
+      "qty": 346,
+      "buy_price": 321,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T14:33:19.826325+00:00",
+      "note": "auto",
+      "entry_sell": 321,
+      "entry_offer": 335
     }
   ]
 }
