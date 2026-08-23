@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 9339,
-      "name": "Ruby bolts",
-      "qty": 139,
-      "buy_price": 273,
+      "id": 2,
+      "item_id": 9243,
+      "name": "Diamond bolts (e)",
+      "qty": 262,
+      "buy_price": 126,
       "direction": "traditional",
-      "opened_at": "2026-08-23T19:25:28.226632+00:00",
+      "opened_at": "2026-08-23T20:33:30.476700+00:00",
       "note": "auto",
-      "entry_sell": 273,
-      "entry_offer": 284
-    },
-    {
-      "id": 5,
-      "item_id": 575,
-      "name": "Earth orb",
-      "qty": 92,
-      "buy_price": 1434,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T20:15:28.558603+00:00",
-      "note": "auto",
-      "entry_sell": 1434,
-      "entry_offer": 1497
-    },
-    {
-      "id": 6,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 1666,
-      "buy_price": 240,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T20:19:28.987467+00:00",
-      "note": "auto",
-      "entry_sell": 240,
-      "entry_offer": 252
+      "entry_sell": 126,
+      "entry_offer": 132
     }
   ]
 }
