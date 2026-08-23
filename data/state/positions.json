@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 223,
-      "name": "Red spiders' eggs",
-      "qty": 475,
-      "buy_price": 171,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T06:19:06.177435+00:00",
-      "note": "auto",
-      "entry_sell": 171,
-      "entry_offer": 177
-    }
-  ]
+  "positions": []
 }
