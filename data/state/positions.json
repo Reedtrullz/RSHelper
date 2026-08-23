@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 44,
       "entry_offer": 46
+    },
+    {
+      "id": 7,
+      "item_id": 890,
+      "name": "Adamant arrow",
+      "qty": 1348,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T12:01:16.362696+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
     }
   ]
 }
