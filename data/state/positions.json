@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 7,
-      "item_id": 11876,
-      "name": "Unfinished broad bolts",
-      "qty": 701,
-      "buy_price": 57,
+      "id": 2,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 584,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-23T13:51:19.762286+00:00",
+      "opened_at": "2026-08-23T17:03:23.978259+00:00",
       "note": "auto",
-      "entry_sell": 57,
-      "entry_offer": 60
+      "entry_sell": 120,
+      "entry_offer": 126
     },
     {
-      "id": 8,
-      "item_id": 97,
-      "name": "Harralander potion (unf)",
-      "qty": 220,
-      "buy_price": 560,
+      "id": 3,
+      "item_id": 12701,
+      "name": "Super combat potion(1)",
+      "qty": 90,
+      "buy_price": 3030,
       "direction": "traditional",
-      "opened_at": "2026-08-23T16:39:23.767382+00:00",
+      "opened_at": "2026-08-23T17:03:23.979120+00:00",
       "note": "auto",
-      "entry_sell": 560,
-      "entry_offer": 586
+      "entry_sell": 3030,
+      "entry_offer": 3173
     }
   ]
 }
