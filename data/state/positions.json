@@ -14,27 +14,27 @@
     },
     {
       "id": 2,
-      "item_id": 9242,
-      "name": "Ruby bolts (e)",
-      "qty": 850,
-      "buy_price": 147,
+      "item_id": 31111,
+      "name": "Demon tear",
+      "qty": 1694,
+      "buy_price": 236,
       "direction": "traditional",
-      "opened_at": "2026-08-23T05:15:04.284684+00:00",
+      "opened_at": "2026-08-23T05:31:04.704547+00:00",
       "note": "auto",
-      "entry_sell": 147,
-      "entry_offer": 153
+      "entry_sell": 236,
+      "entry_offer": 246
     },
     {
       "id": 3,
-      "item_id": 4699,
-      "name": "Lava rune",
-      "qty": 540,
-      "buy_price": 26,
+      "item_id": 23685,
+      "name": "Divine super combat potion(4)",
+      "qty": 21,
+      "buy_price": 18212,
       "direction": "traditional",
-      "opened_at": "2026-08-23T05:15:04.286226+00:00",
+      "opened_at": "2026-08-23T05:31:04.705660+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 18212,
+      "entry_offer": 18945
     }
   ]
 }
