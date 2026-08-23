@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 9243,
-      "name": "Diamond bolts (e)",
-      "qty": 928,
-      "buy_price": 132,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T08:23:10.714546+00:00",
-      "note": "auto",
-      "entry_sell": 132,
-      "entry_offer": 138
-    },
-    {
       "id": 2,
       "item_id": 1119,
       "name": "Steel platebody",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 925,
       "entry_offer": 961
+    },
+    {
+      "id": 3,
+      "item_id": 2970,
+      "name": "Mort myre fungus",
+      "qty": 313,
+      "buy_price": 277,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T08:43:11.820828+00:00",
+      "note": "auto",
+      "entry_sell": 277,
+      "entry_offer": 291
     }
   ]
 }
