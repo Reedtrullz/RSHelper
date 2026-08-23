@@ -14,15 +14,27 @@
     },
     {
       "id": 4,
-      "item_id": 1515,
-      "name": "Yew logs",
-      "qty": 148,
-      "buy_price": 107,
+      "item_id": 4740,
+      "name": "Bolt rack",
+      "qty": 392,
+      "buy_price": 75,
       "direction": "traditional",
-      "opened_at": "2026-08-23T07:07:07.985198+00:00",
+      "opened_at": "2026-08-23T07:11:07.973106+00:00",
       "note": "auto",
-      "entry_sell": 107,
-      "entry_offer": 111
+      "entry_sell": 75,
+      "entry_offer": 78
+    },
+    {
+      "id": 5,
+      "item_id": 397,
+      "name": "Sea turtle",
+      "qty": 384,
+      "buy_price": 1039,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T07:23:08.442126+00:00",
+      "note": "auto",
+      "entry_sell": 1039,
+      "entry_offer": 1088
     }
   ]
 }
