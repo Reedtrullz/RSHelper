@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 1953,
-      "buy_price": 75,
+      "id": 2,
+      "item_id": 12905,
+      "name": "Anti-venom(4)",
+      "qty": 34,
+      "buy_price": 11459,
       "direction": "traditional",
-      "opened_at": "2026-08-23T20:49:30.740305+00:00",
+      "opened_at": "2026-08-23T21:03:30.014531+00:00",
       "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 78
+      "entry_sell": 11459,
+      "entry_offer": 11883
+    },
+    {
+      "id": 3,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 99,
+      "buy_price": 1325,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T21:05:31.236600+00:00",
+      "note": "auto",
+      "entry_sell": 1325,
+      "entry_offer": 1381
     }
   ]
 }
