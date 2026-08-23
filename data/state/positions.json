@@ -14,27 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 892,
-      "name": "Rune arrow",
-      "qty": 2509,
-      "buy_price": 42,
+      "item_id": 11212,
+      "name": "Dragon arrow",
+      "qty": 241,
+      "buy_price": 1655,
       "direction": "traditional",
-      "opened_at": "2026-08-23T22:21:33.218734+00:00",
+      "opened_at": "2026-08-23T22:35:32.604863+00:00",
       "note": "auto",
-      "entry_sell": 42,
-      "entry_offer": 44
-    },
-    {
-      "id": 4,
-      "item_id": 6016,
-      "name": "Cactus spine",
-      "qty": 93,
-      "buy_price": 1573,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T22:21:33.219305+00:00",
-      "note": "auto",
-      "entry_sell": 1573,
-      "entry_offer": 1636
+      "entry_sell": 1655,
+      "entry_offer": 1726
     }
   ]
 }
