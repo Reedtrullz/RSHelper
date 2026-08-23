@@ -1,16 +1,3 @@
 {
-  "positions": [
-    {
-      "id": 1,
-      "item_id": 9192,
-      "name": "Diamond bolt tips",
-      "qty": 1185,
-      "buy_price": 174,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T09:55:14.063107+00:00",
-      "note": "auto",
-      "entry_sell": 174,
-      "entry_offer": 181
-    }
-  ]
+  "positions": []
 }
