@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 225,
+      "name": "Limpwurt root",
+      "qty": 196,
+      "buy_price": 218,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T18:49:27.391902+00:00",
+      "note": "auto",
+      "entry_sell": 218,
+      "entry_offer": 230
+    }
+  ]
 }
