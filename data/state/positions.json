@@ -14,15 +14,27 @@
     },
     {
       "id": 5,
-      "item_id": 9381,
-      "name": "Runite bolts (unf)",
-      "qty": 590,
-      "buy_price": 120,
+      "item_id": 1339,
+      "name": "Steel warhammer",
+      "qty": 87,
+      "buy_price": 167,
       "direction": "traditional",
-      "opened_at": "2026-08-23T17:19:24.460035+00:00",
+      "opened_at": "2026-08-23T17:31:25.121689+00:00",
       "note": "auto",
-      "entry_sell": 120,
-      "entry_offer": 125
+      "entry_sell": 167,
+      "entry_offer": 175
+    },
+    {
+      "id": 6,
+      "item_id": 329,
+      "name": "Salmon",
+      "qty": 113,
+      "buy_price": 28,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T17:31:25.122013+00:00",
+      "note": "auto",
+      "entry_sell": 28,
+      "entry_offer": 27
     }
   ]
 }
