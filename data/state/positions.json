@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1942,
-      "name": "Potato",
-      "qty": 170,
-      "buy_price": 26,
+      "id": 1,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 824,
+      "buy_price": 106,
       "direction": "traditional",
-      "opened_at": "2026-08-23T04:07:02.199510+00:00",
+      "opened_at": "2026-08-23T04:59:03.976321+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
-    },
-    {
-      "id": 3,
-      "item_id": 371,
-      "name": "Raw swordfish",
-      "qty": 712,
-      "buy_price": 197,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T04:41:02.238510+00:00",
-      "note": "auto",
-      "entry_sell": 197,
-      "entry_offer": 205
+      "entry_sell": 106,
+      "entry_offer": 110
     }
   ]
 }
