@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 4694,
-      "name": "Steam rune",
-      "qty": 698,
-      "buy_price": 76,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T01:34:57.658868+00:00",
-      "note": "auto",
-      "entry_sell": 76,
-      "entry_offer": 79
-    },
-    {
       "id": 5,
       "item_id": 1751,
       "name": "Blue dragonhide",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 1767,
       "entry_offer": 1835
+    },
+    {
+      "id": 6,
+      "item_id": 29143,
+      "name": "Cooked moonlight antelope",
+      "qty": 135,
+      "buy_price": 2945,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T02:22:59.016963+00:00",
+      "note": "auto",
+      "entry_sell": 2945,
+      "entry_offer": 3107
+    },
+    {
+      "id": 7,
+      "item_id": 526,
+      "name": "Bones",
+      "qty": 101,
+      "buy_price": 35,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T02:32:57.988202+00:00",
+      "note": "auto",
+      "entry_sell": 35,
+      "entry_offer": 37
     }
   ]
 }
