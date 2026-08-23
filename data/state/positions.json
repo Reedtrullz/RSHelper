@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 100,
       "entry_offer": 95
-    },
-    {
-      "id": 3,
-      "item_id": 11212,
-      "name": "Dragon arrow",
-      "qty": 241,
-      "buy_price": 1655,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T22:35:32.604863+00:00",
-      "note": "auto",
-      "entry_sell": 1655,
-      "entry_offer": 1726
     }
   ]
 }
