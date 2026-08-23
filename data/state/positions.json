@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 101,
-      "name": "Irit potion (unf)",
-      "qty": 197,
-      "buy_price": 1768,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T11:31:16.557083+00:00",
-      "note": "auto",
-      "entry_sell": 1768,
-      "entry_offer": 1834
-    },
-    {
       "id": 6,
       "item_id": 819,
       "name": "Bronze dart tip",
@@ -26,15 +14,15 @@
     },
     {
       "id": 7,
-      "item_id": 890,
-      "name": "Adamant arrow",
-      "qty": 1348,
-      "buy_price": 26,
+      "item_id": 851,
+      "name": "Maple longbow",
+      "qty": 99,
+      "buy_price": 273,
       "direction": "traditional",
-      "opened_at": "2026-08-23T12:01:16.362696+00:00",
+      "opened_at": "2026-08-23T12:11:17.787264+00:00",
       "note": "auto",
-      "entry_sell": 26,
-      "entry_offer": 27
+      "entry_sell": 273,
+      "entry_offer": 286
     }
   ]
 }
