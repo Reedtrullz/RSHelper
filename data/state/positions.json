@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 3,
-      "item_id": 30900,
-      "name": "Shark lure",
-      "qty": 85,
-      "buy_price": 223,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T11:19:16.595164+00:00",
-      "note": "auto",
-      "entry_sell": 223,
-      "entry_offer": 235
-    },
-    {
       "id": 5,
       "item_id": 101,
       "name": "Irit potion (unf)",
@@ -23,6 +11,18 @@
       "note": "auto",
       "entry_sell": 1768,
       "entry_offer": 1834
+    },
+    {
+      "id": 6,
+      "item_id": 819,
+      "name": "Bronze dart tip",
+      "qty": 223,
+      "buy_price": 44,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T11:43:17.320784+00:00",
+      "note": "auto",
+      "entry_sell": 44,
+      "entry_offer": 46
     }
   ]
 }
