@@ -2,15 +2,15 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 31910,
-      "name": "Mithril cannonball",
-      "qty": 962,
-      "buy_price": 152,
+      "item_id": 13511,
+      "name": "Ensouled dragon head",
+      "qty": 71,
+      "buy_price": 5571,
       "direction": "traditional",
-      "opened_at": "2026-08-23T22:57:34.308131+00:00",
+      "opened_at": "2026-08-23T23:37:35.308274+00:00",
       "note": "auto",
-      "entry_sell": 152,
-      "entry_offer": 159
+      "entry_sell": 5571,
+      "entry_offer": 5780
     }
   ]
 }
