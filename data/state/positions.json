@@ -1,3 +1,28 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 205,
+      "name": "Grimy harralander",
+      "qty": 125,
+      "buy_price": 298,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T11:07:16.138349+00:00",
+      "note": "auto",
+      "entry_sell": 298,
+      "entry_offer": 311
+    },
+    {
+      "id": 2,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 357,
+      "buy_price": 172,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T11:11:16.381620+00:00",
+      "note": "auto",
+      "entry_sell": 172,
+      "entry_offer": 181
+    }
+  ]
 }
