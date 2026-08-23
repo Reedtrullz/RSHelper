@@ -43,6 +43,22 @@ class EventHub:
                 pass
 
 
+def _cap_open_qty(qty: int, buy_limit: int, name: str) -> int:
+    """Validate an open-position qty against the item's 4h GE buy limit.
+
+    Returns the qty unchanged when within the limit; raises ValueError for
+    non-positive qty or when the qty exceeds the buy limit (an uncapped qty
+    would create a position the simulated GE fill can never complete,
+    wedging a GE slot and the bank stack).
+    """
+    if qty <= 0:
+        raise ValueError("qty must be positive")
+    if buy_limit > 0 and qty > buy_limit:
+        raise ValueError(
+            f"qty {qty:,} exceeds the {buy_limit:,}/4h buy limit for {name}")
+    return qty
+
+
 def _spawn_daemon(kind: str, profile: str | None) -> dict:
     """Start auto-trade or monitor detached. Returns {ok, pid} or {ok: False, error}."""
     import rshelper
@@ -486,6 +502,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         # the bid, a structurally negative trade.
         direction = cfg.flip.direction
         if action == "open":
+            # Cap the open qty at the item's 4h GE buy limit, matching the
+            # CLI's trade sizing (see _cap_open_qty).
+            qty = _cap_open_qty(qty, safe_int(entry.get("limit")),
+                                entry.get("name", "?"))
             if direction == "traditional":
                 pos = open_position(entry["id"], entry["name"], qty, low,
                                     direction="traditional", note="paper",
@@ -497,6 +517,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                                     entry_sell=low, profile=profile)
             return {"ok": True, "position": asdict(pos)}
         if action == "instant":
+            if qty <= 0:
+                raise ValueError("qty must be positive")
             if direction == "traditional":
                 trade = log_trade(entry["id"], entry["name"], qty, low, high,
                                   note="paper", strategy="manual",
