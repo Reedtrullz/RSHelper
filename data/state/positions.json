@@ -11,18 +11,6 @@
       "note": "auto",
       "entry_sell": 561,
       "entry_offer": 588
-    },
-    {
-      "id": 6,
-      "item_id": 864,
-      "name": "Bronze knife",
-      "qty": 130,
-      "buy_price": 43,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T18:01:25.694641+00:00",
-      "note": "auto",
-      "entry_sell": 43,
-      "entry_offer": 45
     }
   ]
 }
