@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 193,
-      "buy_price": 126,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T03:55:01.682845+00:00",
-      "note": "auto",
-      "entry_sell": 126,
-      "entry_offer": 120
-    },
-    {
       "id": 2,
       "item_id": 1942,
       "name": "Potato",
@@ -26,15 +14,27 @@
     },
     {
       "id": 3,
-      "item_id": 9144,
-      "name": "Runite bolts",
-      "qty": 432,
-      "buy_price": 103,
+      "item_id": 1623,
+      "name": "Uncut sapphire",
+      "qty": 763,
+      "buy_price": 219,
       "direction": "traditional",
-      "opened_at": "2026-08-23T04:09:01.020982+00:00",
+      "opened_at": "2026-08-23T04:17:01.351370+00:00",
       "note": "auto",
-      "entry_sell": 103,
-      "entry_offer": 108
+      "entry_sell": 219,
+      "entry_offer": 227
+    },
+    {
+      "id": 4,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 2185,
+      "buy_price": 183,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T04:25:01.460914+00:00",
+      "note": "auto",
+      "entry_sell": 183,
+      "entry_offer": 190
     }
   ]
 }
