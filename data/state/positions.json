@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 7944,
+      "name": "Raw monkfish",
+      "qty": 193,
+      "buy_price": 126,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T03:55:01.682845+00:00",
+      "note": "auto",
+      "entry_sell": 126,
+      "entry_offer": 120
+    },
+    {
+      "id": 2,
+      "item_id": 1942,
+      "name": "Potato",
+      "qty": 170,
+      "buy_price": 26,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T04:07:02.199510+00:00",
+      "note": "auto",
+      "entry_sell": 26,
+      "entry_offer": 27
+    },
+    {
+      "id": 3,
+      "item_id": 9144,
+      "name": "Runite bolts",
+      "qty": 432,
+      "buy_price": 103,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T04:09:01.020982+00:00",
+      "note": "auto",
+      "entry_sell": 103,
+      "entry_offer": 108
+    }
+  ]
 }
