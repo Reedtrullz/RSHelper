@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 24613,
-      "name": "Blighted entangle sack",
-      "qty": 905,
-      "buy_price": 45,
+      "item_id": 21483,
+      "name": "Ultracompost",
+      "qty": 367,
+      "buy_price": 447,
       "direction": "traditional",
-      "opened_at": "2026-08-23T19:05:30.789363+00:00",
+      "opened_at": "2026-08-23T19:17:28.380954+00:00",
       "note": "auto",
-      "entry_sell": 45,
-      "entry_offer": 47
-    },
-    {
-      "id": 2,
-      "item_id": 449,
-      "name": "Adamantite ore",
-      "qty": 798,
-      "buy_price": 501,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T19:05:30.816317+00:00",
-      "note": "auto",
-      "entry_sell": 501,
-      "entry_offer": 521
+      "entry_sell": 447,
+      "entry_offer": 465
     }
   ]
 }
