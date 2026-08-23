@@ -2,15 +2,27 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 231,
-      "name": "Snape grass",
-      "qty": 370,
-      "buy_price": 636,
+      "item_id": 9193,
+      "name": "Dragonstone bolt tips",
+      "qty": 146,
+      "buy_price": 400,
       "direction": "traditional",
-      "opened_at": "2026-08-23T05:39:04.952012+00:00",
+      "opened_at": "2026-08-23T05:59:05.483919+00:00",
       "note": "auto",
-      "entry_sell": 636,
-      "entry_offer": 661
+      "entry_sell": 400,
+      "entry_offer": 414
+    },
+    {
+      "id": 3,
+      "item_id": 8778,
+      "name": "Oak plank",
+      "qty": 1030,
+      "buy_price": 388,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T06:03:05.699377+00:00",
+      "note": "auto",
+      "entry_sell": 388,
+      "entry_offer": 407
     }
   ]
 }
