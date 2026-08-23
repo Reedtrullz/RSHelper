@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 211,
+      "name": "Grimy avantoe",
+      "qty": 183,
+      "buy_price": 1518,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T21:49:32.182218+00:00",
+      "note": "auto",
+      "entry_sell": 1518,
+      "entry_offer": 1578
+    }
+  ]
 }
