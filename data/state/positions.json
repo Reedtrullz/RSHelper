@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 125,
-      "buy_price": 298,
+      "id": 3,
+      "item_id": 30900,
+      "name": "Shark lure",
+      "qty": 85,
+      "buy_price": 223,
       "direction": "traditional",
-      "opened_at": "2026-08-23T11:07:16.138349+00:00",
+      "opened_at": "2026-08-23T11:19:16.595164+00:00",
       "note": "auto",
-      "entry_sell": 298,
-      "entry_offer": 311
+      "entry_sell": 223,
+      "entry_offer": 235
     },
     {
-      "id": 2,
-      "item_id": 9143,
-      "name": "Adamant bolts",
-      "qty": 357,
-      "buy_price": 172,
+      "id": 5,
+      "item_id": 101,
+      "name": "Irit potion (unf)",
+      "qty": 197,
+      "buy_price": 1768,
       "direction": "traditional",
-      "opened_at": "2026-08-23T11:11:16.381620+00:00",
+      "opened_at": "2026-08-23T11:31:16.557083+00:00",
       "note": "auto",
-      "entry_sell": 172,
-      "entry_offer": 181
+      "entry_sell": 1768,
+      "entry_offer": 1834
     }
   ]
 }
