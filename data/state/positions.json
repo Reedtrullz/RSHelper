@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 105,
-      "name": "Kwuarm potion (unf)",
-      "qty": 165,
-      "buy_price": 2412,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T06:39:07.035171+00:00",
-      "note": "auto",
-      "entry_sell": 2412,
-      "entry_offer": 2497
-    },
-    {
       "id": 3,
       "item_id": 107,
       "name": "Cadantine potion (unf)",
@@ -26,15 +14,15 @@
     },
     {
       "id": 4,
-      "item_id": 822,
-      "name": "Mithril dart tip",
-      "qty": 1943,
-      "buy_price": 105,
+      "item_id": 1515,
+      "name": "Yew logs",
+      "qty": 148,
+      "buy_price": 107,
       "direction": "traditional",
-      "opened_at": "2026-08-23T06:47:07.290017+00:00",
+      "opened_at": "2026-08-23T07:07:07.985198+00:00",
       "note": "auto",
-      "entry_sell": 105,
-      "entry_offer": 109
+      "entry_sell": 107,
+      "entry_offer": 111
     }
   ]
 }
