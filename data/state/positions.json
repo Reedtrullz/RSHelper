@@ -1,28 +1,16 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9193,
-      "name": "Dragonstone bolt tips",
-      "qty": 146,
-      "buy_price": 400,
+      "id": 1,
+      "item_id": 223,
+      "name": "Red spiders' eggs",
+      "qty": 475,
+      "buy_price": 171,
       "direction": "traditional",
-      "opened_at": "2026-08-23T05:59:05.483919+00:00",
+      "opened_at": "2026-08-23T06:19:06.177435+00:00",
       "note": "auto",
-      "entry_sell": 400,
-      "entry_offer": 414
-    },
-    {
-      "id": 3,
-      "item_id": 8778,
-      "name": "Oak plank",
-      "qty": 1030,
-      "buy_price": 388,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T06:03:05.699377+00:00",
-      "note": "auto",
-      "entry_sell": 388,
-      "entry_offer": 407
+      "entry_sell": 171,
+      "entry_offer": 177
     }
   ]
 }
