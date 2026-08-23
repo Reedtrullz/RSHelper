@@ -13,28 +13,16 @@
       "entry_offer": 284
     },
     {
-      "id": 5,
-      "item_id": 205,
-      "name": "Grimy harralander",
-      "qty": 218,
-      "buy_price": 300,
+      "id": 4,
+      "item_id": 32907,
+      "name": "Ironwood logs",
+      "qty": 1931,
+      "buy_price": 125,
       "direction": "traditional",
-      "opened_at": "2026-08-23T19:39:27.554276+00:00",
+      "opened_at": "2026-08-23T20:03:28.361696+00:00",
       "note": "auto",
-      "entry_sell": 300,
-      "entry_offer": 311
-    },
-    {
-      "id": 6,
-      "item_id": 4740,
-      "name": "Bolt rack",
-      "qty": 277,
-      "buy_price": 75,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T19:49:29.187161+00:00",
-      "note": "auto",
-      "entry_sell": 75,
-      "entry_offer": 78
+      "entry_sell": 125,
+      "entry_offer": 130
     }
   ]
 }
