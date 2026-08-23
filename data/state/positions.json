@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 1,
-      "item_id": 5295,
-      "name": "Ranarr seed",
-      "qty": 13,
-      "buy_price": 29342,
+      "item_id": 9192,
+      "name": "Diamond bolt tips",
+      "qty": 1185,
+      "buy_price": 174,
       "direction": "traditional",
-      "opened_at": "2026-08-23T09:47:13.841851+00:00",
+      "opened_at": "2026-08-23T09:55:14.063107+00:00",
       "note": "auto",
-      "entry_sell": 29342,
-      "entry_offer": 30644
-    },
-    {
-      "id": 2,
-      "item_id": 209,
-      "name": "Grimy irit leaf",
-      "qty": 91,
-      "buy_price": 1340,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T09:47:13.842172+00:00",
-      "note": "auto",
-      "entry_sell": 1340,
-      "entry_offer": 1394
+      "entry_sell": 174,
+      "entry_offer": 181
     }
   ]
 }
