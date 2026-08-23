@@ -23,6 +23,18 @@
       "note": "auto",
       "entry_sell": 1524,
       "entry_offer": 1580
+    },
+    {
+      "id": 9,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1259,
+      "buy_price": 184,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T16:33:22.325601+00:00",
+      "note": "auto",
+      "entry_sell": 184,
+      "entry_offer": 194
     }
   ]
 }
