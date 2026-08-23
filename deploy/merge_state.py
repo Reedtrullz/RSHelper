@@ -91,18 +91,47 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
             _merge_alerts(src, dst)
         elif name in LIST_FILES:
             key, id_key = LIST_FILES[name]
-            rows: dict = {}
-            for row in _read_list(dst, key):
-                rows[row.get(id_key)] = row
-            for row in _read_list(src, key):
-                rows[row.get(id_key)] = row  # repo wins on id ties
-            ordered = sorted(rows, key=lambda k: (k is None, k))
-            # Id-collision guard: if a repo row and a volume row share an id
-            # but differ (cross-process id reuse), keep both by giving the
-            # volume row a synthetic id rather than silently dropping it.
-            merged = [rows[k] for k in ordered]
-            if name == "trades.json":
-                merged = _dedupe_collisions(merged)
+            # Union by id. Unlike the plain dict-union, an id present in
+            # BOTH copies with DIFFERENT content must keep both rows: the
+            # Mac and the VPS each number trades/alerts from max+1, so a
+            # cross-process id collision means two different rows, not a
+            # duplicate. The repo row wins the id; the volume row is kept
+            # with a synthetic id. (A dict-union would silently drop it.)
+            vol_rows = _read_list(dst, key)
+            src_rows = _read_list(src, key)
+            by_id: dict = {}
+            for row in vol_rows:
+                rid = row.get(id_key)
+                if rid is None:
+                    continue  # malformed row: no id to union on; skip
+                by_id.setdefault(rid, []).append(row)
+            for row in src_rows:
+                rid = row.get(id_key)
+                if rid is None:
+                    continue
+                if rid in by_id:
+                    # Only a DIFFERENT row with the same id is a true
+                    # cross-process collision (Mac and VPS each numbered #N
+                    # for different rows). Identical rows (the common case:
+                    # the same state synced twice) must collapse to one.
+                    if row == by_id[rid][0]:
+                        continue
+                    by_id[rid].insert(0, row)
+                else:
+                    by_id[rid] = [row]
+            merged = []
+            next_synthetic = max(
+                (r.get("id", 0) or 0) for r in vol_rows + src_rows
+            ) + 1 if (vol_rows or src_rows) else 1
+            for rid in sorted(by_id, key=lambda k: (k is None, k)):
+                group = by_id[rid]
+                merged.append(group[0])
+                for extra in group[1:]:
+                    # Volume-side collision: renumber so both survive.
+                    extra = dict(extra)
+                    extra["id"] = next_synthetic
+                    next_synthetic += 1
+                    merged.append(extra)
             _write_json(dst, {key: merged})
         elif name in REPLACE_FILES:
             # The staged copy is the source of truth: replace the volume
@@ -121,7 +150,12 @@ def merge_dir(stage: str, volume: str, chown: str | None) -> None:
 
 
 def _merge_alerts(src: str, dst: str) -> None:
-    """Union alerts by id (repo wins ties) and merge watch_triggered by max ts."""
+    """Union alerts by id (repo wins ties) and merge watch_triggered by max ts.
+
+    Alerts can also collide across machines (each side numbers from max+1),
+    so a collided id keeps BOTH rows — the repo row wins the id and the
+    volume row is renumbered (same as LIST_FILES).
+    """
     def _read(path: str) -> dict:
         try:
             with open(path, encoding="utf-8") as f:
@@ -131,14 +165,38 @@ def _merge_alerts(src: str, dst: str) -> None:
             return {}
 
     a, b = _read(dst), _read(src)
-    alerts_rows: dict = {}
-    for row in a.get("alerts", []):
-        if isinstance(row, dict):
-            alerts_rows[row.get("id")] = row
-    for row in b.get("alerts", []):
-        if isinstance(row, dict):
-            alerts_rows[row.get("id")] = row  # repo wins on id ties
-    ordered = sorted(alerts_rows, key=lambda k: (k is None, k))
+    vol_rows = [r for r in a.get("alerts", []) if isinstance(r, dict)]
+    src_rows = [r for r in b.get("alerts", []) if isinstance(r, dict)]
+    by_id: dict = {}
+    for row in vol_rows:
+        rid = row.get("id")
+        if rid is None:
+            continue
+        by_id.setdefault(rid, []).append(row)
+    for row in src_rows:
+        rid = row.get("id")
+        if rid is None:
+            continue
+        if rid in by_id:
+            # Identical rows collapse; only a DIFFERENT row is a true
+            # cross-process collision that must be preserved (renumbered).
+            if row == by_id[rid][0]:
+                continue
+            by_id[rid].insert(0, row)  # repo wins the id
+        else:
+            by_id[rid] = [row]
+    ordered = []
+    next_synthetic = max(
+        (r.get("id", 0) or 0) for r in vol_rows + src_rows
+    ) + 1 if (vol_rows or src_rows) else 1
+    for rid in sorted(by_id, key=lambda k: (k is None, k)):
+        group = by_id[rid]
+        ordered.append(group[0])
+        for extra in group[1:]:
+            extra = dict(extra)
+            extra["id"] = next_synthetic
+            next_synthetic += 1
+            ordered.append(extra)
     watch_a = a.get("watch_triggered", {}) or {}
     watch_b = b.get("watch_triggered", {}) or {}
     watch = dict(watch_a)
@@ -148,30 +206,8 @@ def _merge_alerts(src: str, dst: str) -> None:
                 watch[k] = v
         except (TypeError, ValueError):
             pass
-    _write_json(dst, {"alerts": [alerts_rows[k] for k in ordered],
+    _write_json(dst, {"alerts": ordered,
                       "watch_triggered": watch})
-
-
-def _dedupe_collisions(rows: list[dict]) -> list[dict]:
-    """Give volume-side rows that collided on id a synthetic id.
-
-    trades.json ids come from max+1 per machine; when the Mac and the VPS
-    both wrote trade #N for different trades, the union would drop one. This
-    keeps both by renumbering the later (volume) row.
-    """
-    seen: set = set()
-    out: list[dict] = []
-    next_synthetic = max((r.get("id", 0) or 0) for r in rows) + 1 if rows else 1
-    for row in rows:
-        rid = row.get("id")
-        if rid is not None and rid in seen:
-            row = dict(row)
-            row["id"] = next_synthetic
-            next_synthetic += 1
-        if rid is not None:
-            seen.add(rid)
-        out.append(row)
-    return out
 
 
 def main(argv: list[str]) -> int:

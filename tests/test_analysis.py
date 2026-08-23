@@ -246,6 +246,25 @@ def test_margin_scanner_sorted_by_confidence():
     assert results[0].confidence >= results[1].confidence
     print("  PASSED test_margin_scanner_sorted_by_confidence")
 
+def test_traditional_direction_tax_on_high():
+    """Traditional margin tax is 2% of the SELL price (high), not the low."""
+    # 50 windows of (high=1000, low=900). Traditional margin = h - l - tax(h)
+    # = 1000 - 900 - ge_tax(1000)=20 -> 80 per window.
+    dp = _make_datapoints([(1000, 900)] * 50)
+    result = analyze_timeseries(1, dp, current_buy=1000, current_sell=900,
+                                direction="traditional")
+    assert result is not None
+    assert result.avg_margin == 1000 - 900 - 20, \
+        f"traditional avg_margin {result.avg_margin} should be 80 (tax on high)"
+    # Arbitrage: sell at low (900), tax ge_tax(900)=18 -> 900 - 1000 - 18 = -118.
+    arb = analyze_timeseries(2, dp, current_buy=1000, current_sell=900,
+                             direction="arbitrage")
+    assert arb is not None
+    assert arb.avg_margin == 900 - 1000 - 18, \
+        f"arbitrage avg_margin {arb.avg_margin} should be -118 (tax on low)"
+    print("  PASSED test_traditional_direction_tax_on_high")
+
+
 if __name__ == "__main__":
     test_consistent_margin()
     test_no_margin_item()
@@ -263,4 +282,5 @@ if __name__ == "__main__":
     test_margin_scanner_members_filter()
     test_margin_scanner_insufficient_data()
     test_margin_scanner_sorted_by_confidence()
+    test_traditional_direction_tax_on_high()
     print("\nAll analysis tests passed.")

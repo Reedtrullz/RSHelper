@@ -139,7 +139,8 @@ survives crashes:
 
 - `~/Library/LaunchAgents/com.reidar.rshelper-trader.plist` — runs
   `.venv/bin/python -m rshelper auto-trade` (the paper-trader loop), pointing
-  at this repo's venv.
+  at this repo's venv. `KeepAlive: true` — launchd restarts it on ANY exit
+  (clean or crash), so a clean stop never leaves the trader down permanently.
 - `~/Library/LaunchAgents/com.reidar.rshelper-state-sync.plist` — runs
   `~/.config/rshelper/bin/sync-and-push-state.py` every 15 min, committing
   trading state (`data/state/*.json`, incl. `alerts.json`) to `main` as

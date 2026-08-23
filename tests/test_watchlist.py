@@ -45,6 +45,19 @@ class TestWatchlist(unittest.TestCase):
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["alert_margin_above"], 200)
 
+    def test_add_preserves_existing_thresholds(self):
+        """Re-adding an item WITHOUT thresholds must keep the old ones —
+        `watch add` after remove must not silently wipe alert config."""
+        watchlist.add(561, "Nature rune", alert_margin_above=200,
+                      alert_margin_below=50)
+        watchlist.add(561, "Nature rune")  # no thresholds specified
+        entry = watchlist.load()["items"]["561"]
+        self.assertEqual(entry["alert_margin_above"], 200)
+        self.assertEqual(entry["alert_margin_below"], 50)
+        # An explicit call with a new threshold still updates it.
+        watchlist.add(561, "Nature rune", alert_margin_above=300)
+        self.assertEqual(watchlist.load()["items"]["561"]["alert_margin_above"], 300)
+
     def test_remove_existing(self):
         watchlist.add(561, "Nature rune")
         self.assertTrue(watchlist.remove(561))

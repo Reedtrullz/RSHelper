@@ -124,6 +124,35 @@ def test_exit_reason():
     print("  PASSED test_exit_reason")
 
 
+def test_exit_reason_stale_quote_blocks_tp_sl():
+    """TP/SL must not fire on a stale quote — only max_hold may fire without
+    a fresh price (a stale quote can book P&L at a price that no longer
+    exists)."""
+    from rshelper.positions import Position
+    now = time.time()
+    cfg = _cfg(stop_grace_minutes=0)
+    # Position in take-profit territory on a FRESH quote.
+    p = Position(id=1, item_id=1, name="X", qty=10, buy_price=97,
+                 direction="traditional",
+                 opened_at=(datetime.now(timezone.utc)).isoformat())
+    assert exit_reason(p, _latest(now, **{"1": (102, 97)}), cfg, now=now) == \
+        "take_profit"
+    # The SAME quote, but stale (8 min old > EXIT_MAX_AGE 5 min): hold.
+    stale = {"1": {"high": 102, "low": 97,
+                   "highTime": now - 480, "lowTime": now - 480}}
+    assert exit_reason(p, stale, cfg, now=now) is None
+    # Same for the stop: a stale crash bid must not stop the position out.
+    stale_crash = {"1": {"high": 100, "low": 90,
+                         "highTime": now - 480, "lowTime": now - 480}}
+    assert exit_reason(p, stale_crash, cfg, now=now) is None
+    # max_hold still fires with no fresh price at all (dead item).
+    old = Position(id=2, item_id=2, name="Y", qty=10, buy_price=97,
+                   direction="traditional",
+                   opened_at=(datetime.now(timezone.utc) - timedelta(hours=5)).isoformat())
+    assert exit_reason(old, stale_crash, cfg, now=now) == "max_hold"
+    print("  PASSED test_exit_reason_stale_quote_blocks_tp_sl")
+
+
 def test_candidate_edge_ranking():
     """Candidates rank by expected edge (dip x net spread), not raw volume."""
     _clean()
@@ -1104,6 +1133,7 @@ def test_sync_script_ignores_snapshot_subdirs():
 if __name__ == "__main__":
     test_select_candidates_filters()
     test_exit_reason()
+    test_exit_reason_stale_quote_blocks_tp_sl()
     test_size_position_caps()
     test_run_cycle_opens_and_closes()
     test_spread_does_not_insta_stop_and_stop_records_slippage()

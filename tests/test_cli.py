@@ -493,6 +493,39 @@ class TestCLI(unittest.TestCase):
                                        members_only=False, cooldown=15,
                                        json=False))
 
+    def test_signals_surge_human_mode_shows_multiplier(self):
+        """SURGE deviation is a percentage (220.0 = 3.2x); the human table
+        must show the multiplier (3.2x), not the raw percentage (220.0x)."""
+        import contextlib
+        import io
+        from unittest import mock
+        import rshelper.signals as sigmod
+        from rshelper.signals import Signal
+        from rshelper.models import Item
+        from argparse import Namespace
+        import rshelper.cli as cmod
+        fake = [Signal(type="SURGE", item_id=561, name="Nature rune",
+                       severity="MEDIUM", current_price=100, deviation=220.0,
+                       message="Nature rune: 3200 volume (normal: ~1000)")]
+        items = [Item(id=561, name="Nature rune", members=False, buy_limit=10000,
+                      alch_value=0, buy_price=100, sell_price=92, volume=3200,
+                      profit=7, rs_score=80)]
+        cmod._fetch_bootstrap = lambda p=None: (
+            [{"id": 561, "name": "Nature rune"}],
+            {"561": {"high": 100, "low": 92, "highTime": 1, "lowTime": 1}},
+            {"561": {"avgHighPrice": 100, "avgLowPrice": 92,
+                     "highPriceVolume": 3200, "lowPriceVolume": 3200}},
+            items)
+        with mock.patch.object(sigmod, "detect_signals", return_value=fake), \
+             contextlib.redirect_stdout(io.StringIO()) as out:
+            cmod.signals_cmd(Namespace(profile=None, monitor=0,
+                                       flip_direction="arbitrage",
+                                       members_only=False, cooldown=15,
+                                       json=False))
+        text = out.getvalue()
+        self.assertIn("3.2x", text, f"SURGE must show the multiplier, got: {text}")
+        self.assertNotIn("220.0x", text, "SURGE must not show the raw % as x")
+
     def test_signals_monitor_ignores_json_documented(self):
         """signals --monitor prints [signal] lines; --json is not honored there."""
         import contextlib
@@ -586,6 +619,127 @@ class TestCLI(unittest.TestCase):
                             self.assertIn("confidence", data["timeseries_analysis"])
             finally:
                 amod._cache_path = orig_cache
+
+    def test_item_info_flip_tax_on_sell_leg(self):
+        """item-info flip tax is on the SELL price (low), not the buy (high)."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import rshelper.api as amod
+        import rshelper.cli as cmod
+        now = int(time.time())
+        with tempfile.TemporaryDirectory() as tmp:
+            orig_cache = amod._cache_path
+            amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
+            try:
+                # Patch the cli-module bindings — item_info calls the
+                # module-global fetch_mapping/fetch_latest, not api's.
+                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                        {"id": 555555, "name": "Zzz unique flip tax", "members": False,
+                         "limit": 100, "highalch": 0}]), \
+                     mock.patch.object(cmod, "fetch_latest", return_value={
+                            "555555": {"high": 1000, "low": 900,
+                                       "highTime": now - 60, "lowTime": now - 60}}):
+                    import contextlib, io
+                    with contextlib.redirect_stdout(io.StringIO()) as out:
+                        cmod.item_info(Namespace(
+                            item="zzz unique flip tax", profile=None, json=True,
+                            timeseries=False, predict=False,
+                            tax_curve=False, wiki=False, wiki_open=False))
+                data = json.loads(out.getvalue())
+                # Margin = high - low = 100. Tax on the sell leg (low 900):
+                # 2% of 900 = 18. (Tax on the buy leg would be 20.)
+                self.assertEqual(data["flip_margin"], 100)
+                self.assertEqual(data["flip_tax"], 18)
+                self.assertEqual(data["flip_profit"], 100 - 18)
+            finally:
+                amod._cache_path = orig_cache
+
+    def test_item_info_json_predict_emits_prediction(self):
+        """item-info --json --predict must include a prediction key."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import rshelper.api as amod
+        import rshelper.cli as cmod
+        now = int(time.time())
+        # Monotonic rising lows: trend must be "up".
+        ts_data = [
+            {"timestamp": now - (60 * (10 - i)), "avgHighPrice": 100 + i,
+             "avgLowPrice": 90 + i, "highPriceVolume": 100, "lowPriceVolume": 100}
+            for i in range(10)
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            orig_cache = amod._cache_path
+            amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
+            try:
+                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                        {"id": 1397, "name": "Air battlestaff", "members": True,
+                         "limit": 18000, "highalch": 9300}]):
+                    with mock.patch.object(amod, "fetch_latest", return_value={
+                            "1397": {"high": 8780, "low": 8750,
+                                     "highTime": now - 60, "lowTime": now - 60}}):
+                        with mock.patch.object(amod, "fetch_timeseries",
+                                               return_value=ts_data):
+                            import contextlib, io
+                            with contextlib.redirect_stdout(io.StringIO()) as out:
+                                cmod.item_info(Namespace(
+                                    item="air battlestaff", profile=None,
+                                    json=True, timeseries=False, predict=True,
+                                    tax_curve=False, wiki=False, wiki_open=False))
+                data = json.loads(out.getvalue())
+                self.assertIn("prediction", data)
+                self.assertEqual(data["prediction"]["trend"], "up")
+                self.assertIn("next_low_estimate", data["prediction"])
+            finally:
+                amod._cache_path = orig_cache
+
+    def test_item_info_json_no_prose_leak(self):
+        """item-info --json must emit ONLY JSON on stdout (no wiki prose)."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import rshelper.api as amod
+        import rshelper.cli as cmod
+        now = int(time.time())
+        with tempfile.TemporaryDirectory() as tmp:
+            orig_cache = amod._cache_path
+            amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
+            try:
+                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                        {"id": 555556, "name": "Zzz unique prose leak", "members": False,
+                         "limit": 100, "highalch": 0}]), \
+                     mock.patch.object(cmod, "fetch_latest", return_value={
+                            "555556": {"high": 100, "low": 90,
+                                       "highTime": now - 60, "lowTime": now - 60}}):
+                    import contextlib, io
+                    with contextlib.redirect_stdout(io.StringIO()) as out:
+                        cmod.item_info(Namespace(
+                            item="zzz unique prose leak", profile=None, json=True,
+                            timeseries=False, predict=False,
+                            tax_curve=False, wiki=True, wiki_open=True))
+                # stdout must parse as ONE JSON doc — no trailing prose.
+                data = json.loads(out.getvalue())
+                self.assertIsInstance(data, dict)
+            finally:
+                amod._cache_path = orig_cache
+
+    def test_signals_json_empty_stdout_pure(self):
+        """signals --json with no signals must emit [] on stdout, not prose."""
+        from pathlib import Path
+        from unittest import mock
+        from argparse import Namespace
+        import contextlib, io
+        import rshelper.cli as cmod
+        cmod._fetch_bootstrap = lambda p=None: ([], {}, {}, [])
+        with mock.patch("rshelper.signals.detect_signals", return_value=[]):
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                cmod.signals_cmd(Namespace(profile=None, monitor=0,
+                                           flip_direction="arbitrage",
+                                           members_only=False, cooldown=15,
+                                           json=True))
+        data = json.loads(out.getvalue())
+        self.assertEqual(data, [])
 
     def test_profile_switch_missing_raises(self):
         """profile switch to a nonexistent profile must exit 1."""
