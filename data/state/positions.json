@@ -11,6 +11,30 @@
       "note": "auto",
       "entry_sell": 57,
       "entry_offer": 60
+    },
+    {
+      "id": 8,
+      "item_id": 851,
+      "name": "Maple longbow",
+      "qty": 183,
+      "buy_price": 269,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T15:19:21.861584+00:00",
+      "note": "auto",
+      "entry_sell": 269,
+      "entry_offer": 284
+    },
+    {
+      "id": 9,
+      "item_id": 24607,
+      "name": "Blighted ancient ice sack",
+      "qty": 1052,
+      "buy_price": 380,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T15:19:21.862160+00:00",
+      "note": "auto",
+      "entry_sell": 380,
+      "entry_offer": 394
     }
   ]
 }
