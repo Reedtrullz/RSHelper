@@ -1,28 +1,28 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 7944,
-      "name": "Raw monkfish",
-      "qty": 584,
-      "buy_price": 120,
+      "id": 4,
+      "item_id": 72,
+      "name": "Magic shortbow (u)",
+      "qty": 416,
+      "buy_price": 561,
       "direction": "traditional",
-      "opened_at": "2026-08-23T17:03:23.978259+00:00",
+      "opened_at": "2026-08-23T17:11:24.534971+00:00",
       "note": "auto",
-      "entry_sell": 120,
-      "entry_offer": 126
+      "entry_sell": 561,
+      "entry_offer": 588
     },
     {
-      "id": 3,
-      "item_id": 12701,
-      "name": "Super combat potion(1)",
-      "qty": 90,
-      "buy_price": 3030,
+      "id": 5,
+      "item_id": 9381,
+      "name": "Runite bolts (unf)",
+      "qty": 590,
+      "buy_price": 120,
       "direction": "traditional",
-      "opened_at": "2026-08-23T17:03:23.979120+00:00",
+      "opened_at": "2026-08-23T17:19:24.460035+00:00",
       "note": "auto",
-      "entry_sell": 3030,
-      "entry_offer": 3173
+      "entry_sell": 120,
+      "entry_offer": 125
     }
   ]
 }
