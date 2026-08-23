@@ -13,28 +13,16 @@
       "entry_offer": 588
     },
     {
-      "id": 5,
-      "item_id": 1339,
-      "name": "Steel warhammer",
-      "qty": 87,
-      "buy_price": 167,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T17:31:25.121689+00:00",
-      "note": "auto",
-      "entry_sell": 167,
-      "entry_offer": 175
-    },
-    {
       "id": 6,
-      "item_id": 329,
-      "name": "Salmon",
-      "qty": 113,
-      "buy_price": 28,
+      "item_id": 864,
+      "name": "Bronze knife",
+      "qty": 130,
+      "buy_price": 43,
       "direction": "traditional",
-      "opened_at": "2026-08-23T17:31:25.122013+00:00",
+      "opened_at": "2026-08-23T18:01:25.694641+00:00",
       "note": "auto",
-      "entry_sell": 28,
-      "entry_offer": 27
+      "entry_sell": 43,
+      "entry_offer": 45
     }
   ]
 }
