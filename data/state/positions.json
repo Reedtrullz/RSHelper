@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 318,
+      "buy_price": 163,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T09:31:12.949449+00:00",
+      "note": "auto",
+      "entry_sell": 163,
+      "entry_offer": 172
+    }
+  ]
 }
