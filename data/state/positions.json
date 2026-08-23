@@ -1,40 +1,16 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 11875,
-      "name": "Broad bolts",
-      "qty": 1023,
-      "buy_price": 54,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T05:03:03.910005+00:00",
-      "note": "auto",
-      "entry_sell": 54,
-      "entry_offer": 57
-    },
-    {
       "id": 2,
-      "item_id": 31111,
-      "name": "Demon tear",
-      "qty": 1694,
-      "buy_price": 236,
+      "item_id": 231,
+      "name": "Snape grass",
+      "qty": 370,
+      "buy_price": 636,
       "direction": "traditional",
-      "opened_at": "2026-08-23T05:31:04.704547+00:00",
+      "opened_at": "2026-08-23T05:39:04.952012+00:00",
       "note": "auto",
-      "entry_sell": 236,
-      "entry_offer": 246
-    },
-    {
-      "id": 3,
-      "item_id": 23685,
-      "name": "Divine super combat potion(4)",
-      "qty": 21,
-      "buy_price": 18212,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T05:31:04.705660+00:00",
-      "note": "auto",
-      "entry_sell": 18212,
-      "entry_offer": 18945
+      "entry_sell": 636,
+      "entry_offer": 661
     }
   ]
 }
