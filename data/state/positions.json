@@ -14,27 +14,15 @@
     },
     {
       "id": 8,
-      "item_id": 2483,
-      "name": "Lantadyme potion (unf)",
-      "qty": 199,
-      "buy_price": 1524,
+      "item_id": 97,
+      "name": "Harralander potion (unf)",
+      "qty": 220,
+      "buy_price": 560,
       "direction": "traditional",
-      "opened_at": "2026-08-23T16:19:23.421556+00:00",
+      "opened_at": "2026-08-23T16:39:23.767382+00:00",
       "note": "auto",
-      "entry_sell": 1524,
-      "entry_offer": 1580
-    },
-    {
-      "id": 9,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 1259,
-      "buy_price": 184,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T16:33:22.325601+00:00",
-      "note": "auto",
-      "entry_sell": 184,
-      "entry_offer": 194
+      "entry_sell": 560,
+      "entry_offer": 586
     }
   ]
 }
