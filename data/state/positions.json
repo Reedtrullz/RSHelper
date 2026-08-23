@@ -1,16 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 21483,
-      "name": "Ultracompost",
-      "qty": 367,
-      "buy_price": 447,
+      "id": 3,
+      "item_id": 9339,
+      "name": "Ruby bolts",
+      "qty": 139,
+      "buy_price": 273,
       "direction": "traditional",
-      "opened_at": "2026-08-23T19:17:28.380954+00:00",
+      "opened_at": "2026-08-23T19:25:28.226632+00:00",
       "note": "auto",
-      "entry_sell": 447,
-      "entry_offer": 465
+      "entry_sell": 273,
+      "entry_offer": 284
+    },
+    {
+      "id": 4,
+      "item_id": 3049,
+      "name": "Grimy toadflax",
+      "qty": 190,
+      "buy_price": 2100,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T19:35:27.592086+00:00",
+      "note": "auto",
+      "entry_sell": 2100,
+      "entry_offer": 2198
     }
   ]
 }
