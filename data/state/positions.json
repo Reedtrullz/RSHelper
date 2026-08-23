@@ -1,16 +1,16 @@
 {
   "positions": [
     {
-      "id": 5,
-      "item_id": 1751,
-      "name": "Blue dragonhide",
-      "qty": 164,
-      "buy_price": 1767,
+      "id": 2,
+      "item_id": 9143,
+      "name": "Adamant bolts",
+      "qty": 678,
+      "buy_price": 164,
       "direction": "traditional",
-      "opened_at": "2026-08-23T02:00:57.127833+00:00",
+      "opened_at": "2026-08-23T03:11:00.659363+00:00",
       "note": "auto",
-      "entry_sell": 1767,
-      "entry_offer": 1835
+      "entry_sell": 164,
+      "entry_offer": 172
     }
   ]
 }
