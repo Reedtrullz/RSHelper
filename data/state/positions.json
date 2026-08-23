@@ -14,27 +14,15 @@
     },
     {
       "id": 3,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 763,
-      "buy_price": 219,
+      "item_id": 371,
+      "name": "Raw swordfish",
+      "qty": 712,
+      "buy_price": 197,
       "direction": "traditional",
-      "opened_at": "2026-08-23T04:17:01.351370+00:00",
+      "opened_at": "2026-08-23T04:41:02.238510+00:00",
       "note": "auto",
-      "entry_sell": 219,
-      "entry_offer": 227
-    },
-    {
-      "id": 4,
-      "item_id": 25849,
-      "name": "Amethyst dart",
-      "qty": 2185,
-      "buy_price": 183,
-      "direction": "traditional",
-      "opened_at": "2026-08-23T04:25:01.460914+00:00",
-      "note": "auto",
-      "entry_sell": 183,
-      "entry_offer": 190
+      "entry_sell": 197,
+      "entry_offer": 205
     }
   ]
 }
