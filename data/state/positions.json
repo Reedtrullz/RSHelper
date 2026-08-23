@@ -1,3 +1,16 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 1619,
+      "name": "Uncut ruby",
+      "qty": 387,
+      "buy_price": 1033,
+      "direction": "traditional",
+      "opened_at": "2026-08-23T01:02:56.561379+00:00",
+      "note": "auto",
+      "entry_sell": 1033,
+      "entry_offer": 1077
+    }
+  ]
 }
