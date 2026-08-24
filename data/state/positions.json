@@ -11,6 +11,18 @@
       "note": "auto",
       "entry_sell": 266,
       "entry_offer": 278
+    },
+    {
+      "id": 3,
+      "item_id": 29784,
+      "name": "Araxyte venom sac",
+      "qty": 428,
+      "buy_price": 934,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T00:49:37.717771+00:00",
+      "note": "auto",
+      "entry_sell": 934,
+      "entry_offer": 983
     }
   ]
 }
