@@ -1,40 +1,28 @@
 {
   "positions": [
     {
-      "id": 1,
-      "item_id": 1623,
-      "name": "Uncut sapphire",
-      "qty": 530,
-      "buy_price": 230,
-      "direction": "traditional",
-      "opened_at": "2026-08-24T04:01:44.450827+00:00",
-      "note": "auto",
-      "entry_sell": 230,
-      "entry_offer": 241
-    },
-    {
       "id": 2,
-      "item_id": 526,
-      "name": "Bones",
-      "qty": 205,
-      "buy_price": 37,
+      "item_id": 1119,
+      "name": "Steel platebody",
+      "qty": 85,
+      "buy_price": 925,
       "direction": "traditional",
-      "opened_at": "2026-08-24T04:13:44.978109+00:00",
+      "opened_at": "2026-08-24T04:21:45.523816+00:00",
       "note": "auto",
-      "entry_sell": 37,
-      "entry_offer": 39
+      "entry_sell": 925,
+      "entry_offer": 965
     },
     {
       "id": 3,
-      "item_id": 2,
-      "name": "Steel cannonball",
-      "qty": 1659,
-      "buy_price": 241,
+      "item_id": 113,
+      "name": "Strength potion(4)",
+      "qty": 81,
+      "buy_price": 112,
       "direction": "traditional",
-      "opened_at": "2026-08-24T04:13:44.978857+00:00",
+      "opened_at": "2026-08-24T04:29:49.129811+00:00",
       "note": "auto",
-      "entry_sell": 241,
-      "entry_offer": 250
+      "entry_sell": 112,
+      "entry_offer": 116
     }
   ]
 }
