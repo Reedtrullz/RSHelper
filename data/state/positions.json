@@ -2,27 +2,15 @@
   "positions": [
     {
       "id": 2,
-      "item_id": 13511,
-      "name": "Ensouled dragon head",
-      "qty": 71,
-      "buy_price": 5571,
+      "item_id": 9339,
+      "name": "Ruby bolts",
+      "qty": 99,
+      "buy_price": 266,
       "direction": "traditional",
-      "opened_at": "2026-08-23T23:37:35.308274+00:00",
+      "opened_at": "2026-08-24T00:29:37.170682+00:00",
       "note": "auto",
-      "entry_sell": 5571,
-      "entry_offer": 5780
-    },
-    {
-      "id": 3,
-      "item_id": 9244,
-      "name": "Dragonstone bolts (e)",
-      "qty": 1123,
-      "buy_price": 356,
-      "direction": "traditional",
-      "opened_at": "2026-08-24T00:21:36.897730+00:00",
-      "note": "auto",
-      "entry_sell": 356,
-      "entry_offer": 369
+      "entry_sell": 266,
+      "entry_offer": 278
     }
   ]
 }
