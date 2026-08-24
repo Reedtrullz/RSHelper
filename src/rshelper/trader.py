@@ -317,8 +317,13 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     if age_min is not None and age_min >= cfg.max_hold_minutes:
         return "max_hold"
     price = latest.get(str(position.item_id))
-    if not isinstance(price, dict) or price_issue(price) or not _fresh(price, EXIT_MAX_AGE, now):
+    if not isinstance(price, dict) or price_issue(price):
         return None  # no usable price this cycle; hold
+    # TP/SL/collapse must never fire on stale data — a stale quote can book
+    # a profit/loss at a price that no longer exists. Only max_hold may fire
+    # without a fresh quote (it needs no price at all).
+    if not _fresh(price, EXIT_MAX_AGE, now):
+        return None
     offer = safe_int(price.get("high", 0))
     bid = safe_int(price.get("low", 0))
     if position.direction == "traditional":

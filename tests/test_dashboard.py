@@ -31,6 +31,34 @@ class TestItemToDict(unittest.TestCase):
         self.assertEqual(d["gp_per_hour"], 0)
 
 
+class TestCapOpenQty(unittest.TestCase):
+    """The dashboard open-position qty must be capped by the GE buy limit,
+    matching the CLI's trade sizing (an uncapped qty would wedge a GE slot)."""
+
+    def test_within_limit(self):
+        from rshelper.dashboard.server import _cap_open_qty
+        self.assertEqual(_cap_open_qty(50, 10000, "Nature rune"), 50)
+
+    def test_zero_qty_rejected(self):
+        from rshelper.dashboard.server import _cap_open_qty
+        with self.assertRaises(ValueError):
+            _cap_open_qty(0, 10000, "Nature rune")
+        with self.assertRaises(ValueError):
+            _cap_open_qty(-5, 10000, "Nature rune")
+
+    def test_exceeds_limit_rejected(self):
+        from rshelper.dashboard.server import _cap_open_qty
+        with self.assertRaises(ValueError) as ctx:
+            _cap_open_qty(20000, 13000, "Nature rune")
+        self.assertIn("buy limit", str(ctx.exception))
+
+    def test_zero_limit_means_unknown_no_cap(self):
+        from rshelper.dashboard.server import _cap_open_qty
+        # A missing/zero buy limit (GE Tracker fallback without limit data)
+        # must not reject a large qty.
+        self.assertEqual(_cap_open_qty(20000, 0, "Unknown"), 20000)
+
+
 class TestHandlerRouting(unittest.TestCase):
     def setUp(self):
         self.scanner = FlipScanner(direction="arbitrage")
@@ -648,6 +676,32 @@ class TestTemplate(unittest.TestCase):
 
     def test_html_has_esc_html(self):
         self.assertIn("function escHtml", INDEX_HTML)
+
+    def test_js_close_ge_history_defined(self):
+        """The watch-alert editor's Cancel button calls closeGEHistory — it
+        must be defined (a missing function throws on click)."""
+        self.assertIn("function closeGEHistory", INDEX_HTML)
+        # The reference and the definition must both exist.
+        self.assertIn("onclick=\"closeGEHistory(this)\"", INDEX_HTML)
+
+    def test_js_signals_map_keys_by_item_and_type(self):
+        """signalsMap must key by item_id+type so an item with BOTH a DUMP
+        and a FLIP signal keeps both (item_id-only keying drops one)."""
+        self.assertIn("signalsMap[x.item_id+':'+x.type]=x", INDEX_HTML)
+
+    def test_js_signal_severity_keeps_highest_rank(self):
+        """HIGH has numeric rank 0, so JS fallbacks must use nullish
+        coalescing; `0 || 3` incorrectly demotes HIGH to the fallback rank."""
+        self.assertIn("sev[s.severity]??3", INDEX_HTML)
+        self.assertIn("order[a.severity]??3", INDEX_HTML)
+        self.assertNotIn("sev[s.severity]||3", INDEX_HTML)
+        self.assertNotIn("order[a.severity]||3", INDEX_HTML)
+
+    def test_js_surge_display_shows_multiplier(self):
+        """renderSignals must convert the SURGE percentage deviation to a
+        multiplier (220.0 -> 3.2x), not print 220x."""
+        self.assertIn("(dev/100)+1", INDEX_HTML)
+        self.assertNotIn("dev+'x'", INDEX_HTML)
 
 
 class TestCLIDashboardSubcommand(unittest.TestCase):

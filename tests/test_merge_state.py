@@ -22,11 +22,37 @@ def test_list_union_repo_wins_volume_only_kept():
         merge_state.merge_dir(str(stage), str(vol), None)
         merged = json.loads((vol / "trades.json").read_text())["trades"]
         by_id = {r["id"]: r for r in merged}
-        assert set(by_id) == {1, 2, 3}
+        # id 2 collides with DIFFERENT content (Mac and VPS each wrote #2):
+        # both survive — the repo row keeps id 2, the volume row is
+        # renumbered to a synthetic id (4).
+        assert set(by_id) == {1, 2, 3, 4}
         assert by_id[1]["site"] is True   # volume-only row kept
         assert by_id[2]["site"] is False  # repo wins on id ties
         assert by_id[3]["site"] is False
+        assert by_id[4]["site"] is True   # collided volume row preserved
+        # The renumbered row carries a synthetic id beyond the max real id.
+        assert 4 not in {1, 2, 3}
     print("  PASSED test_list_union_repo_wins_volume_only_kept")
+
+
+def test_trades_collision_preserves_both_rows():
+    """A Mac/VPS id collision must keep BOTH trades (renumber the volume row),
+    not silently drop one like the old dict-union did."""
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / "stage"
+        vol = Path(tmp) / "vol"
+        stage.mkdir()
+        vol.mkdir()
+        (vol / "trades.json").write_text(json.dumps({"trades": [
+            {"id": 5, "source": "vps"}]}))
+        (stage / "trades.json").write_text(json.dumps({"trades": [
+            {"id": 5, "source": "mac"}]}))
+        merge_state.merge_dir(str(stage), str(vol), None)
+        merged = json.loads((vol / "trades.json").read_text())["trades"]
+        assert len(merged) == 2, f"collision must keep both, got {merged}"
+        assert merged[0]["id"] == 5 and merged[0]["source"] == "mac"  # repo wins id
+        assert merged[1]["id"] == 6 and merged[1]["source"] == "vps"  # renumbered
+    print("  PASSED test_trades_collision_preserves_both_rows")
 
 
 def test_watchlist_union_and_plain_file_wins():
@@ -140,12 +166,41 @@ def test_alerts_merge_preserves_watch_triggered():
     print("  PASSED test_alerts_merge_preserves_watch_triggered")
 
 
+def test_alerts_collision_preserves_both_rows():
+    """An alert id collision across machines must keep BOTH alerts, not drop
+    the volume-side row (the old dict-union silently lost it)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / "stage"
+        vol = Path(tmp) / "vol"
+        stage.mkdir()
+        vol.mkdir()
+        (vol / "alerts.json").write_text(json.dumps({
+            "alerts": [{"id": 3, "source": "vps"}],
+            "watch_triggered": {"561": 1},
+        }))
+        (stage / "alerts.json").write_text(json.dumps({
+            "alerts": [{"id": 3, "source": "mac"}],
+            "watch_triggered": {"561": 2},
+        }))
+        merge_state.merge_dir(str(stage), str(vol), None)
+        merged = json.loads((vol / "alerts.json").read_text())
+        assert len(merged["alerts"]) == 2, merged
+        assert merged["alerts"][0]["source"] == "mac"   # repo wins id 3
+        assert merged["alerts"][0]["id"] == 3
+        assert merged["alerts"][1]["source"] == "vps"   # volume renumbered
+        assert merged["alerts"][1]["id"] == 4
+        assert merged["watch_triggered"]["561"] == 2    # max ts wins
+    print("  PASSED test_alerts_collision_preserves_both_rows")
+
+
 if __name__ == "__main__":
     test_list_union_repo_wins_volume_only_kept()
+    test_trades_collision_preserves_both_rows()
     test_watchlist_union_and_plain_file_wins()
     test_snapshot_subdir_recursion()
     test_positions_pruned_not_unioned()
     test_positions_stage_wins_on_conflict()
     test_alerts_merge_preserves_watch_triggered()
+    test_alerts_collision_preserves_both_rows()
     test_main_requires_args()
     print("\nAll merge_state tests passed.")
