@@ -1,18 +1,6 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 9339,
-      "name": "Ruby bolts",
-      "qty": 99,
-      "buy_price": 266,
-      "direction": "traditional",
-      "opened_at": "2026-08-24T00:29:37.170682+00:00",
-      "note": "auto",
-      "entry_sell": 266,
-      "entry_offer": 278
-    },
-    {
       "id": 3,
       "item_id": 29784,
       "name": "Araxyte venom sac",
@@ -23,6 +11,30 @@
       "note": "auto",
       "entry_sell": 934,
       "entry_offer": 983
+    },
+    {
+      "id": 4,
+      "item_id": 449,
+      "name": "Adamantite ore",
+      "qty": 772,
+      "buy_price": 518,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T01:05:38.181666+00:00",
+      "note": "auto",
+      "entry_sell": 518,
+      "entry_offer": 542
+    },
+    {
+      "id": 5,
+      "item_id": 389,
+      "name": "Raw manta ray",
+      "qty": 193,
+      "buy_price": 1036,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T01:05:38.181965+00:00",
+      "note": "auto",
+      "entry_sell": 1036,
+      "entry_offer": 1084
     }
   ]
 }
