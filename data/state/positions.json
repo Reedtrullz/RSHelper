@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 9075,
+      "name": "Astral rune",
+      "qty": 1560,
+      "buy_price": 111,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T02:31:40.517599+00:00",
+      "note": "auto",
+      "entry_sell": 111,
+      "entry_offer": 115
+    },
+    {
+      "id": 2,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 150,
+      "buy_price": 1311,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T02:37:41.676233+00:00",
+      "note": "auto",
+      "entry_sell": 1311,
+      "entry_offer": 1381
+    },
+    {
+      "id": 3,
+      "item_id": 359,
+      "name": "Raw tuna",
+      "qty": 113,
+      "buy_price": 45,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T02:37:41.677148+00:00",
+      "note": "auto",
+      "entry_sell": 45,
+      "entry_offer": 47
+    }
+  ]
 }
