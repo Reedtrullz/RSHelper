@@ -1,3 +1,40 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": 1,
+      "item_id": 209,
+      "name": "Grimy irit leaf",
+      "qty": 177,
+      "buy_price": 1319,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T01:37:39.390989+00:00",
+      "note": "auto",
+      "entry_sell": 1319,
+      "entry_offer": 1381
+    },
+    {
+      "id": 2,
+      "item_id": 25849,
+      "name": "Amethyst dart",
+      "qty": 1365,
+      "buy_price": 183,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T01:41:39.646360+00:00",
+      "note": "auto",
+      "entry_sell": 183,
+      "entry_offer": 190
+    },
+    {
+      "id": 3,
+      "item_id": 853,
+      "name": "Maple shortbow",
+      "qty": 165,
+      "buy_price": 185,
+      "direction": "traditional",
+      "opened_at": "2026-08-24T01:49:39.903460+00:00",
+      "note": "auto",
+      "entry_sell": 185,
+      "entry_offer": 192
+    }
+  ]
 }
