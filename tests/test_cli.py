@@ -600,13 +600,13 @@ class TestCLI(unittest.TestCase):
             orig_cache = amod._cache_path
             amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping", return_value=[
                         {"id": 1397, "name": "Air battlestaff", "members": True,
                          "limit": 18000, "highalch": 9300}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(cmod, "fetch_latest", return_value={
                             "1397": {"high": 8780, "low": 8750,
                                      "highTime": now - 60, "lowTime": now - 60}}):
-                        with mock.patch.object(amod, "fetch_timeseries",
+                        with mock.patch.object(cmod, "fetch_timeseries",
                                                return_value=ts_data):
                             import contextlib, io
                             with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -673,13 +673,13 @@ class TestCLI(unittest.TestCase):
             orig_cache = amod._cache_path
             amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping", return_value=[
                         {"id": 1397, "name": "Air battlestaff", "members": True,
                          "limit": 18000, "highalch": 9300}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(cmod, "fetch_latest", return_value={
                             "1397": {"high": 8780, "low": 8750,
                                      "highTime": now - 60, "lowTime": now - 60}}):
-                        with mock.patch.object(amod, "fetch_timeseries",
+                        with mock.patch.object(cmod, "fetch_timeseries",
                                                return_value=ts_data):
                             import contextlib, io
                             with contextlib.redirect_stdout(io.StringIO()) as out:

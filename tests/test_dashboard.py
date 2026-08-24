@@ -689,6 +689,14 @@ class TestTemplate(unittest.TestCase):
         and a FLIP signal keeps both (item_id-only keying drops one)."""
         self.assertIn("signalsMap[x.item_id+':'+x.type]=x", INDEX_HTML)
 
+    def test_js_signal_severity_keeps_highest_rank(self):
+        """HIGH has numeric rank 0, so JS fallbacks must use nullish
+        coalescing; `0 || 3` incorrectly demotes HIGH to the fallback rank."""
+        self.assertIn("sev[s.severity]??3", INDEX_HTML)
+        self.assertIn("order[a.severity]??3", INDEX_HTML)
+        self.assertNotIn("sev[s.severity]||3", INDEX_HTML)
+        self.assertNotIn("order[a.severity]||3", INDEX_HTML)
+
     def test_js_surge_display_shows_multiplier(self):
         """renderSignals must convert the SURGE percentage deviation to a
         multiplier (220.0 -> 3.2x), not print 220x."""

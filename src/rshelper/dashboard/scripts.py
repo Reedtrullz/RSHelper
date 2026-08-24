@@ -247,7 +247,7 @@ function sigBadge(item){
   let best=null;
   Object.values(signalsMap).forEach(s=>{
     if(s.item_id!==item.id)return;
-    if(!best||(sev[s.severity]||3)<(sev[best.severity]||3))best=s;
+    if(!best||(sev[s.severity]??3)<(sev[best.severity]??3))best=s;
   });
   if(!best)return '<span class="dim">-</span>';
   return '<span class="sig-badge sig-'+escHtml(best.type)+'" title="'+escHtml(best.message)+'">'+escHtml(best.type)+'</span>';
@@ -779,7 +779,7 @@ async function renderSignals(){
   let signals=Object.values(signalsMap);
   if(q)signals=signals.filter(s=>s.name.toLowerCase().includes(q));
   const order={HIGH:0,MEDIUM:1,LOW:2};
-  signals.sort((a,b)=>(order[a.severity]||3)-(order[b.severity]||3)||String(a.type).localeCompare(String(b.type)));
+  signals.sort((a,b)=>(order[a.severity]??3)-(order[b.severity]??3)||String(a.type).localeCompare(String(b.type)));
   // One view-row per item (the highest-severity signal wins the row): the
   // keyboard nav and row highlighting key on item id, so duplicate ids
   // would make selection ambiguous.
