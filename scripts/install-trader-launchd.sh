@@ -9,11 +9,18 @@
 #   scripts/install-trader-launchd.sh uninstall
 #   scripts/install-trader-launchd.sh status
 set -euo pipefail
+umask 077
+ACTION="${1:-install}"
+case "$ACTION" in
+  install|uninstall|status) ;;
+  *) echo "usage: $0 [install [--with-monitor]|uninstall|status]" >&2; exit 1 ;;
+esac
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LABEL="com.reidar.rshelper-trader"
 SYNC_LABEL="com.reidar.rshelper-state-sync"
 MON_LABEL="com.reidar.rshelper-monitor"
+SERVICE_DOMAIN="gui/$(id -u)"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 SYNC_PLIST="$HOME/Library/LaunchAgents/$SYNC_LABEL.plist"
 MON_PLIST="$HOME/Library/LaunchAgents/$MON_LABEL.plist"
@@ -27,21 +34,50 @@ if ! [[ "$SYNC_INTERVAL" =~ ^[1-9][0-9]*$ ]]; then
   exit 1
 fi
 
-if [ ! -x "$VENV_PY" ]; then
+if [ "$ACTION" != "status" ] && [ ! -x "$VENV_PY" ]; then
   echo "error: venv python not found at $VENV_PY" >&2
   exit 1
 fi
-
-mkdir -p "$LOG_DIR"
 
 # The repo lives under ~/Documents, which macOS TCC blocks for launchd
 # jobs; the trader's venv python is allowed (it has been granted access),
 # but /bin/bash cannot open scripts there. Stage the sync script outside
 # the protected tree and point the LaunchAgent at the staged copy. Always
-# restage so script fixes propagate to the running agent.
-mkdir -p "$(dirname "$SYNC_SCRIPT")"
-cp "$REPO_DIR/scripts/sync-and-push-state.py" "$SYNC_SCRIPT"
-chmod +x "$SYNC_SCRIPT"
+# restage on explicit install so status/uninstall never update the helper.
+stage_sync() {
+  mkdir -p "$LOG_DIR" "$HOME/Library/LaunchAgents" "$(dirname "$SYNC_SCRIPT")"
+  cp "$REPO_DIR/scripts/sync-and-push-state.py" "$SYNC_SCRIPT"
+  chmod 700 "$SYNC_SCRIPT"
+}
+
+verify_ready() {
+  PYTHONPATH="$REPO_DIR/src" "$VENV_PY" - "$1" <<'PY'
+import sys
+from rshelper.daemon import wait_for_ready
+try:
+    ready = wait_for_ready(sys.argv[1], 'default', timeout=3).get('ready') is True
+except (OSError, ValueError, RuntimeError):
+    ready = False
+if not ready:
+    print('[installer] daemon startup failed or did not report ready; inspect the private daemon log', file=sys.stderr)
+raise SystemExit(0 if ready else 1)
+PY
+}
+
+start_verified() {
+  local kind="$1" label="$2" plist="$3"
+  if launchctl bootstrap "$SERVICE_DOMAIN" "$plist" && verify_ready "$kind"; then
+    return 0
+  fi
+  # A failed readiness check must not leave a KeepAlive retry loop enabled.
+  if ! launchctl disable "$SERVICE_DOMAIN/$label"; then
+    echo "[installer] failed to disable $label; service may remain enabled; inspect launchctl" >&2
+  fi
+  if ! launchctl bootout "$SERVICE_DOMAIN/$label"; then
+    echo "[installer] failed to unload $label; inspect launchctl and the private daemon log" >&2
+  fi
+  return 1
+}
 
 xml_escape() {
   printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
@@ -52,6 +88,7 @@ write_plist() {
   VENV_X="$(xml_escape "$VENV_PY")"
   SRC_X="$(xml_escape "$REPO_DIR/src")"
   DIR_X="$(xml_escape "$REPO_DIR")"
+  DOMAIN_X="$(xml_escape "$SERVICE_DOMAIN")"
   OUT_X="$(xml_escape "$LOG_DIR/trader.out.log")"
   ERR_X="$(xml_escape "$LOG_DIR/trader.err.log")"
   cat > "$PLIST" <<EOF
@@ -71,6 +108,9 @@ write_plist() {
   <dict>
     <key>PYTHONPATH</key><string>$SRC_X</string>
     <key>PYTHONUNBUFFERED</key><string>1</string>
+    <key>RSHELPER_SUPERVISOR_KIND</key><string>launchd</string>
+    <key>RSHELPER_SERVICE_DOMAIN</key><string>$DOMAIN_X</string>
+    <key>RSHELPER_SERVICE_LABEL</key><string>$LABEL_X</string>
   </dict>
   <key>WorkingDirectory</key><string>$DIR_X</string>
   <key>RunAtLoad</key><true/>
@@ -84,6 +124,7 @@ EOF
 }
 
 write_sync_plist() {
+  REPO_X="$(xml_escape "$REPO_DIR")"
   SYNC_X="$(xml_escape "$SYNC_SCRIPT")"
   VENV_X="$(xml_escape "$VENV_PY")"
   OUT_X="$(xml_escape "$LOG_DIR/sync.out.log")"
@@ -102,7 +143,7 @@ write_sync_plist() {
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
-    <key>RSHELPER_REPO</key><string>$REPO_DIR</string>
+    <key>RSHELPER_REPO</key><string>$REPO_X</string>
   </dict>
   <key>StartInterval</key><integer>$SYNC_INTERVAL</integer>
   <key>RunAtLoad</key><true/>
@@ -117,6 +158,7 @@ write_monitor_plist() {
   VENV_X="$(xml_escape "$VENV_PY")"
   SRC_X="$(xml_escape "$REPO_DIR/src")"
   DIR_X="$(xml_escape "$REPO_DIR")"
+  DOMAIN_X="$(xml_escape "$SERVICE_DOMAIN")"
   OUT_X="$(xml_escape "$LOG_DIR/monitor.out.log")"
   ERR_X="$(xml_escape "$LOG_DIR/monitor.err.log")"
   cat > "$MON_PLIST" <<EOF
@@ -136,6 +178,9 @@ write_monitor_plist() {
   <dict>
     <key>PYTHONPATH</key><string>$SRC_X</string>
     <key>PYTHONUNBUFFERED</key><string>1</string>
+    <key>RSHELPER_SUPERVISOR_KIND</key><string>launchd</string>
+    <key>RSHELPER_SERVICE_DOMAIN</key><string>$DOMAIN_X</string>
+    <key>RSHELPER_SERVICE_LABEL</key><string>$MON_LABEL</string>
   </dict>
   <key>WorkingDirectory</key><string>$DIR_X</string>
   <key>RunAtLoad</key><true/>
@@ -148,16 +193,22 @@ write_monitor_plist() {
 EOF
 }
 
-case "${1:-install}" in
+case "$ACTION" in
   install)
     WITH_MONITOR="${2:-no}"
+    if [[ "$WITH_MONITOR" != "no" && "$WITH_MONITOR" != "--with-monitor" ]]; then
+      echo "error: unknown install option" >&2; exit 1
+    fi
+    stage_sync
     write_plist
+    launchctl enable "$SERVICE_DOMAIN/$LABEL"
     launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
-    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+    start_verified trader "$LABEL" "$PLIST"
     echo "Installed and started $LABEL"
     echo "  plist: $PLIST"
     echo "  logs:  $LOG_DIR/trader.{out,err}.log"
     write_sync_plist
+    launchctl enable "$SERVICE_DOMAIN/$SYNC_LABEL"
     launchctl bootout "gui/$(id -u)" "$SYNC_PLIST" 2>/dev/null || true
     launchctl bootstrap "gui/$(id -u)" "$SYNC_PLIST"
     echo "Installed state sync $SYNC_LABEL (every ${SYNC_INTERVAL}s)"
@@ -165,8 +216,9 @@ case "${1:-install}" in
     echo "  logs:  $LOG_DIR/sync.{out,err}.log"
     if [[ "$WITH_MONITOR" == "--with-monitor" ]]; then
       write_monitor_plist
+      launchctl enable "$SERVICE_DOMAIN/$MON_LABEL"
       launchctl bootout "gui/$(id -u)" "$MON_PLIST" 2>/dev/null || true
-      launchctl bootstrap "gui/$(id -u)" "$MON_PLIST"
+      start_verified monitor "$MON_LABEL" "$MON_PLIST"
       echo "Installed monitor $MON_LABEL (market signals + watchlist alerts)"
       echo "  plist: $MON_PLIST"
       echo "  logs:  $LOG_DIR/monitor.{out,err}.log"

@@ -1,14 +1,13 @@
 """Background monitor: polling loop with macOS notifications."""
-import json
-import os
-import signal
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper.daemon import (LeaseBusy, LeaseError, acquire_lease, daemon_status,
+                             install_stop_signal, read_private_json,
+                             request_stop, restore_stop_signal)
 
 MONITOR_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = MONITOR_DIR / "monitor.pid"
@@ -52,49 +51,54 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
     from rshelper.profile import resolve_profile
     profile = resolve_profile(profile)
     prof_name = profile if profile else "default"
-    mon_dir = _monitor_dir(profile)
-    mon_dir.mkdir(parents=True, exist_ok=True)
-    pid = os.getpid()
-    started = datetime.now(timezone.utc).isoformat()
     p_path = _pid_path(profile)
-    # Claim the pid file with O_EXCL so a second monitor cannot silently
-    # clobber a live one (mirrors the trader's single-instance guard). The
-    # pid is written+fsynced while the O_EXCL fd is held so a concurrent
-    # claimant never reads a partial file and unlinks a live claim.
-    for _ in range(2):
-        try:
-            fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "w") as f:
-                f.write(str(pid))
-                f.flush()
-                os.fsync(f.fileno())
-            break
-        except FileExistsError:
-            try:
-                old_pid = int(p_path.read_text().strip())
-                os.kill(old_pid, 0)
-            except (ValueError, OSError):
-                p_path.unlink(missing_ok=True)  # stale pid; retry the claim
-                continue
-            print(f"[monitor] Already running (PID {old_pid}); "
-                  f"use --stop first.", file=sys.stderr)
-            sys.exit(1)
-    state = {"pid": pid, "started_iso": started, "last_check_iso": None, "profile": prof_name}
-    _write_state(state, profile)
-    print(f"[monitor] Started (PID {pid}, interval {interval_sec}s)", file=sys.stderr)
     try:
-        while True:
+        with acquire_lease("monitor", prof_name, pid_path=p_path) as lease:
+            state = {"pid": lease.pid,
+                     "started_iso": datetime.now(timezone.utc).isoformat(),
+                     "last_check_iso": None, "profile": prof_name,
+                     "running": True, "daemon_instance": lease.daemon_instance,
+                     "supervisor": lease.supervisor_kind,
+                     "desired_state": lease.desired_state, "ready": False}
+            previous_handler = None
+            state_written = False
             try:
-                _poll_cycle(no_notify, profile)
-                state["last_check_iso"] = datetime.now(timezone.utc).isoformat()
+                previous_handler = install_stop_signal(lease)
                 _write_state(state, profile)
-            except Exception as e:
-                print(f"[monitor] Cycle error: {e}", file=sys.stderr)
-            time.sleep(interval_sec)
-    except KeyboardInterrupt:
-        print("\n[monitor] Shutting down...", file=sys.stderr)
-    finally:
-        _cleanup(profile)
+                state_written = True
+                lease.mark_ready()
+                state["ready"] = True
+                _write_state(state, profile)
+                print(f"[monitor] Started (PID {lease.pid}, interval {interval_sec}s)",
+                      file=sys.stderr)
+                while not lease.stop_event.is_set():
+                    try:
+                        _poll_cycle(no_notify, profile)
+                        state["last_check_iso"] = datetime.now(timezone.utc).isoformat()
+                    except Exception as e:
+                        print(f"[monitor] Cycle error: {e}", file=sys.stderr)
+                    _write_state(state, profile)
+                    lease.stop_event.wait(max(0.1, interval_sec))
+            except KeyboardInterrupt:
+                print("\n[monitor] Shutting down...", file=sys.stderr)
+            finally:
+                if state_written:
+                    state["running"] = False
+                    state["ready"] = False
+                    state["desired_state"] = lease.desired_state
+                    state["stopped_iso"] = datetime.now(timezone.utc).isoformat()
+                    _write_state(state, profile)
+                if previous_handler is not None:
+                    restore_stop_signal(previous_handler)
+    except LeaseBusy as exc:
+        print(f"[monitor] Start refused: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+    except LeaseError as exc:
+        print(f"[monitor] Startup failed: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+    except Exception as exc:
+        print(f"[monitor] Startup failed: {exc}", file=sys.stderr)
+        raise
 
 
 def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
@@ -177,69 +181,21 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
 
 
 def stop_monitor(profile: str | None = None) -> bool:
-    p_path = _pid_path(profile)
-    if not p_path.exists():
-        return False
-    try:
-        pid = int(p_path.read_text().strip())
-    except (ValueError, OSError):
-        p_path.unlink(missing_ok=True)
-        s_path = _state_path(profile)
-        s_path.unlink(missing_ok=True)
-        return False
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        p_path.unlink(missing_ok=True)
-        s_path = _state_path(profile)
-        s_path.unlink(missing_ok=True)
-        return False
-    try:
-        os.kill(pid, signal.SIGTERM)
-        deadline = time.time() + 3
-        exited = False
-        while time.time() < deadline:
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                exited = True
-                break  # process exited
-            time.sleep(0.1)
-        if not exited:
-            try:
-                os.kill(pid, signal.SIGKILL)
-            except OSError:
-                pass
-            time.sleep(0.2)
-        p_path.unlink(missing_ok=True)
-        s_path = _state_path(profile)
-        s_path.unlink(missing_ok=True)
-        return True
-    except OSError:
-        p_path.unlink(missing_ok=True)
-        s_path = _state_path(profile)
-        s_path.unlink(missing_ok=True)
-        return False
+    return request_stop("monitor", profile, pid_path=_pid_path(profile))["ok"]
 
 
 def monitor_status(profile: str | None = None) -> dict | None:
     p_path = _pid_path(profile)
     s_path = _state_path(profile)
-    if not p_path.exists() or not s_path.exists():
-        return None
     try:
-        pid = int(p_path.read_text().strip())
-    except (ValueError, OSError):
+        state = read_private_json(s_path)
+    except LeaseError:
+        state = None
+    status = daemon_status("monitor", profile, pid_path=p_path, state=state)
+    if state is None and status["ownership"] == "synced_snapshot" and not status["running"]:
         return None
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return None
-    try:
-        state = json.loads(s_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return None
-    started = state.get("started_iso")
+    result = {**(state or {}), **status}
+    started = (state or {}).get("started_iso")
     uptime = 0
     if started:
         try:
@@ -247,15 +203,10 @@ def monitor_status(profile: str | None = None) -> dict | None:
             uptime = (datetime.now(timezone.utc) - started_dt).total_seconds()
         except (ValueError, TypeError):
             pass
-    return {"running": True, "pid": pid, "uptime_sec": int(uptime),
-            "last_check_iso": state.get("last_check_iso"),
-            "profile": state.get("profile", "default")}
+    result["uptime_sec"] = int(uptime)
+    result["last_check_iso"] = (state or {}).get("last_check_iso")
+    return result
 
 
 def _write_state(state: dict, profile: str | None = None) -> None:
     atomic_write_json(_state_path(profile), state)
-
-
-def _cleanup(profile: str | None = None) -> None:
-    _pid_path(profile).unlink(missing_ok=True)
-    _state_path(profile).unlink(missing_ok=True)

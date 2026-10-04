@@ -786,14 +786,29 @@ def history_cmd(args: argparse.Namespace) -> None:
     print()
 
 
+def _daemon_stop_cmd(kind: str, args: argparse.Namespace) -> None:
+    from rshelper.daemon import request_stop
+    report = request_stop(kind, getattr(args, 'profile', None))
+    label = 'Trader' if kind == 'auto-trade' else 'Monitor'
+    if getattr(args, 'json', False):
+        print(json.dumps(report, indent=2))
+    elif report.get('stopped'):
+        print(f'{label} stopped; desired state {report.get("desired_state", "stopped")}.')
+    elif report.get('ok') and report.get('requested'):
+        print(f'{label} stop requested; desired state {report.get("desired_state")}; shutdown pending.')
+    else:
+        print(f'{label}: {report.get("error", "stop failed")}; desired state '
+              f'{report.get("desired_state", "unchanged")}.', file=sys.stderr)
+    if not report.get('ok'):
+        raise SystemExit(1)
+
+
 def auto_trade_cmd(args: argparse.Namespace) -> None:
     """Autonomous paper trader: find and execute paper trades on a loop."""
     from rshelper.trader import run_trader, stop_trader, trader_status
     profile = getattr(args, "profile", None)
     if args.stop:
-        stopped = stop_trader(profile)
-        print("Trader stopped." if stopped else "No trader running.",
-              file=sys.stdout if stopped else sys.stderr)
+        _daemon_stop_cmd('auto-trade', args)
         return
     if args.status:
         status = trader_status(profile)
@@ -1734,6 +1749,7 @@ def _main() -> None:
     mon.add_argument("--stop", action="store_true",
                       help="Stop a running monitor")
     mon.add_argument("--status", action="store_true", help="Show monitor status")
+    mon.add_argument("--json", action="store_true", help="Show lifecycle receipt as JSON")
 
     # Auto-trader subcommand
     trader_p = sub.add_parser(
@@ -1971,23 +1987,19 @@ def _main() -> None:
         item_info(args)
     elif args.command == "monitor":
         if args.stop:
-            from rshelper.monitor import stop_monitor
-            ok = stop_monitor(args.profile if hasattr(args, "profile") else None)
-            if ok:
-                print("Monitor stopped.")
-            else:
-                print("No monitor running.", file=sys.stderr)
-                sys.exit(1)
+            _daemon_stop_cmd('monitor', args)
         elif args.status:
             from rshelper.monitor import monitor_status
-            status = monitor_status()
-            if status is None:
-                print("No monitor running.")
+            status = monitor_status(args.profile) or {'running': False, 'ownership': 'synced_snapshot'}
+            if args.json:
+                print(json.dumps(status, indent=2))
             else:
-                print(f"  Monitor: RUNNING")
-                print(f"  PID: {status['pid']}")
-                print(f"  Running since: ~{max(1, status['uptime_sec'] // 60)} min ago")
-                print(f"  Last check: {status['last_check_iso'] or 'N/A'}")
+                print('Monitor: ' + ('running' if status.get('running') else 'not running'))
+                print(f'  Ownership: {status.get("ownership", "unverified")}')
+                print(f'  Desired state: {status.get("desired_state", "unknown")}')
+                if status.get('pid'):
+                    print(f'  PID: {status["pid"]}')
+                print(f'  Last check: {status.get("last_check_iso") or "N/A"}')
         else:
             from rshelper.monitor import run_monitor
             run_monitor(interval_sec=args.interval, no_notify=args.no_notify, profile=args.profile)

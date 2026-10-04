@@ -158,3 +158,27 @@ First owner startup atomically provisions a random 256-bit credential in the sel
 To connect, obtain the credential through the owner's authenticated SSH/local file access and enter it in the dashboard's password field over HTTPS (loopback HTTP is acceptable locally). Do not paste it into an issue, command argument, shared screenshot or browser URL. The session keeps the token only in memory and sends Authorization headers, including for fetch-stream SSE. Disconnect clears private state and destroys the session; a page reload requires reconnection. No password identity service or implicit proxy trust is claimed. Public/private replication and historical Git-data disposition remain separate E08 acceptance gates.
 
 State-only sync verifies private record availability inside the owner container through `deploy/check_state.py`. The bearer credential stays in that container, and the CI log receives only boolean authentication/schema success; record values and counts are not printed. Public `/api/health` remains the sanitized deployment receipt.
+
+## Scheduled state commit isolation
+
+The reviewed synchronizer uses a temporary Git index and private pending/last-pushed
+refs. It preserves checkout HEAD, staged source and worktree files. Its emitted
+revision identifies the state commit; checkout HEAD alone does not certify a
+successful state push. A failed push retains that exact revision for retry,
+including a run with no changed source bytes. Pushes never force the remote.
+
+Required signing remains the default. Unlock the configured signer when signing
+fails; no failure handler retries unsigned. The explicit `--unsigned` option is
+an operator choice for synthetic/operator runs and must not be added to the
+unattended service as a fallback. `--status` and `--dry-run` emit JSON without
+record values; status remains readable on a detached checkout, while mutation
+requires the configured repository's `main` checkout. A detected source/ref
+divergence requires deliberate reconciliation; the helper does not reset WIP.
+
+For a copied helper, `RSHELPER_REPO` must point to the matching reviewed source
+and shared validation/publication modules. The launchd plist supplies that
+setting. Code integration does not update an installed helper or restart a
+live service. Validate the copied layout in a disposable HOME before the
+operator's migration window. The existing private feed is a compatibility
+bridge; E08's owner publication choice and private transport transition remain
+separate acceptance gates. See [the synchronizer migration note](../docs/execution/synchronizer-migration.md).
