@@ -1050,6 +1050,8 @@ def test_sync_script_reports_commit_failure():
     spec.loader.exec_module(mod)
     mod.SRC = Path(_tmpdir.name) / "sync_src"
     mod.DEST = Path(_tmpdir.name) / "sync_dst"
+    mod.REPO = Path(_tmpdir.name)
+    (mod.REPO / ".git").mkdir(exist_ok=True)
     mod.SRC.mkdir(exist_ok=True)
     mod.DEST.mkdir(exist_ok=True)
     (mod.SRC / "trades.json").write_text('{"trades": [2]}')
@@ -1080,6 +1082,8 @@ def test_sync_script_falls_back_unsigned_on_1password():
     spec.loader.exec_module(mod)
     mod.SRC = Path(_tmpdir.name) / "sync_src_1p"
     mod.DEST = Path(_tmpdir.name) / "sync_dst_1p"
+    mod.REPO = Path(_tmpdir.name)
+    (mod.REPO / ".git").mkdir(exist_ok=True)
     mod.SRC.mkdir(exist_ok=True)
     mod.DEST.mkdir(exist_ok=True)
     (mod.SRC / "trades.json").write_text('{"trades": [3]}')
@@ -1118,6 +1122,8 @@ def test_sync_script_ignores_snapshot_subdirs():
         (src / "snapshots" / "subdir").mkdir(parents=True)
         (src / "snapshots" / "flip-2026-08-01.json").write_text("{}")
         mod.SRC, mod.DEST = src, dst
+        mod.REPO = Path(tmp)
+        (mod.REPO / ".git").mkdir()
 
         def fake_git(*args, **kw):
             import subprocess

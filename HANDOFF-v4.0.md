@@ -100,7 +100,21 @@ POST (all origin-checked): `/api/trades` · `/api/watchlist`
 `/api/monitor` (start/stop, 403 without control) · `/api/alerts/read` ·
 `/api/trades/delete`.
 
-## Tests (344, 24 files)
+## Tests
+
+Run `.venv/bin/python scripts/run-tests.py --offline --json` for deterministic
+checks. It discovers unittest methods and standalone test functions, runs each
+file in a disposable HOME, inherits isolation into CLI subprocesses, rejects
+unexpected external network/process access, and fails on empty files. It reports
+actual tests, skips and failures rather than relying on historical counts.
+Live integration checks are separate and explicitly opt in with
+`.venv/bin/python scripts/run-tests.py --provider-check --json`.
+
+The 2026-10-04 bootstrap baseline is 386 tests in 25 files, four provider tests
+skipped in offline mode, zero failures/errors on Python 3.14. This is engineering
+test evidence; it does not certify trading returns or production deployment.
+
+Historical v3.0.0 baseline: 344 tests, 24 files.
 
 New: `tests/test_alerts.py` (11 — push/list/prune/mark-read/dedupe/profile
 isolation/atomic-write/failure-silent) and 13 new route tests in

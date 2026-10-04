@@ -46,9 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for f in tests/test_*.py; do
-            .venv/bin/python "$f"
-          done
+          .venv/bin/python scripts/run-tests.py --offline --json
 
       - name: Verify stdout contract (--json pipes clean)
         shell: bash
