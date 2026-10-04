@@ -3,10 +3,14 @@ fallback for datacenter IPs that the wiki's Cloudflare blocks (403)."""
 
 import calendar
 import concurrent.futures
+from contextlib import contextmanager
 import datetime
+import email.utils
+import fcntl
 import json
 import math
 import os
+import stat
 import sys
 import tempfile
 import threading
@@ -24,6 +28,9 @@ GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
 USER_AGENT = "RSHelper/1.6 (+https://rs.reidar.tech; reed@reidar.tech)"
 _LAST_REQUEST = 0.0
 _THROTTLE_LOCK = threading.Lock()
+REQUEST_INTERVAL = 1.0
+MAX_RETRY_AFTER = 60.0
+MAX_BUDGET_AHEAD = 120.0  # Bounded local queue plus shared server cooldown.
 CACHE_DIR = Path.home() / ".cache" / "rshelper"
 CACHE_MAX_AGE = {
     "mapping": 86400,  # 24h — item metadata rarely changes
@@ -37,43 +44,271 @@ STALE_MULTIPLIER = 3  # serve stale cache up to 3x max_age if API fails
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _throttle() -> None:
-    """Rate-limit to 1 req/sec per Wiki API policy. Thread-safe.
-
-    The trader, monitor, dashboard, and VPS deploy are separate processes
-    that each throttle independently with a process-local timestamp — with
-    several running that can exceed the wiki's 1 req/sec policy. A shared
-    timestamp file (in the cache dir) serializes the budget across
-    processes; each caller sleeps until its turn. A missing or ancient
-    stamp (older than a few seconds) means no recent request anywhere, so
-    the caller proceeds immediately and writes its own stamp.
-    """
-    global _LAST_REQUEST
-    with _THROTTLE_LOCK:
-        stamp = _throttle_path()
-        now = time.time()
-        last = _LAST_REQUEST
-        try:
-            file_last = float(stamp.read_text())
-            # Only honor a stamp that is recent (within ~2s); an old one is
-            # leftover from a dead process and should not serialize us.
-            if now - file_last < 2.0:
-                last = file_last
-        except (OSError, ValueError):
-            pass
-        wait = 1.0 - (now - last)
-        if wait > 0:
-            time.sleep(wait)
-        _LAST_REQUEST = time.time()
-        try:
-            stamp.write_text(f"{_LAST_REQUEST}")
-        except OSError:
-            pass  # no cross-process throttle without a writable cache dir
+class RequestBudgetUnavailable(RuntimeError):
+    """The shared request budget cannot safely reserve an attempt."""
 
 
 def _throttle_path() -> Path:
-    """Shared throttle stamp in the cache dir (per-user, cross-process)."""
+    """Shared reservation state, independent of the active account profile."""
     return CACHE_DIR / ".throttle"
+
+
+def _throttle_lock_path() -> Path:
+    return CACHE_DIR / ".throttle.lock"
+
+
+def _load_request_budget(stamp: Path, now: float) -> tuple[float, float, float, float]:
+    """Return wall clock, next slot, cooldown and completed dispatch time."""
+    try:
+        fd = os.open(stamp, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise RequestBudgetUnavailable('shared request budget is not a regular file')
+            with os.fdopen(fd, 'rb') as stream:
+                fd = None
+                content = stream.read(4097)
+            if len(content) > 4096:
+                raise RequestBudgetUnavailable('shared request budget exceeds size limit')
+            raw = content.decode('ascii').strip()
+        finally:
+            if fd is not None:
+                os.close(fd)
+    except FileNotFoundError:
+        return now, now, 0.0, 0.0
+    except (OSError, UnicodeDecodeError) as exc:
+        raise RequestBudgetUnavailable("cannot read shared request budget") from exc
+    try:
+        try:
+            state = json.JSONDecoder().decode(raw)
+        except json.JSONDecodeError:
+            # Accept the previous release's numeric timestamp during upgrade.
+            legacy = float(raw)
+            if not math.isfinite(legacy):
+                raise ValueError("non-finite legacy timestamp")
+            return legacy, legacy + REQUEST_INTERVAL, 0.0, 0.0
+        if isinstance(state, (int, float)) and not isinstance(state, bool):
+            legacy = float(state)
+            if not math.isfinite(legacy):
+                raise ValueError("non-finite legacy timestamp")
+            return legacy, legacy + REQUEST_INTERVAL, 0.0, 0.0
+        if not isinstance(state, dict) or type(state.get('version')) is not int or state['version'] != 1:
+            raise ValueError("unknown reservation state")
+        last_now = state["last_now"]
+        next_at = state["next_at"]
+        blocked_until = state.get('blocked_until', 0.0)
+        finished = state.get('dispatch_finished', 0.0)
+        if isinstance(finished, bool) or not isinstance(finished, (int, float)):
+            raise ValueError('invalid dispatch timestamp')
+        finished = float(finished)
+        if (isinstance(last_now, bool) or isinstance(next_at, bool) or isinstance(blocked_until, bool)
+                or not isinstance(last_now, (int, float))
+                or not isinstance(next_at, (int, float)) or not isinstance(blocked_until, (int, float))):
+            raise ValueError("invalid reservation timestamp")
+        last_now, next_at, blocked_until = float(last_now), float(next_at), float(blocked_until)
+        if (not all(math.isfinite(value) for value in (last_now, next_at, blocked_until, finished))
+                or next_at < last_now or blocked_until < 0
+                or finished < 0 or finished > last_now
+                or blocked_until - last_now > MAX_RETRY_AFTER):
+            raise ValueError("invalid reservation timestamp")
+        if next_at - last_now > MAX_BUDGET_AHEAD:
+            raise ValueError("reservation timestamp exceeds bound")
+        return last_now, next_at, blocked_until, finished
+    except (ValueError, TypeError, KeyError, OverflowError) as exc:
+        raise RequestBudgetUnavailable("shared request budget is corrupt") from exc
+
+
+def _write_request_budget(stamp: Path, last_now: float, next_at: float,
+                          blocked_until: float = 0.0, finished: float = 0.0) -> None:
+    payload = json.dumps({"version": 1, "last_now": last_now, "next_at": next_at,
+                          'blocked_until': blocked_until, 'dispatch_finished': finished},
+                         allow_nan=False)
+    try:
+        fd, temporary = tempfile.mkstemp(dir=stamp.parent, prefix=".throttle-", suffix=".tmp")
+    except OSError as exc:
+        raise RequestBudgetUnavailable('cannot create shared request budget') from exc
+    try:
+        try:
+            stream = os.fdopen(fd, 'w')
+        except BaseException:
+            os.close(fd)
+            raise
+        with stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, stamp)
+    except Exception as exc:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        if isinstance(exc, OSError):
+            raise RequestBudgetUnavailable('cannot write shared request budget') from exc
+        raise
+
+
+@contextmanager
+def _locked_request_budget():
+    stamp = _throttle_path()
+    fd = None
+    lock_file = None
+    try:
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(_throttle_lock_path(),
+                     os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise RequestBudgetUnavailable('shared request lock is not a regular file')
+        lock_file = os.fdopen(fd, 'r+')
+        fd = None
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+    except (OSError, OverflowError, ValueError) as exc:
+        if lock_file is not None: lock_file.close()
+        raise RequestBudgetUnavailable('cannot coordinate shared request budget') from exc
+    except BaseException:
+        if lock_file is not None: lock_file.close()
+        raise
+    finally:
+        if fd is not None: os.close(fd)
+    # Do not classify an HTTPError raised by dispatch as a lock-acquisition
+    # failure: HTTPError inherits OSError and must reach the retry handler.
+    with lock_file:
+        try:
+            yield stamp
+        finally:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            except OSError as exc:
+                raise RequestBudgetUnavailable('cannot release shared request lock') from exc
+
+
+def _reserve_request(now: float | None, interval: float,
+                     retry_after: float | None = None) -> float:
+    """Atomically reserve an attempt time; the caller sleeps after unlocking."""
+    if ((now is not None and not math.isfinite(now)) or not math.isfinite(interval) or interval <= 0
+            or (retry_after is not None and
+                (not math.isfinite(retry_after) or retry_after < 0))):
+        raise RequestBudgetUnavailable("invalid request budget input")
+    with _locked_request_budget() as stamp:
+        # Sampling after the lock prevents stale samples from resembling rollback.
+        if now is None:
+            now = time.time()
+        if not math.isfinite(now):
+            raise RequestBudgetUnavailable('invalid request budget clock')
+        last_now, next_at, blocked_until, finished = _load_request_budget(stamp, now)
+        if now < last_now:
+            raise RequestBudgetUnavailable('system clock moved backwards')
+        if retry_after is not None:
+            blocked_until = max(blocked_until, now + min(retry_after, MAX_RETRY_AFTER))
+        reserved = max(now, next_at, blocked_until)
+        if reserved + interval - now > MAX_BUDGET_AHEAD:
+            raise RequestBudgetUnavailable('shared request queue exceeds wait budget')
+        _write_request_budget(stamp, now, reserved + interval, blocked_until, finished)
+        return reserved
+
+
+def _record_retry_after(delay: float) -> None:
+    """Publish server backoff even when this caller has exhausted its retries."""
+    with _locked_request_budget() as stamp:
+        now = time.time()
+        last_now, next_at, blocked_until, finished = _load_request_budget(stamp, now)
+        if now < last_now:
+            raise RequestBudgetUnavailable('system clock moved backwards')
+        blocked_until = max(blocked_until, now + min(delay, MAX_RETRY_AFTER))
+        _write_request_budget(stamp, now, max(now, next_at, blocked_until), blocked_until, finished)
+
+
+def _wait_for_reservation(reserved: float) -> None:
+    """Recheck shared cooldown before dispatch; sleep only after unlocking."""
+    while True:
+        with _locked_request_budget() as stamp:
+            now = time.time()
+            last_now, next_at, blocked_until, finished = _load_request_budget(stamp, now)
+            if now < last_now:
+                raise RequestBudgetUnavailable('system clock moved backwards')
+            if reserved < blocked_until:
+                # A server cooldown invalidates slots already held by waiters.
+                # Reassign those slots, so they cannot burst when it expires.
+                reserved = max(now, next_at, blocked_until)
+                if reserved + REQUEST_INTERVAL - now > MAX_BUDGET_AHEAD:
+                    raise RequestBudgetUnavailable('shared request queue exceeds wait budget')
+                _write_request_budget(stamp, now, reserved + REQUEST_INTERVAL, blocked_until, finished)
+            delay = reserved - now
+        if delay <= 0:
+            return
+        time.sleep(delay)
+
+
+def _dispatch_request(request, attempt=0):
+    """Serialize actual dispatch through response headers, then space arrivals.
+
+    A process may pause after reserving a slot. Holding the shared lock through
+    urlopen prevents that stale slot from racing another actual dispatch. The
+    next attempt waits one interval after headers (or a failed connection),
+    conservatively preserving spacing even if the prior dispatch was delayed.
+    Response-body reads and all sleeps stay outside the lock.
+    """
+    while True:
+        with _locked_request_budget() as stamp:
+            now = time.time()
+            last_now, next_at, blocked_until, finished = _load_request_budget(stamp, now)
+            if not math.isfinite(now) or now < last_now:
+                raise RequestBudgetUnavailable('invalid or reversed request clock')
+            delay = max(blocked_until, finished + REQUEST_INTERVAL) - now
+            if delay <= 0:
+                response = None
+                server_delay = 0.0
+                try:
+                    response = urllib.request.urlopen(request, timeout=15)
+                    return response
+                except urllib.error.HTTPError as exc:
+                    if exc.code in (429, 503):
+                        server_delay = min(MAX_RETRY_AFTER, max(RETRY_DELAY * (2 ** attempt),
+                            _parse_retry_after((exc.headers or {}).get('Retry-After'))))
+                    raise
+                finally:
+                    try:
+                        completed = time.time()
+                        if not math.isfinite(completed) or completed < now:
+                            raise RequestBudgetUnavailable('invalid or reversed dispatch clock')
+                        blocked_until = max(blocked_until, completed + server_delay) if server_delay else blocked_until
+                        _write_request_budget(stamp, completed, max(completed, next_at),
+                                              blocked_until, completed)
+                    except BaseException:
+                        if response is not None: response.close()
+                        raise
+        time.sleep(delay)
+
+
+def _throttle() -> None:
+    """Compatibility wrapper for callers that explicitly pace one request."""
+    global _LAST_REQUEST
+    reserved = _reserve_request(None, REQUEST_INTERVAL)
+    _wait_for_reservation(reserved)
+    _LAST_REQUEST = time.time()
+
+
+def _parse_retry_after(value: str | None) -> float:
+    """Parse Retry-After seconds or HTTP date, bounded to one minute."""
+    if not value:
+        return 0.0
+    value = value.strip()
+    try:
+        delay = float(value)
+        if not math.isfinite(delay) or delay < 0:
+            return 0.0
+        return min(delay, MAX_RETRY_AFTER)
+    except ValueError:
+        pass
+    try:
+        target = email.utils.parsedate_to_datetime(value)
+        if target.tzinfo is None:
+            target = target.replace(tzinfo=datetime.timezone.utc)
+        delay = target.timestamp() - time.time()
+        if not math.isfinite(delay):
+            return 0.0
+        return min(max(0.0, delay), MAX_RETRY_AFTER)
+    except (TypeError, ValueError, OverflowError):
+        return 0.0
 
 
 # Backoff config for retryable errors
@@ -87,20 +322,32 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
     """GET url with retry+backoff, return parsed JSON (None on failure)."""
     last_exc = None
     for attempt in range(retries + 1):
+        try:
+            reserved = _reserve_request(None, REQUEST_INTERVAL)
+            _wait_for_reservation(reserved)
+        except RequestBudgetUnavailable as exc:
+            print(f"  Warning: shared request budget unavailable; skipping {url}: {exc}",
+                  file=sys.stderr)
+            return None
         req = urllib.request.Request(
             url,
             headers={"User-Agent": USER_AGENT},
         )
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with _dispatch_request(req, attempt) as resp:
                 raw = resp.read(MAX_RESPONSE_BYTES + 1)
                 if len(raw) > MAX_RESPONSE_BYTES:
                     print("  Warning: market response exceeds 32 MiB limit", file=sys.stderr)
                     return None
                 return _decode_market_json(raw)
+        except RequestBudgetUnavailable as exc:
+            print(f'  Warning: shared dispatch budget unavailable: {exc}', file=sys.stderr)
+            return None
         except urllib.error.HTTPError as exc:
+            if exc.code in (429, 503):
+                delay = max(RETRY_DELAY * (2 ** attempt),
+                            _parse_retry_after((exc.headers or {}).get("Retry-After")))
             if exc.code in (429, 503) and attempt < retries:
-                delay = RETRY_DELAY * (2 ** attempt)
                 print(f"  Retrying {url} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
                 time.sleep(delay)
                 last_exc = exc
@@ -121,7 +368,6 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
 
 def _get(path: str, retries: int = MAX_RETRIES) -> Any:
     """GET a Wiki API endpoint with retry+backoff, return parsed JSON."""
-    _throttle()  # retries sleep RETRY_DELAY*2^n below, so no re-throttle
     return _fetch_url(f"{BASE_URL}/{path}", retries)
 
 
@@ -130,7 +376,6 @@ def _get_ge_tracker(profile: str | None = None) -> Any | None:
     cached = _load_cache("ge_tracker", profile)
     if cached is not None:
         return cached
-    _throttle()
     rows = _validated("ge_tracker", _fetch_url(GE_TRACKER_URL))
     data = {"data": rows} if rows else None
     if data is not None:
