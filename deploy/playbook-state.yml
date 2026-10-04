@@ -28,10 +28,19 @@
         mode: preserve
         directory_mode: '0755'
 
+    - name: Install shared state validation module for merge
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../src/rshelper/persistence.py"
+        dest: "{{ app_dir }}/state-validation.py"
+        owner: deploy
+        group: deploy
+        mode: '0644'
+
     - name: Merge staged state over the live volume (site writes win by id)
       ansible.builtin.script: >-
         merge_state.py {{ app_dir }}/state-stage
         {{ app_dir }}/data/.config/rshelper --chown 1000:1000
+        --validation-module {{ app_dir }}/state-validation.py
 
     - name: Remove state staging directory
       ansible.builtin.file:
