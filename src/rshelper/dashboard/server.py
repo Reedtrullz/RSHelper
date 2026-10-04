@@ -61,12 +61,13 @@ def _cap_open_qty(qty: int, buy_limit: int, name: str) -> int:
 
 def _spawn_daemon(kind: str, profile: str | None) -> dict:
     """Start auto-trade or monitor detached. Returns {ok, pid} or {ok: False, error}."""
+    from rshelper.profile import resolve_profile
+    profile = resolve_profile(profile)
     import rshelper
     pkg_dir = os.path.dirname(os.path.abspath(rshelper.__file__))
     src_dir = os.path.dirname(pkg_dir)  # repo/src — the parent the package lives in
     cmd = [sys.executable, "-m", "rshelper", kind]
-    if profile and profile != "default":
-        cmd += ["--profile", profile]
+    cmd += ["--profile", profile]
     log_dir = __import__("rshelper.profile", fromlist=["resolve_config_path"]).resolve_config_path("logs", profile)
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"{kind}.log"
@@ -108,6 +109,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     Blocks until interrupted. Handles KeyboardInterrupt for graceful shutdown.
     Data re-fetches from the API every 120 seconds (ponytail TTL cache).
     """
+    from rshelper.profile import resolve_profile
+    profile = resolve_profile(profile)
     cfg = load_config(profile)
     scan_kwargs = {
         "members_only": cfg.flip.members_only,

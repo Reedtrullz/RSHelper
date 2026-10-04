@@ -17,13 +17,14 @@ PROFILE_NAME_RE = re.compile(r'^[a-zA-Z0-9_-]{1,32}$')
 def _read_active_profile() -> str:
     """Read active profile name. Returns 'default' if missing."""
     try:
-        if ACTIVE_PROFILE_PATH.exists():
-            name = ACTIVE_PROFILE_PATH.read_text().strip()
-            if name:
-                return name
+        name = ACTIVE_PROFILE_PATH.read_text().strip()
+    except FileNotFoundError:
+        return "default"
     except OSError:
-        pass
-    return "default"
+        raise ValueError("cannot read active profile marker; use an explicit --profile") from None
+    if not validate_profile_name(name):
+        raise ValueError("invalid active profile marker; use profile switch with a valid name")
+    return name
 
 
 def get_active_profile() -> str:
@@ -31,6 +32,8 @@ def get_active_profile() -> str:
 
 
 def set_active_profile(name: str) -> None:
+    if not validate_profile_name(name):
+        raise ValueError("invalid profile name")
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     atomic_write_text(ACTIVE_PROFILE_PATH, name)
 
@@ -67,12 +70,32 @@ def atomic_write_json(path: Path, data, indent: int | None = None) -> None:
         raise
 
 
+def resolve_profile(requested: str | None = None) -> str:
+    name = _read_active_profile() if requested is None else requested
+    if not validate_profile_name(name):
+        raise ValueError("profile name must contain 1–32 letters, digits, underscores or hyphens")
+    return name
+
+
+def _rooted_path(root: Path, subpath: str, profile: str | None) -> Path:
+    name = resolve_profile(profile)
+    if not isinstance(subpath, str):
+        raise ValueError("profile filename must be a relative string")
+    relative = Path(subpath)
+    if relative.is_absolute() or '..' in relative.parts:
+        raise ValueError("profile filename must stay within its selected root")
+    selected = root if name == "default" else root / "profiles" / name
+    target = selected / relative
+    canonical_root = root.resolve()
+    canonical_selected = selected.resolve()
+    canonical_target = target.resolve()
+    if not canonical_selected.is_relative_to(canonical_root) or not canonical_target.is_relative_to(canonical_selected):
+        raise ValueError("profile path escapes its selected root through a symlink")
+    return canonical_target
+
+
 def resolve_config_path(subpath: str, profile: str | None = None) -> Path:
-    if profile is None:
-        profile = _read_active_profile()
-    if profile == "default":
-        return CONFIG_DIR / subpath
-    return CONFIG_DIR / "profiles" / profile / subpath
+    return _rooted_path(CONFIG_DIR, subpath, profile)
 
 
 def filter_fields(cls, data: dict) -> dict:
@@ -86,23 +109,22 @@ def filter_fields(cls, data: dict) -> dict:
 
 
 def resolve_cache_path(subpath: str, profile: str | None = None) -> Path:
-    if profile is None:
-        profile = _read_active_profile()
-    if profile == "default":
-        return CACHE_DIR / subpath
-    return CACHE_DIR / "profiles" / profile / subpath
+    return _rooted_path(CACHE_DIR, subpath, profile)
 
 
 def validate_profile_name(name: str) -> bool:
-    return bool(PROFILE_NAME_RE.match(name))
+    return isinstance(name, str) and bool(PROFILE_NAME_RE.fullmatch(name))
 
 
 def create_profile(name: str) -> bool:
     """Create profile directories. Returns False if name invalid or already exists."""
     if not validate_profile_name(name):
         return False
-    config_profile = CONFIG_DIR / "profiles" / name
-    cache_profile = CACHE_DIR / "profiles" / name
+    try:
+        config_profile = resolve_config_path("", name)
+        cache_profile = resolve_cache_path("", name)
+    except ValueError:
+        return False
     if config_profile.exists() or cache_profile.exists():
         return False
     config_profile.mkdir(parents=True, exist_ok=True)
@@ -112,10 +134,17 @@ def create_profile(name: str) -> bool:
 
 def delete_profile(name: str, force: bool = False) -> bool:
     """Delete profile directories. Returns False if not found."""
-    if name == "default":
+    if name == "default" or not validate_profile_name(name):
         return False  # can't delete default
-    config_profile = CONFIG_DIR / "profiles" / name
-    cache_profile = CACHE_DIR / "profiles" / name
+    if (CONFIG_DIR / "profiles" / name).is_symlink() or (CACHE_DIR / "profiles" / name).is_symlink():
+        return False
+    try:
+        config_profile = resolve_config_path("", name)
+        cache_profile = resolve_cache_path("", name)
+    except ValueError:
+        return False
+    if config_profile.is_symlink() or cache_profile.is_symlink():
+        return False
     found = config_profile.exists() or cache_profile.exists()
     if not found:
         return False

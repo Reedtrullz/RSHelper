@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax, price_issue, safe_int
-from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper.profile import atomic_write_json, resolve_config_path, resolve_profile
 
 TRADER_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = TRADER_DIR / "trader.pid"
@@ -55,7 +55,7 @@ RECENT_EXIT_MAX_AGE = 2 * 3600
 def _exits_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return EXITS_PATH
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "recent_exits.json"
+    return resolve_config_path("recent_exits.json", profile)
 
 
 def _load_recent_exits(profile: str | None = None) -> None:
@@ -93,13 +93,13 @@ def _persist_recent_exits(profile: str | None = None) -> None:
 def _pid_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return PID_PATH
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "trader.pid"
+    return resolve_config_path("trader.pid", profile)
 
 
 def _state_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return STATE_PATH
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "trader_state.json"
+    return resolve_config_path("trader_state.json", profile)
 
 
 def _write_state(state: dict, profile: str | None = None) -> None:
@@ -588,6 +588,8 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
 def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                once: bool = False) -> dict | None:
     """Poll loop: manage and open paper positions. Blocks until stopped."""
+    profile = resolve_profile(profile)
+
     def _sigterm(signum, frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, _sigterm)
@@ -618,7 +620,7 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
     if not (0 <= cfg.stop_mark_blend <= 1):
         raise ValueError("stop_mark_blend must be in [0, 1]")
     interval = interval or cfg.interval_sec
-    prof_name = profile if profile else "default"
+    prof_name = profile
     pid = os.getpid()
     p_path = _pid_path(profile)
     # Claim the pid file with O_EXCL so two racing starts cannot both pass
