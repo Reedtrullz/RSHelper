@@ -32,7 +32,8 @@ transport cutover remain separate. Existing Git copies are retained.
 Validate this code in disposable repositories first. The implementation round
 does not invoke or restage the installed synchronizer. When a reviewed release
 is staged by the operator, its configured repository must contain the matching
-shared validation/publication modules. Keep the installed service's required
+shared validation/publication modules. Missing configured modules and preloaded
+rshelper code from another source fail closed before state selection. Keep the installed service's required
 signing policy. Unlock the signer or reconcile source readiness when needed;
 do not use unsigned mode as an unattended resilience fallback.
 

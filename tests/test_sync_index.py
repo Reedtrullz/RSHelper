@@ -281,6 +281,29 @@ class SyncIndexTest(unittest.TestCase):
         self.assertEqual(report.returncode,0,report.stderr);self.assertEqual(report.stderr,'')
         self.assertEqual(json.loads(report.stdout)['paths'],['data/state/trades.json'])
 
+    def test_missing_configured_validation_source_fails_closed(self):
+        destination=self.home/'.config/rshelper/bin/sync-and-push-state.py'
+        destination.parent.mkdir();shutil.copyfile(ROOT/'scripts/sync-and-push-state.py',destination)
+        env=dict(os.environ,RSHELPER_REPO=str(self.repo),PYTHONPATH=str(ROOT/'src'))
+        result=subprocess.run([sys.executable,str(destination),'--dry-run'],env=env,
+            capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,1)
+        self.assertEqual(result.stdout,'')
+        self.assertIn('validation source',result.stderr.lower())
+        self.assertEqual(self.git('ls-remote','origin','refs/heads/main').split()[0],self.git('rev-parse','HEAD'))
+
+    def test_preloaded_validation_from_another_source_is_refused(self):
+        (self.repo/'src').symlink_to(ROOT/'src',target_is_directory=True)
+        other=self.home/'other-src';(other/'rshelper').mkdir(parents=True)
+        (other/'rshelper/__init__.py').write_text('FIXTURE=True\n')
+        env=dict(os.environ,RSHELPER_REPO=str(self.repo),PYTHONPATH=str(other))
+        code="import rshelper,runpy,sys;sys.argv=[sys.argv[1],'--dry-run'];runpy.run_path(sys.argv[0],run_name='__main__')"
+        result=subprocess.run([sys.executable,'-c',code,str(ROOT/'scripts/sync-and-push-state.py')],
+            env=env,capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,1)
+        self.assertEqual(result.stdout,'')
+        self.assertIn('differs from configured repository',result.stderr)
+
     def test_state_selection_has_file_and_total_byte_budgets(self):
         original=self.git('ls-remote','origin','refs/heads/main')
         (self.source/'positions.json').write_text('{"positions":[]}')

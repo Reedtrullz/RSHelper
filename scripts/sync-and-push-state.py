@@ -166,6 +166,15 @@ def collect(source):
     if len(candidates)>MAX_SYNC_FILES: raise SyncError('State selection exceeds file budget')
     candidates.sort()
     app_src=REPO/'src'
+    package=(app_src/'rshelper').resolve()
+    required=('__init__.py','publication.py','backup.py','persistence.py','profile.py','config.py')
+    if any(not (package/name).is_file() for name in required):
+        raise SyncError('Configured validation source is missing; state selection refused')
+    for name,module in tuple(sys.modules.items()):
+        if name=='rshelper' or name.startswith('rshelper.'):
+            file=getattr(module,'__file__',None)
+            if not file or not Path(file).resolve().is_relative_to(package):
+                raise SyncError('Loaded validation source differs from configured repository')
     sys.path.insert(0,str(app_src))
     from rshelper.publication import PRIVATE_FILES, KNOWN_FIELDS
     from rshelper.backup import _read_file, _validate_file, CORE_KINDS
