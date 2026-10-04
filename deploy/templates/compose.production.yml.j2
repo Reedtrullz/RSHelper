@@ -3,6 +3,7 @@ services:
     image: "{{ compose_image | default(docker_image) }}"
     container_name: "{{ container_name }}"
     restart: unless-stopped
+    command: ["python", "-m", "rshelper", "dashboard", "--bind", "0.0.0.0", "--port", "5555", "--access-mode", "owner"]
     ports:
       - "{{ app_bind_address }}:{{ app_host_port }}:5555"
     environment:

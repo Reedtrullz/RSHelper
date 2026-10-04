@@ -9,7 +9,7 @@ from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
 from rshelper.config import load_config
-from rshelper.market import price_issue
+from rshelper.market import price_issue, safe_int
 from rshelper.scanner import FlipScanner
 from rshelper.signals import detect_signals
 from rshelper.dashboard.handlers import make_handler
@@ -102,7 +102,9 @@ def _stop_daemon(kind: str, profile: str | None) -> dict:
 
 
 def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
-        open_browser: bool = False, profile: str | None = None) -> None:
+        open_browser: bool = False, profile: str | None = None,
+        access_mode: str = "owner", owner_token: str | None = None,
+        owner_token_file: str | None = None) -> None:
     """Start the dashboard HTTP server.
 
     Prints the dashboard URL to stdout. All status/log messages go to stderr.
@@ -111,6 +113,21 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     """
     from rshelper.profile import resolve_profile
     profile = resolve_profile(profile)
+    if access_mode not in ('owner', 'public-demo'):
+        raise ValueError('invalid dashboard access mode')
+    if access_mode == 'public-demo' and control:
+        raise ValueError('daemon control requires owner mode')
+    if access_mode == 'owner' and owner_token is not None:
+        import re
+        if not isinstance(owner_token, str) or re.fullmatch('[0-9a-f]{64}', owner_token) is None:
+            raise ValueError('invalid provisioned owner credential')
+    if access_mode == 'owner' and owner_token is None:
+        from pathlib import Path
+        from rshelper.dashboard.owner_token import load_or_create_token
+        from rshelper.profile import resolve_config_path
+        token_path = Path(owner_token_file) if owner_token_file else resolve_config_path('', profile) / 'owner.token'
+        owner_token = load_or_create_token(token_path)
+        print(f'[dashboard] Owner credential file: {token_path}', file=sys.stderr)
     cfg = load_config(profile)
     scan_kwargs = {
         "members_only": cfg.flip.members_only,
@@ -129,16 +146,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         items = []
         _latest = {}
         _vol_5m = {}
-        try:
-            alerts.push_alert("system", "WARN", None, "",
-                              "Data source unavailable",
-                              "Initial OSRS Wiki fetch failed; serving cached/empty data",
-                              profile=profile)
-        except Exception:
-            pass
+        if access_mode == 'owner':
+            try:
+                alerts.push_alert("system", "WARN", None, "",
+                                  "Data source unavailable",
+                                  "Initial OSRS Wiki fetch failed; serving cached/empty data",
+                                  profile=profile)
+            except Exception:
+                pass
 
     from rshelper.tuning import record_if_changed
-    record_if_changed(profile)
+    if access_mode == 'owner':
+        record_if_changed(profile)
 
     hub = EventHub()
 
@@ -237,25 +256,27 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                     cache["source"] = _source(_l)
                 except SystemExit:
                     print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
-                    try:
-                        alerts.push_alert("system", "WARN", None, "",
-                                          "Data source unavailable",
-                                          "Re-fetch failed; keeping previous data",
-                                          profile=profile)
-                        hub.broadcast("alert", {"alert": {
-                            "type": "system", "severity": "WARN",
-                            "title": "Data source unavailable",
-                            "message": "Re-fetch failed; keeping previous data"}})
-                    except Exception:
-                        pass
+                    if access_mode == "owner":
+                        try:
+                            alerts.push_alert("system", "WARN", None, "",
+                                              "Data source unavailable",
+                                              "Re-fetch failed; keeping previous data",
+                                              profile=profile)
+                            hub.broadcast("alert", {"alert": {
+                                "type": "system", "severity": "WARN",
+                                "title": "Data source unavailable",
+                                "message": "Re-fetch failed; keeping previous data"}})
+                        except Exception:
+                            pass
                 cache["last_fetch"] = time.time()
-                _check_watch_alerts(cache["latest"] or {})
-                if cache["source"] != old_source:
-                    alerts.push_alert(
-                        "system", "INFO", None, "", "Data source changed",
-                        f"Switched from {old_source} to {cache['source']}",
-                        profile=profile)
-                hub.broadcast("refresh")
+                if access_mode == "owner":
+                    _check_watch_alerts(cache["latest"] or {})
+                    if cache["source"] != old_source:
+                        alerts.push_alert(
+                            "system", "INFO", None, "", "Data source changed",
+                            f"Switched from {old_source} to {cache['source']}",
+                            profile=profile)
+                    hub.broadcast("refresh")
 
     def get_items():
         refresh()
@@ -814,12 +835,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            history_fn=get_history, trades_fn=get_trades,
                            pnl_fn=get_pnl, delete_trade_fn=delete_trade_fn,
                            log_trade_fn=log_trade_fn, event_hub=hub,
-                           allowed_hosts=allowed_hosts)
+                           allowed_hosts=allowed_hosts, mode=access_mode,
+                           owner_token=owner_token, control=control)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):
-        print(f"[dashboard] WARNING: binding to {bind} exposes the dashboard on "
-              f"all network interfaces with no authentication", file=sys.stderr)
+        print(f"[dashboard] WARNING: dashboard endpoints are reachable on all "
+              f"network interfaces; protected APIs enforce the configured "
+              f"access policy", file=sys.stderr)
     if control:
         print("[dashboard] NOTE: daemon control is ENABLED — the dashboard "
               "can start/stop the auto-trader and monitor.", file=sys.stderr)

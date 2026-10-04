@@ -1893,6 +1893,10 @@ def _main() -> None:
     dash = sub.add_parser("dashboard", help="Launch local web dashboard")
     dash.add_argument("--port", type=int, default=5555)
     dash.add_argument("--bind", type=str, default="127.0.0.1")
+    dash.add_argument("--access-mode", choices=['owner', 'public-demo'], default='owner',
+                      help="Owner bearer access or market-only public demo")
+    dash.add_argument("--owner-token-file", default=None,
+                      help="Private credential file; default: selected profile owner.token")
     dash.add_argument("--open", action="store_true",
                       help="Open the dashboard in your browser")
     dash.add_argument("--control", action="store_true",
@@ -2000,7 +2004,8 @@ def _main() -> None:
     elif args.command == "dashboard":
         from rshelper.dashboard.server import run
         run(bind=args.bind, port=args.port, control=args.control,
-            open_browser=args.open, profile=args.profile)
+            open_browser=args.open, profile=args.profile,
+            access_mode=args.access_mode, owner_token_file=args.owner_token_file)
 
     elif args.command == "margin-check":
         margin_check(args)
