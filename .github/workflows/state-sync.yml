@@ -59,10 +59,13 @@ jobs:
           scp -r -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
             data/state deploy@198.23.137.16:/tmp/rshelper-state-${{ github.sha }}
           scp -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            deploy/merge_state.py deploy@198.23.137.16:/tmp/rshelper-merge-state.py
+            deploy/merge_state.py deploy@198.23.137.16:/tmp/rshelper-merge-state-${{ github.sha }}.py
+          scp -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            src/rshelper/persistence.py deploy@198.23.137.16:/tmp/rshelper-state-validation-${{ github.sha }}.py
           ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
-            "sudo python3 /tmp/rshelper-merge-state.py /tmp/rshelper-state-${{ github.sha }} /opt/apps/rshelper/data/.config/rshelper --chown 1000:1000 \
-             && sudo rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state.py"
+            "sudo -n python3 /tmp/rshelper-merge-state-${{ github.sha }}.py /tmp/rshelper-state-${{ github.sha }} /opt/apps/rshelper/data/.config/rshelper --chown 1000:1000 \
+             --validation-module /tmp/rshelper-state-validation-${{ github.sha }}.py \
+             && sudo -n rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state-${{ github.sha }}.py /tmp/rshelper-state-validation-${{ github.sha }}.py"
 
       - name: Verify live state endpoint reflects the sync
         run: |
