@@ -1263,7 +1263,8 @@ class TestNewRoutes(unittest.TestCase):
         h.send_header = lambda key, value: None
         h.end_headers = lambda: None
         h.do_POST()
-        self.assertEqual(calls, [(None, False)])  # NOT (None, True)
+        self.assertEqual(calls, [])  # Wrong JSON types never invoke a mutator.
+        self.assertEqual(json.loads(h.wfile.getvalue())['code'], 'invalid_request')
 
     def test_timeseries_real_typeerror_not_masked(self):
         """A TypeError raised INSIDE the fn must 500, not re-call with 1 arg."""

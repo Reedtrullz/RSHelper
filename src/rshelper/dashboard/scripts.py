@@ -60,6 +60,13 @@ function apiFetch(url,options={}){
     return response;
   },error=>{release();throw error});
 }
+function apiErrorMessage(data,status){
+  return (data.code?data.code+': ':'')+(data.message||data.error||('HTTP '+status));
+}
+async function rejectApiError(response){
+  const data=await response.json().catch(()=>({}));
+  throw new Error(apiErrorMessage(data,response.status));
+}
 function hasFeature(name){return Array.isArray(capabilities.features)&&capabilities.features.includes(name)}
 function renderAccessUI(message=''){
   let bar=document.getElementById('accessBar');
@@ -201,8 +208,9 @@ function toggleAlerts(){
 async function markAllRead(){
   try{
     const r=await apiFetch('/api/alerts/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})});
+    if(!r.ok)await rejectApiError(r);
     if(r.ok){alertsData.unread=0;(alertsData.alerts||[]).forEach(a=>a.read=true);}
-  }catch(e){}
+  }catch(e){setStatus('Error: '+e.message,true);return;}
   const dd=document.getElementById('alertDropdown');
   if(dd){dd.remove();toggleAlerts();}
   renderTopbar();
@@ -359,7 +367,7 @@ async function starItem(id,ev){
   const action=watchIds.has(id)?'remove':'add';
   try{
     const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,item_id:id})});
-    if(!r.ok)throw new Error('watchlist update failed');
+    if(!r.ok)await rejectApiError(r);
     const d=await r.json();
     watchIds=new Set(d.items.map(i=>i.id));
     meta.watchlist=d.items.length;
@@ -436,7 +444,7 @@ async function paperTrade(){
     const r=await apiFetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action,item,qty})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
     setStatus(action==='open'?'Position opened':'Paper trade logged',false);
     fetchData();
   }catch(e){
@@ -1045,7 +1053,7 @@ async function saveWatchAlerts(id){
   try{
     const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below})});
-    if(!r.ok)throw new Error('save failed');
+    if(!r.ok)await rejectApiError(r);
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
     renderWatchlist();
     setStatus('Alert thresholds saved',false);
@@ -1140,7 +1148,7 @@ async function collectOffer(positionId,ev){
     const r=await apiFetch('/api/ge/collect',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({position_id:positionId})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
     setStatus('Collected '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp',false);
     fetchData();
   }catch(e){
@@ -1393,7 +1401,7 @@ async function traderControl(action){
   try{
     const r=await apiFetch('/api/trader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
-    if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
+    if(!r.ok||d.ok===false)throw new Error(apiErrorMessage(d,r.status));
     setStatus(action==='start'?'Auto-trader starting...':'Auto-trader stop requested',false);
     setTimeout(fetchData,1500);
   }catch(e){setStatus('Error: '+e.message,true);}
@@ -1403,7 +1411,7 @@ async function monitorControl(action){
   try{
     const r=await apiFetch('/api/monitor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
-    if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
+    if(!r.ok||d.ok===false)throw new Error(apiErrorMessage(d,r.status));
     setStatus(action==='start'?'Monitor starting...':'Monitor stop requested',false);
     setTimeout(fetchData,1500);
   }catch(e){setStatus('Error: '+e.message,true);}
@@ -1545,7 +1553,7 @@ async function closePosition(positionId,ev){
     const r=await apiFetch('/api/positions',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'close',position_id:positionId})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
     setStatus('Closed '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp',false);
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}
@@ -1709,7 +1717,7 @@ async function deleteTrade(tradeId,ev){
   try{
     const r=await apiFetch('/api/trades/delete',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({trade_id:tradeId})});
-    if(!r.ok)throw new Error('delete failed');
+    if(!r.ok)await rejectApiError(r);
     setStatus('Trade deleted',false);
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}
