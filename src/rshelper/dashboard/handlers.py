@@ -268,10 +268,11 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(500, "Scan failed")
 
         def _serve_health(self):
-            import os
-            from rshelper import __version__
-            version = os.environ.get("VERSION") or __version__
-            self._serve_json({"status": "healthy", "version": version})
+            from rshelper.release import health_metadata, ReleaseMetadataError
+            try:
+                self._serve_json(health_metadata())
+            except ReleaseMetadataError:
+                self.send_error(500, 'Invalid image build metadata')
 
         def _serve_capabilities(self):
             features = ["market", "static", "health"]

@@ -1,5 +1,6 @@
 """Exercise input boundaries over real loopback HTTP, never live state."""
 import json
+import errno
 import http.client
 from pathlib import Path
 import socket
@@ -54,13 +55,24 @@ class HttpInputsTest(unittest.TestCase):
                 sender = threading.Thread(target=send_slowly, daemon=True); sender.start()
             else:
                 client.sendall(body)
-            if half_close: client.shutdown(socket.SHUT_WR)
+            if half_close:
+                try: client.shutdown(socket.SHUT_WR)
+                except OSError as exc:
+                    if exc.errno != errno.ENOTCONN: raise
             raw = b''
             try:
                 while True:
                     part = client.recv(65536)
                     if not part: break
                     raw += part
+                    # HTTP completion is Content-Length, not TCP EOF. A server
+                    # closing a deadline-aborted request may reset the socket if
+                    # the dripping sender has already written additional bytes.
+                    if b'\r\n\r\n' in raw:
+                        head, payload = raw.split(b'\r\n\r\n', 1)
+                        response_headers = dict(line.lower().split(': ', 1) for line in
+                            head.decode('ascii').split('\r\n')[1:])
+                        if len(payload) >= int(response_headers['content-length']): break
             finally:
                 if drip: stop.set(); sender.join(timeout=1)
         head, payload = raw.split(b'\r\n\r\n', 1)

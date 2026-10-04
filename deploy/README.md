@@ -108,14 +108,46 @@ collection, and SSH access to the VPS as `deploy`.
 ```bash
 APP_VERSION=$(git rev-parse HEAD) ansible-playbook \
   -i deploy/inventory/hosts.yml deploy/playbook.yml \
-  -e "docker_image=ghcr.io/reedtrullz/rshelper:$(git rev-parse --short=12 HEAD)"
+  -e "docker_image=ghcr.io/reedtrullz/rshelper@${RSHELPER_IMAGE_DIGEST:?Set the reviewed registry sha256 digest}"
 ```
 
-The playbook validates that the image tag and `APP_VERSION` look like
-immutable SHA deploys, starts the container behind a `127.0.0.1` host port,
-adds the Caddy site block for `rs.reidar.tech`, verifies the local and public
-`/api/health` endpoints expose the exact SHA, and rolls back to the previous
-image if any verification step fails.
+Use the digest emitted by the successful GHCR build for the requested commit.
+CI passes that digest directly; SHA-shaped tags and mutable tags are refused.
+Docker resolves an OCI index for `linux/amd64`; the verifier checks the pulled
+digest, actual platform, OCI revision label and root-owned baked build metadata
+before replacing the service. Runtime `VERSION` never supplies health's build
+revision. Local/public receipts must match the baked SHA and declared digest,
+and Docker must report the exact image ID inspected during preflight.
+
+Rollback retains the previous image's repository digest, OCI revision and
+physical image ID, plus a tagged local retention reference. It uses the recorded
+digest with `pull: never` and verifies the restored image ID. Existing images
+from before this change have no baked metadata; that initial rollback baseline
+is explicitly legacy and uses its inspected OCI revision and previous health
+format. Once upgraded, rollback also requires baked SHA/digest health receipts.
+Artifact verification does not certify state-schema rollback compatibility;
+the separate #32 recovery drill supplies that gate. A candidate preflight failure
+leaves the existing container and saved Compose configuration intact. Candidate
+metadata is copied from an unstarted disposable container; preflight executes
+no candidate code and mounts no application state.
+
+## Reviewed Python base refresh
+
+The old base was the moving `python:3.11-slim` tag. On 2026-10-04, the Docker
+Registry API returned index
+`sha256:6f31d6e9ba2b0a787a3f81c37b004155b87b9efa1b771182bd550c1615745be5`
+and the selected `linux/amd64` manifest
+`sha256:922f47525757de33aff59f24cdfc85f412ac4a06aa8af7c7e9028d584b7bcdeb`.
+Both response bodies matched their registry digest headers. Dockerfile pins the
+selected platform manifest and records that base digest in the built metadata.
+
+For a refresh, inspect `python:3.11-slim` with
+`docker buildx imagetools inspect python:3.11-slim --raw`, select exactly one
+Linux/amd64 manifest, and verify its digest against the registry response.
+Record old/new index and platform digests in the PR, update `BASE_IMAGE_DIGEST`,
+then run offline/Python3.11/Node checks, a Linux/amd64 fixture image build and
+the artifact mismatch/rollback receipt checks. Release only after exact-head
+CI and actual digest/revision receipts pass. No scheduled tag-only refresh.
 
 ## Owner access boundary
 
