@@ -43,6 +43,22 @@ class TestTuning(unittest.TestCase):
         self.assertEqual(process["min_volume"], 7)
         self.assertEqual(process["top"], 20)
 
+    def test_corrupt_log_preserved_before_append(self):
+        path = tuning.log_path()
+        for text in ('broken', '{}', '{"entries": [4]}', '{"entries": [{"ts": false, "params": {}}]}'):
+            path.write_text(text)
+            with self.assertRaises(ValueError):
+                tuning.record_if_changed()
+            self.assertEqual(path.read_text(), text)
+
+    def test_unknown_log_fields_preserved_on_append(self):
+        path = tuning.log_path()
+        path.write_text(json.dumps({'entries': [], 'extension': {'keep': True}}))
+        tuning.record_if_changed(note='fixture')
+        data = json.loads(path.read_text())
+        self.assertEqual(data['extension'], {'keep': True})
+        self.assertEqual(data['entries'][0]['note'], 'fixture')
+
     def test_record_on_change(self):
         entry = tuning.record_if_changed()
         self.assertIsNotNone(entry)

@@ -1,12 +1,10 @@
 """Tuning log: record config.toml parameter changes over time."""
 import json
-import threading
 from datetime import datetime, timezone
 
 from rshelper.config import effective_config_dict, load_config
 from rshelper.profile import atomic_write_json, resolve_config_path
-
-_TUNING_LOCK = threading.Lock()
+from rshelper.persistence import read_state, locked_state, StateCorruptionError
 
 
 def params(profile: str | None = None) -> dict:
@@ -18,27 +16,45 @@ def log_path(profile: str | None = None):
     return resolve_config_path("tuning_log.json", profile)
 
 
-def load_entries(profile: str | None = None) -> list[dict]:
+def _load_log(profile: str | None = None) -> dict:
     path = log_path(profile)
-    try:
-        if path.exists():
-            return json.loads(path.read_text()).get("entries", [])
-    except (json.JSONDecodeError, OSError):
-        pass
-    return []
+    data = read_state(path, "generic")
+    if not data:
+        try:
+            path.stat()
+        except FileNotFoundError:
+            return {"entries": []}
+    entries = data.get("entries")
+    if not isinstance(entries, list):
+        raise StateCorruptionError("tuning_log.json: entries must be a list; original bytes preserved")
+    for entry in entries:
+        if (not isinstance(entry, dict) or not isinstance(entry.get("ts"), str)
+                or not isinstance(entry.get("params"), dict)
+                or ("note" in entry and not isinstance(entry["note"], str))):
+            raise StateCorruptionError("tuning_log.json: invalid tuning entry; original bytes preserved")
+        try:
+            datetime.fromisoformat(entry["ts"].replace("Z", "+00:00"))
+        except ValueError:
+            raise StateCorruptionError("tuning_log.json: invalid tuning timestamp; original bytes preserved") from None
+    return data
+
+
+def load_entries(profile: str | None = None) -> list[dict]:
+    return _load_log(profile)["entries"]
 
 
 def record_if_changed(profile: str | None = None, note: str = "auto") -> dict | None:
-    """Append a tuning entry when effective params changed. Returns the entry or None."""
-    with _TUNING_LOCK:
+    """Append under a shared lock; failed reads preserve the existing log."""
+    with locked_state(log_path(profile)):
+        data = _load_log(profile)
         current = params(profile)
-        entries = load_entries(profile)
+        entries = data["entries"]
         if entries and entries[-1]["params"] == current:
             return None
         entry = {"ts": datetime.now(timezone.utc).isoformat(),
                  "params": current, "note": note}
         entries.append(entry)
-        atomic_write_json(log_path(profile), {"entries": entries})
+        atomic_write_json(log_path(profile), data)
         return entry
 
 

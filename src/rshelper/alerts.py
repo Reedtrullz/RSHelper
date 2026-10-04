@@ -7,7 +7,8 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
+from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 ALERTS_PATH = "alerts.json"
 MAX_ALERTS = 200           # cap the persisted feed
@@ -19,39 +20,7 @@ _fallback_id = 0  # per-process monotonic ids when persistence fails
 
 
 def _file_lock(profile: str | None = None):
-    """Cross-process advisory lock for the alerts store.
-
-    The trader daemon, monitor daemon, and dashboard server are separate
-    processes that all read-modify-write alerts.json. A process-local
-    threading.Lock cannot serialize them, so push/mark-read/dedupe take an
-    flock on a sidecar .lock file (same profile dir). Returns a context
-    manager; best-effort (falls back to the thread lock on unsupported
-    platforms).
-    """
-    path = _alerts_path(profile).with_suffix(".json.lock")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    except OSError:
-        return _ALERT_LOCK
-    import contextlib
-    @contextlib.contextmanager
-    def _locked():
-        try:
-            import fcntl
-            fcntl.flock(fd, fcntl.LOCK_EX)
-        except (ImportError, OSError):
-            pass
-        try:
-            yield
-        finally:
-            try:
-                import fcntl
-                fcntl.flock(fd, fcntl.LOCK_UN)
-            except (ImportError, OSError):
-                pass
-            os.close(fd)
-    return _locked()
+    return locked_state(_alerts_path(profile))
 
 
 @dataclass
@@ -74,20 +43,12 @@ def _alerts_path(profile: str | None = None):
     return resolve_config_path(ALERTS_PATH, profile)
 
 
-def _load(profile: str | None = None) -> dict:
-    path = _alerts_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        if path.exists():
-            data = json.loads(path.read_text())
-            if isinstance(data, dict) and isinstance(data.get("alerts"), list):
-                return data
-    except (json.JSONDecodeError, OSError):
-        pass
-    return {"alerts": [], "watch_triggered": {}}
+def _load(profile: str | None = None):
+    return read_state(_alerts_path(profile), "alerts")
 
 
 def _save(data: dict, profile: str | None = None) -> None:
+    validate_state(data, "alerts", _alerts_path(profile))
     atomic_write_json(_alerts_path(profile), data)
 
 
@@ -125,7 +86,7 @@ def push_alert(type: str, severity: str, item_id: int | None,
             _prune(store)
             _save(store, profile)
         return Alert(**alert)
-    except OSError as exc:
+    except (OSError, StateCorruptionError) as exc:
         # Disk trouble must not break a trader/monitor cycle.
         import sys
         print(f"[alerts] warning: could not persist alert: {exc}", file=sys.stderr)
@@ -158,7 +119,7 @@ def _prune(store: dict) -> None:
 def list_alerts(limit: int = 50, profile: str | None = None) -> list[Alert]:
     """Newest-first alert feed, capped at `limit`."""
     store = _load(profile)
-    alerts = [Alert(**a) for a in store.get("alerts", []) if isinstance(a, dict)]
+    alerts = [Alert(**filter_fields(Alert, a)) for a in store.get("alerts", []) if isinstance(a, dict)]
     alerts.sort(key=lambda a: a.ts, reverse=True)
     return alerts[:limit]
 
@@ -216,13 +177,14 @@ def update_watch_alerts(item_id: int, above: int | None, below: int | None,
     and clears a previous dedupe so a newly-set threshold can fire.
     """
     from rshelper import watchlist
-    data = watchlist.load(profile)
-    entry = data.get("items", {}).get(str(item_id))
-    if entry is None:
-        raise ValueError(f"item {item_id} is not on the watchlist")
-    entry["alert_margin_above"] = above
-    entry["alert_margin_below"] = below
-    watchlist._save(data, profile)
+    with watchlist._watchlist_lock(profile):
+        data = watchlist.load(profile)
+        entry = data.get("items", {}).get(str(item_id))
+        if entry is None:
+            raise ValueError(f"item {item_id} is not on the watchlist")
+        entry["alert_margin_above"] = above
+        entry["alert_margin_below"] = below
+        watchlist._save(data, profile)
     with _file_lock(profile):
         store = _load(profile)
         store.setdefault("watch_triggered", {}).pop(str(item_id), None)

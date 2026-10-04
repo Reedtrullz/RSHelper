@@ -7,16 +7,13 @@ logs the realized trades into the journal. State lives in positions.json
 journal.
 """
 
-import contextlib
-import fcntl
-import json
-import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
+from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 POSITIONS_PATH = Path.home() / ".config" / "rshelper" / "positions.json"
@@ -24,33 +21,7 @@ _LOCK = threading.Lock()
 
 
 def _positions_lock(profile: str | None = None):
-    """Cross-process advisory lock for positions.json (flock sidecar).
-
-    The trader daemon, dashboard, and CLI are separate processes that all
-    open/close positions; a process-local lock cannot serialize them.
-    """
-    path = _positions_path(profile).with_suffix(".json.lock")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    except OSError:
-        return _LOCK
-
-    @contextlib.contextmanager
-    def _locked():
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
-        except OSError:
-            pass
-        try:
-            yield
-        finally:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-            except OSError:
-                pass
-            os.close(fd)
-    return _locked()
+    return locked_state(_positions_path(profile))
 
 
 @dataclass
@@ -73,21 +44,16 @@ def _positions_path(profile: str | None = None) -> Path:
     return resolve_config_path("positions.json", profile)
 
 
-def _load(profile: str | None = None) -> list[dict]:
-    path = _positions_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        if path.exists():
-            rows = json.loads(path.read_text()).get("positions", [])
-            return [filter_fields(Position, r) for r in rows
-                    if isinstance(r, dict)]
-    except (json.JSONDecodeError, OSError):
-        pass
-    return []
+def _load(profile: str | None = None):
+    return read_state(_positions_path(profile), "positions")["positions"]
 
 
 def _save(positions: list[dict], profile: str | None = None) -> None:
-    atomic_write_json(_positions_path(profile), {"positions": positions}, indent=2)
+    path = _positions_path(profile)
+    store = read_state(path, "positions")
+    store["positions"] = positions
+    validate_state(store, "positions", path)
+    atomic_write_json(path, store, indent=2)
 
 
 def _next_id(positions: list[dict]) -> int:
@@ -124,7 +90,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
 def list_positions(profile: str | None = None) -> list[Position]:
     """Return open positions, oldest first."""
     with _LOCK:
-        positions = [Position(**p) for p in _load(profile)]
+        positions = [Position(**filter_fields(Position, p)) for p in _load(profile)]
     positions.sort(key=lambda p: p.opened_at)
     return positions
 

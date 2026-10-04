@@ -341,7 +341,7 @@ def test_concurrent_log_trade_no_lost_updates():
 
     def writer(i):
         try:
-            log_trade(i, "Concurrent", 1, 100, 200)
+            log_trade(i + 1, "Concurrent", 1, 100, 200)
         except Exception as e:
             errors.append(e)
 
