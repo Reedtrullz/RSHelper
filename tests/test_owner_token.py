@@ -9,6 +9,32 @@ from rshelper.dashboard.owner_token import load_or_create_token
 
 
 class TestOwnerToken(unittest.TestCase):
+    def test_parent_replacement_cannot_select_an_outside_credential(self):
+        import os
+        import rshelper.dashboard.owner_token as module
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            selected, outside = root / 'selected', root / 'outside'
+            selected.mkdir(); outside.mkdir()
+            token = selected / 'owner.token'
+            token.write_text('a' * 64); token.chmod(0o600)
+            external = outside / 'owner.token'
+            external.write_text('b' * 64); external.chmod(0o600)
+            open_file = os.open
+            changed = False
+            def replace_parent(path, *args, **kwargs):
+                nonlocal changed
+                if Path(path).name == 'owner.token' and not changed:
+                    changed = True
+                    selected.rename(root / 'retained')
+                    selected.symlink_to(outside, target_is_directory=True)
+                return open_file(path, *args, **kwargs)
+            with mock.patch.object(module.os, 'open', side_effect=replace_parent):
+                with self.assertRaises((ValueError, OSError)):
+                    load_or_create_token(token)
+            self.assertEqual(external.read_text(), 'b' * 64)
+            self.assertEqual((root / 'retained/owner.token').read_text(), 'a' * 64)
+
     def test_default_token_alias_is_not_resolved_before_validation(self):
         import rshelper.dashboard.server as server
         from rshelper import profile

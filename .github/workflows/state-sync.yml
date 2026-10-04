@@ -67,7 +67,8 @@ jobs:
              --validation-module /tmp/rshelper-state-validation-${{ github.sha }}.py \
              && sudo -n rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state-${{ github.sha }}.py /tmp/rshelper-state-validation-${{ github.sha }}.py"
 
-      - name: Verify live state endpoint reflects the sync
+      - name: Verify authenticated private state without exposing records
         run: |
-          curl --fail -s https://rs.reidar.tech/api/trades \
-            | python3 -c "import json,sys; d=json.load(sys.stdin); print('live /api/trades count:', d.get('count'))"
+          set -euo pipefail
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+            'sudo -n docker exec -i rshelper python -' < deploy/check_state.py
