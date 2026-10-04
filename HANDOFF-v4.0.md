@@ -126,6 +126,14 @@ fallback), `test_merge_state.py` (alerts.json union).
 
 ## Operations notes
 
+Configuration validation runs before provider/state work. Generated TOML,
+dataclass defaults and effective settings have a consistency regression.
+Processing settings appear in tuning snapshots. The current dip default is
+2.5%; older 3.0% replay results and the replay harness's 2.0%/1.5%/10-minute
+baseline remain explicit historical comparisons. Longer configured cooldowns
+retain the exit records needed to enforce them; previously pruned records
+cannot be reconstructed by this change.
+
 - `rshelper dashboard --control` on the Mac enables Start/Stop for the
   trader/monitor from the UI. The launchd trader keeps running as before;
   the state-sync LaunchAgent now also syncs `alerts.json`.

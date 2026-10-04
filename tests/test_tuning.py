@@ -27,10 +27,21 @@ class TestTuning(unittest.TestCase):
 
     def test_params_shape(self):
         p = tuning.params()
-        self.assertEqual(set(p), {"alch", "flip", "margin", "trader"})
+        self.assertEqual(set(p), {"alch", "flip", "margin", "process", "trader"})
         self.assertIn("min_volume", p["flip"])
         self.assertIn("direction", p["margin"])
+        self.assertIn("capital", p["process"])
         self.assertIn("spread_collapse_exit_minutes", p["trader"])
+
+    def test_process_parameters_are_recorded(self):
+        path = profile.resolve_config_path("config.toml")
+        path.write_text("[process]\ncapital = 12345\nmin_volume = 7\n")
+        params = tuning.params()
+        self.assertIn("process", params)
+        process = params.get("process", {})
+        self.assertEqual(process["capital"], 12345)
+        self.assertEqual(process["min_volume"], 7)
+        self.assertEqual(process["top"], 20)
 
     def test_record_on_change(self):
         entry = tuning.record_if_changed()

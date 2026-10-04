@@ -18,6 +18,14 @@ lands in `~/.cache/rshelper/`.
 
 ## Commands
 
+Configuration is checked before a command fetches data or mutates state.
+Invalid tables, misspelled keys, wrong types, nonfinite values and unsafe
+relationships produce a section/key diagnostic and preserve the original file.
+`rshelper config show` reports all effective settings, including processing.
+The current trader dip default is 2.5%; the historical 3.0% replay comparison
+is separate evidence. This validation update does not retune the strategy.
+Exit history is retained for the longest configured reentry cooldown.
+
 ```bash
 rshelper alch-scan          # profitable high-alchemy items by GP/hr
 rshelper flip-scan          # flip margins (arbitrage or traditional)

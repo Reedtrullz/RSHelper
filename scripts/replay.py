@@ -18,6 +18,11 @@ Usage:
         [--hold 180] [--json]
 
 Data: reads /tmp/replay_ts.json (or fetches top items from the journal).
+
+ReplayConfig retains its historical 2.0% dip, -1.5% stop and 10-minute grace
+baseline. The current validated trader defaults are 2.5%, -2.0% and 20 minutes.
+Pass parameters explicitly when comparing these models; historical replay
+results do not establish an optimal current strategy.
 """
 from __future__ import annotations
 
