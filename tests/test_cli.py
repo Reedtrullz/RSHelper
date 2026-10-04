@@ -713,7 +713,7 @@ class TestCLI(unittest.TestCase):
                             "555556": {"high": 100, "low": 90,
                                        "highTime": now - 60, "lowTime": now - 60}}):
                     import contextlib, io
-                    with contextlib.redirect_stdout(io.StringIO()) as out:
+                    with contextlib.redirect_stdout(io.StringIO()) as out, mock.patch("webbrowser.open"):
                         cmod.item_info(Namespace(
                             item="zzz unique prose leak", profile=None, json=True,
                             timeseries=False, predict=False,

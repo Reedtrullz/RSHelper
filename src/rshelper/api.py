@@ -93,20 +93,20 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
         except urllib.error.HTTPError as exc:
             if exc.code in (429, 503) and attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
-                print(f"  Retrying {url} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})")
+                print(f"  Retrying {url} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
                 time.sleep(delay)
                 last_exc = exc
                 continue
-            print(f"  Warning: HTTP {exc.code} fetching {url}: {exc.reason}")
+            print(f"  Warning: HTTP {exc.code} fetching {url}: {exc.reason}", file=sys.stderr)
             return None
         except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
             if attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
-                print(f"  Retrying {url} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})")
+                print(f"  Retrying {url} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
                 time.sleep(delay)
                 last_exc = exc
                 continue
-            print(f"  Warning: failed to fetch {url}: {exc}")
+            print(f"  Warning: failed to fetch {url}: {exc}", file=sys.stderr)
             return None
     return None
 

@@ -1606,7 +1606,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
                 print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>7.1f}%  RS={rs}")
         print()
 
-def main() -> None:
+def _main() -> None:
     cfg = load_config()
 
     parser = argparse.ArgumentParser(
@@ -2189,6 +2189,17 @@ def main() -> None:
     else:
         parser.print_help()
         sys.exit(1)
+
+
+def main() -> None:
+    original_stderr = sys.stderr
+    try:
+        _main()
+    finally:
+        if sys.stderr is not original_stderr:
+            quiet_stream = sys.stderr
+            sys.stderr = original_stderr
+            quiet_stream.close()
 
 
 if __name__ == "__main__":

@@ -79,10 +79,11 @@ def main() -> int:
     # Rank by ROI (only configs that produced trades)
     ranked = [r for r in results if r.get("trades", 0) > 0]
     ranked.sort(key=lambda r: r.get("roi_pct", -999), reverse=True)
-    print(f"=== Top {args.top} configs by ROI (from {len(ranked)} runs) ===")
+    stream = sys.stderr if args.json else sys.stdout
+    print(f"=== Top {args.top} configs by ROI (from {len(ranked)} runs) ===", file=stream)
     for r in ranked[:args.top]:
         print(f"  {r['label']:45s} roi={r['roi_pct']:6.2f}% win={r['win_rate']:5.1f}% "
-              f"trades={r['trades']:4d} pf={r['profit_factor']} max_dd={r['max_drawdown']}")
+              f"trades={r['trades']:4d} pf={r['profit_factor']} max_dd={r['max_drawdown']}", file=stream)
     if args.json:
         print(json.dumps(ranked[:args.top], default=str, indent=2))
     return 0
