@@ -1,0 +1,7 @@
+# Draft publication policy (E08-A)
+
+Recommended public output is generated synthetic demo data only. The serializer may expose approved item IDs, quantities, prices, tax/profit event timestamps and hold duration from a synthetic profile. It excludes names, notes, strategies, account labels, config, alert content, operational state and unknown fields. The policy defaults to no approved profiles and no approved files; a new profile/field fails closed. Preview output lists exact paths, field names and counts without record values. Every approved field appears in serialized rows; a missing optional value is represented as null, preserving the preview schema without fabricating a value. Pure serialization has nine passing privacy/shape regressions and performs no transport or Git mutation.
+
+Real operational state should be replicated privately over the existing authenticated SSH deployment identity after backup, writer lease/sequence and remote receipt gates. Keep private backup files outside public Git. No active synchronization or deployed feed changes in this slice. Historical Git copies need a separate owner decision; this policy cannot erase prior history.
+
+Owner choice is pending for public field classes and the existing-feed transition. Selecting synthetic-only approves the draft data classes for generated fixtures; it does not publish or relabel real records as synthetic. Real-state samples need a separately named field policy and concrete reviewed export before activation.
