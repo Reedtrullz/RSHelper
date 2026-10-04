@@ -172,7 +172,17 @@ def quarantine_snapshot(root: Path, relative: str, evidence_root: Path,
         source_dir = _open_directory(source.parent)
         handles.callback(os.close, source_dir)
         handles.enter_context(_source_lock(source_dir, source.name))
+        # Retain the inode until verification completes. Closing all source
+        # handles lets some filesystems reuse its number after an unlink.
+        source_fd = os.open(source.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                            dir_fd=source_dir)
+        handles.callback(os.close, source_fd)
+        pinned_info = os.fstat(source_fd)
+        if not stat.S_ISREG(pinned_info.st_mode):
+            raise RecoveryError('snapshot must be a regular file')
         raw, source_identity = _read_at(source_dir, source.name)
+        if source_identity != _identity(pinned_info):
+            raise RecoveryError('snapshot changed; source preserved')
         _malformed(raw)
         digest = hashlib.sha256(raw).hexdigest()
         if expected_sha != digest:
