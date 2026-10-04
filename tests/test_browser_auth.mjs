@@ -103,4 +103,19 @@ await assert.rejects(vm.runInContext("apiFetch('/api/meta')", publicHarness.cont
 assert.equal(calls.filter(c => c.url === '/api/meta').length, 0, 'public mode blocks accidental private fetches');
 assert.ok(!source.includes('new EventSource('), 'authenticated SSE uses fetch streaming');
 
-console.log('browser owner flow regressions passed');
+const rejectedForm = harness(async () => new Response(JSON.stringify({
+  ok: false, code: 'invalid_request', message: 'alert_above must be an integer >= 0'
+}), {status: 400, headers: {'Content-Type': 'application/json'}}));
+vm.runInContext("authenticated=true;ownerToken='synthetic';accessMode='owner'", rejectedForm.context);
+rejectedForm.context.document.getElementById('wlAbove').value = '-1';
+rejectedForm.context.document.getElementById('wlBelow').value = '';
+let removed = false;
+rejectedForm.context.document.querySelectorAll = () => [{remove() {removed=true}}];
+let errorMessage = '';
+rejectedForm.context.setStatus = (message) => {errorMessage=message};
+await rejectedForm.context.saveWatchAlerts(2);
+assert.match(errorMessage, /invalid_request.*alert_above/, 'mutation error displays server code and message');
+assert.equal(rejectedForm.context.document.getElementById('wlAbove').value, '-1', 'invalid input remains editable');
+assert.equal(removed, false, 'validation error keeps the form open');
+
+console.log('browser owner flow and mutation error regressions passed');

@@ -2,13 +2,17 @@
 
 import json
 import re
+import socket
 import sys
 import time
 from http.server import BaseHTTPRequestHandler
 from typing import Callable
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 
 from rshelper.dashboard.templates import INDEX_HTML
+from rshelper.dashboard.http_inputs import (
+    HttpInputError, MAX_BODY_BYTES, decode_object, parse_query, validate_operation,
+)
 
 
 _GET_RESOURCES = {
@@ -137,11 +141,17 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
     class DashboardHandler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
+        body_read_timeout = 5.0
 
         def do_GET(self):
             path = self.path.split("?", 1)[0]
             resource = _GET_RESOURCES.get(path)
             if resource is not None and not self._authorize(resource, False):
+                return
+            try:
+                self._query()
+            except HttpInputError as exc:
+                self.send_error(exc.status, str(exc))
                 return
             if path == "/":
                 self._serve_html()
@@ -193,6 +203,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(404)
 
         def do_POST(self):
+            # A handler serves multiple requests on an HTTP/1.1 connection.
+            self.__dict__.pop('_json_body', None)
             path = self.path.split("?", 1)[0]
             resource = _POST_RESOURCES.get(path)
             if resource is not None:
@@ -204,6 +216,13 @@ def make_handler(scanner, scan_items: Callable[[], list],
             if resource == "daemon-control" and not control:
                 self.send_error(403, "Daemon control is disabled")
                 return
+            if resource is not None:
+                try:
+                    self._query()
+                    self._json_body = self._read_json_object()
+                except HttpInputError as exc:
+                    self.send_error(exc.status, str(exc))
+                    return
             if path == "/api/trades":
                 self._handle_log_trade()
             elif path == "/api/watchlist":
@@ -531,8 +550,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_ge_collect(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 position_id = int(body.get("position_id", 0))
             except Exception:
                 self.send_error(400, "Invalid JSON")
@@ -548,8 +566,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_paper_trade(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 action = body.get("action", "")
                 item = body.get("item", "")
                 qty = int(body.get("qty", 0))
@@ -567,8 +584,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_watchlist(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 action = body.get("action", "")
                 item_id = int(body.get("item_id", 0))
                 above = body.get("alert_above")
@@ -595,8 +611,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_close_position(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 action = body.get("action", "")
                 position_id = int(body.get("position_id", 0))
                 qty = body.get("qty")
@@ -618,8 +633,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_trader_control(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 action = body.get("action", "")
             except Exception:
                 self.send_error(400, "Invalid JSON")
@@ -638,8 +652,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_monitor_control(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 action = body.get("action", "")
             except Exception:
                 self.send_error(400, "Invalid JSON")
@@ -658,8 +671,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_alerts_read(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 ids = body.get("ids")
                 # Strict bool: a JSON string "false" must not coerce to True.
                 all_flag = body.get("all") is True
@@ -678,8 +690,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_trade_delete(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length))
+                body = self._read_json_object()
                 trade_id = int(body.get("trade_id", 0))
             except Exception:
                 self.send_error(400, "Invalid JSON")
@@ -695,9 +706,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _handle_log_trade(self):
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = self.rfile.read(length)
-                data = json.loads(body)
+                data = self._read_json_object()
             except Exception:
                 self.send_error(400, "Invalid JSON")
                 return
@@ -725,6 +734,66 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 print(f"[dashboard] trade log error: {e}", file=sys.stderr)
                 self.send_error(500, "Trade logging failed")
 
+        def _read_json_object(self):
+            if hasattr(self, '_json_body'):
+                return self._json_body
+            get_all = getattr(self.headers, 'get_all', None)
+            lengths = get_all('Content-Length', []) if get_all else (
+                [self.headers['Content-Length']] if 'Content-Length' in self.headers else [])
+            if self.headers.get('Transfer-Encoding') is not None:
+                raise HttpInputError('Transfer-Encoding is not supported')
+            if not lengths:
+                raise HttpInputError('Content-Length is required', 411, 'length_required')
+            if len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdecimal():
+                raise HttpInputError('Invalid Content-Length')
+            # Avoid converting a huge integer just to reject it.
+            if len(lengths[0]) > 10:
+                raise HttpInputError('Body exceeds 65536-byte limit', 413, 'body_too_large')
+            length = int(lengths[0])
+            if length > MAX_BODY_BYTES:
+                raise HttpInputError('Body exceeds 65536-byte limit', 413, 'body_too_large')
+            deadline = time.monotonic() + self.body_read_timeout
+            connection = getattr(self, 'connection', None)
+            old_timeout = connection.gettimeout() if connection is not None else None
+            content = bytearray()
+            try:
+                while len(content) < length:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0: raise HttpInputError('Body read deadline exceeded', 408, 'body_timeout')
+                    if connection is not None: connection.settimeout(remaining)
+                    read = getattr(self.rfile, 'read1', self.rfile.read)
+                    chunk = read(length-len(content))
+                    if not chunk: raise HttpInputError('Incomplete request body')
+                    content.extend(chunk)
+            except (TimeoutError, socket.timeout) as exc:
+                raise HttpInputError('Body read deadline exceeded', 408, 'body_timeout') from exc
+            finally:
+                if connection is not None: connection.settimeout(old_timeout)
+            return validate_operation(self.path.partition('?')[0], decode_object(content))
+
+        def _json_error(self, status, code, message):
+            self.close_connection = True
+            body = json.dumps({'ok': False, 'code': code, 'message': message,
+                               'error': message}).encode('utf-8')
+            self.send_response(status)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Connection', 'close')
+            self.end_headers()
+            if getattr(self, 'command', '') != 'HEAD': self.wfile.write(body)
+
+        def send_error(self, code, message=None, explain=None):
+            if getattr(self, 'path', '').partition('?')[0].startswith('/api/'):
+                codes = {400: 'invalid_request', 401: 'unauthorized', 403: 'forbidden',
+                         404: 'not_found', 408: 'body_timeout', 411: 'length_required',
+                         413: 'body_too_large', 414: 'query_too_large',
+                         500: 'internal_error', 501: 'unsupported_method'}
+                self._json_error(code, codes.get(code, 'http_error'),
+                                 message or self.responses.get(code, ('HTTP error',))[0])
+            else:
+                super().send_error(code, message, explain)
+
         def _serve_json(self, data):
             body = json.dumps(data).encode("utf-8")
             self.send_response(200)
@@ -735,7 +804,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
             self.wfile.write(body)
 
         def _query(self):
-            return parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+            return parse_query(self.path)
 
         def _origin_ok(self) -> bool:
             """Reject state-mutating requests from foreign origins.
