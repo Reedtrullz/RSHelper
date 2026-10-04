@@ -63,7 +63,8 @@ class TestMarketValidation(unittest.TestCase):
             vanished.exists.return_value = True
             vanished.stat.side_effect = FileNotFoundError('fixture')
             vanished.open.side_effect = FileNotFoundError('fixture')
-            with mock.patch.object(api, '_cache_path', return_value=vanished):
+            with mock.patch.object(api, '_cache_path', return_value=vanished), \
+                    mock.patch.object(api, '_provenance_path', return_value=Path(tmp)/'latest.provenance.json'):
                 self.assertIsNone(api._load_cache('latest'))
                 self.assertIsNone(api._load_stale_cache('latest'))
 
