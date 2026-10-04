@@ -24,10 +24,22 @@ def _has_network():
         return False
 
 
-HAS_NETWORK = _has_network()
+HAS_NETWORK = os.environ.get("RSHELPER_PROVIDER_CHECK") == "1" and _has_network()
 
 
 class TestIntegration(unittest.TestCase):
+
+    def test_build_items_offline(self):
+        import time
+        now = int(time.time())
+        mapping = [{"id": 2, "name": "Cannonball", "members": True,
+                    "limit": 11000, "highalch": 6}]
+        latest = {"2": {"high": 200, "low": 190,
+                        "highTime": now, "lowTime": now}}
+        volumes = {"2": {"highPriceVolume": 500, "lowPriceVolume": 500}}
+        items = build_items_from_api(mapping, latest, volumes)
+        self.assertEqual(len(items), 1)
+        self.assertEqual((items[0].buy_price, items[0].sell_price), (200, 190))
 
     @unittest.skipUnless(HAS_NETWORK, "no network")
     def test_fetch_latest_returns_data(self):

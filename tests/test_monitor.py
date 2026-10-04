@@ -20,7 +20,11 @@ STATE_PATH = mon.STATE_PATH
 
 
 def test_notify_command_format():
-    notify("Test", "This is a test notification")
+    from unittest import mock
+    with mock.patch.object(mon.subprocess, "run") as run:
+        notify("Test", "This is a test notification")
+    assert run.call_args.args[0] == [
+        "osascript", "-e", 'display notification "This is a test notification" with title "Test"']
     print("  PASSED test_notify_command_format")
 
 
@@ -91,7 +95,9 @@ def test_stale_pid_cleanup():
         PID_PATH.unlink()
     PID_PATH.parent.mkdir(parents=True, exist_ok=True)
     PID_PATH.write_text("99999")  # PID that almost certainly doesn't exist
-    result = stop_monitor()
+    from unittest import mock
+    with mock.patch.object(mon.os, "kill", side_effect=ProcessLookupError):
+        result = stop_monitor()
     # After cleanup, PID file should be gone AND result should be False
     assert not PID_PATH.exists(), "PID file should be cleaned up"
     assert result is False, "stop_monitor should return False for stale PID"
