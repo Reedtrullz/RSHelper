@@ -18,19 +18,19 @@ STATE_PATH = MONITOR_DIR / "monitor_state.json"
 def _pid_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return PID_PATH
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "monitor.pid"
+    return resolve_config_path("monitor.pid", profile)
 
 
 def _state_path(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return STATE_PATH
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile / "monitor_state.json"
+    return resolve_config_path("monitor_state.json", profile)
 
 
 def _monitor_dir(profile: str | None = None) -> Path:
     if profile is None or profile == "default":
         return MONITOR_DIR
-    return Path.home() / ".config" / "rshelper" / "profiles" / profile
+    return resolve_config_path("", profile)
 
 
 def notify(title: str, message: str) -> None:
@@ -49,6 +49,8 @@ def notify(title: str, message: str) -> None:
 def run_monitor(interval_sec: int = 120, no_notify: bool = False,
                 profile: str | None = None) -> None:
     """Main polling loop. Blocks until KeyboardInterrupt."""
+    from rshelper.profile import resolve_profile
+    profile = resolve_profile(profile)
     prof_name = profile if profile else "default"
     mon_dir = _monitor_dir(profile)
     mon_dir.mkdir(parents=True, exist_ok=True)

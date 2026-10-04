@@ -1607,7 +1607,14 @@ def signals_cmd(args: argparse.Namespace) -> None:
         print()
 
 def _main() -> None:
-    cfg = load_config()
+    from rshelper.profile import resolve_profile
+    selection = argparse.ArgumentParser(add_help=False)
+    selection.add_argument("--profile")
+    selected, remaining = selection.parse_known_args()
+    # An invalid active marker must remain repairable through the app.
+    repair = sys.argv[1:3] == ["profile", "switch"]
+    launch_profile = resolve_profile("default" if repair and selected.profile is None else selected.profile)
+    cfg = load_config(launch_profile)
 
     parser = argparse.ArgumentParser(
         prog="rshelper",
@@ -1921,7 +1928,7 @@ def _main() -> None:
     margin.add_argument("--save-snapshot", action="store_true",
                          help="Save results for later diff/trend comparison")
 
-    args, unknown = parser.parse_known_args()
+    args, unknown = parser.parse_known_args(remaining)
     if unknown:
         print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
               file=sys.stderr)
@@ -1938,7 +1945,7 @@ def _main() -> None:
             if tok.startswith("--profile="):
                 args.profile = tok.split("=", 1)[1]
                 break
-    cfg = load_config(args.profile)
+    args.profile = launch_profile
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
@@ -2195,6 +2202,9 @@ def main() -> None:
     original_stderr = sys.stderr
     try:
         _main()
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        raise SystemExit(2) from None
     finally:
         if sys.stderr is not original_stderr:
             quiet_stream = sys.stderr
