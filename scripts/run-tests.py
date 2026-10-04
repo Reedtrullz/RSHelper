@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -56,7 +57,8 @@ def main():
     scratch_root = Path(os.environ.get("RSHELPER_TEST_SCRATCH", ROOT / ".execution"))
     scratch_root.mkdir(parents=True, exist_ok=True)
     for path in files:
-        with tempfile.TemporaryDirectory(prefix="suite-", dir=scratch_root) as folder:
+        with tempfile.TemporaryDirectory(prefix="suite-", dir=scratch_root) as folder, \
+                tempfile.TemporaryDirectory(prefix='rsh-offline-', dir='/private/tmp' if sys.platform == 'darwin' else '/tmp') as socket_root:
             home = Path(folder) / "home"
             home.mkdir()
             result_path = Path(folder) / "result.json"
@@ -68,10 +70,24 @@ def main():
                    "RSHELPER_TEST_GUARD": str(GUARD),
                    "RSHELPER_TEST_VIOLATIONS": str(violation),
                    "RSHELPER_TEST_SCRATCH": folder,
+                   "RSHELPER_TEST_SOCKET_ROOT": socket_root,
+                   "RSHELPER_DAEMON_SOCKET_ROOT": socket_root,
                    "RSHELPER_OFFLINE": "1" if args.offline else "0",
                    "RSHELPER_PROVIDER_CHECK": "1" if args.provider_check else "0",
                    "PYTHONPATH": os.pathsep.join([str(GUARD), str(ROOT / "src")]),
                    "PYTHONDONTWRITEBYTECODE": "1"}
+            if path.resolve() == ROOT / 'tests/test_sync_index.py':
+                env['RSHELPER_TEST_GIT_ROOT'] = str(Path(folder).resolve())
+            else:
+                env.pop('RSHELPER_TEST_GIT_ROOT', None)
+            if path.resolve() == ROOT / 'tests/test_daemon_installer.py':
+                env['RSHELPER_TEST_SHELL_ROOT'] = str(Path(folder).resolve())
+            else:
+                env.pop('RSHELPER_TEST_SHELL_ROOT', None)
+            for name in ('git', 'ps', 'ssh-keygen'):
+                executable = shutil.which(name)
+                if executable:
+                    env['RSHELPER_TEST_EXECUTABLE_'+name.upper().replace('-', '_')] = str(Path(executable).resolve())
             command = [sys.executable, __file__, "--offline" if args.offline else "--provider-check",
                        "--file", str(path.resolve()), "--result", str(result_path)]
             try:

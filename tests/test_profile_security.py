@@ -86,8 +86,7 @@ class TestProfileSecurity(unittest.TestCase):
         with mock.patch.object(monitor, '_monitor_dir', return_value=self.config), \
                 mock.patch.object(monitor, '_pid_path', return_value=self.config / 'monitor.pid'), \
                 mock.patch.object(monitor, '_state_path', return_value=self.config / 'monitor_state.json'), \
-                mock.patch.object(monitor, '_poll_cycle', side_effect=poll), \
-                mock.patch.object(monitor.time, 'sleep'):
+                mock.patch.object(monitor, '_poll_cycle', side_effect=poll):
             monitor.run_monitor(interval_sec=1, no_notify=True)
         self.assertEqual(calls, ['default', 'default'])
         self.assertEqual(profile.get_active_profile(), 'alt')

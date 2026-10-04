@@ -2,6 +2,7 @@
 
 import errno
 import os
+import stat
 import subprocess
 import sys
 import time
@@ -59,10 +60,31 @@ def _cap_open_qty(qty: int, buy_limit: int, name: str) -> int:
     return qty
 
 
+def _open_daemon_log(path):
+    descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_nlink != 1:
+            raise OSError('daemon log must be an owned regular file')
+        os.fchmod(descriptor, 0o600)
+        return os.fdopen(descriptor, 'ab')
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
 def _spawn_daemon(kind: str, profile: str | None) -> dict:
-    """Start auto-trade or monitor detached. Returns {ok, pid} or {ok: False, error}."""
+    """Start detached and wait for this child's verified readiness receipt."""
+    from rshelper.daemon import daemon_status, wait_for_ready, start_supervised_daemon, LeaseError
     from rshelper.profile import resolve_profile
     profile = resolve_profile(profile)
+    previous = daemon_status(kind, profile)
+    if previous.get('supervisor') == 'launchd':
+        return start_supervised_daemon(kind, profile)
+    if previous.get('ownership') == 'legacy_unverified':
+        return {'ok': False, 'error': 'Legacy daemon ownership is unverified; controlled restart required.'}
+    if previous.get('running'):
+        return {'ok': False, 'error': 'A verified daemon is already running.'}
     import rshelper
     pkg_dir = os.path.dirname(os.path.abspath(rshelper.__file__))
     src_dir = os.path.dirname(pkg_dir)  # repo/src — the parent the package lives in
@@ -71,16 +93,18 @@ def _spawn_daemon(kind: str, profile: str | None) -> dict:
     log_dir = __import__("rshelper.profile", fromlist=["resolve_config_path"]).resolve_config_path("logs", profile)
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"{kind}.log"
-    if log_path.exists() and log_path.stat().st_size > 5 * 1024 * 1024:
+    if log_path.exists() and not log_path.is_symlink() and log_path.stat().st_size > 5 * 1024 * 1024:
         log_path.unlink(missing_ok=True)  # ponytail: rotate at 5MB
     # The child runs `python -m rshelper`; when the dashboard's own
     # importability came from PYTHONPATH (or from cwd in a dev flow), the
     # child must inherit a path that resolves the package. Prepend src so a
     # cwd-based launch (PYTHONPATH unset) still works.
     env = dict(os.environ)
+    for key in ('RSHELPER_SUPERVISOR_KIND', 'RSHELPER_SERVICE_DOMAIN', 'RSHELPER_SERVICE_LABEL'):
+        env.pop(key, None)
     env["PYTHONPATH"] = src_dir + os.pathsep + env.get("PYTHONPATH", "")
     try:
-        with open(log_path, "ab") as logf:
+        with _open_daemon_log(log_path) as logf:
             proc = subprocess.Popen(
                 cmd, cwd=src_dir, stdout=logf, stderr=logf,
                 start_new_session=True,  # survive dashboard shutdown
@@ -88,17 +112,37 @@ def _spawn_daemon(kind: str, profile: str | None) -> dict:
             )
     except OSError as exc:
         return {"ok": False, "error": f"could not start {kind}: {exc}"}
-    return {"ok": True, "pid": proc.pid, "log": str(log_path)}
+    ready = False
+    try:
+        if proc.poll() is not None:
+            return {'ok': False, 'error': f'{kind} exited before reporting ready', 'log': str(log_path)}
+        status = wait_for_ready(kind, profile, expected_pid=proc.pid, process=proc, timeout=3)
+        if (status.get('ownership') == 'verified_lease' and status.get('pid') == proc.pid
+                and status.get('ready') is True):
+            ready = True
+            return {'ok': True, 'pid': proc.pid, 'log': str(log_path),
+                    'ownership': 'verified_lease', 'ready': True,
+                    'daemon_instance': status.get('daemon_instance')}
+        error = (f'{kind} exited before reporting ready' if status.get('reason') == 'process_exited'
+                 else f'{kind} did not report verified readiness')
+        return {'ok': False, 'error': error, 'log': str(log_path)}
+    except (LeaseError, OSError, ValueError) as exc:
+        return {'ok': False, 'error': f'{kind} readiness failed: {exc}', 'log': str(log_path)}
+    finally:
+        # Only this unreaped Popen child is ours to terminate. Never signal a
+        # PID discovered in another owner's file or stop a racing lease owner.
+        if not ready and proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=2)
 
 
 def _stop_daemon(kind: str, profile: str | None) -> dict:
-    if kind == "auto-trade":
-        from rshelper.trader import stop_trader
-        stopped = stop_trader(profile)
-    else:
-        from rshelper.monitor import stop_monitor
-        stopped = stop_monitor(profile)
-    return {"ok": stopped, "stopped": stopped}
+    from rshelper.daemon import request_stop
+    return request_stop(kind, profile)
 
 
 def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,

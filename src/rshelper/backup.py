@@ -55,7 +55,7 @@ def _files(root):
 
 
 def _read_file(path):
-    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     try:
         stream = os.fdopen(descriptor, 'rb')
     except BaseException:

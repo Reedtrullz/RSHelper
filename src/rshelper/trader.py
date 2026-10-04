@@ -25,6 +25,9 @@ from pathlib import Path
 
 from rshelper.market import ge_tax, price_issue, safe_int, quote_time_issue
 from rshelper.profile import atomic_write_json, resolve_config_path, resolve_profile
+from rshelper.daemon import (LeaseBusy, LeaseError, acquire_lease, daemon_status,
+                             install_stop_signal, read_private_json,
+                             request_stop, restore_stop_signal)
 
 TRADER_DIR = Path.home() / ".config" / "rshelper"
 PID_PATH = TRADER_DIR / "trader.pid"
@@ -114,12 +117,9 @@ def _write_state(state: dict, profile: str | None = None) -> None:
 
 
 def _read_state(profile: str | None = None) -> dict | None:
-    path = _state_path(profile)
-    if not path.exists():
-        return None
     try:
-        return json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
+        return read_private_json(_state_path(profile))
+    except LeaseError:
         return None
 
 
@@ -626,124 +626,92 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
         raise ValueError("stop_mark_blend must be in [0, 1]")
     interval = interval or cfg.interval_sec
     prof_name = profile
-    pid = os.getpid()
     p_path = _pid_path(profile)
-    # Claim the pid file with O_EXCL so two racing starts cannot both pass
-    # the liveness check; a stale file from a dead process is replaced.
-    # The pid is written+fsynced while the O_EXCL fd is still held, so a
-    # concurrent claimant can never read a partial/empty file and unlink a
-    # live claim.
-    for _ in range(2):
-        try:
-            fd = os.open(p_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "w") as f:
-                f.write(str(pid))
-                f.flush()
-                os.fsync(f.fileno())
-            break
-        except FileExistsError:
-            try:
-                old_pid = int(p_path.read_text().strip())
-                os.kill(old_pid, 0)
-            except (ValueError, OSError):
-                p_path.unlink(missing_ok=True)  # stale pid; retry the claim
-                continue
-            print(f"[trader] Already running (PID {old_pid}); use --stop first.",
-                  file=sys.stderr)
-            sys.exit(1)
-    state = {"pid": pid, "started_iso": datetime.now(timezone.utc).isoformat(),
-             "last_cycle_iso": None, "last_result": None,
-             "realized_pnl": 0, "profile": prof_name, "running": True,
-             "cycles": 0, "errors": 0, "exits_by_reason": {}}
-    _write_state(state, profile)
-    print(f"[trader] Paper trader started (PID {pid}, interval {interval}s, "
-          f"capital {cfg.capital:,} gp)", file=sys.stderr)
     try:
-        while True:
-            cycle_started = time.time()
-            result = {}
+        with acquire_lease("trader", prof_name, pid_path=p_path) as lease:
+            state = {"pid": lease.pid,
+                     "started_iso": datetime.now(timezone.utc).isoformat(),
+                     "last_cycle_iso": None, "last_result": None,
+                     "realized_pnl": 0, "profile": prof_name, "running": True,
+                     "cycles": 0, "errors": 0, "exits_by_reason": {},
+                     "daemon_instance": lease.daemon_instance,
+                     "supervisor": lease.supervisor_kind,
+                     "desired_state": lease.desired_state, "ready": False}
+            previous_handler = None
+            state_written = False
             try:
-                result = run_cycle(cfg, profile)
-            except SystemExit:
-                result = {"error": "data sources unavailable"}
-            except Exception as e:
-                result = {"error": str(e)}
-            print(f"[trader] cycle: {json.dumps(result)}", file=sys.stderr)
-            state["cycles"] = state.get("cycles", 0) + 1
-            if result.get("closed_pnl") is not None:
-                state["realized_pnl"] = state.get("realized_pnl", 0) + result["closed_pnl"]
-            for c in result.get("closed", []):
-                reason = c.get("reason", "unknown")
-                exits = state.setdefault("exits_by_reason", {})
-                row = exits.setdefault(reason, {"count": 0, "profit": 0})
-                row["count"] += 1
-                row["profit"] += c.get("profit", 0)
-            if result.get("error"):
-                state["errors"] = state.get("errors", 0) + 1
-            state["last_cycle_iso"] = datetime.now(timezone.utc).isoformat()
-            state["last_result"] = result
-            _write_state(state, profile)
-            if once:
-                break
-            elapsed = time.time() - cycle_started
-            time.sleep(max(1, interval - elapsed))
-    except KeyboardInterrupt:
-        print("\n[trader] Stopping...", file=sys.stderr)
-    finally:
-        try:
-            # Only remove our own pid file; a later instance may have taken over.
-            if _pid_path(profile).read_text().strip() == str(pid):
-                _pid_path(profile).unlink(missing_ok=True)
-        except (ValueError, OSError):
-            pass
-        state["running"] = False
-        _write_state(state, profile)
-    return state.get("last_result")
+                previous_handler = install_stop_signal(lease)
+                _write_state(state, profile)
+                state_written = True
+                lease.mark_ready()
+                state["ready"] = True
+                _write_state(state, profile)
+                print(f"[trader] Paper trader started (PID {lease.pid}, interval {interval}s, "
+                      f"capital {cfg.capital:,} gp)", file=sys.stderr)
+                while not lease.stop_event.is_set():
+                    cycle_started = time.time()
+                    result = {}
+                    try:
+                        result = run_cycle(cfg, profile)
+                    except SystemExit:
+                        result = {"error": "data sources unavailable"}
+                    except Exception as e:
+                        result = {"error": str(e)}
+                    print(f"[trader] cycle: {json.dumps(result)}", file=sys.stderr)
+                    state["cycles"] = state.get("cycles", 0) + 1
+                    if result.get("closed_pnl") is not None:
+                        state["realized_pnl"] = state.get("realized_pnl", 0) + result["closed_pnl"]
+                    for c in result.get("closed", []):
+                        reason = c.get("reason", "unknown")
+                        exits = state.setdefault("exits_by_reason", {})
+                        row = exits.setdefault(reason, {"count": 0, "profit": 0})
+                        row["count"] += 1
+                        row["profit"] += c.get("profit", 0)
+                    if result.get("error"):
+                        state["errors"] = state.get("errors", 0) + 1
+                    state["last_cycle_iso"] = datetime.now(timezone.utc).isoformat()
+                    state["last_result"] = result
+                    _write_state(state, profile)
+                    if once:
+                        break
+                    elapsed = time.time() - cycle_started
+                    lease.stop_event.wait(max(0.1, interval - elapsed))
+            except KeyboardInterrupt:
+                print("\n[trader] Stopping...", file=sys.stderr)
+            finally:
+                if state_written:
+                    state["running"] = False
+                    state["ready"] = False
+                    state["desired_state"] = lease.desired_state
+                    state["stopped_iso"] = datetime.now(timezone.utc).isoformat()
+                    _write_state(state, profile)
+                if previous_handler is not None:
+                    restore_stop_signal(previous_handler)
+            return state.get("last_result")
+    except LeaseBusy as exc:
+        print(f"[trader] Start refused: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+    except LeaseError as exc:
+        print(f"[trader] Startup failed: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+    except Exception as exc:
+        print(f"[trader] Daemon failure: {exc}", file=sys.stderr)
+        raise
 
 
 def stop_trader(profile: str | None = None) -> bool:
-    p_path = _pid_path(profile)
-    if not p_path.exists():
-        return False
-    try:
-        pid = int(p_path.read_text().strip())
-    except (ValueError, OSError):
-        p_path.unlink(missing_ok=True)
-        return False
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        p_path.unlink(missing_ok=True)
-        return False
-    os.kill(pid, signal.SIGTERM)
-    deadline = time.time() + 3
-    exited = False
-    while time.time() < deadline:
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            exited = True
-            break
-        time.sleep(0.1)
-    if not exited:
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except OSError:
-            pass
-    try:
-        if p_path.read_text().strip() == str(pid):
-            p_path.unlink(missing_ok=True)
-    except (ValueError, OSError):
-        pass
-    return True
+    return request_stop("trader", profile, pid_path=_pid_path(profile))["ok"]
 
 
 def trader_status(profile: str | None = None) -> dict | None:
-    """Live status when the pid file is present, else synced-state snapshot."""
+    """Lease-verified local status, unverified legacy record, or state snapshot."""
     p_path = _pid_path(profile)
     state = _read_state(profile)
-    if state is None:
+    daemon = daemon_status("trader", profile, pid_path=p_path, state=state)
+    if (state is None and not daemon.get("running")
+            and daemon.get("ownership") == "synced_snapshot"):
         return None
+    state = state or {}
     # The journal is the authoritative P&L ledger; the state counter resets
     # on every daemon start, so expose the all-time auto P&L alongside it.
     journal_pnl = None
@@ -755,33 +723,12 @@ def trader_status(profile: str | None = None) -> dict | None:
         journal_trades = len(auto_trades)
     except Exception:
         pass
-    local_pid = None
-    pid_file_present = False
-    try:
-        pid_file_present = p_path.exists()
-        local_pid = int(p_path.read_text().strip())
-        os.kill(local_pid, 0)
-    except (OSError, ValueError, AttributeError):
-        local_pid = None
-    if pid_file_present and local_pid is None:
-        # A pid file exists here but the process is dead (SIGKILL/reboot):
-        # report truthfully as stopped and drop the stale pid file.
-        try:
-            p_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        base = _status_base(state)
-        base["journal_realized_pnl"] = journal_pnl
-        base["journal_auto_trades"] = journal_trades
-        return {"running": False, "local": True, "pid": None, **base}
-    if local_pid is None:
-        # No live process here: report the synced snapshot truthfully.
-        base = _status_base(state)
-        base["journal_realized_pnl"] = journal_pnl
-        base["journal_auto_trades"] = journal_trades
-        return {"running": bool(state.get("running")),
-                "local": False, "pid": None, **base}
     base = _status_base(state)
     base["journal_realized_pnl"] = journal_pnl
     base["journal_auto_trades"] = journal_trades
-    return {"running": True, "local": True, "pid": local_pid, **base}
+    for key in ("ownership", "supervisor", "service_domain", "service_label",
+                "desired_state", "daemon_instance", "ready"):
+        if key in daemon:
+            base[key] = daemon[key]
+    return {"running": daemon["running"], "local": daemon["local"],
+            "pid": daemon.get("pid"), **base}

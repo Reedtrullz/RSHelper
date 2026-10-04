@@ -90,17 +90,17 @@ def test_monitor_cli_args():
 
 
 def test_stale_pid_cleanup():
-    """stop_monitor returns False for a nonexistent PID and cleans up file."""
+    """A stale legacy PID is reported unverified and retained for migration."""
     if PID_PATH.exists():
         PID_PATH.unlink()
     PID_PATH.parent.mkdir(parents=True, exist_ok=True)
     PID_PATH.write_text("99999")  # PID that almost certainly doesn't exist
-    from unittest import mock
-    with mock.patch.object(mon.os, "kill", side_effect=ProcessLookupError):
-        result = stop_monitor()
-    # After cleanup, PID file should be gone AND result should be False
-    assert not PID_PATH.exists(), "PID file should be cleaned up"
+    before = PID_PATH.read_bytes()
+    result = stop_monitor()
+    status = monitor_status()
+    assert PID_PATH.read_bytes() == before, "unverified legacy state must not be removed"
     assert result is False, "stop_monitor should return False for stale PID"
+    assert status["ownership"] == "legacy_unverified", status
     print("  PASSED test_stale_pid_cleanup")
 
 
@@ -178,14 +178,56 @@ def test_monitor_single_instance_guard():
             pass
         assert mon.PID_PATH.read_text().strip() == str(os.getpid()), \
             "the live instance's pid file must not be clobbered"
-        # a stale pid is replaced and the monitor runs until interrupted
-        mon.PID_PATH.write_text("99999999")
+        # A stale legacy pid is retained; the lease owns new state separately.
+        mon.PID_PATH.write_text("99999")
+        before = mon.PID_PATH.read_bytes()
         with mock.patch.object(mon, "_poll_cycle", side_effect=KeyboardInterrupt):
             mon.run_monitor(interval_sec=1)
-        assert not mon.PID_PATH.exists(), "cleanup must remove the pid file"
+        assert mon.PID_PATH.read_bytes() == before, "legacy PID evidence must be preserved"
+        state = json.loads(mon.STATE_PATH.read_text())
+        assert state["running"] is False
+        assert mon.monitor_status()["ownership"] == "synced_snapshot"
     finally:
         mon.PID_PATH, mon.STATE_PATH = old_pid, old_state
     print("  PASSED test_monitor_single_instance_guard")
+
+
+def test_monitor_startup_failure_releases_only_its_lease():
+    from unittest import mock
+    from rshelper.daemon import acquire_lease
+    old_pid, old_state = mon.PID_PATH, mon.STATE_PATH
+    with tempfile.TemporaryDirectory(prefix="rshelper-monitor-start-") as tmp:
+        mon.PID_PATH = Path(tmp) / "monitor.pid"
+        mon.STATE_PATH = Path(tmp) / "monitor_state.json"
+        try:
+            with mock.patch.object(mon, "_write_state", side_effect=OSError("fixture write failure")):
+                try:
+                    mon.run_monitor(interval_sec=1)
+                    assert False, "startup state failure must be reported"
+                except OSError as exc:
+                    assert "fixture write failure" in str(exc)
+            assert not mon.STATE_PATH.exists(), "failed startup must not publish partial state"
+            with acquire_lease("monitor", "default", pid_path=mon.PID_PATH):
+                pass
+            assert mon.PID_PATH.with_name(mon.PID_PATH.name + ".lease").exists()
+        finally:
+            mon.PID_PATH, mon.STATE_PATH = old_pid, old_state
+    print("  PASSED test_monitor_startup_failure_releases_only_its_lease")
+
+
+def test_stop_monitor_uses_owned_control_channel():
+    from rshelper.daemon import acquire_lease
+    old_pid = mon.PID_PATH
+    with tempfile.TemporaryDirectory(prefix="rshelper-monitor-stop-") as tmp:
+        mon.PID_PATH = Path(tmp) / "monitor.pid"
+        try:
+            with acquire_lease("monitor", "default", pid_path=mon.PID_PATH) as lease:
+                assert stop_monitor() is True
+                assert lease.stop_event.is_set()
+                assert lease.desired_state == "stopped"
+        finally:
+            mon.PID_PATH = old_pid
+    print("  PASSED test_stop_monitor_uses_owned_control_channel")
 
 
 if __name__ == "__main__":
@@ -199,4 +241,6 @@ if __name__ == "__main__":
     test_monitor_cli_help()
     test_signals_receive_full_universe()
     test_monitor_single_instance_guard()
+    test_monitor_startup_failure_releases_only_its_lease()
+    test_stop_monitor_uses_owned_control_channel()
     print("\nAll monitor tests passed.")

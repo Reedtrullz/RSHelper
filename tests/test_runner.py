@@ -56,6 +56,53 @@ class TestRunner(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("external process", json.loads(result.stdout)["files"][0]["error"])
 
+    def test_synthetic_git_is_scoped_and_remote_transports_are_disabled(self):
+        result=self.invoke("import os, subprocess\nfrom pathlib import Path\n"
+            "def test_git():\n"
+            " root=Path(os.environ['TMPDIR'])/'git-fixture'\n"
+            " os.environ['RSHELPER_TEST_GIT_ROOT']=os.environ['TMPDIR']\n"
+            " subprocess.run(['git','init',str(root)],capture_output=True,check=True)\n"
+            " denied=subprocess.run(['git','-C',str(root),'fetch','https://example.invalid/repo.git'],capture_output=True,text=True)\n"
+            " assert denied.returncode and 'transport' in denied.stderr and 'not allowed' in denied.stderr\n")
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_git_allowance_cannot_select_the_real_checkout(self):
+        result=self.invoke("import os, subprocess\n"
+            "def test_git():\n"
+            " os.environ['RSHELPER_TEST_GIT_ROOT']=os.environ['TMPDIR']\n"
+            " try: subprocess.run(['git','-C',os.environ['RSHELPER_REAL_HOME'],'status'],capture_output=True)\n"
+            " except Exception: pass\n")
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('external process',json.loads(result.stdout)['files'][0]['error'])
+
+    def test_read_only_process_start_identity_is_allowed(self):
+        result=self.invoke("import os, subprocess\n"
+            "def test_identity():\n"
+            " p=subprocess.run(['ps','-o','lstart=','-p',str(os.getpid())],capture_output=True,text=True)\n"
+            " assert p.returncode==0 and p.stdout.strip()\n")
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_process_allowance_rejects_a_same_named_path_replacement(self):
+        result=self.invoke("import os, subprocess\nfrom pathlib import Path\n"
+            "def test_identity():\n"
+            " root=Path(os.environ['TMPDIR'])/'fake-bin';root.mkdir()\n"
+            " fake=root/'ps';fake.write_text('#!/bin/sh\\nexit 0\\n');fake.chmod(0o700)\n"
+            " os.environ['PATH']=str(root)+os.pathsep+os.environ['PATH']\n"
+            " try: subprocess.run(['ps','-o','lstart=','-p',str(os.getpid())],capture_output=True)\n"
+            " except Exception: pass\n")
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('external process',json.loads(result.stdout)['files'][0]['error'])
+
+    def test_owned_unix_socket_is_allowed_without_external_network(self):
+        result=self.invoke("import os, socket\nfrom pathlib import Path\n"
+            "def test_socket():\n"
+            " path=Path(os.environ['RSHELPER_TEST_SOCKET_ROOT'])/'fixture.sock'\n"
+            " with socket.socket(socket.AF_UNIX) as server,socket.socket(socket.AF_UNIX) as client:\n"
+            "  server.bind(str(path));server.listen(1);client.connect(str(path))\n"
+            "  conn,_=server.accept();conn.close()\n"
+            " path.unlink()\n")
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_positional_environment_keeps_guard(self):
         result = self.invoke("import os, subprocess, sys\ndef test_child():\n"
                              " env = {'HOME': os.environ['HOME']}\n"

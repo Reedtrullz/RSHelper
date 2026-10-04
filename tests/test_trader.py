@@ -850,7 +850,7 @@ def test_trader_daemon_guards_and_pnl():
             except SystemExit:
                 pass
             # a dead pid allows start; one cycle runs and P&L accumulates
-            tmod.PID_PATH.write_text("99999999")
+            tmod.PID_PATH.write_text("99999")
             with mock.patch.object(tmod, "run_cycle", return_value={
                     "candidates": 1, "opened": [], "closed": [],
                     "closed_pnl": 250}):
@@ -860,10 +860,28 @@ def test_trader_daemon_guards_and_pnl():
             assert state["realized_pnl"] == 250
             assert state["cycles"] == 1
             assert state["running"] is False  # set false on clean exit
-            assert not tmod.PID_PATH.exists()  # cleaned up on exit
+            assert tmod.PID_PATH.read_text() == "99999"  # legacy evidence is preserved
+            status = tmod.trader_status()
+            assert status["ownership"] == "synced_snapshot", status
+            assert status["running"] is False
         finally:
             tmod.PID_PATH, tmod.STATE_PATH = old_pid, old_state
     print("  PASSED test_trader_daemon_guards_and_pnl")
+
+
+def test_trader_stop_uses_owned_control_channel():
+    from rshelper.daemon import acquire_lease
+    old_pid = tmod.PID_PATH
+    with tempfile.TemporaryDirectory(prefix="rshelper-trader-stop-") as tmp:
+        tmod.PID_PATH = Path(tmp) / "trader.pid"
+        try:
+            with acquire_lease("trader", "default", pid_path=tmod.PID_PATH) as lease:
+                assert tmod.stop_trader() is True
+                assert lease.stop_event.is_set()
+                assert lease.desired_state == "stopped"
+        finally:
+            tmod.PID_PATH = old_pid
+    print("  PASSED test_trader_stop_uses_owned_control_channel")
 
 
 def test_max_hold_flat_close():
@@ -957,7 +975,8 @@ def test_status_journal_pnl():
             status = tmod.trader_status()
             assert status["journal_realized_pnl"] == 30, status
             assert status["journal_auto_trades"] == 1
-            assert status["running"] is True
+            assert status["running"] is False
+            assert status["ownership"] == "legacy_unverified", status
         finally:
             tmod.PID_PATH, tmod.STATE_PATH = old_pid, old_state
             jmod.TRADES_PATH = old_trades
@@ -1016,124 +1035,12 @@ def test_status_staleness():
     print("  PASSED test_status_staleness")
 
 
-def test_sync_script_changed_detection():
-    """Sync helper only stages files whose content changed."""
-    import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "sync_state", Path(__file__).resolve().parent.parent /
-        "scripts" / "sync-and-push-state.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    with tempfile.TemporaryDirectory() as tmp:
-        src = Path(tmp) / "src"
-        dst = Path(tmp) / "dst"
-        src.mkdir(); dst.mkdir()
-        (src / "trades.json").write_text('{"trades": []}')
-        (dst / "trades.json").write_text('{"trades": []}')
-        assert mod._files_differ(src, dst, "trades.json") is False
-        (src / "trades.json").write_text('{"trades": [1]}')
-        assert mod._files_differ(src, dst, "trades.json") is True
-        assert mod._files_differ(src, dst, "missing.json") is False
-    print("  PASSED test_sync_script_changed_detection")
 
 
-def test_sync_script_reports_commit_failure():
-    """A failed state commit must surface as an error, not fake success."""
-    import contextlib
-    import importlib.util
-    import io
-    from unittest import mock
-    spec = importlib.util.spec_from_file_location(
-        "sync_state_commit_fail", Path(__file__).resolve().parent.parent /
-        "scripts" / "sync-and-push-state.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    mod.SRC = Path(_tmpdir.name) / "sync_src"
-    mod.DEST = Path(_tmpdir.name) / "sync_dst"
-    mod.REPO = Path(_tmpdir.name)
-    (mod.REPO / ".git").mkdir(exist_ok=True)
-    mod.SRC.mkdir(exist_ok=True)
-    mod.DEST.mkdir(exist_ok=True)
-    (mod.SRC / "trades.json").write_text('{"trades": [2]}')
-    fake = mock.Mock(side_effect=[
-        mock.Mock(returncode=0),  # git add
-        mock.Mock(returncode=1, stderr="signing failed"),  # git commit
-    ])
-    with mock.patch.object(mod.subprocess, "run", fake), \
-            contextlib.redirect_stderr(io.StringIO()) as err:
-        rc = mod.main()
-    assert rc == 1
-    assert "commit failed: signing failed" in err.getvalue()
-    assert fake.call_count == 2  # push must not run after a failed commit
-    print("  PASSED test_sync_script_reports_commit_failure")
 
 
-def test_sync_script_falls_back_unsigned_on_1password():
-    """A 1Password signing failure must not block the state sync (fall back
-    to an unsigned commit so the live site doesn't go stale)."""
-    import contextlib
-    import importlib.util
-    import io
-    from unittest import mock
-    spec = importlib.util.spec_from_file_location(
-        "sync_state_1p_fallback", Path(__file__).resolve().parent.parent /
-        "scripts" / "sync-and-push-state.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    mod.SRC = Path(_tmpdir.name) / "sync_src_1p"
-    mod.DEST = Path(_tmpdir.name) / "sync_dst_1p"
-    mod.REPO = Path(_tmpdir.name)
-    (mod.REPO / ".git").mkdir(exist_ok=True)
-    mod.SRC.mkdir(exist_ok=True)
-    mod.DEST.mkdir(exist_ok=True)
-    (mod.SRC / "trades.json").write_text('{"trades": [3]}')
-    fake = mock.Mock(side_effect=[
-        mock.Mock(returncode=0),  # git add
-        mock.Mock(returncode=1, stderr="1Password: failed to fill whole buffer"),
-        mock.Mock(returncode=0),  # git commit --no-gpg-sign
-        mock.Mock(returncode=0),  # git push
-    ])
-    with mock.patch.object(mod.subprocess, "run", fake), \
-            contextlib.redirect_stderr(io.StringIO()) as err:
-        rc = mod.main()
-    assert rc == 0, f"sync should succeed via unsigned fallback, rc={rc}"
-    assert "retrying unsigned" in err.getvalue()
-    assert "1Password" in err.getvalue()
-    # git add + signed commit + unsigned commit + push
-    assert fake.call_count == 4
-    # the unsigned commit must pass --no-gpg-sign
-    commit_calls = [c for c in fake.call_args_list if "commit" in c.args[0]]
-    assert any("--no-gpg-sign" in c.args[0] for c in commit_calls)
-    print("  PASSED test_sync_script_falls_back_unsigned_on_1password")
 
 
-def test_sync_script_ignores_snapshot_subdirs():
-    """A subdirectory inside snapshots must not abort the state sync."""
-    import importlib.util
-    from unittest import mock
-    spec = importlib.util.spec_from_file_location(
-        "sync_state_subdir", Path(__file__).resolve().parent.parent /
-        "scripts" / "sync-and-push-state.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    with tempfile.TemporaryDirectory() as tmp:
-        src = Path(tmp) / "src"
-        dst = Path(tmp) / "dst"
-        (src / "snapshots" / "subdir").mkdir(parents=True)
-        (src / "snapshots" / "flip-2026-08-01.json").write_text("{}")
-        mod.SRC, mod.DEST = src, dst
-        mod.REPO = Path(tmp)
-        (mod.REPO / ".git").mkdir()
-
-        def fake_git(*args, **kw):
-            import subprocess
-            return subprocess.CompletedProcess(args, 0, "", "")
-
-        with mock.patch.object(mod.subprocess, "run", side_effect=fake_git):
-            rc = mod.main()
-        assert rc == 0, f"sync must not crash on a snapshot subdir, rc={rc}"
-        assert (dst / "snapshots" / "flip-2026-08-01.json").exists()
-    print("  PASSED test_sync_script_ignores_snapshot_subdirs")
 
 
 if __name__ == "__main__":
@@ -1148,13 +1055,10 @@ if __name__ == "__main__":
     test_stop_loss_cooldown_is_longer()
     test_stop_cooldown_survives_restart()
     test_trader_daemon_guards_and_pnl()
+    test_trader_stop_uses_owned_control_channel()
     test_max_hold_flat_close()
     test_trader_config_validation()
     test_status_staleness()
-    test_sync_script_changed_detection()
-    test_sync_script_reports_commit_failure()
-    test_sync_script_falls_back_unsigned_on_1password()
-    test_sync_script_ignores_snapshot_subdirs()
     test_candidate_edge_ranking()
     test_spread_collapse_exit()
     test_run_cycle_spread_collapse_closes_at_bid()
