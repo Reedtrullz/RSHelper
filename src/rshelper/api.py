@@ -22,6 +22,7 @@ from typing import Any
 
 from rshelper.profile import resolve_cache_path
 from rshelper.market_validation import validate_payload, MarketDataError
+from rshelper.market_data import MarketDataResult
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
@@ -39,6 +40,11 @@ CACHE_MAX_AGE = {
     "ge_tracker": 300,  # 5 min — full GE Tracker dump; one fetch per cycle
 }
 STALE_MULTIPLIER = 3  # serve stale cache up to 3x max_age if API fails
+CACHE_ENVELOPE_VERSION = 1
+_MARKET_SOURCES = {"wiki", "ge-tracker", "unknown"}
+_DELIVERIES = {"fresh-cache", "network", "stale-cache"}
+_VOLUME_KINDS = {"executed-trades", "standing-orders", "unknown"}
+_TRACKER_DELIVERY = threading.local()
 
 # Ensure cache dir exists at import time (parents for fresh HOMEs)
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -373,15 +379,30 @@ def _get(path: str, retries: int = MAX_RETRIES) -> Any:
 
 def _get_ge_tracker(profile: str | None = None) -> Any | None:
     """Fetch the GE Tracker all-items dump (undocumented, no auth), cached."""
-    cached = _load_cache("ge_tracker", profile)
+    _TRACKER_DELIVERY.value = None
+    _TRACKER_DELIVERY.result = None
+    cached = _cache_result("ge_tracker", profile, stale=False)
     if cached is not None:
-        return cached
+        _TRACKER_DELIVERY.value = "fresh-cache"
+        _TRACKER_DELIVERY.result = cached
+        return {"data": cached.data}
     rows = _validated("ge_tracker", _fetch_url(GE_TRACKER_URL))
     data = {"data": rows} if rows else None
     if data is not None:
-        _save_cache("ge_tracker", data, profile)
+        now = time.time()
+        _save_cache_result("ge_tracker", data, profile, source="ge-tracker",
+                           fetched_at=now, last_attempt_at=now, last_success_at=now,
+                           volume_kind="standing-orders", coverage={"ge-tracker": len(rows)})
+        _TRACKER_DELIVERY.value = "network"
+        _TRACKER_DELIVERY.result = MarketDataResult(rows, 'ge-tracker', 'network',
+            now, now, now, False, 'standing-orders', {'ge-tracker': len(rows)})
         return data
-    return _load_stale_cache("ge_tracker", profile)
+    stale_result = _cache_result("ge_tracker", profile, stale=True, now=time.time())
+    if stale_result is not None:
+        _TRACKER_DELIVERY.value = stale_result.delivery
+        _TRACKER_DELIVERY.result = stale_result
+        return {"data": stale_result.data}
+    return None
 
 
 def _ge_tracker_items(dump: Any) -> list[dict]:
@@ -451,6 +472,106 @@ def _5m_from_ge_tracker(dump: Any) -> dict[str, dict]:
 
 def _cache_path(name: str, profile: str | None = None) -> Path:
     return resolve_cache_path(name + ".json", profile)
+
+
+def _provenance_path(name: str, profile: str | None = None) -> Path:
+    return _cache_path(name, profile).with_name(name + ".provenance.json")
+
+
+def _read_provenance_record(name: str, profile: str | None = None):
+    """Read the versioned sidecar; absent sidecars denote legacy provenance."""
+    path = _provenance_path(name, profile)
+    try:
+        envelope, modified = _read_cache_payload(path)
+    except FileNotFoundError:
+        return None
+    except (MarketDataError, UnicodeDecodeError, RecursionError, OSError):
+        raise MarketDataError("invalid market provenance")
+    keys = {"schema_version", "data", "source", "fetched_at", "last_attempt_at",
+            "last_success_at", "volume_kind", "coverage"}
+    if not isinstance(envelope, dict) or set(envelope) != keys:
+        raise MarketDataError("invalid market provenance fields")
+    if (isinstance(envelope["schema_version"], bool)
+            or not isinstance(envelope["schema_version"], int)
+            or envelope["schema_version"] != CACHE_ENVELOPE_VERSION):
+        raise MarketDataError("unsupported market provenance version")
+    if (not isinstance(envelope["source"], str) or envelope["source"] not in _MARKET_SOURCES
+            or not isinstance(envelope["volume_kind"], str)
+            or envelope["volume_kind"] not in _VOLUME_KINDS):
+        raise MarketDataError("invalid market provenance label")
+    if ((envelope['source'] == 'ge-tracker' and envelope['volume_kind'] == 'executed-trades')
+            or (envelope['source'] == 'unknown' and envelope['volume_kind'] != 'unknown')):
+        raise MarketDataError('source cannot certify this volume semantics')
+    for key in ("fetched_at", "last_attempt_at", "last_success_at"):
+        value = envelope[key]
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                  or not math.isfinite(value) or value < 0):
+            raise MarketDataError("invalid market provenance timestamp")
+    coverage = envelope["coverage"]
+    if (not isinstance(coverage, dict) or any(
+            not isinstance(source, str) or source not in _MARKET_SOURCES or isinstance(count, bool)
+            or not isinstance(count, int) or count < 0
+            for source, count in coverage.items())):
+        raise MarketDataError("invalid market provenance coverage")
+    return envelope, modified
+
+
+def _cache_metadata(name: str, profile: str | None = None) -> dict | None:
+    record = _read_provenance_record(name, profile)
+    return record[0] if record is not None else None
+
+
+def _read_cache_record(name: str, profile: str | None = None):
+    # This single atomic envelope is authoritative. The data-only mirror is
+    # for rollback/old readers; its separate replacement cannot certify source.
+    record = _read_provenance_record(name, profile)
+    if record is not None:
+        envelope, modified = record
+        return envelope['data'], envelope, modified
+    data, modified = _read_cache_payload(_cache_path(name, profile))
+    return data, {'source': 'unknown', 'fetched_at': None, 'last_attempt_at': None,
+                 'last_success_at': None, 'volume_kind': 'unknown', 'coverage': {}}, modified
+
+
+def _atomic_json(path: Path, value: Any) -> None:
+    payload = json.dumps(value, allow_nan=False, separators=(",", ":")).encode("utf-8")
+    if len(payload) > MAX_RESPONSE_BYTES:
+        raise MarketDataError("market cache exceeds size limit")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _save_cache_result(name: str, data: Any, profile: str | None, *, source: str,
+                       fetched_at: float | None, last_attempt_at: float | None,
+                       last_success_at: float | None, volume_kind: str,
+                       coverage: dict[str, int]) -> None:
+    """Write the legacy data shape and a matching bounded provenance envelope."""
+    if source not in _MARKET_SOURCES or volume_kind not in _VOLUME_KINDS:
+        raise MarketDataError("invalid market provenance label")
+    envelope = {"schema_version": CACHE_ENVELOPE_VERSION, "data": data,
+                "source": source, "fetched_at": fetched_at,
+                "last_attempt_at": last_attempt_at, "last_success_at": last_success_at,
+                "volume_kind": volume_kind, "coverage": coverage}
+    for value in (data, envelope):
+        encoded = json.dumps(value, allow_nan=False, separators=(",", ":")).encode("utf-8")
+        if len(encoded) > MAX_RESPONSE_BYTES:
+            raise MarketDataError("market cache exceeds size limit")
+    # Current readers use the complete atomic envelope. Separate legacy mirror
+    # writes can interleave without changing the provenance of that record.
+    _atomic_json(_provenance_path(name, profile), envelope)
+    _atomic_json(_cache_path(name, profile), data)
 
 
 def _decode_market_json(raw):
@@ -528,11 +649,12 @@ def _load_cache(name: str, profile: str | None = None) -> Any | None:
     """Return only validated fresh cache; disappearance is an ordinary miss."""
     path = _cache_path(name, profile)
     try:
-        data, modified = _read_cache_payload(path)
+        data, _metadata, modified = _read_cache_record(name, profile)
     except FileNotFoundError:
         return None
     except (MarketDataError, UnicodeDecodeError, RecursionError, OSError):
         _quarantine_cache(path, name)
+        _quarantine_cache(_provenance_path(name, profile), name+'.provenance')
         return None
     age = time.time() - modified
     if not 0 <= age < CACHE_MAX_AGE.get(name, 300):
@@ -547,7 +669,7 @@ def _load_stale_cache(name: str, profile: str | None = None) -> Any | None:
     """Return validated stale cache only after providers have failed."""
     path = _cache_path(name, profile)
     try:
-        data, modified = _read_cache_payload(path)
+        data, _metadata, modified = _read_cache_record(name, profile)
         age = time.time() - modified
         if not 0 <= age < CACHE_MAX_AGE.get(name, 300) * STALE_MULTIPLIER:
             return None
@@ -555,31 +677,18 @@ def _load_stale_cache(name: str, profile: str | None = None) -> Any | None:
         if valid is None:
             _quarantine_cache(path, name)
             return None
-        print(f"  Note: using stale cache for '{name}' ({int(age)}s old)", file=sys.stderr)
         return {"data": valid} if name == "ge_tracker" else valid
     except FileNotFoundError:
         return None
     except (MarketDataError, UnicodeDecodeError, RecursionError, OSError):
         _quarantine_cache(path, name)
+        _quarantine_cache(_provenance_path(name, profile), name+'.provenance')
         return None
 
 
 def _save_cache(name: str, data: Any, profile: str | None = None) -> None:
     """Write cache atomically (temp file + rename) to avoid corruption on crash."""
-    target = _cache_path(name, profile)
-    cache_dir = target.parent
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(dir=cache_dir, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp_path, target)  # atomic on POSIX
-    except Exception:
-        try:
-            os.unlink(tmp_path)
-        except FileNotFoundError:
-            pass
-        raise
+    _atomic_json(_cache_path(name, profile), data)
 
 
 def cleanup_stale_cache(profile: str | None = None) -> int:
@@ -597,87 +706,150 @@ def cleanup_stale_cache(profile: str | None = None) -> int:
     return removed
 
 
-def fetch_mapping(profile: str | None = None) -> list[dict] | None:
-    """Fetch item ID -> metadata (name, buy limit, alch value, members).
+def _coverage_count(data: Any) -> int:
+    return len(data) if isinstance(data, (dict, list)) else 0
 
-    Wiki first; falls back to the GE Tracker dump when the wiki is
-    unreachable (e.g. Cloudflare 403 from datacenter IPs).
-    """
-    cached = _load_cache("mapping", profile)
+
+def _result(data: Any, metadata: dict, delivery: str, *, stale: bool = False) -> MarketDataResult:
+    return MarketDataResult(data=data, source=metadata["source"], delivery=delivery,
+                            fetched_at=metadata["fetched_at"],
+                            last_attempt_at=metadata["last_attempt_at"],
+                            last_success_at=metadata["last_success_at"], stale=stale,
+                            volume_kind=metadata["volume_kind"],
+                            coverage=dict(metadata["coverage"]))
+
+
+def _cache_result(name: str, profile: str | None, *, stale: bool,
+                  now: float | None = None) -> MarketDataResult | None:
+    data = _load_stale_cache(name, profile) if stale else _load_cache(name, profile)
+    if data is None:
+        return None
+    if name == "ge_tracker" and isinstance(data, dict) and "data" in data:
+        data = data["data"]
+    try:
+        raw, metadata, modified = _read_cache_record(name, profile)
+        age = time.time() - modified
+        ttl = CACHE_MAX_AGE.get(name, 300) * (STALE_MULTIPLIER if stale else 1)
+        if not 0 <= age < ttl: return None
+        # Payload and metadata must come from the same validated snapshot, even
+        # if a concurrent writer refreshed it after the compatibility read.
+        data = _validated(name, raw)
+        if data is None: return None
+        stale = stale and age >= CACHE_MAX_AGE.get(name, 300)
+    except (FileNotFoundError, MarketDataError, UnicodeDecodeError, RecursionError, OSError):
+        return None
+    if stale:
+        attempted = time.time() if now is None else now
+        metadata = dict(metadata)
+        metadata["last_attempt_at"] = attempted
+        # Failed attempt metadata belongs to this result only. Never rewrite a
+        # sidecar after an unlocked read: it could overwrite a newer success.
+        delivery = "stale-cache"
+        print(f"  Note: using stale cache for '{name}' ({int(age)}s old)", file=sys.stderr)
+    else:
+        delivery = "fresh-cache"
+    return _result(data, metadata, delivery, stale=stale)
+
+
+def _fetch_result(name: str, profile: str | None, *, path: str,
+                  tracker_convert=None, volume_kind: str = "unknown") -> MarketDataResult | None:
+    """Acquire one validated endpoint in fresh-cache -> Wiki -> Tracker -> stale order."""
+    attempted_at = time.time()
+    cached = _cache_result(name, profile, stale=False, now=attempted_at)
     if cached is not None:
         return cached
-    data = _validated("mapping", _get("mapping"))
-    if data is not None:
-        result = data
-        if result:
-            _save_cache("mapping", result, profile)
-            return result
-    dump = _get_ge_tracker(profile)
-    if dump is not None:
-        print("  Note: OSRS Wiki unavailable; using GE Tracker fallback.", file=sys.stderr)
-        result = _validated("mapping", _mapping_from_ge_tracker(dump))
-        if result:
-            _save_cache("mapping", result, profile)
-            return result
-    return _load_stale_cache("mapping", profile)
+
+    wiki_data = _validated(name, _get(path))
+    if wiki_data:
+        now = time.time()
+        metadata = {"source": "wiki", "fetched_at": now, "last_attempt_at": attempted_at,
+                    "last_success_at": now, "volume_kind": volume_kind,
+                    "coverage": {"wiki": _coverage_count(wiki_data)}}
+        _save_cache_result(name, wiki_data, profile, **metadata)
+        return _result(wiki_data, metadata, "network")
+
+    if tracker_convert is not None:
+        _TRACKER_DELIVERY.value = None
+        _TRACKER_DELIVERY.result = None
+        dump = _get_ge_tracker(profile)
+        tracker_delivery = getattr(_TRACKER_DELIVERY, "value", None) or "network"
+        if dump is not None:
+            converted = _validated(name, tracker_convert(dump))
+            if converted:
+                tracker_result = getattr(_TRACKER_DELIVERY, 'result', None)
+                if tracker_result is not None and tracker_result.data == _ge_tracker_items(dump):
+                    tracker_meta = {key: getattr(tracker_result, key) for key in
+                        ('source', 'fetched_at', 'last_success_at')}
+                else:
+                    tracker_meta = {"source": "unknown", "fetched_at": None,
+                                    "last_success_at": None}
+                now = time.time()
+                meta = {"source": tracker_meta["source"],
+                        "fetched_at": tracker_meta["fetched_at"],
+                        "last_attempt_at": attempted_at,
+                        "last_success_at": tracker_meta["last_success_at"],
+                        "volume_kind": ("standing-orders" if tracker_meta["source"] == "ge-tracker"
+                                        and name in ("latest", "5m") else
+                                        "unknown" if tracker_meta["source"] == "unknown" else volume_kind),
+                        "coverage": {tracker_meta["source"]: _coverage_count(converted)}
+                        if tracker_meta["source"] != "unknown" else {}}
+                # Only metadata attached to this exact dump certifies source.
+                delivery = tracker_delivery
+                if delivery != "stale-cache":
+                    _save_cache_result(name, converted, profile, **meta)
+                print("  Note: OSRS Wiki unavailable; using GE Tracker fallback.", file=sys.stderr)
+                return _result(converted, meta, delivery,
+                               stale=delivery == "stale-cache")
+
+    return _cache_result(name, profile, stale=True, now=time.time())
+
+
+def fetch_mapping_result(profile: str | None = None) -> MarketDataResult | None:
+    """Return item metadata with cache/provider provenance."""
+    return _fetch_result("mapping", profile, path="mapping",
+                         tracker_convert=_mapping_from_ge_tracker)
+
+
+def fetch_latest_result(profile: str | None = None) -> MarketDataResult | None:
+    """Return latest prices with provenance and explicit order-volume semantics."""
+    return _fetch_result("latest", profile, path="latest",
+                         tracker_convert=_latest_from_ge_tracker)
+
+
+def fetch_5m_result(profile: str | None = None) -> MarketDataResult | None:
+    """Return 5-minute prices and identify whether volume is trades or orders."""
+    return _fetch_result("5m", profile, path="5m", tracker_convert=_5m_from_ge_tracker,
+                         volume_kind="executed-trades")
+
+
+def fetch_timeseries_result(item_id: int, timestep: str = "5m",
+                            profile: str | None = None) -> MarketDataResult | None:
+    """Return one Wiki history series with explicit provenance."""
+    cache_name = f"ts_{item_id}_{timestep}"
+    return _fetch_result(cache_name, profile,
+                         path=f"timeseries?id={item_id}&timestep={timestep}",
+                         volume_kind="executed-trades")
+
+
+def fetch_mapping(profile: str | None = None) -> list[dict] | None:
+    result = fetch_mapping_result(profile)
+    return result.data if result is not None else None
 
 
 def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
-    """Fetch latest high/low prices keyed by item ID (wiki, GE Tracker fallback)."""
-    cached = _load_cache("latest", profile)
-    if cached is not None:
-        return cached
-    data = _validated("latest", _get("latest"))
-    if data is not None:
-        result = data
-        if result:
-            _save_cache("latest", result, profile)
-            return result
-    dump = _get_ge_tracker(profile)
-    if dump is not None:
-        result = _validated("latest", _latest_from_ge_tracker(dump))
-        if result:
-            _save_cache("latest", result, profile)
-            return result
-    return _load_stale_cache("latest", profile)
+    result = fetch_latest_result(profile)
+    return result.data if result is not None else None
 
 
 def fetch_5m(profile: str | None = None) -> dict[str, dict] | None:
-    """Fetch 5-minute OHLC averages keyed by item ID (wiki, GE Tracker fallback)."""
-    cached = _load_cache("5m", profile)
-    if cached is not None:
-        return cached
-    data = _validated("5m", _get("5m"))
-    if data is not None:
-        result = data
-        if result:
-            _save_cache("5m", result, profile)
-            return result
-    dump = _get_ge_tracker(profile)
-    if dump is not None:
-        result = _validated("5m", _5m_from_ge_tracker(dump))
-        if result:
-            _save_cache("5m", result, profile)
-            return result
-    return _load_stale_cache("5m", profile)
+    result = fetch_5m_result(profile)
+    return result.data if result is not None else None
 
 
-def fetch_timeseries(item_id: int, timestep: str = "5m", profile: str | None = None) -> list[dict] | None:
-    """Fetch historical OHLC data for a single item.
-
-    timestep: '5m', '1h', '6h', '24h'
-    Returns list of dicts with keys:
-        timestamp, avgHighPrice, avgLowPrice, highPriceVolume, lowPriceVolume
-    """
-    cache_name = f"ts_{item_id}_{timestep}"
-    cached = _load_cache(cache_name, profile)
-    if cached is not None:
-        return cached
-    data = _validated(cache_name, _get(f"timeseries?id={item_id}&timestep={timestep}"))
-    if data:
-        _save_cache(cache_name, data, profile)
-        return data
-    return _load_stale_cache(cache_name, profile)
+def fetch_timeseries(item_id: int, timestep: str = "5m",
+                     profile: str | None = None) -> list[dict] | None:
+    result = fetch_timeseries_result(item_id, timestep, profile)
+    return result.data if result is not None else None
 
 
 def fetch_timeseries_batch(
