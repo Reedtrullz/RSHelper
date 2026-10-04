@@ -71,13 +71,17 @@ https://rs.reidar.tech. Current version: `3.0.0`
    (spread_pct - 2.0)` first, then an optional confidence model (reliability
    x profitability) breaks ties, then volume. The scanner's `rs_score` is a
    secondary signal, never the primary rank.
-10. **Replay-validated defaults** (`scripts/replay.py` + `scripts/sweep.py`):
-   the trader defaults were tuned against 30 real items' 5m candles — dip
+10. **Historical replay baseline** (`scripts/replay.py` + `scripts/sweep.py`):
+   the recorded 30-item, 5m-candle comparison used dip
    `>= 3.0%` (2% bought falling knives), stop `-2.0%` (wider than -1.5%,
    fewer noise stops), grace `20 min` (let the dip revert), time-exit at
    `60 min` (no idling to max_hold). Sweep: dip3+stop2+grace20 → ROI 4.62%
    vs 3.11% baseline on the replay set. Re-run `sweep.py` after collecting
-   more live trades before changing these again.
+   more live trades before changing these again. The current checked source
+   default is **2.5% dip**, not the historical 3.0% comparison. The replay
+   harness retains its older explicit 2.0%/1.5%/10-minute baseline; select
+   parameters explicitly when comparing it with the current trader. These
+   historical results do not establish an optimal current strategy.
 
 ## Known Deliberate Simplifications (ponytail)
 

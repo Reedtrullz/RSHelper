@@ -1610,6 +1610,7 @@ def _main() -> None:
     from rshelper.profile import resolve_profile
     selection = argparse.ArgumentParser(add_help=False)
     selection.add_argument("--profile")
+    selection.add_argument("--version", action="version", version=f"rshelper {__version__}")
     selected, remaining = selection.parse_known_args()
     # An invalid active marker must remain repairable through the app.
     repair = sys.argv[1:3] == ["profile", "switch"]

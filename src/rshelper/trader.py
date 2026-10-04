@@ -47,9 +47,14 @@ MAX_VOLUME_FRACTION = 0.10  # never size above 10% of the last 5m volume
 # Maps item_id -> (exit_ts, reason) so stop-losses get a longer cooldown.
 _RECENT_EXITS: dict[int, tuple[float, str]] = {}
 EXITS_PATH = TRADER_DIR / "recent_exits.json"
-# Cooldowns are at most stop_reentry_minutes (90); entries older than 2h can
-# never block a re-entry, so pruning them keeps the file bounded.
-RECENT_EXIT_MAX_AGE = 2 * 3600
+
+
+def _recent_exit_max_age(cfg=None) -> float:
+    """Retention horizon needed to enforce the longest configured cooldown."""
+    if cfg is None:
+        from rshelper.config import TraderConfig
+        cfg = TraderConfig()
+    return max(cfg.reentry_minutes, cfg.stop_reentry_minutes) * 60
 
 
 def _exits_path(profile: str | None = None) -> Path:
@@ -58,32 +63,34 @@ def _exits_path(profile: str | None = None) -> Path:
     return resolve_config_path("recent_exits.json", profile)
 
 
-def _load_recent_exits(profile: str | None = None) -> None:
+def _load_recent_exits(profile: str | None = None, cfg=None) -> None:
     """Merge persisted exits into the in-memory map (survives restarts)."""
     try:
         data = json.loads(_exits_path(profile).read_text())
     except (OSError, json.JSONDecodeError, ValueError):
         return
     now = time.time()
+    max_age = _recent_exit_max_age(cfg)
     # Prune expired entries already held in memory (a long-running daemon
     # would otherwise keep them until restart).
     for iid in [iid for iid, (ts, _) in _RECENT_EXITS.items()
-                if now - ts > RECENT_EXIT_MAX_AGE]:
+                if now - ts > max_age]:
         del _RECENT_EXITS[iid]
     for key, val in data.items():
         try:
             ts = float(val["ts"])
-            if now - ts > RECENT_EXIT_MAX_AGE:
+            if now - ts > max_age:
                 continue  # stale exit: no longer blocks any re-entry
             _RECENT_EXITS[int(key)] = (ts, str(val["reason"]))
         except (KeyError, TypeError, ValueError):
             continue
 
 
-def _persist_recent_exits(profile: str | None = None) -> None:
+def _persist_recent_exits(profile: str | None = None, cfg=None) -> None:
     now = time.time()
+    max_age = _recent_exit_max_age(cfg)
     fresh = {iid: (ts, reason) for iid, (ts, reason) in _RECENT_EXITS.items()
-             if now - ts <= RECENT_EXIT_MAX_AGE}
+             if now - ts <= max_age}
     atomic_write_json(_exits_path(profile), {
         str(iid): {"ts": ts, "reason": reason}
         for iid, (ts, reason) in fresh.items()
@@ -417,7 +424,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
     from rshelper.positions import close_positions, list_positions, open_position
     from rshelper.journal import log_trade
 
-    _load_recent_exits(profile)
+    _load_recent_exits(profile, cfg)
     _mapping, latest, vol_5m, items = _fetch_bootstrap(profile)
     candidates = select_candidates(items, latest, vol_5m, cfg)
 
@@ -553,7 +560,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
                        "profit": profit_sum,
                        "fill_guard": guarded_fill is not None})
         _RECENT_EXITS[p.item_id] = (now, reason)
-        _persist_recent_exits(profile)
+        _persist_recent_exits(profile, cfg)
 
     remaining = [p for p in list_positions(profile) if p.note == "auto"]
     slots = max(0, cfg.max_positions - len(remaining))

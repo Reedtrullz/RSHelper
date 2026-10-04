@@ -1,11 +1,9 @@
 """Tuning log: record config.toml parameter changes over time."""
 import json
-import os
 import threading
-from dataclasses import asdict
 from datetime import datetime, timezone
 
-from rshelper.config import load_config
+from rshelper.config import effective_config_dict, load_config
 from rshelper.profile import atomic_write_json, resolve_config_path
 
 _TUNING_LOCK = threading.Lock()
@@ -13,9 +11,7 @@ _TUNING_LOCK = threading.Lock()
 
 def params(profile: str | None = None) -> dict:
     """Effective tuning parameters as a JSON-safe dict."""
-    cfg = load_config(profile)
-    return {"alch": asdict(cfg.alch), "flip": asdict(cfg.flip),
-            "margin": asdict(cfg.margin), "trader": asdict(cfg.trader)}
+    return effective_config_dict(load_config(profile))
 
 
 def log_path(profile: str | None = None):

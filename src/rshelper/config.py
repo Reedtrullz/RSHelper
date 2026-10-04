@@ -2,7 +2,8 @@
 
 
 import tomllib
-from dataclasses import dataclass, field
+import math
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from rshelper.profile import atomic_write_text, resolve_config_path
@@ -148,73 +149,196 @@ class Config:
     trader: TraderConfig = field(default_factory=TraderConfig)
 
 
+class ConfigError(ValueError):
+    """Invalid configuration with a stable section/key diagnostic."""
+
+    def __init__(self, section: str, key: str, reason: str):
+        self.section = section
+        self.key = key
+        self.reason = reason
+        super().__init__(f"[{section}].{key}: {reason}")
+
+
+_SECTION_TYPES = {
+    "alch": AlchConfig,
+    "flip": FlipConfig,
+    "margin": MarginConfig,
+    "process": ProcessConfig,
+    "trader": TraderConfig,
+}
+_MAX_CONFIG_INTEGER = (1 << 63) - 1
+_MAX_RESULTS = 10_000
+_MAX_COOLDOWN_MINUTES = 365 * 24 * 60
+_INT_RANGES = {
+    "alch": {
+        "nature_rune_cost": (0, _MAX_CONFIG_INTEGER),
+        "min_volume": (0, _MAX_CONFIG_INTEGER),
+        "top": (1, _MAX_RESULTS),
+    },
+    "flip": {
+        "min_volume": (0, _MAX_CONFIG_INTEGER),
+        "min_margin": (0, _MAX_CONFIG_INTEGER),
+        "top": (1, _MAX_RESULTS),
+    },
+    "margin": {
+        "min_volume": (0, _MAX_CONFIG_INTEGER),
+        "min_margin": (0, _MAX_CONFIG_INTEGER),
+        "check": (1, _MAX_RESULTS),
+        "top": (1, _MAX_RESULTS),
+    },
+    "process": {
+        "min_volume": (0, _MAX_CONFIG_INTEGER),
+        "min_profit": (0, _MAX_CONFIG_INTEGER),
+        "top": (1, _MAX_RESULTS),
+        "capital": (0, _MAX_CONFIG_INTEGER),
+    },
+    "trader": {
+        "capital": (1, _MAX_CONFIG_INTEGER),
+        "max_positions": (1, 8),
+        "min_volume": (0, _MAX_CONFIG_INTEGER),
+        "min_price": (10, _MAX_CONFIG_INTEGER),
+        "reentry_minutes": (0, _MAX_COOLDOWN_MINUTES),
+        "stop_reentry_minutes": (0, _MAX_COOLDOWN_MINUTES),
+        "stop_grace_minutes": (0, _MAX_COOLDOWN_MINUTES),
+        "max_hold_minutes": (1, _MAX_COOLDOWN_MINUTES),
+        "spread_collapse_exit_minutes": (0, _MAX_COOLDOWN_MINUTES),
+        "interval_sec": (1, 24 * 60 * 60),
+        "artifact_min_low_vol": (0, _MAX_CONFIG_INTEGER),
+    },
+}
+_FLOAT_RANGES = {
+    "trader": {
+        "trade_capital_frac": (0.0, 1.0, False, True),
+        "max_spread_ratio": (1.0, 1000.0, True, True),
+        "dip_depth_pct": (0.0, 100.0, False, False),
+        "max_dip_pct": (0.0, 100.0, False, True),
+        "min_spread_pct": (0.0, 100.0, True, True),
+        "max_entry_spread_pct": (0.0, 100.0, False, True),
+        "take_profit_pct": (0.0, 100.0, False, True),
+        "stop_loss_pct": (-100.0, 0.0, False, False),
+        "artifact_low_vol_frac": (0.0, 1.0, False, True),
+        "artifact_outlier_pct": (0.0, 100.0, True, True),
+        "stop_slippage": (0.0, 1.0, False, True),
+        "stop_mark_blend": (0.0, 1.0, True, True),
+    },
+}
+
+
+def _in_range(value: float, bounds: tuple[float, float, bool, bool]) -> bool:
+    low, high, include_low, include_high = bounds
+    return ((value >= low if include_low else value > low)
+            and (value <= high if include_high else value < high))
+
+
+def validate_config(config: Config) -> Config:
+    """Check every effective setting before a command starts its work."""
+    if type(config) is not Config:
+        raise ConfigError("config", "object", "expected a Config instance")
+
+    for section, config_type in _SECTION_TYPES.items():
+        values = getattr(config, section)
+        if type(values) is not config_type:
+            raise ConfigError(section, "section",
+                              f"expected {config_type.__name__} instance")
+        for item in fields(config_type):
+            key = item.name
+            value = getattr(values, key)
+            expected = item.type
+            if expected is bool:
+                valid_type = type(value) is bool
+            elif expected is int:
+                valid_type = type(value) is int
+            elif expected is float:
+                valid_type = type(value) in (int, float)
+            elif expected is str:
+                valid_type = type(value) is str
+            else:
+                valid_type = False
+            if not valid_type:
+                raise ConfigError(section, key,
+                                  f"expected {expected.__name__}, got {type(value).__name__}")
+
+            if expected is int:
+                low, high = _INT_RANGES[section][key]
+                if value < low or value > high:
+                    raise ConfigError(section, key,
+                                      f"must be between {low} and {high}")
+            elif expected is float:
+                try:
+                    finite = math.isfinite(value)
+                except OverflowError:
+                    finite = False
+                if not finite:
+                    raise ConfigError(section, key, "must be finite")
+                bounds = _FLOAT_RANGES[section][key]
+                if not _in_range(value, bounds):
+                    low, high, include_low, include_high = bounds
+                    left = "[" if include_low else "("
+                    right = "]" if include_high else ")"
+                    raise ConfigError(section, key,
+                                      f"must be in {left}{low}, {high}{right}")
+
+    for section in ("flip", "margin"):
+        direction = getattr(config, section).direction
+        if direction not in ("arbitrage", "traditional"):
+            raise ConfigError(section, "direction",
+                              "must be 'arbitrage' or 'traditional'")
+
+    trader = config.trader
+    if trader.max_dip_pct <= trader.dip_depth_pct:
+        raise ConfigError("trader", "max_dip_pct",
+                          "must be greater than dip_depth_pct")
+    if trader.max_entry_spread_pct < trader.min_spread_pct:
+        raise ConfigError("trader", "max_entry_spread_pct",
+                          "must be at least min_spread_pct")
+    if trader.stop_reentry_minutes < trader.reentry_minutes:
+        raise ConfigError("trader", "stop_reentry_minutes",
+                          "must be at least reentry_minutes")
+    if trader.stop_grace_minutes >= trader.max_hold_minutes:
+        raise ConfigError("trader", "stop_grace_minutes",
+                          "must be less than max_hold_minutes")
+    if trader.spread_collapse_exit_minutes > trader.max_hold_minutes:
+        raise ConfigError("trader", "spread_collapse_exit_minutes",
+                          "must not exceed max_hold_minutes")
+    if trader.interval_sec >= trader.max_hold_minutes * 60:
+        raise ConfigError("trader", "interval_sec",
+                          "must be shorter than max_hold_minutes")
+    return config
+
+
+def effective_config_dict(config: Config) -> dict:
+    """Return the validated effective config in generated TOML section shape."""
+    validate_config(config)
+    return {section: asdict(getattr(config, section))
+            for section in _SECTION_TYPES}
+
+
+def _config_from_toml(raw: dict) -> Config:
+    if not isinstance(raw, dict):
+        raise ConfigError("config", "root", "must contain TOML tables")
+    sections = {}
+    for section, values in raw.items():
+        config_type = _SECTION_TYPES.get(section)
+        if config_type is None:
+            raise ConfigError("config", str(section), "unknown configuration section")
+        if not isinstance(values, dict):
+            raise ConfigError(section, "section", "must be a TOML table")
+        known = {item.name for item in fields(config_type)}
+        for key in values:
+            if key not in known:
+                raise ConfigError(section, str(key), "unknown configuration key")
+        sections[section] = config_type(**values)
+    return Config(**sections)
+
+
 def load_config(profile: str | None = None) -> Config:
-    """Load config from ~/.config/rshelper/config.toml, creating default if missing."""
+    """Load, validate and return config before command-specific work begins."""
     path = resolve_config_path("config.toml", profile)
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
         atomic_write_text(path, DEFAULT_CONFIG_TOML)
-    raw = tomllib.loads(path.read_text())
-
-    alch_raw = raw.get("alch", {})
-    flip_raw = raw.get("flip", {})
-    margin_raw = raw.get("margin", {})
-    process_raw = raw.get("process", {})
-    trader_raw = raw.get("trader", {})
-
-    return Config(
-        alch=AlchConfig(
-            nature_rune_cost=alch_raw.get("nature_rune_cost", 0),
-            members_only=alch_raw.get("members_only", False),
-            min_volume=alch_raw.get("min_volume", 0),
-            top=alch_raw.get("top", 50),
-        ),
-        flip=FlipConfig(
-            direction=flip_raw.get("direction", "arbitrage"),
-            members_only=flip_raw.get("members_only", False),
-            min_volume=flip_raw.get("min_volume", 10),
-            min_margin=flip_raw.get("min_margin", 0),
-            top=flip_raw.get("top", 50),
-        ),
-        margin=MarginConfig(
-            direction=margin_raw.get("direction", "arbitrage"),
-            members_only=margin_raw.get("members_only", False),
-            min_volume=margin_raw.get("min_volume", 10),
-            min_margin=margin_raw.get("min_margin", 0),
-            check=margin_raw.get("check", 20),
-            top=margin_raw.get("top", 20),
-        ),
-        process=ProcessConfig(
-            members_only=process_raw.get("members_only", False),
-            min_volume=process_raw.get("min_volume", 0),
-            min_profit=process_raw.get("min_profit", 0),
-            top=process_raw.get("top", 20),
-            capital=process_raw.get("capital", 0),
-        ),
-        trader=TraderConfig(
-            capital=trader_raw.get("capital", 1_000_000),
-            trade_capital_frac=trader_raw.get("trade_capital_frac", 0.40),
-            max_positions=trader_raw.get("max_positions", 3),
-            min_volume=trader_raw.get("min_volume", 800),
-            min_price=trader_raw.get("min_price", 25),
-            max_spread_ratio=trader_raw.get("max_spread_ratio", 5.0),
-            dip_depth_pct=trader_raw.get("dip_depth_pct", 2.5),
-            max_dip_pct=trader_raw.get("max_dip_pct", 10.0),
-            min_spread_pct=trader_raw.get("min_spread_pct", 3.5),
-            max_entry_spread_pct=trader_raw.get("max_entry_spread_pct", 5.75),
-            reentry_minutes=trader_raw.get("reentry_minutes", 30),
-            stop_reentry_minutes=trader_raw.get("stop_reentry_minutes", 90),
-            take_profit_pct=trader_raw.get("take_profit_pct", 3.0),
-            stop_loss_pct=trader_raw.get("stop_loss_pct", -2.0),
-            stop_grace_minutes=trader_raw.get("stop_grace_minutes", 20),
-            max_hold_minutes=trader_raw.get("max_hold_minutes", 180),
-            spread_collapse_exit_minutes=trader_raw.get(
-                "spread_collapse_exit_minutes", 60),
-            interval_sec=trader_raw.get("interval_sec", 120),
-            artifact_min_low_vol=trader_raw.get("artifact_min_low_vol", 20),
-            artifact_low_vol_frac=trader_raw.get("artifact_low_vol_frac", 0.10),
-            artifact_outlier_pct=trader_raw.get("artifact_outlier_pct", 5.0),
-            stop_slippage=trader_raw.get("stop_slippage", 0.97),
-            stop_mark_blend=trader_raw.get("stop_mark_blend", 0.0),
-        ),
-    )
+    try:
+        raw = tomllib.loads(path.read_text())
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError("config", "toml", str(exc)) from exc
+    return validate_config(_config_from_toml(raw))
