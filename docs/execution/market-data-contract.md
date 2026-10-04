@@ -1,0 +1,9 @@
+# Validated provider and legacy cache contract
+
+Mapping and Tracker dumps are lists; latest and 5m data are keyed objects; timeseries is a list of candle objects. An optional provider `data` wrapper is accepted. Legacy unwrapped cache data remains supported. Unknown extension fields are retained; nonfinite JSON numbers and excessive nesting are rejected before caching. Invalid rows are dropped with aggregate stderr counts. Rejection leaves the last valid cache intact and attempts the documented fallback before stale reads.
+
+A row may carry a null optional quote/average where the provider has no executed trade. Null or missing quote time makes that quote unusable to price consumers; timeseries candles require valid timestamps. The 5m endpoint puts its window timestamp at the envelope level rather than on each row, so row validation checks average/volume types. This validator does not manufacture a per-row time. Provenance and volume-window metadata are handled by #5; Tracker order quantities remain distinct from executed volume.
+
+Engineering limits: 32 MiB response/cache payload, JSON nesting depth 64, numeric market fields at most 2^63−1, and positive quote timestamps no more than 60 seconds ahead of the local clock. These are safety limits, not measurements of provider clock accuracy. Both quote legs use the same chronology guard, including trader freshness. Cache reads use a bounded descriptor and its own mtime; concurrent disappearance is a miss. Invalid-cache diagnostic evidence is at most one 64 KiB file per endpoint in the same profile cache, atomically replaced with mode 0600. Evidence may be truncated and is never ranked or used as quotes.
+
+No trading-state schema is changed. Rollback readers can still read valid existing cache shapes. Bad caches are retained as bounded diagnostics and refreshed through the normal app path; there is no manual home-state repair step.

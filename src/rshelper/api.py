@@ -5,6 +5,7 @@ import calendar
 import concurrent.futures
 import datetime
 import json
+import math
 import os
 import sys
 import tempfile
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from rshelper.profile import resolve_cache_path
+from rshelper.market_validation import validate_payload, MarketDataError
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
@@ -76,6 +78,8 @@ def _throttle_path() -> Path:
 
 # Backoff config for retryable errors
 MAX_RETRIES = 3
+MAX_RESPONSE_BYTES = 32 * 1024 * 1024
+MAX_JSON_DEPTH = 64
 RETRY_DELAY = 2.0  # seconds, doubles each retry
 
 
@@ -89,7 +93,11 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
         )
         try:
             with urllib.request.urlopen(req, timeout=15) as resp:
-                return json.loads(resp.read())
+                raw = resp.read(MAX_RESPONSE_BYTES + 1)
+                if len(raw) > MAX_RESPONSE_BYTES:
+                    print("  Warning: market response exceeds 32 MiB limit", file=sys.stderr)
+                    return None
+                return _decode_market_json(raw)
         except urllib.error.HTTPError as exc:
             if exc.code in (429, 503) and attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
@@ -99,7 +107,7 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
                 continue
             print(f"  Warning: HTTP {exc.code} fetching {url}: {exc.reason}", file=sys.stderr)
             return None
-        except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
+        except (urllib.error.URLError, json.JSONDecodeError, MarketDataError, UnicodeDecodeError, RecursionError, OSError) as exc:
             if attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
                 print(f"  Retrying {url} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
@@ -123,8 +131,9 @@ def _get_ge_tracker(profile: str | None = None) -> Any | None:
     if cached is not None:
         return cached
     _throttle()
-    data = _fetch_url(GE_TRACKER_URL)
-    if data is not None and _ge_tracker_items(data):
+    rows = _validated("ge_tracker", _fetch_url(GE_TRACKER_URL))
+    data = {"data": rows} if rows else None
+    if data is not None:
         _save_cache("ge_tracker", data, profile)
         return data
     return _load_stale_cache("ge_tracker", profile)
@@ -199,39 +208,114 @@ def _cache_path(name: str, profile: str | None = None) -> Path:
     return resolve_cache_path(name + ".json", profile)
 
 
-def _load_cache(name: str, profile: str | None = None) -> Any | None:
-    """Load cached JSON. Returns data only if fresh (< max_age)."""
-    p = _cache_path(name, profile)
-    if not p.exists():
-        return None
-    max_age = CACHE_MAX_AGE.get(name, 300)
-    age = time.time() - p.stat().st_mtime
-    if age < 0:
-        return None  # future-dated file (clock skew/restore) is not fresh
+def _decode_market_json(raw):
     try:
-        data = json.loads(p.read_text())
-    except (json.JSONDecodeError, OSError):
-        p.unlink(missing_ok=True)
+        payload = json.loads(raw)
+    except ValueError as exc:
+        raise MarketDataError("invalid market JSON") from exc
+    stack = [iter([payload])]
+    while stack:
+        try:
+            value = next(stack[-1])
+        except StopIteration:
+            stack.pop()
+            continue
+        if isinstance(value, float) and not math.isfinite(value):
+            raise MarketDataError("nonfinite market JSON number")
+        if isinstance(value, dict):
+            stack.append(iter(value.values()))
+        elif isinstance(value, list):
+            stack.append(iter(value))
+        if len(stack) > MAX_JSON_DEPTH:
+            raise MarketDataError("market JSON exceeds nesting limit")
+    return payload
+
+
+def _validated(name: str, payload: object) -> Any | None:
+    endpoint = "timeseries" if name.startswith("ts_") else name
+    if payload is None:
         return None
-    if age < max_age:
-        return data
-    return None
+    try:
+        result = validate_payload(endpoint, payload, time.time())
+    except MarketDataError as exc:
+        print(f"  Warning: rejected market data ({exc})", file=sys.stderr)
+        return None
+    if result["rejected"]:
+        print(f"  Warning: rejected {result['rejected']} invalid {endpoint} rows", file=sys.stderr)
+    return result["data"] or None
+
+
+def _quarantine_cache(path: Path, name: str) -> None:
+    """One bounded evidence file per endpoint, replaced atomically."""
+    endpoint = "timeseries" if name.startswith("ts_") else name
+    target = path.parent / f".invalid-{endpoint}.json"
+    try:
+        with path.open("rb") as stream:
+            raw = stream.read(64 * 1024)
+        fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".invalid.tmp")
+        try:
+            try:
+                stream = os.fdopen(fd, "wb")
+            except BaseException:
+                os.close(fd)
+                raise
+            with stream:
+                stream.write(raw)
+            os.replace(tmp, target)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+    except OSError:
+        pass
+
+
+def _read_cache_payload(path: Path):
+    """Read one inode through a bounded descriptor, including its mtime."""
+    with path.open("rb") as stream:
+        modified = os.fstat(stream.fileno()).st_mtime
+        raw = stream.read(MAX_RESPONSE_BYTES + 1)
+    if len(raw) > MAX_RESPONSE_BYTES:
+        raise MarketDataError("market cache exceeds size limit")
+    return _decode_market_json(raw), modified
+
+
+def _load_cache(name: str, profile: str | None = None) -> Any | None:
+    """Return only validated fresh cache; disappearance is an ordinary miss."""
+    path = _cache_path(name, profile)
+    try:
+        data, modified = _read_cache_payload(path)
+    except FileNotFoundError:
+        return None
+    except (MarketDataError, UnicodeDecodeError, RecursionError, OSError):
+        _quarantine_cache(path, name)
+        return None
+    age = time.time() - modified
+    if not 0 <= age < CACHE_MAX_AGE.get(name, 300):
+        return None
+    valid = _validated(name, data)
+    if valid is None:
+        _quarantine_cache(path, name)
+    return {"data": valid} if name == "ge_tracker" and valid else valid
 
 
 def _load_stale_cache(name: str, profile: str | None = None) -> Any | None:
-    """Return stale cache data (within STALE_MULTIPLIER * max_age) when API fails."""
-    p = _cache_path(name, profile)
-    if not p.exists():
-        return None
-    max_age = CACHE_MAX_AGE.get(name, 300)
-    age = time.time() - p.stat().st_mtime
-    if age < 0 or age >= max_age * STALE_MULTIPLIER:
-        return None
+    """Return validated stale cache only after providers have failed."""
+    path = _cache_path(name, profile)
     try:
-        data = json.loads(p.read_text())
+        data, modified = _read_cache_payload(path)
+        age = time.time() - modified
+        if not 0 <= age < CACHE_MAX_AGE.get(name, 300) * STALE_MULTIPLIER:
+            return None
+        valid = _validated(name, data)
+        if valid is None:
+            _quarantine_cache(path, name)
+            return None
         print(f"  Note: using stale cache for '{name}' ({int(age)}s old)", file=sys.stderr)
-        return data
-    except (json.JSONDecodeError, OSError):
+        return {"data": valid} if name == "ge_tracker" else valid
+    except FileNotFoundError:
+        return None
+    except (MarketDataError, UnicodeDecodeError, RecursionError, OSError):
+        _quarantine_cache(path, name)
         return None
 
 
@@ -277,16 +361,16 @@ def fetch_mapping(profile: str | None = None) -> list[dict] | None:
     cached = _load_cache("mapping", profile)
     if cached is not None:
         return cached
-    data = _get("mapping")
+    data = _validated("mapping", _get("mapping"))
     if data is not None:
-        result = data.get("data", data) if isinstance(data, dict) else data
+        result = data
         if result:
             _save_cache("mapping", result, profile)
             return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
         print("  Note: OSRS Wiki unavailable; using GE Tracker fallback.", file=sys.stderr)
-        result = _mapping_from_ge_tracker(dump)
+        result = _validated("mapping", _mapping_from_ge_tracker(dump))
         if result:
             _save_cache("mapping", result, profile)
             return result
@@ -298,15 +382,15 @@ def fetch_latest(profile: str | None = None) -> dict[str, dict] | None:
     cached = _load_cache("latest", profile)
     if cached is not None:
         return cached
-    data = _get("latest")
+    data = _validated("latest", _get("latest"))
     if data is not None:
-        result = data.get("data", data)
+        result = data
         if result:
             _save_cache("latest", result, profile)
             return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
-        result = _latest_from_ge_tracker(dump)
+        result = _validated("latest", _latest_from_ge_tracker(dump))
         if result:
             _save_cache("latest", result, profile)
             return result
@@ -318,15 +402,15 @@ def fetch_5m(profile: str | None = None) -> dict[str, dict] | None:
     cached = _load_cache("5m", profile)
     if cached is not None:
         return cached
-    data = _get("5m")
+    data = _validated("5m", _get("5m"))
     if data is not None:
-        result = data.get("data", data)
+        result = data
         if result:
             _save_cache("5m", result, profile)
             return result
     dump = _get_ge_tracker(profile)
     if dump is not None:
-        result = _5m_from_ge_tracker(dump)
+        result = _validated("5m", _5m_from_ge_tracker(dump))
         if result:
             _save_cache("5m", result, profile)
             return result
@@ -344,10 +428,10 @@ def fetch_timeseries(item_id: int, timestep: str = "5m", profile: str | None = N
     cached = _load_cache(cache_name, profile)
     if cached is not None:
         return cached
-    data = _get(f"timeseries?id={item_id}&timestep={timestep}")
-    if data and "data" in data:
-        _save_cache(cache_name, data["data"], profile)
-        return data["data"]
+    data = _validated(cache_name, _get(f"timeseries?id={item_id}&timestep={timestep}"))
+    if data:
+        _save_cache(cache_name, data, profile)
+        return data
     return _load_stale_cache(cache_name, profile)
 
 

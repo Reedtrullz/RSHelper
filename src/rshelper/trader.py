@@ -23,7 +23,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rshelper.market import ge_tax, price_issue, safe_int
+from rshelper.market import ge_tax, price_issue, safe_int, quote_time_issue
 from rshelper.profile import atomic_write_json, resolve_config_path, resolve_profile
 
 TRADER_DIR = Path.home() / ".config" / "rshelper"
@@ -126,9 +126,7 @@ def _read_state(profile: str | None = None) -> dict | None:
 def _fresh(price: dict, max_age: int, now: float) -> bool:
     for key in ("highTime", "lowTime"):
         ts = price.get(key)
-        if not isinstance(ts, (int, float)):
-            return False
-        if now - ts > max_age:
+        if quote_time_issue(ts, now) or now - ts > max_age:
             return False
     return True
 
