@@ -202,7 +202,8 @@ class TestAuthorizationBoundary(unittest.TestCase):
                 self.assertEqual(h.response_code, 200)
                 if path == "/api/health":
                     payload = json.loads(h.wfile.getvalue())
-                    self.assertEqual(set(payload), {"status", "version"})
+                    self.assertEqual(set(payload), {'status', 'version', 'build_revision',
+                        'image_digest', 'platform', 'base_image_digest'})
                     self.assertEqual(payload["status"], "healthy")
                     self.assertIsInstance(payload["version"], str)
                 elif path == "/api/capabilities":

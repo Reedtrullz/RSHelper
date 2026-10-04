@@ -72,6 +72,8 @@ jobs:
     outputs:
       image: ${{ steps.image.outputs.image }}
       tag: ${{ steps.image.outputs.tag }}
+      digest: ${{ steps.build.outputs.digest }}
+      revision: ${{ github.sha }}
 
     steps:
       - name: Check out repository
@@ -95,6 +97,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        id: build
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: .
@@ -175,7 +178,7 @@ jobs:
           printf '%s\n' "$expected_host_key" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
 
-      - name: Deploy immutable image tag
+      - name: Deploy immutable image digest
         shell: bash
         env:
           APP_VERSION: ${{ github.sha }}
@@ -186,9 +189,11 @@ jobs:
           ansible-playbook \
             -i deploy/inventory/hosts.yml \
             deploy/playbook.yml \
-            -e "docker_image=${{ needs.build-and-push.outputs.image }}:${{ needs.build-and-push.outputs.tag }}"
+            -e "docker_image=${{ needs.build-and-push.outputs.image }}@${{ needs.build-and-push.outputs.digest }}"
 
       - name: Verify public deployment version
+        env:
+          EXPECTED_IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
         shell: bash
         run: |
           python3 - <<'PY'
@@ -199,6 +204,7 @@ jobs:
           import urllib.request
 
           expected = os.environ['GITHUB_SHA']
+          expected_digest = os.environ['EXPECTED_IMAGE_DIGEST']
           url = 'https://rs.reidar.tech/api/health'
           last = None
           for _ in range(12):
@@ -213,7 +219,9 @@ jobs:
                   with urllib.request.urlopen(request, timeout=10) as response:
                       last = response.read().decode('utf-8')
                       payload = json.loads(last)
-                      if payload.get('status') == 'healthy' and payload.get('version') == expected:
+                      if (payload.get('status') == 'healthy' and payload.get('version') == expected
+                              and payload.get('build_revision') == expected
+                              and payload.get('image_digest') == expected_digest):
                           print(json.dumps(payload, indent=2))
                           sys.exit(0)
               except Exception as exc:

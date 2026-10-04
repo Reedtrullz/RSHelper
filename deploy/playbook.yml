@@ -7,17 +7,14 @@
 #   - Target host is logged into GHCR if the image is private.
 #   - community.docker collection installed on the control node.
 # Variables:
-#   - docker_image: immutable image tag to deploy
-#     (for example ghcr.io/reedtrullz/rshelper:<git-sha>)
-#   - app_version: full 40-character git SHA exposed by /api/health
+#   - docker_image: immutable image@sha256 digest to deploy
+#   - app_version: full 40-character requested/baked source SHA
 #     (default APP_VERSION env)
-#   - allow_mutable_tag: set true only for an intentional latest/manual
-#     recovery deploy
 #   - app_domain: public domain (inventory default rs.reidar.tech)
 # Usage:
 #   APP_VERSION=$(git rev-parse HEAD) ansible-playbook \
 #     -i deploy/inventory/hosts.yml deploy/playbook.yml \
-#     -e "docker_image=ghcr.io/reedtrullz/rshelper:$(git rev-parse --short=12 HEAD)"
+#     -e "docker_image=ghcr.io/reedtrullz/rshelper@sha256:<registry-digest>"
 
 - name: Deploy RSHelper to VPS
   hosts: rshelper
@@ -28,9 +25,8 @@
     app_name: rshelper
     container_name: rshelper
     app_dir: /opt/apps/rshelper
-    docker_image: ghcr.io/reedtrullz/rshelper:latest
+    docker_image: ''
     app_version: "{{ lookup('ansible.builtin.env', 'APP_VERSION') | default('latest', true) }}"
-    allow_mutable_tag: false
     health_url: "http://{{ app_bind_address }}:{{ app_host_port }}/api/health"
     public_health_url: "https://{{ app_domain }}/api/health"
     caddy_marker_name: RSHelper
@@ -44,14 +40,12 @@
           - app_host_port | int > 1024
           - app_host_port | int < 65536
           - app_bind_address in ['127.0.0.1', 'localhost']
-          - docker_image is match('^ghcr.io/[a-z0-9._-]+/[a-z0-9._-]+:[A-Za-z0-9._-]+$')
-          - allow_mutable_tag | bool or docker_image is match('^ghcr.io/[a-z0-9._-]+/[a-z0-9._-]+:(?:staging-)?[0-9a-f]{7,40}$')
-          - allow_mutable_tag | bool or app_version is match('^[0-9a-f]{40}$')
+          - docker_image is match('^ghcr.io/[a-z0-9._-]+/[a-z0-9._-]+@sha256:[0-9a-f]{64}$')
+          - app_version is match('^[0-9a-f]{40}$')
         fail_msg: >-
           Invalid RSHelper deployment variables. Production deploys require
-          an immutable SHA-like GHCR image tag, and app_version must be the
-          full 40-character git SHA exposed by /api/health. Set
-          allow_mutable_tag=true only for an intentional mutable-tag deploy.
+          an immutable GHCR digest and a full source revision. Tags and
+          runtime VERSION cannot certify the bytes in the running image.
         success_msg: RSHelper deployment variables validated.
       tags: [always]
 
@@ -102,23 +96,57 @@
       check_mode: false
       tags: [deploy, rollback]
 
+    - name: Install artifact verification helpers
+      ansible.builtin.copy:
+        src: "{{ item.source }}"
+        dest: "{{ app_dir }}/{{ item.destination }}"
+        owner: deploy
+        group: deploy
+        mode: '0644'
+      loop:
+        - {source: "{{ playbook_dir }}/../src/rshelper/release.py", destination: release-validation.py}
+        - {source: "{{ playbook_dir }}/verify_artifact.py", destination: verify-artifact.py}
+      tags: [deploy, rollback]
+
+    - name: Capture previous immutable digest and OCI revision
+      ansible.builtin.command:
+        argv:
+          - python3
+          - "{{ app_dir }}/verify-artifact.py"
+          - --mode
+          - previous
+          - --image
+          - "{{ current_container.container.Image }}"
+          - --repository
+          - "{{ docker_image.split('@')[0] }}"
+          - --container
+          - "{{ container_name }}"
+          - --validation-module
+          - "{{ app_dir }}/release-validation.py"
+      register: previous_receipt
+      when: current_container.exists | default(false)
+      changed_when: false
+      tags: [deploy, rollback]
+
+    - name: Read previous local health for legacy rollback compatibility
+      ansible.builtin.uri:
+        url: "{{ health_url }}"
+        return_content: true
+        timeout: 5
+      register: previous_health
+      when: current_container.exists | default(false)
+      failed_when: false
+      tags: [deploy, rollback]
+
     - name: Remember previous deployment for rollback
       ansible.builtin.set_fact:
         previous_container_exists: "{{ current_container.exists | default(false) }}"
         previous_image_id: "{{ current_container.container.Image | default('') }}"
-        previous_app_version: >-
-          {{
-            (
-              current_container.container.Config.Env
-              | default([])
-              | select('match', '^VERSION=')
-              | list
-              | first
-              | default('VERSION=unknown')
-            )
-            | regex_replace('^VERSION=', '')
-            | default('unknown', true)
-          }}
+        previous_app_version: "{{ (previous_receipt.stdout | default('{}') | from_json).revision | default('unknown') }}"
+        previous_immutable_image: "{{ (previous_receipt.stdout | default('{}') | from_json).image | default('') }}"
+        previous_image_digest: "{{ (previous_receipt.stdout | default('{}') | from_json).digest | default('') }}"
+        previous_has_baked_metadata: "{{ (previous_health.json.build_revision | default('')) is match('^[0-9a-f]{40}$') }}"
+        candidate_replacement_started: false
       tags: [deploy, rollback]
 
     - name: Tag previous image for rollback
@@ -147,24 +175,38 @@
               - "{{ lookup('env', 'GHCR_USERNAME', default='') }}"
               - --password-stdin
             stdin: "{{ lookup('env', 'GHCR_TOKEN', default='') }}"
+          no_log: true
           when: lookup('env', 'GHCR_TOKEN', default='') | length > 0
           changed_when: true
           tags: [deploy]
 
         - name: Pull requested GHCR image
-          community.docker.docker_image:
-            name: "{{ docker_image }}"
-            source: pull
-            force_source: true
+          ansible.builtin.command:
+            argv: [docker, pull, --platform, linux/amd64, "{{ docker_image }}"]
+          changed_when: true
           tags: [deploy]
 
-        - name: Render production Compose file
-          ansible.builtin.template:
-            src: templates/compose.production.yml.j2
-            dest: "{{ app_dir }}/compose.production.yml"
-            owner: deploy
-            group: deploy
-            mode: '0644'
+        - name: Verify candidate digest platform OCI label and baked revision before replacement
+          ansible.builtin.command:
+            argv:
+              - python3
+              - "{{ app_dir }}/verify-artifact.py"
+              - --mode
+              - candidate
+              - --image
+              - "{{ docker_image }}"
+              - --revision
+              - "{{ app_version }}"
+              - --validation-module
+              - "{{ app_dir }}/release-validation.py"
+          register: candidate_receipt
+          changed_when: false
+          tags: [deploy]
+
+        - name: Remember verified candidate identity
+          ansible.builtin.set_fact:
+            candidate_image_id: "{{ (candidate_receipt.stdout | from_json).image_id }}"
+            candidate_image_digest: "{{ (candidate_receipt.stdout | from_json).digest }}"
           tags: [deploy]
 
         - name: Check for tracked state directory
@@ -217,6 +259,20 @@
           when: tracked_state.stat.exists | bool
           tags: [deploy]
 
+        - name: Mark candidate replacement boundary
+          ansible.builtin.set_fact:
+            candidate_replacement_started: true
+          tags: [deploy]
+
+        - name: Render production Compose file
+          ansible.builtin.template:
+            src: templates/compose.production.yml.j2
+            dest: "{{ app_dir }}/compose.production.yml"
+            owner: deploy
+            group: deploy
+            mode: '0644'
+          tags: [deploy]
+
         - name: Start RSHelper with Docker Compose
           community.docker.docker_compose_v2:
             project_src: "{{ app_dir }}"
@@ -229,6 +285,26 @@
             wait_timeout: 120
           tags: [deploy]
 
+        - name: Verify running container uses the inspected candidate image ID
+          ansible.builtin.command:
+            argv:
+              - python3
+              - "{{ app_dir }}/verify-artifact.py"
+              - --mode
+              - running
+              - --image
+              - "{{ docker_image }}"
+              - --revision
+              - "{{ app_version }}"
+              - --container
+              - "{{ container_name }}"
+              - --expected-image-id
+              - "{{ candidate_image_id }}"
+              - --validation-module
+              - "{{ app_dir }}/release-validation.py"
+          changed_when: false
+          tags: [verify]
+
         - name: Wait for local RSHelper health endpoint
           ansible.builtin.uri:
             url: "{{ health_url }}"
@@ -240,6 +316,8 @@
             local_health.status == 200
             and (local_health.json.status | default('')) == 'healthy'
             and (local_health.json.version | default('')) == app_version
+            and (local_health.json.build_revision | default('')) == app_version
+            and (local_health.json.image_digest | default('')) == candidate_image_digest
           retries: 12
           delay: 5
           failed_when: false
@@ -252,6 +330,8 @@
             local_health.status | default(0) != 200
             or (local_health.json.status | default('')) != 'healthy'
             or (local_health.json.version | default('')) != app_version
+            or (local_health.json.build_revision | default('')) != app_version
+            or (local_health.json.image_digest | default('')) != candidate_image_digest
           tags: [verify]
 
         - name: Manage Caddy reverse proxy block
@@ -291,6 +371,8 @@
             public_health.status == 200
             and (public_health.json.status | default('')) == 'healthy'
             and (public_health.json.version | default('')) == app_version
+            and (public_health.json.build_revision | default('')) == app_version
+            and (public_health.json.image_digest | default('')) == candidate_image_digest
           retries: 12
           delay: 5
           failed_when: false
@@ -305,6 +387,8 @@
             public_health.status | default(0) != 200
             or (public_health.json.status | default('')) != 'healthy'
             or (public_health.json.version | default('')) != app_version
+            or (public_health.json.build_revision | default('')) != app_version
+            or (public_health.json.image_digest | default('')) != candidate_image_digest
           tags: [verify]
 
         - name: Report successful deployment
@@ -317,6 +401,12 @@
           tags: [verify]
 
       rescue:
+        - name: Fail preflight without replacing a running container
+          ansible.builtin.fail:
+            msg: "Candidate artifact preflight failed before container replacement; existing service retained."
+          when: not (candidate_replacement_started | bool)
+          tags: [rollback]
+
         - name: Fail when rollback image is unavailable
           ansible.builtin.fail:
             msg: "Deployment failed and no previous image was available for rollback: {{ ansible_failed_result | default({}) }}"
@@ -328,7 +418,7 @@
         - name: Report rollback start
           ansible.builtin.debug:
             msg:
-              - "Candidate deployment failed; restoring previous image {{ rollback_image }}."
+              - "Candidate deployment failed; restoring previous digest {{ previous_immutable_image }}."
               - "Previous version: {{ previous_app_version }}"
               - "Failure: {{ ansible_failed_result | default({}) }}"
           tags: [rollback]
@@ -341,8 +431,9 @@
             group: deploy
             mode: '0644'
           vars:
-            compose_image: "{{ rollback_image }}"
+            compose_image: "{{ previous_immutable_image }}"
             compose_app_version: "{{ previous_app_version }}"
+            compose_image_digest: "{{ previous_image_digest }}"
           tags: [rollback]
 
         - name: Restore previous RSHelper container
@@ -355,7 +446,28 @@
             remove_orphans: true
             wait: true
             wait_timeout: 120
+            pull: never
           tags: [rollback]
+
+        - name: Verify restored image ID matches the recorded rollback artifact
+          ansible.builtin.command:
+            argv:
+              - python3
+              - "{{ app_dir }}/verify-artifact.py"
+              - --mode
+              - running
+              - --image
+              - "{{ previous_immutable_image }}"
+              - --revision
+              - "{{ previous_app_version }}"
+              - --container
+              - "{{ container_name }}"
+              - --expected-image-id
+              - "{{ previous_image_id }}"
+              - --validation-module
+              - "{{ app_dir }}/release-validation.py"
+          changed_when: false
+          tags: [rollback, verify]
 
         - name: Wait for local rollback health endpoint
           ansible.builtin.uri:
@@ -371,6 +483,9 @@
               previous_app_version == 'unknown'
               or (rollback_local_health.json.version | default('')) == previous_app_version
             )
+            and (not previous_has_baked_metadata | bool or (
+              (rollback_local_health.json.build_revision | default('')) == previous_app_version
+              and (rollback_local_health.json.image_digest | default('')) == previous_image_digest))
           retries: 12
           delay: 5
           failed_when: false
@@ -386,6 +501,9 @@
               previous_app_version != 'unknown'
               and (rollback_local_health.json.version | default('')) != previous_app_version
             )
+            or (previous_has_baked_metadata | bool and (
+              (rollback_local_health.json.build_revision | default('')) != previous_app_version
+              or (rollback_local_health.json.image_digest | default('')) != previous_image_digest))
           tags: [rollback, verify]
 
         - name: Verify public deployment version after rollback
@@ -402,6 +520,9 @@
               previous_app_version == 'unknown'
               or (rollback_public_health.json.version | default('')) == previous_app_version
             )
+            and (not previous_has_baked_metadata | bool or (
+              (rollback_public_health.json.build_revision | default('')) == previous_app_version
+              and (rollback_public_health.json.image_digest | default('')) == previous_image_digest))
           retries: 12
           delay: 5
           failed_when: false
@@ -419,13 +540,16 @@
               previous_app_version != 'unknown'
               and (rollback_public_health.json.version | default('')) != previous_app_version
             )
+            or (previous_has_baked_metadata | bool and (
+              (rollback_public_health.json.build_revision | default('')) != previous_app_version
+              or (rollback_public_health.json.image_digest | default('')) != previous_image_digest))
           tags: [rollback, verify]
 
         - name: Fail deployment after successful rollback
           ansible.builtin.fail:
             msg: >-
               Candidate deployment failed and RSHelper was rolled back to
-              previous image {{ rollback_image }} with version {{ previous_app_version }}.
+              previous digest {{ previous_immutable_image }} with version {{ previous_app_version }}.
           tags: [rollback]
 
   handlers:
