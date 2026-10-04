@@ -1,0 +1,11 @@
+# Private profile backup capture (#28-A)
+
+Run `rshelper --profile NAME profile backup /private/destination/profile.zip --json` to create a new validated ZIP. The destination must be outside the selected profile state root and must not already exist. The bundle and entries are private (0600). Never commit a real backup or its records to public Git.
+
+The manifest identifies application/schema version, selected profile, capture time, per-file byte lengths and SHA-256 hashes, a source fingerprint, sensitivity and excluded filenames. Current allowlisted files include config, journal, positions, watchlist, alerts, tuning and signal/trader state, plus regular JSON snapshots. Tokens, PID files, active selection, other profiles, caches and unknown files are excluded. An exclusion means the bundle does not cover that file; it is not permission to discard it. Backup publication policy is separate from public-demo approval and private replication.
+
+Capture validates each supported source file, holds shared locks in canonical order, and rechecks bytes and the file inventory before publishing the archive. A corrupt/unreadable/oversized source, unsupported schema, symlink, concurrent change or existing destination fails without changing source bytes or overwriting a bundle. Limits are 64 MiB per source and 256 MiB total. These are engineering budgets, not measured operating peaks.
+
+The legacy writers do not yet all coordinate multi-file transactions. Locks plus rechecking detect changes during this capture; the manifest does not certify that independent records describe one logical transaction. Use the forthcoming owned writer lease/sequence workflow before migration cutover. #28 remains open for bundle validation, read-only import preview, stale-revision checks, staged apply, and a measured restore drill. Creating a ZIP is not a verified restore or production rollback.
+
+Use `profile backup ... --evidence --json` only to retain raw bytes for diagnosis. It remains available with invalid config, performs no strategy work, and marks the bundle `unvalidated-evidence` with per-file validation status. Such a bundle preserves corruption evidence but is not a trusted restore source. Normal backups still reject invalid files. Evidence capture does not repair, move or remove source files.

@@ -1610,12 +1610,20 @@ def _main() -> None:
     from rshelper.profile import resolve_profile
     selection = argparse.ArgumentParser(add_help=False)
     selection.add_argument("--profile")
+    selection.add_argument("--quiet", action="store_true")
     selection.add_argument("--version", action="version", version=f"rshelper {__version__}")
     selected, remaining = selection.parse_known_args()
     # An invalid active marker must remain repairable through the app.
     repair = sys.argv[1:3] == ["profile", "switch"]
     launch_profile = resolve_profile("default" if repair and selected.profile is None else selected.profile)
-    cfg = load_config(launch_profile)
+    # Evidence capture remains available when the config itself is corrupt.
+    # It runs no strategy work and labels its bytes as unvalidated.
+    evidence_capture = remaining[:2] == ["profile", "backup"] and "--evidence" in remaining
+    if evidence_capture:
+        from rshelper.config import Config
+        cfg = Config()
+    else:
+        cfg = load_config(launch_profile)
 
     parser = argparse.ArgumentParser(
         prog="rshelper",
@@ -1863,6 +1871,10 @@ def _main() -> None:
     profile_switch = profile_sub.add_parser("switch", help="Switch active profile")
     profile_switch.add_argument("name", help="Profile name")
     profile_sub.add_parser("list", help="List all profiles")
+    profile_backup = profile_sub.add_parser("backup", help="Create a validated private profile ZIP backup")
+    profile_backup.add_argument("destination", help="New ZIP path outside the state directory")
+    profile_backup.add_argument("--evidence", action="store_true", help="Preserve invalid bytes for diagnosis; this is not a validated restore source")
+    profile_backup.add_argument("--json", action="store_true", help="Print the private manifest as JSON")
     profile_del = profile_sub.add_parser("delete", help="Delete a profile")
     profile_del.add_argument("name", help="Profile name")
     profile_del.add_argument("--force", action="store_true", help="Delete even if profile has data")
@@ -1947,6 +1959,7 @@ def _main() -> None:
                 args.profile = tok.split("=", 1)[1]
                 break
     args.profile = launch_profile
+    args.quiet = args.quiet or selected.quiet
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
@@ -2145,7 +2158,18 @@ def _main() -> None:
         from rshelper.profile import (get_active_profile, set_active_profile,
                                        create_profile, delete_profile, list_profiles,
                                        validate_profile_name)
-        if args.profile_action == "create":
+        if args.profile_action == "backup":
+            from pathlib import Path
+            from rshelper.backup import export_profile
+            try:
+                manifest = export_profile(args.profile, Path(args.destination), "evidence" if args.evidence else "backup")
+            except OSError as exc:
+                raise ValueError(f"backup failed: {exc}") from None
+            if args.json:
+                print(json.dumps(manifest))
+            else:
+                print(f"Private backup saved: {args.destination} ({len(manifest['files'])} files)")
+        elif args.profile_action == "create":
             if not validate_profile_name(args.name):
                 print(f"Invalid profile name: {args.name}", file=sys.stderr)
                 sys.exit(1)
