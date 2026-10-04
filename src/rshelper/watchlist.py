@@ -1,12 +1,9 @@
 """Watchlist state file — JSON-backed, atomic writes."""
 
-import contextlib
-import fcntl
-import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, resolve_config_path
 
 WATCHLIST_PATH = Path.home() / ".config" / "rshelper" / "watchlist.json"
@@ -21,43 +18,16 @@ def _watchlist_path(profile: str | None = None) -> Path:
 
 
 def _watchlist_lock(profile: str | None = None):
-    """Cross-process advisory lock for watchlist.json (flock sidecar)."""
-    path = _watchlist_path(profile).with_suffix(".json.lock")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    except OSError:
-        return contextlib.nullcontext()
-
-    @contextlib.contextmanager
-    def _locked():
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
-        except OSError:
-            pass
-        try:
-            yield
-        finally:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-            except OSError:
-                pass
-            os.close(fd)
-    return _locked()
+    return locked_state(_watchlist_path(profile))
 
 
-def load(profile: str | None = None) -> dict:
-    """Load watchlist, returning default empty if missing or corrupt."""
-    path = _watchlist_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        return json.loads(path.read_text()) if path.exists() else {"items": {}}
-    except json.JSONDecodeError:
-        return {"items": {}}
+def load(profile: str | None = None):
+    return read_state(_watchlist_path(profile), "watchlist")
 
 
 def _save(data: dict, profile: str | None = None) -> None:
     """Atomic write: temp file + rename."""
+    validate_state(data, "watchlist", _watchlist_path(profile))
     atomic_write_json(_watchlist_path(profile), data, indent=2)
 
 

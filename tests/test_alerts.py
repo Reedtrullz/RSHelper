@@ -91,12 +91,14 @@ class TestAlerts(unittest.TestCase):
         alert with a non-numeric ts (the corrupt row is pruned)."""
         path = amod._alerts_path("default")
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text('{"alerts": [{"id": 1, "ts": "corrupt", "type": "signal"}]}')
-        amod.push_alert("system", "INFO", None, "", "ok", "m",
-                        profile="default")
-        feed = amod.list_alerts(profile="default")
-        self.assertEqual([a.title for a in feed], ["ok"])
-        self.assertEqual(len(feed), 1)
+        raw = '{"alerts": [{"id": 1, "ts": "corrupt", "type": "signal"}]}'
+        path.write_text(raw)
+        volatile = amod.push_alert("system", "INFO", None, "", "ok", "m", profile="default")
+        self.assertEqual(volatile.title, "ok")
+        self.assertEqual(path.read_text(), raw)
+        from rshelper.persistence import StateCorruptionError
+        with self.assertRaises(StateCorruptionError):
+            amod.list_alerts(profile="default")
 
     def test_watch_dedupe(self):
         self.assertFalse(amod.watch_triggered(4151, profile="default"))
@@ -113,14 +115,13 @@ class TestAlerts(unittest.TestCase):
         self.assertEqual([x.title for x in d], ["default-alert"])
         self.assertEqual([x.title for x in a], ["alt-alert"])
 
-    def test_corrupt_file_recovers(self):
+    def test_corrupt_file_requires_explicit_recovery(self):
         path = amod._alerts_path("default")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("{not json")
-        amod.push_alert("system", "INFO", None, "", "ok", "m")
-        feed = amod.list_alerts(profile="default")
-        self.assertEqual(len(feed), 1)
-        self.assertEqual(feed[0].title, "ok")
+        volatile = amod.push_alert("system", "INFO", None, "", "ok", "m")
+        self.assertEqual(volatile.title, "ok")
+        self.assertEqual(path.read_text(), "{not json")
 
     def test_persists_across_reload(self):
         amod.push_alert("trader", "HIGH", 1, "Nature rune", "take_profit",

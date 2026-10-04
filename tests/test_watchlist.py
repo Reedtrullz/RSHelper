@@ -74,10 +74,12 @@ class TestWatchlist(unittest.TestCase):
         self.assertIn(2, ids)
         self.assertEqual(len(ids), 2)
 
-    def test_corrupt_json_recovers(self):
+    def test_corrupt_json_requires_explicit_recovery(self):
         watchlist.WATCHLIST_PATH.write_text("not valid json {{{")
-        data = watchlist.load()
-        self.assertEqual(data, {"items": {}})
+        from rshelper.persistence import StateCorruptionError
+        with self.assertRaises(StateCorruptionError):
+            watchlist.load()
+        self.assertEqual(watchlist.WATCHLIST_PATH.read_text(), "not valid json {{{")
 
     def test_roundtrip(self):
         watchlist.add(1, "Item 1", alert_margin_above=100)

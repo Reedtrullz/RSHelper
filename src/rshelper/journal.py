@@ -1,14 +1,11 @@
 """Trade journal: log trades, compute P&L."""
-import contextlib
-import fcntl
-import json
-import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
+from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 TRADES_PATH = Path.home() / ".config" / "rshelper" / "trades.json"
@@ -22,34 +19,7 @@ def _trades_path(profile: str | None = None) -> Path:
 
 
 def _trade_lock(profile: str | None = None):
-    """Cross-process advisory lock for the journal.
-
-    The trader daemon and the VPS dashboard are separate processes that both
-    append to trades.json; a process-local lock cannot serialize them, so
-    log_trade/delete take an flock on a sidecar .lock file.
-    """
-    path = _trades_path(profile).with_suffix(".json.lock")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    except OSError:
-        return _TRADE_LOCK
-
-    @contextlib.contextmanager
-    def _locked():
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
-        except OSError:
-            pass
-        try:
-            yield
-        finally:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-            except OSError:
-                pass
-            os.close(fd)
-    return _locked()
+    return locked_state(_trades_path(profile))
 
 
 @dataclass
@@ -92,20 +62,15 @@ class PnLSummary:
     max_drawdown: int = 0      # worst peak-to-trough of cumulative P&L
 
 
-def _load(profile: str | None = None) -> list[dict]:
-    path = _trades_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        if path.exists():
-            rows = json.loads(path.read_text()).get("trades", [])
-            return [filter_fields(Trade, t) for t in rows if isinstance(t, dict)]
-    except (json.JSONDecodeError, OSError):
-        pass
-    return []
+def _load(profile: str | None = None):
+    return read_state(_trades_path(profile), "trades")["trades"]
 
 
 def _save(trades: list[dict], profile: str | None = None) -> None:
-    atomic_write_json(_trades_path(profile), {"trades": trades})
+    store = read_state(_trades_path(profile), "trades")
+    store["trades"] = trades
+    validate_state(store, "trades", _trades_path(profile))
+    atomic_write_json(_trades_path(profile), store)
 
 
 def _next_id(trades: list[dict]) -> int:
@@ -176,7 +141,7 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
     """
     with _TRADE_LOCK:
         trades = _load(profile)
-    result = [Trade(**t) for t in trades]
+    result = [Trade(**filter_fields(Trade, t)) for t in trades]
     if item_name:
         q = item_name.lower()
         result = [t for t in result if q in t.name.lower()]
