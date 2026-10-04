@@ -242,9 +242,15 @@ function setStatus(msg,isErr){
   document.getElementById('statusDot').className=isErr?'dot err':'dot live';
 }
 function sigBadge(item){
-  const s=signalsMap[item.id];
-  if(!s)return '<span class="dim">-</span>';
-  return '<span class="sig-badge sig-'+escHtml(s.type)+'" title="'+escHtml(s.message)+'">'+escHtml(s.type)+'</span>';
+  // Show the highest-severity signal for the item (an item can have several).
+  const sev={HIGH:0,MEDIUM:1,LOW:2};
+  let best=null;
+  Object.values(signalsMap).forEach(s=>{
+    if(s.item_id!==item.id)return;
+    if(!best||(sev[s.severity]??3)<(sev[best.severity]??3))best=s;
+  });
+  if(!best)return '<span class="dim">-</span>';
+  return '<span class="sig-badge sig-'+escHtml(best.type)+'" title="'+escHtml(best.message)+'">'+escHtml(best.type)+'</span>';
 }
 function setView(v){
   view=v;
@@ -311,7 +317,9 @@ async function fetchData(){
     allItems=(await r.json()).items||[];
     meta=await m.json();
     signalsMap={};
-    (await s.json()).signals.forEach(x=>{signalsMap[x.item_id]=x});
+    // Key by item_id + type: an item can have BOTH a DUMP and a FLIP signal
+    // (or CRASH + SURGE); keying by item_id alone would silently drop one.
+    (await s.json()).signals.forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
     watchIds=new Set(meta.watch_ids||[]);
     // Initialize the bell from the server's authoritative unread count.
     if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
@@ -771,8 +779,16 @@ async function renderSignals(){
   let signals=Object.values(signalsMap);
   if(q)signals=signals.filter(s=>s.name.toLowerCase().includes(q));
   const order={HIGH:0,MEDIUM:1,LOW:2};
-  signals.sort((a,b)=>(order[a.severity]||3)-(order[b.severity]||3)||String(a.type).localeCompare(String(b.type)));
-  viewRows=signals.map(s=>({id:s.item_id,name:s.name}));
+  signals.sort((a,b)=>(order[a.severity]??3)-(order[b.severity]??3)||String(a.type).localeCompare(String(b.type)));
+  // One view-row per item (the highest-severity signal wins the row): the
+  // keyboard nav and row highlighting key on item id, so duplicate ids
+  // would make selection ambiguous.
+  const seen=new Set();
+  viewRows=signals.filter(s=>{
+    if(seen.has(s.item_id))return false;
+    seen.add(s.item_id);
+    return true;
+  }).map(s=>({id:s.item_id,name:s.name}));
   if(!signals.length){
     const note=meta.source==='ge_tracker'
       ?'No active signals. The GE Tracker fallback carries only offer quantities, so signals are disabled by design on this source.'
@@ -785,7 +801,9 @@ async function renderSignals(){
   signals.forEach(s=>{
     const sel=s.item_id===selectedId?' selected':'';
     const dev=Number(s.deviation)||0;
-    const devTxt=s.type==='SURGE'?dev+'x':(dev>0?'+':'')+dev+'%';
+    // SURGE deviation is a percentage (220.0 = 3.2x baseline); show the
+    // multiplier, not the raw percentage, under "Deviation".
+    const devTxt=s.type==='SURGE'?((dev/100)+1).toFixed(1)+'x':(dev>0?'+':'')+dev+'%';
     h+='<tr class="'+sel+'" data-id="'+s.item_id+'" onclick="selectId('+s.item_id+',false)">'+
       '<td><span class="sig-badge sig-'+escHtml(s.type)+'">'+escHtml(s.type)+'</span></td>'+
       '<td class="sev-'+escHtml(s.severity)+'">'+escHtml(s.severity)+'</td>'+
@@ -866,6 +884,10 @@ function editWatchAlerts(id,ev){
     '<button class="act-btn" style="margin-right:8px" onclick="saveWatchAlerts('+id+')">Save</button>'+
     '<button class="act-btn" onclick="closeGEHistory(this)">Cancel</button></div></div>';
   document.body.appendChild(overlay);
+}
+function closeGEHistory(){
+  // Cancel the alert-threshold editor: close the overlay, leave values alone.
+  document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
 }
 async function saveWatchAlerts(id){
   const aboveRaw=document.getElementById('wlAbove').value;

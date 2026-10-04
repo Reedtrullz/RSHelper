@@ -89,6 +89,10 @@ def _is_cooling(item_id: int, signal_type: str, cooldown_sec: int,
         cooldowns = _load_cooldowns()
     key = _cooldown_key(item_id, signal_type)
     last = cooldowns.get(key, 0)
+    try:
+        last = float(last)
+    except (TypeError, ValueError):
+        return False  # corrupt timestamp: never treat as cooling
     return (time.time() - last) < cooldown_sec
 
 

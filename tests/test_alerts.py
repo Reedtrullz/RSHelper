@@ -75,6 +75,29 @@ class TestAlerts(unittest.TestCase):
         feed = amod.list_alerts(limit=1000, profile="default")
         self.assertLessEqual(len(feed), 200)
 
+    def test_prune_drops_corrupt_ts_without_crashing(self):
+        """A corrupt (non-numeric) alert ts must be dropped by _prune, not
+        raise — push_alert only catches OSError, so a ValueError here would
+        crash a trader/monitor cycle."""
+        store = {"alerts": [
+            {"id": 1, "ts": "corrupt", "type": "signal"},
+            {"id": 2, "ts": time.time(), "type": "system"},
+        ]}
+        amod._prune(store)  # must not raise
+        self.assertEqual([a["id"] for a in store["alerts"]], [2])
+
+    def test_push_survives_corrupt_existing_alert(self):
+        """push_alert must not raise when the store already contains an
+        alert with a non-numeric ts (the corrupt row is pruned)."""
+        path = amod._alerts_path("default")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('{"alerts": [{"id": 1, "ts": "corrupt", "type": "signal"}]}')
+        amod.push_alert("system", "INFO", None, "", "ok", "m",
+                        profile="default")
+        feed = amod.list_alerts(profile="default")
+        self.assertEqual([a.title for a in feed], ["ok"])
+        self.assertEqual(len(feed), 1)
+
     def test_watch_dedupe(self):
         self.assertFalse(amod.watch_triggered(4151, profile="default"))
         amod.set_watch_triggered(4151, profile="default")

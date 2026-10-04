@@ -304,6 +304,21 @@ def test_cooldown_expiry():
     print("  PASSED test_cooldown_expiry")
 
 
+def test_corrupt_cooldown_value_does_not_crash():
+    """A non-numeric cooldown timestamp in the persisted file must not make
+    _is_cooling raise — it should treat the item as not cooling."""
+    from rshelper import signals as _s
+    cooldowns = {"98:CRASH": "not-a-timestamp", "99:CRASH": -100}
+    # String value: must not raise, must not be cooling.
+    assert _s._is_cooling(98, "CRASH", 999, cooldowns) is False
+    # Negative (future) timestamp: not cooling either.
+    assert _s._is_cooling(99, "CRASH", 999, cooldowns) is False
+    # A real recent timestamp IS cooling.
+    cooldowns["97:CRASH"] = time.time()
+    assert _s._is_cooling(97, "CRASH", 999, cooldowns) is True
+    print("  PASSED test_corrupt_cooldown_value_does_not_crash")
+
+
 def test_no_false_positives():
     """Normal prices produce no signals."""
     items = [_make_item(item_id=70, buy=100, sell=99, volume=50)]

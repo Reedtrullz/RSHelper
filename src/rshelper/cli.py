@@ -842,6 +842,10 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     cfg = load_config(profile)
     result = run_trader(cfg.trader, interval=args.interval or None,
                         profile=profile, once=args.once)
+    # Data goes to stdout FIRST so the JSON document is not preceded by the
+    # trader's own status lines (which go to stderr). This keeps
+    # `auto-trade --once --json | jq` clean when stdout and stderr are
+    # merged (e.g. `2>&1 |`).
     if args.once and result:
         print(json.dumps(result, indent=2))
 
@@ -1047,9 +1051,13 @@ def item_info(args: argparse.Namespace) -> None:
         alch_profit = alch_value - buy_price - nature_cost
         out["alch_profit"] = alch_profit
         # Flip
-        # Margin: buy-high minus sell-low (consistent with spread display)
+        # Margin: buy-high minus sell-low (consistent with spread display).
+        # Tax applies to the SELL leg: item-info follows the API field
+        # convention (buy=instant-buy/high, sell=instant-sell/low), so the
+        # flip "sell" price is the low. Tax on the buy leg would be the
+        # wrong direction's tax.
         flip_margin = buy_price - sell_price
-        tax_flip = ge_tax(buy_price)
+        tax_flip = ge_tax(sell_price)
         flip_profit = flip_margin - tax_flip
         out["flip_margin"] = flip_margin
         out["flip_tax"] = tax_flip
@@ -1080,9 +1088,7 @@ def item_info(args: argparse.Namespace) -> None:
                     }
                     if getattr(args, "predict", False):
                         try:
-                            from rshelper.analysis import analyze_timeseries as _at
-                            # Reuse the same analysis; prediction is a small
-                            # linear trend on the timeseries.
+                            # Prediction is a small linear trend on the lows.
                             import statistics
                             lows = [int(p.get("avgLowPrice") or 0)
                                     for p in (ts or []) if p.get("avgLowPrice")]
@@ -1117,9 +1123,10 @@ def item_info(args: argparse.Namespace) -> None:
         print(alch_line)
 
         # Flip
-        # Margin: buy-high minus sell-low (consistent with spread display)
+        # Margin: buy-high minus sell-low (consistent with spread display).
+        # Tax applies to the SELL leg (the low) — see the JSON branch above.
         flip_margin = buy_price - sell_price
-        tax_flip = ge_tax(buy_price)
+        tax_flip = ge_tax(sell_price)
         flip_profit = flip_margin - tax_flip
         flip_line = f"  Flip margin: {flip_margin:,} gp (tax: {tax_flip:,}, net: {flip_profit:,})"
         if flip_profit <= 0:
@@ -1130,12 +1137,13 @@ def item_info(args: argparse.Namespace) -> None:
     # Wiki URL
     wiki_name = name.replace(" ", "_")
     wiki_url = f"https://oldschool.runescape.wiki/w/Exchange:{wiki_name}"
-    if getattr(args, "wiki", False):
+    if getattr(args, "wiki", False) and not args.json:
         print(f"\n  Wiki: {wiki_url}")
     if getattr(args, "wiki_open", False):
         import webbrowser
         webbrowser.open(wiki_url)
-        print(f"  Opening {wiki_url}")
+        if not args.json:
+            print(f"  Opening {wiki_url}")
 
     # Tax curve: show profit at different sell prices
     if getattr(args, "tax_curve", False) and buy_price > 0:
@@ -1525,7 +1533,7 @@ def signals_cmd(args: argparse.Namespace) -> None:
                             "type": s.type, "item_id": s.item_id, "name": s.name,
                             "severity": s.severity, "current_price": s.current_price,
                             "deviation": s.deviation, "message": s.message,
-                        }, indent=2))
+                        }))
                     else:
                         print(f"[signal] {s.type} {s.severity} {s.name} "
                               f"{s.current_price:,} gp {s.message}")
@@ -1536,7 +1544,10 @@ def signals_cmd(args: argparse.Namespace) -> None:
 
     signals, flips = _scan_once()
     if not signals:
-        print("\nNo active signals detected.")
+        if args.json:
+            print(json.dumps([]))
+        else:
+            print("\nNo active signals detected.")
         return
 
     if args.json:
@@ -1587,7 +1598,10 @@ def signals_cmd(args: argparse.Namespace) -> None:
                 suggestion = f"Buy at {s.current_price:,}"
                 print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>+8.1f}%  {suggestion}")
             elif sig_type == "SURGE":
-                print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>8.1f}x")
+                # deviation is a percentage (e.g. 220.0 = 3.2x baseline);
+                # display the multiplier, not the percentage, under "Vol Ratio".
+                mult = (s.deviation / 100.0) + 1.0
+                print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {mult:>8.1f}x")
             else:
                 print(f"  {s.severity:<7} {s.name:<28} {s.current_price:>10,} {s.deviation:>7.1f}%  RS={rs}")
         print()

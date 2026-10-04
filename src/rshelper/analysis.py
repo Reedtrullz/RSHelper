@@ -97,7 +97,13 @@ def analyze_timeseries(
 
     avg_buy = sum(buy_prices) / len(buy_prices)
 
-    # Current margin — direction-aware with 5M tax cap
+    # Current margin — direction-aware with 5M tax cap.
+    # IMPORTANT: the API field convention is FIXED (buy=instant-buy/high,
+    # sell=instant-sell/low); `direction` only decides which way the margin
+    # is computed, never which API field maps to which price. So the tax is
+    # on the SELL leg (low) in both modes: traditional buys the low and
+    # sells the high, so its "sell" price is current_buy (the high); the
+    # tax is still the 2% of the sell (high), which is ge_tax(current_buy).
     if direction == "arbitrage":
         current_tax = ge_tax(current_sell)
         current_margin = current_sell - current_buy - current_tax

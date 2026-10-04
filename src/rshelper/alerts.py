@@ -144,9 +144,15 @@ def _next_id() -> int:
 def _prune(store: dict) -> None:
     alerts = store.get("alerts", [])
     now = time.time()
-    alerts = [a for a in alerts
-              if now - float(a.get("ts", 0)) <= PRUNE_AFTER_DAYS * 86400]
-    store["alerts"] = alerts[-MAX_ALERTS:]
+    kept = []
+    for a in alerts:
+        try:
+            ts = float(a.get("ts", 0))
+        except (TypeError, ValueError):
+            continue  # corrupt row: drop it rather than crash the caller
+        if now - ts <= PRUNE_AFTER_DAYS * 86400:
+            kept.append(a)
+    store["alerts"] = kept[-MAX_ALERTS:]
 
 
 def list_alerts(limit: int = 50, profile: str | None = None) -> list[Alert]:
