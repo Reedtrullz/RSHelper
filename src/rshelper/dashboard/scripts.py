@@ -16,7 +16,123 @@ let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
 let sparkSeq=0;
 let countdown=refreshSecs;
-let sseOk=false,sseLastEvent=Date.now();
+let sseOk=false,sseLastEvent=Date.now(),sseController=null;
+let accessMode='owner',capabilities={mode:'owner',features:[]},ownerToken='',authenticated=false;
+let accessReady=false,authEpoch=0;
+const pendingRequests=new Set();
+const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity']);
+const publicMarketPaths=new Set(['/api/scan','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
+
+function apiFetch(url,options={}){
+  const path=String(url).split('?',1)[0];
+  if(accessReady&&publicMarketPaths.has(path)&&!hasFeature('market'))return Promise.reject(new Error('Market feature unavailable'));
+  const isPrivate=path.startsWith('/api/')&&!publicMarketPaths.has(path)&&
+    path!=='/api/capabilities'&&path!=='/api/health';
+  const token=options.ownerToken||ownerToken;
+  if(isPrivate&&(!authenticated&&!options.ownerToken))return Promise.reject(new Error('Owner connection required'));
+  if(isPrivate&&accessMode==='public-demo')return Promise.reject(new Error('Unavailable in public mode'));
+  if(isPrivate&&!options.ownerToken&&accessReady&&!hasFeature('private-state'))return Promise.reject(new Error('Private feature unavailable'));
+  const epoch=authEpoch,controller=new AbortController();
+  const externalSignal=options.signal;
+  if(externalSignal){
+    if(externalSignal.aborted)controller.abort();
+    else externalSignal.addEventListener('abort',()=>controller.abort(),{once:true});
+  }
+  pendingRequests.add(controller);
+  const headers=new Headers(options.headers||{});
+  if(token)headers.set('Authorization','Bearer '+token);
+  const requestOptions={...options,headers,signal:controller.signal};
+  delete requestOptions.ownerToken;
+  const release=()=>pendingRequests.delete(controller);
+  return fetch(url,requestOptions).then(response=>{
+    if(epoch!==authEpoch){controller.abort();release();throw new DOMException('Request belongs to an expired session','AbortError')}
+    if(!response.ok&&!options.stream)release();
+    if(options.stream){response._rshelperRelease=release;return response}
+    const readJson=response.json.bind(response);
+    response.json=async()=>{
+      if(epoch!==authEpoch)throw new DOMException('Request belongs to an expired session','AbortError');
+      try{
+        const value=await readJson();
+        if(epoch!==authEpoch)throw new DOMException('Request belongs to an expired session','AbortError');
+        return value;
+      }finally{release()}
+    };
+    return response;
+  },error=>{release();throw error});
+}
+function hasFeature(name){return Array.isArray(capabilities.features)&&capabilities.features.includes(name)}
+function renderAccessUI(message=''){
+  let bar=document.getElementById('accessBar');
+  if(!bar){
+    bar=document.createElement('div');bar.id='accessBar';
+    bar.style.cssText='position:sticky;top:0;z-index:10000;display:flex;gap:8px;align-items:center;padding:8px 14px;background:#111827;color:#e5e7eb;border-bottom:1px solid #374151;font:13px system-ui';
+    document.body.insertBefore(bar,document.body.firstChild);
+  }
+  if(accessMode==='public-demo'){
+    bar.innerHTML='<span>Public market demo</span>';
+    return;
+  }
+  if(authenticated){
+    bar.innerHTML='<span>Owner connected</span><button type="button" id="ownerDisconnect">Disconnect</button>';
+    document.getElementById('ownerDisconnect').addEventListener('click',disconnectOwner);
+  }else{
+    bar.innerHTML='<label for="ownerTokenInput">Owner token</label><input id="ownerTokenInput" type="password" autocomplete="current-password" spellcheck="false" aria-label="Owner token" style="width:min(320px,45vw)"><button type="button" id="ownerConnect">Connect</button><span id="ownerAuthMessage" role="status">'+escHtml(message)+'</span>';
+    document.getElementById('ownerConnect').addEventListener('click',()=>connectOwner(document.getElementById('ownerTokenInput').value));
+    document.getElementById('ownerTokenInput').addEventListener('keydown',event=>{if(event.key==='Enter')connectOwner(event.target.value)});
+  }
+}
+function applyAccessGates(){
+  const canPrivate=accessMode==='owner'&&authenticated&&hasFeature('private-state');
+  const hasMarket=hasFeature('market');
+  const views={market:hasMarket,process:hasMarket,paper:canPrivate,signals:canPrivate,watchlist:canPrivate,
+    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate};
+  Object.entries(views).forEach(([name,allowed])=>{
+    const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
+    if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
+  });
+  if(!canPrivate&&privateViews.has(view)){view='market';}
+}
+async function initializeAccess(){
+  accessMode='owner';authenticated=false;applyAccessGates();renderAccessUI();
+  try{
+    const response=await apiFetch('/api/capabilities');
+    if(!response.ok)throw new Error('capabilities unavailable');
+    capabilities=await response.json();
+    accessMode=capabilities.mode==='public-demo'?'public-demo':'owner';
+    accessReady=true;
+    applyAccessGates();renderAccessUI();
+  }catch(e){
+    accessMode='owner';capabilities={mode:'owner',features:['market']};accessReady=true;
+    applyAccessGates();renderAccessUI('Dashboard access unavailable.');
+  }
+}
+async function connectOwner(candidate){
+  candidate=String(candidate||'');
+  if(!candidate)return;
+  const button=document.getElementById('ownerConnect');if(button)button.disabled=true;
+  try{
+    const response=await apiFetch('/api/meta',{ownerToken:candidate});
+    if(!response.ok)throw new Error('unauthorized');
+    await response.json();
+    if(!hasFeature('private-state'))throw new Error('private state unavailable');
+    authEpoch++;ownerToken=candidate;authenticated=true;
+    applyAccessGates();renderAccessUI();
+    await fetchData();subscribeSSE();
+  }catch(e){
+    renderAccessUI('Could not connect. Check the token and try again.');
+  }
+}
+function disconnectOwner(){
+  authEpoch++;
+  pendingRequests.forEach(controller=>controller.abort());pendingRequests.clear();
+  if(sseController){sseController.abort();sseController=null;}
+  ownerToken='';authenticated=false;signalsMap={};meta={};watchIds=new Set();alertsData={alerts:[],unread:0};
+  geData=null;bankData=null;alchItems=[];confMap={};viewRows=[];selectedId=null;strategy='';view='market';sseOk=false;
+  ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
+  renderAccessUI();applyAccessGates();
+  document.body.replaceChildren(document.getElementById('accessBar'));
+  window.location.reload();
+}
 
 function marginPct(item){
   if(!item||item.buy_price<=0)return 0;
@@ -54,6 +170,7 @@ function fmtAge(sec){
   return (sec/3600).toFixed(1)+'h';
 }
 function alertBadgeHtml(){
+  if(!authenticated||accessMode!=='owner')return '';
   const n=alertsData.unread||0;
   return '<button class="icon-btn bell" id="btnBell" aria-label="Alerts" title="Alerts" onclick="toggleAlerts()">&#128276;'+
     (n?'<span class="bell-badge">'+(n>99?'99+':n)+'</span>':'')+'</button>';
@@ -83,7 +200,7 @@ function toggleAlerts(){
 }
 async function markAllRead(){
   try{
-    const r=await fetch('/api/alerts/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})});
+    const r=await apiFetch('/api/alerts/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})});
     if(r.ok){alertsData.unread=0;(alertsData.alerts||[]).forEach(a=>a.read=true);}
   }catch(e){}
   const dd=document.getElementById('alertDropdown');
@@ -120,7 +237,7 @@ function updateBadges(){
   // GE/Bank/Materials badges are set by their render fns; on page load they
   // stay "-" until the tab is opened. Keep them accurate with a light
   // one-time fetch (the render fns still overwrite on view).
-  refreshExtBadges();
+  if(authenticated&&accessMode==='owner')refreshExtBadges();
   updateTopbarBell();
 }
 let _extBadgeFetched=false;
@@ -129,8 +246,8 @@ async function refreshExtBadges(){
   _extBadgeFetched=true;
   try{
     const [g,b]=await Promise.all([
-      fetch('/api/ge').then(r=>r.ok?r.json():null).catch(()=>null),
-      fetch('/api/bank').then(r=>r.ok?r.json():null).catch(()=>null)]);
+      apiFetch('/api/ge').then(r=>r.ok?r.json():null).catch(()=>null),
+      apiFetch('/api/bank').then(r=>r.ok?r.json():null).catch(()=>null)]);
     if(g&&g.slots)document.getElementById('badgeGE').textContent=g.slots.length||0;
     if(b&&typeof b.slot_count==='number')document.getElementById('badgeBank').textContent=b.slot_count||0;
   }catch(e){}
@@ -152,33 +269,49 @@ function updateFooter(){
   if(bell)bell.innerHTML=alertBadgeHtml();
 }
 function subscribeSSE(){
-  try{
-    const es=new EventSource('/api/events');
-    es.addEventListener('refresh',()=>{sseLastEvent=Date.now();fetchData();});
-    es.addEventListener('alert',(ev)=>{
-      sseLastEvent=Date.now();
-      try{
-        const d=JSON.parse(ev.data||'{}');
-        if(d&&d.alert&&d.alert.id){
-          // Dedupe by alert id — re-broadcasts/reconnects must not inflate.
-          const known=(alertsData.alerts||[]).some(a=>a.id===d.alert.id);
-          if(!known){
-            alertsData.alerts=[d.alert].concat(alertsData.alerts||[]).slice(0,200);
-            alertsData.unread=(alertsData.unread||0)+1;
-            updateTopbarBell();
+  if(accessMode!=='owner'||!authenticated||sseController)return;
+  sseController=new AbortController();
+  const controller=sseController;
+  (async()=>{
+    let response;
+    try{
+      response=await apiFetch('/api/events',{stream:true,signal:controller.signal});
+      if(!response.ok||!response.body)throw new Error('stream unavailable');
+      sseOk=true;updateFooter();
+      const reader=response.body.getReader(),decoder=new TextDecoder();
+      let buffer='';
+      while(true){
+        const {value,done}=await reader.read();
+        if(done)break;
+        buffer+=decoder.decode(value,{stream:true});
+        let split;
+        while((split=buffer.search(/\r?\n\r?\n/))>=0){
+          const block=buffer.slice(0,split);buffer=buffer.slice(split).replace(/^\r?\n\r?\n/,'');
+          let type='message',data='';
+          block.split(/\r?\n/).forEach(line=>{
+            if(line.startsWith('event:'))type=line.slice(6).trim();
+            else if(line.startsWith('data:'))data+=(data?'\n':'')+line.slice(5).trimStart();
+          });
+          sseLastEvent=Date.now();
+          if(type==='refresh')fetchData();
+          if(type==='alert'){
+            try{
+              const d=JSON.parse(data||'{}');
+              if(d.alert&&d.alert.id&&!alertsData.alerts.some(a=>a.id===d.alert.id)){
+                alertsData.alerts=[d.alert,...alertsData.alerts].slice(0,200);
+                alertsData.unread++;updateTopbarBell();
+              }
+            }catch(e){}
           }
         }
-      }catch(e){}
-    });
-    es.onopen=()=>{sseOk=true;updateFooter();};
-    es.onerror=()=>{
-      sseOk=false;
-      updateFooter();
-      // EventSource auto-reconnects; track the gap so the 60s poll
-      // fallback takes over if the stream never comes back.
-      sseLastEvent=Date.now();
-    };
-  }catch(e){sseOk=false;}
+      }
+    }catch(e){if(e.name!=='AbortError')sseOk=false;}
+    finally{
+      response?._rshelperRelease?.();
+      if(sseController===controller)sseController=null;
+      if(authenticated){sseOk=false;updateFooter();}
+    }
+  })();
 }
 function valueOf(item,col){
   if(col==='margin')return marginPct(item);
@@ -218,13 +351,14 @@ function sortBy(col,ev){
   renderMarket();
 }
 function starHtml(id){
+  if(!authenticated||accessMode!=='owner')return '';
   return '<button class="star '+(watchIds.has(id)?'on':'')+'" onclick="starItem('+id+',event)" aria-label="Toggle watchlist" title="'+(watchIds.has(id)?'Unwatch':'Watch')+'">'+(watchIds.has(id)?'&#9733;':'&#9734;')+'</button>';
 }
 async function starItem(id,ev){
   if(ev)ev.stopPropagation();
   const action=watchIds.has(id)?'remove':'add';
   try{
-    const r=await fetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,item_id:id})});
+    const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,item_id:id})});
     if(!r.ok)throw new Error('watchlist update failed');
     const d=await r.json();
     watchIds=new Set(d.items.map(i=>i.id));
@@ -253,6 +387,7 @@ function sigBadge(item){
   return '<span class="sig-badge sig-'+escHtml(best.type)+'" title="'+escHtml(best.message)+'">'+escHtml(best.type)+'</span>';
 }
 function setView(v){
+  if(privateViews.has(v)&&!(accessMode==='owner'&&authenticated&&hasFeature('private-state'))){v='market';}
   view=v;
   const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity'];
   names.forEach(n=>{
@@ -298,7 +433,7 @@ async function paperTrade(){
     return;
   }
   try{
-    const r=await fetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action,item,qty})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
@@ -309,20 +444,32 @@ async function paperTrade(){
   }
 }
 async function fetchData(){
+  if(!accessReady)return;
+  if(accessMode==='owner'&&!authenticated){
+    setStatus('Connect with your owner token',false);
+    document.getElementById('listBody').textContent='Connect to load your market and private records.';
+    return;
+  }
   document.getElementById('statusText').textContent='Fetching...';
   document.getElementById('statusDot').className='dot';
+  const epoch=authEpoch;
   try{
-    const [r,m,s]=await Promise.all([fetch('/api/scan'),fetch('/api/meta'),fetch('/api/signals')]);
-    if(!r.ok||!m.ok||!s.ok)throw new Error('api error');
+    const privateReady=accessMode==='owner'&&authenticated&&hasFeature('private-state');
+    const requests=[apiFetch('/api/scan')];
+    if(privateReady)requests.push(apiFetch('/api/meta'),apiFetch('/api/signals'));
+    const [r,m,s]=await Promise.all(requests);
+    if(epoch!==authEpoch)return;
+    if(!r.ok||(privateReady&&(!m.ok||!s.ok)))throw new Error('api error');
     allItems=(await r.json()).items||[];
-    meta=await m.json();
+    if(epoch!==authEpoch)return;
     signalsMap={};
-    // Key by item_id + type: an item can have BOTH a DUMP and a FLIP signal
-    // (or CRASH + SURGE); keying by item_id alone would silently drop one.
-    (await s.json()).signals.forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
-    watchIds=new Set(meta.watch_ids||[]);
-    // Initialize the bell from the server's authoritative unread count.
-    if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
+    if(privateReady){
+      meta=await m.json();
+      (await s.json()).signals.forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
+      watchIds=new Set(meta.watch_ids||[]);
+      if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
+    }else{meta={};watchIds=new Set();alertsData={alerts:[],unread:0};}
+    if(epoch!==authEpoch)return;
     setStatus('Connected',false);
     renderTopbar();
     updateBadges();
@@ -339,6 +486,7 @@ async function fetchData(){
     if(view==='market'&&selectedId!=null)renderDetail(selectedId);
     countdown=refreshSecs;
   }catch(e){
+    if(e.name==='AbortError'||epoch!==authEpoch)return;
     setStatus('Error: '+e.message,true);
   }
 }
@@ -356,7 +504,7 @@ function tick(){
   if(countdown<=0){fetchData();countdown=refreshSecs}
   const el=document.getElementById('statRefresh');
   if(el)el.textContent=countdown+'s';
-  if(!sseOk&&Date.now()-sseLastEvent>90000){sseOk=true;sseLastEvent=Date.now();subscribeSSE();}
+  if(accessMode==='owner'&&authenticated&&!sseOk&&!sseController&&Date.now()-sseLastEvent>90000){sseLastEvent=Date.now();subscribeSSE();}
 }
 function viewbarHtml(){
   if(view==='market'){
@@ -425,7 +573,7 @@ function drawSpark(id){
   let pts=[];
   (async()=>{
     try{
-      const r=await fetch('/api/timeseries?id='+id);
+      const r=await apiFetch('/api/timeseries?id='+id);
       pts=(await r.json()).points||[];
     }catch(e){}
     if(pts.length<2){
@@ -474,7 +622,7 @@ function drawMargin(id){
   (async()=>{
     let pts=[];
     try{
-      const r=await fetch('/api/timeseries?id='+id+'&step=1h&points=192');
+      const r=await apiFetch('/api/timeseries?id='+id+'&step=1h&points=192');
       pts=(await r.json()).points||[];
     }catch(e){}
     if(pts.length<2){
@@ -636,7 +784,7 @@ function loadConfidence(id){
   const ctx=document.getElementById('contextPanel');
   if(!ctx)return;
   // Lazily fetch margin confidence and append a tile; failure is silent.
-  fetch('/api/confidence?ids='+id).then(r=>r.ok?r.json():{}).then(d=>{
+  apiFetch('/api/confidence?ids='+id).then(r=>r.ok?r.json():{}).then(d=>{
     const row=d[String(id)];
     if(!row||!ctx.contains(document.getElementById('confTile')))return;
     const tile=document.getElementById('confTile');
@@ -730,7 +878,7 @@ function loadConfColumn(rows){
   // Lazily fetch margin confidence for the visible top of the table.
   const ids=rows.slice(0,30).map(r=>r.id);
   if(!ids.length)return;
-  fetch('/api/confidence?ids='+ids.join(',')).then(r=>r.ok?r.json():{}).then(d=>{
+  apiFetch('/api/confidence?ids='+ids.join(',')).then(r=>r.ok?r.json():{}).then(d=>{
     let changed=false;
     Object.keys(d||{}).forEach(k=>{
       if(!confMap[k]){confMap[k]=d[k];changed=true;}
@@ -743,7 +891,7 @@ async function renderAlch(){
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading alchemy...</div>';
   let items=[];
   try{
-    const r=await fetch('/api/alch');
+    const r=await apiFetch('/api/alch');
     if(!r.ok)throw new Error('alch api');
     items=(await r.json()).items||[];
   }catch(e){
@@ -824,7 +972,7 @@ async function renderWatchlist(){
   viewRows=[];
   let items;
   try{
-    const r=await fetch('/api/watchlist');
+    const r=await apiFetch('/api/watchlist');
     items=(await r.json()).items||[];
   }catch(e){
     body.innerHTML='<div class="loading">Error loading watchlist: '+escHtml(e.message)+'</div>';
@@ -895,7 +1043,7 @@ async function saveWatchAlerts(id){
   const alert_above=aboveRaw===''?null:parseInt(aboveRaw,10);
   const alert_below=belowRaw===''?null:parseInt(belowRaw,10);
   try{
-    const r=await fetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below})});
     if(!r.ok)throw new Error('save failed');
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
@@ -908,7 +1056,7 @@ async function saveWatchAlerts(id){
 async function watchCheckNow(){
   const body=document.getElementById('listBody');
   try{
-    const r=await fetch('/api/watchlist/check');
+    const r=await apiFetch('/api/watchlist/check');
     if(!r.ok)throw new Error('check failed');
     const d=await r.json();
     const trig=d.triggered||[];
@@ -936,7 +1084,7 @@ async function renderGE(){
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading Grand Exchange...</div>';
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const r=await fetch('/api/ge');
+    const r=await apiFetch('/api/ge');
     if(!r.ok)throw new Error('GE API failed');
     geData=await r.json();
     document.getElementById('badgeGE').textContent=geData.slots.length||0;
@@ -989,7 +1137,7 @@ async function collectOffer(positionId,ev){
   const btn=ev&&ev.target;
   if(btn)btn.textContent='Collecting...';
   try{
-    const r=await fetch('/api/ge/collect',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/ge/collect',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({position_id:positionId})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
@@ -1035,7 +1183,7 @@ async function renderBank(){
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading bank...</div>';
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const r=await fetch('/api/bank');
+    const r=await apiFetch('/api/bank');
     if(!r.ok)throw new Error('Bank API failed');
     bankData=await r.json();
     document.getElementById('badgeBank').textContent=bankData.slot_count||0;
@@ -1103,7 +1251,7 @@ async function renderProcess(){
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading materials...</div>';
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const r=await fetch('/api/process');
+    const r=await apiFetch('/api/process');
     if(!r.ok)throw new Error('Process API failed');
     const data=await r.json();
     let recipes=data.recipes||[];
@@ -1223,7 +1371,7 @@ function traderPerfHtml(trader,trades){
   return html;
 }
 function traderControlHtml(trader){
-  if(!meta.control)return '';
+  if(!meta.control||!hasFeature('daemon-control'))return '';
   const running=!!trader.running;
   return '<div style="display:flex;gap:8px;margin-top:8px">'+
     (running
@@ -1232,7 +1380,7 @@ function traderControlHtml(trader){
     '</div>';
 }
 function monitorControlHtml(mon){
-  if(!meta.control)return '';
+  if(!meta.control||!hasFeature('daemon-control'))return '';
   const running=!!mon.running;
   return '<div style="display:flex;gap:8px;margin-top:8px">'+
     (running
@@ -1241,8 +1389,9 @@ function monitorControlHtml(mon){
     '</div>';
 }
 async function traderControl(action){
+  if(!authenticated||!hasFeature('daemon-control'))return;
   try{
-    const r=await fetch('/api/trader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+    const r=await apiFetch('/api/trader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
     if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
     setStatus(action==='start'?'Auto-trader starting...':'Auto-trader stop requested',false);
@@ -1250,8 +1399,9 @@ async function traderControl(action){
   }catch(e){setStatus('Error: '+e.message,true);}
 }
 async function monitorControl(action){
+  if(!authenticated||!hasFeature('daemon-control'))return;
   try{
-    const r=await fetch('/api/monitor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+    const r=await apiFetch('/api/monitor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
     const d=await r.json();
     if(!r.ok||d.ok===false)throw new Error(d.error||d.message||('HTTP '+r.status));
     setStatus(action==='start'?'Monitor starting...':'Monitor stop requested',false);
@@ -1268,9 +1418,9 @@ async function renderPaper(){
   const stratParam=strategy?'?strategy='+strategy:'';
   try{
     const [pr,tr,hr,posr,trr]=await Promise.all([
-      fetch('/api/pnl'+stratParam),fetch('/api/trades'+stratParam),
-      fetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:'')),fetch('/api/positions'),
-      fetch('/api/trader')
+      apiFetch('/api/pnl'+stratParam),apiFetch('/api/trades'+stratParam),
+      apiFetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:'')),apiFetch('/api/positions'),
+      apiFetch('/api/trader')
     ]);
     if(!pr.ok||!tr.ok||!hr.ok||!posr.ok||!trr.ok)throw new Error('paper API failed');
     const pnl=await pr.json();
@@ -1330,7 +1480,7 @@ async function renderPaper(){
       let prices={};
       try{
         const ids=traded.map(i=>i.item_id).join(',');
-        const pr2=await fetch('/api/prices?ids='+ids);
+        const pr2=await apiFetch('/api/prices?ids='+ids);
         if(pr2.ok)prices=(await pr2.json()).prices||{};
       }catch(e){}
       html+='<table><thead><tr><th>Item</th><th>Trades</th><th>Qty</th><th>Realized P&L</th><th>Live Buy</th><th>Live Sell</th><th>Live Margin</th></tr></thead><tbody>';
@@ -1392,7 +1542,7 @@ async function closePosition(positionId,ev){
   if(ev)ev.stopPropagation();
   if(!confirm('Close this position at the current market price?'))return;
   try{
-    const r=await fetch('/api/positions',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/positions',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'close',position_id:positionId})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
@@ -1437,8 +1587,8 @@ async function renderOverview(){
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
     const [pr,posr,trr,mr,hr,alr]=await Promise.all([
-      fetch('/api/pnl'),fetch('/api/positions'),fetch('/api/trader'),fetch('/api/monitor'),
-      fetch('/api/history?paper=1'),fetch('/api/alerts?limit=15')
+      apiFetch('/api/pnl'),apiFetch('/api/positions'),apiFetch('/api/trader'),apiFetch('/api/monitor'),
+      apiFetch('/api/history?paper=1'),apiFetch('/api/alerts?limit=15')
     ]);
     const pnl=await pr.json();
     const pos=(await posr.json())||{positions:[]};
@@ -1505,8 +1655,8 @@ async function renderActivity(){
   const stratParam=strategy?'?strategy='+strategy:'';
   try{
     const [pr,tr,hr]=await Promise.all([
-      fetch('/api/pnl'+stratParam),fetch('/api/trades'+stratParam),
-      fetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:''))]);
+      apiFetch('/api/pnl'+stratParam),apiFetch('/api/trades'+stratParam),
+      apiFetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:''))]);
     if(!pr.ok||!tr.ok||!hr.ok)throw new Error('activity API failed');
     const pnl=await pr.json();
     const trades=(await tr.json()).trades||[];
@@ -1557,14 +1707,13 @@ async function deleteTrade(tradeId,ev){
   if(ev)ev.stopPropagation();
   if(!confirm('Delete this trade from the journal?'))return;
   try{
-    const r=await fetch('/api/trades/delete',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/trades/delete',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({trade_id:tradeId})});
     if(!r.ok)throw new Error('delete failed');
     setStatus('Trade deleted',false);
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}
 }
-fetchData();
-subscribeSSE();
+initializeAccess().then(()=>{fetchData();if(authenticated)subscribeSSE();});
 setInterval(tick,1000);
 """

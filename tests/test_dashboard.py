@@ -1,15 +1,317 @@
 """Tests for the rshelper dashboard module."""
 import io
+import inspect
 import json
 import sys
 import unittest
+from contextlib import redirect_stderr
 
 sys.path.insert(0, "src")
 
 from rshelper.dashboard.templates import INDEX_HTML
-from rshelper.dashboard.handlers import make_handler, _item_to_dict
+from rshelper.dashboard.handlers import make_handler as _make_handler, _item_to_dict
 from rshelper.models import Item
 from rshelper.scanner import FlipScanner
+
+TEST_OWNER_TOKEN = "synthetic-dashboard-owner-token"
+
+
+def make_handler(*args, **kwargs):
+    """Use real owner policy with a synthetic credential for legacy route tests."""
+    kwargs.setdefault("mode", "owner")
+    kwargs.setdefault("owner_token", TEST_OWNER_TOKEN)
+    return _make_handler(*args, **kwargs)
+
+
+class TestAuthorizationConfiguration(unittest.TestCase):
+    def test_handler_accepts_explicit_policy_and_token_parameters(self):
+        params = inspect.signature(_make_handler).parameters
+        self.assertIn("mode", params)
+        self.assertIn("owner_token", params)
+        self.assertIn("control", params)
+
+
+@unittest.skipUnless("mode" in inspect.signature(_make_handler).parameters,
+                     "handler authorization wiring has not been added")
+class TestAuthorizationBoundary(unittest.TestCase):
+    def test_owner_runtime_watch_callbacks_serialize_valid_quotes(self):
+        from unittest import mock
+        from rshelper.config import Config
+        import rshelper.dashboard.server as server
+        callbacks = {}
+        def capture(*args, **kwargs):
+            callbacks.update(kwargs)
+            return object
+        class FakeServer:
+            def __init__(self, *args): pass
+            def serve_forever(self):
+                rows = callbacks['watchlist_fn']()['items']
+                self_case.assertEqual(rows[0]['buy'], 100)
+                self_case.assertEqual(rows[0]['sell'], 110)
+                self_case.assertIn('triggered', callbacks['watchlist_check_fn']())
+            def server_close(self): pass
+        self_case = self
+        import time
+        latest = {'2': {'high': 100, 'low': 110, 'highTime': int(time.time()), 'lowTime': int(time.time())}}
+        with mock.patch.object(server, 'load_config', return_value=Config()), \
+             mock.patch.object(server, '_fetch_bootstrap', return_value=([], latest, {}, [])), \
+             mock.patch.object(server, 'make_handler', side_effect=capture), \
+             mock.patch.object(server, 'ThreadingHTTPServer', FakeServer), \
+             mock.patch.object(server.watchlist, 'load', return_value={'items': {'2': {'name': 'Fixture'}}}), \
+             mock.patch('rshelper.tuning.record_if_changed'):
+            server.run(port=0, profile='default', owner_token='a'*64)
+
+    def test_public_startup_failure_does_not_write_private_state(self):
+        from unittest import mock
+        from rshelper.config import Config
+        import rshelper.dashboard.server as smod
+        class FakeServer:
+            def __init__(self, *args): pass
+            def serve_forever(self): pass
+            def server_close(self): pass
+        with mock.patch.object(smod, 'load_config', return_value=Config()), \
+             mock.patch.object(smod, '_fetch_bootstrap', side_effect=SystemExit), \
+             mock.patch.object(smod, 'ThreadingHTTPServer', FakeServer), \
+             mock.patch.object(smod.alerts, 'push_alert') as alert, \
+             mock.patch('rshelper.tuning.record_if_changed') as tuning:
+            smod.run(port=0, access_mode='public-demo', profile='default')
+        alert.assert_not_called()
+        tuning.assert_not_called()
+
+    GET_PRIVATE = (
+        "/api/monitor", "/api/signals", "/api/trades", "/api/pnl",
+        "/api/history", "/api/meta", "/api/watchlist",
+        "/api/watchlist/check", "/api/positions", "/api/trader",
+        "/api/ge", "/api/bank", "/api/alerts", "/api/events",
+    )
+    POST_MUTATIONS = (
+        "/api/trades", "/api/watchlist", "/api/paper", "/api/ge/collect",
+        "/api/positions", "/api/trader", "/api/monitor",
+        "/api/alerts/read", "/api/trades/delete",
+    )
+
+    def _handler(self, method, path, headers=None, *, mode="owner",
+                 owner_token=TEST_OWNER_TOKEN, control=False, event_hub=None):
+        from http.server import BaseHTTPRequestHandler
+        from rshelper.scanner import FlipScanner
+
+        calls = []
+
+        def callback(name, result=None):
+            def invoke(*args):
+                calls.append(name)
+                return result if result is not None else {}
+            return invoke
+
+        fns = {
+            "signal_detector": callback("signals", []),
+            "scan_kwargs": {},
+            "price_lookup": callback("prices", {}),
+            "meta_fn": callback("meta"),
+            "watchlist_fn": callback("watchlist"),
+            "watchlist_update_fn": callback("watchlist-update"),
+            "watchlist_check_fn": callback("watchlist-check"),
+            "timeseries_fn": callback("timeseries"),
+            "positions_fn": callback("positions"),
+            "close_position_fn": callback("close-position"),
+            "paper_trade_fn": callback("paper-trade"),
+            "trader_fn": callback("trader"),
+            "trader_control_fn": callback("trader-control"),
+            "monitor_fn": callback("monitor"),
+            "monitor_control_fn": callback("monitor-control"),
+            "ge_fn": callback("ge"),
+            "ge_collect_fn": callback("ge-collect"),
+            "bank_fn": callback("bank"),
+            "process_fn": callback("process"),
+            "alch_fn": callback("alch"),
+            "confidence_fn": callback("confidence"),
+            "alerts_fn": callback("alerts"),
+            "alerts_read_fn": callback("alerts-read"),
+            "history_fn": callback("history"),
+            "trades_fn": callback("trades"),
+            "pnl_fn": callback("pnl"),
+            "delete_trade_fn": callback("trade-delete"),
+            "log_trade_fn": callback("trade-log"),
+        }
+        handler_type = _make_handler(
+            FlipScanner(direction="arbitrage"), callback("scan", []),
+            event_hub=event_hub, mode=mode, owner_token=owner_token,
+            control=control, **fns)
+        h = BaseHTTPRequestHandler.__new__(handler_type)
+        h.path = path
+        h.request_version = "HTTP/1.1"
+        h.command = method
+        h.headers = headers or {}
+        payload = b'{"action":"start","trade_id":1,"item_id":1,"position_id":1}'
+        h.rfile = io.BytesIO(payload)
+        h.headers.setdefault("Content-Length", str(len(payload)))
+        h.response_code = None
+        h.response_headers = []
+        h.wfile = io.BytesIO()
+        h.send_response = lambda code, message=None: setattr(h, "response_code", code)
+        h.send_header = lambda key, value: h.response_headers.append((key, value))
+        h.end_headers = lambda: None
+        return h, calls
+
+    def test_missing_or_forged_origin_never_reaches_private_callbacks(self):
+        requests = [("GET", path) for path in self.GET_PRIVATE]
+        requests += [("POST", path) for path in self.POST_MUTATIONS]
+        for method, path in requests:
+            for headers in ({}, {"Origin": "https://evil.example",
+                                 "Host": "127.0.0.1:5555"}):
+                with self.subTest(method=method, path=path, headers=headers):
+                    h, calls = self._handler(method, path, dict(headers))
+                    (h.do_GET if method == "GET" else h.do_POST)()
+                    self.assertIn(h.response_code, (401, 403))
+                    self.assertEqual(calls, [])
+
+    def test_owner_bearer_can_read_private_state(self):
+        h, calls = self._handler("GET", "/api/trades", {
+            "Authorization": f"Bearer {TEST_OWNER_TOKEN}"})
+        h.do_GET()
+        self.assertEqual(h.response_code, 200)
+        self.assertEqual(calls, ["trades"])
+
+    def test_missing_configured_owner_token_fails_closed(self):
+        h, calls = self._handler("GET", "/api/trades", owner_token=None)
+        h.do_GET()
+        self.assertEqual(h.response_code, 401)
+        self.assertEqual(calls, [])
+
+    def test_url_query_token_is_not_an_authentication_credential(self):
+        h, calls = self._handler("GET", f"/api/trades?token={TEST_OWNER_TOKEN}")
+        h.do_GET()
+        self.assertEqual(h.response_code, 401)
+        self.assertEqual(calls, [])
+
+    def test_request_logs_redact_query_and_authorization_values(self):
+        h, _ = self._handler("GET", "/api/trades")
+        log = io.StringIO()
+        with redirect_stderr(log):
+            h.log_message("request %s Authorization: %s",
+                          "/api/trades?token=query-secret", "Bearer header-secret")
+        emitted = log.getvalue()
+        self.assertNotIn("query-secret", emitted)
+        self.assertNotIn("header-secret", emitted)
+
+    def test_public_demo_serves_only_sanitized_public_surfaces(self):
+        for path in ("/", "/api/health", "/api/capabilities", "/api/scan"):
+            with self.subTest(path=path):
+                h, calls = self._handler("GET", path, mode="public-demo")
+                h.do_GET()
+                self.assertEqual(h.response_code, 200)
+                if path == "/api/health":
+                    payload = json.loads(h.wfile.getvalue())
+                    self.assertEqual(set(payload), {"status", "version"})
+                    self.assertEqual(payload["status"], "healthy")
+                    self.assertIsInstance(payload["version"], str)
+                elif path == "/api/capabilities":
+                    payload = json.loads(h.wfile.getvalue())
+                    self.assertEqual(set(payload), {"mode", "features"})
+                    self.assertEqual(payload["mode"], "public-demo")
+                    self.assertEqual(payload["features"], ["market", "static", "health"])
+                elif path == "/api/scan":
+                    self.assertEqual(calls, ["scan"])
+                self.assertNotIn(TEST_OWNER_TOKEN.encode(), h.wfile.getvalue())
+
+    def test_public_events_are_denied_before_stream_subscription(self):
+        class Hub:
+            subscribers = []
+
+            def subscribe(self, queue):
+                self.subscribers.append(queue)
+
+            def unsubscribe(self, queue):
+                self.subscribers.remove(queue)
+
+        hub = Hub()
+        h, calls = self._handler("GET", "/api/events?ttl=1", {
+            "Authorization": f"Bearer {TEST_OWNER_TOKEN}"}, mode="public-demo",
+            event_hub=hub)
+        h.do_GET()
+        self.assertIn(h.response_code, (401, 403))
+        self.assertEqual(calls, [])
+        self.assertEqual(hub.subscribers, [])
+        self.assertNotIn(b"private-alert", h.wfile.getvalue())
+
+    def test_valid_owner_token_does_not_enable_daemon_control(self):
+        h, calls = self._handler("POST", "/api/trader", {
+            "Authorization": f"Bearer {TEST_OWNER_TOKEN}",
+            "Host": "127.0.0.1:5555"})
+        h.do_POST()
+        self.assertEqual(h.response_code, 403)
+        self.assertEqual(calls, [])
+
+    def test_authenticated_foreign_origin_still_fails_csrf_check(self):
+        h, calls = self._handler("POST", "/api/watchlist", {
+            "Authorization": f"Bearer {TEST_OWNER_TOKEN}",
+            "Origin": "https://evil.example", "Host": "127.0.0.1:5555"})
+        h.do_POST()
+        self.assertEqual(h.response_code, 403)
+        self.assertEqual(calls, [])
+
+    def test_public_market_refresh_does_not_mutate_private_alert_state(self):
+        import tempfile
+        from pathlib import Path
+        from types import SimpleNamespace
+        from unittest import mock
+        from http.server import BaseHTTPRequestHandler
+        from itertools import chain, repeat
+        import rshelper.dashboard.server as server_module
+
+        latest = {"1": {"high": 100, "low": 110}}
+        fetched = [({}, {}, {}, []), ({}, latest, {}, [])]
+        cfg = SimpleNamespace(flip=SimpleNamespace(
+            direction="arbitrage", members_only=False, min_volume=0,
+            min_margin=0))
+        response_codes = []
+        times = iter(chain([0], repeat(121)))
+
+        class FakeServer:
+            def __init__(self, address, handler_type):
+                self.RequestHandlerClass = handler_type
+
+            def serve_forever(self):
+                h = BaseHTTPRequestHandler.__new__(self.RequestHandlerClass)
+                h.path = "/api/scan"
+                h.command = "GET"
+                h.request_version = "HTTP/1.1"
+                h.headers = {}
+                h.response_code = None
+                h.wfile = io.BytesIO()
+                h.send_response = lambda code, message=None: response_codes.append(code)
+                h.send_header = lambda key, value: None
+                h.end_headers = lambda: None
+                h.do_GET()
+
+            def server_close(self):
+                pass
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(server_module, "load_config", return_value=cfg), \
+                 mock.patch.object(server_module, "_fetch_bootstrap",
+                                   side_effect=fetched), \
+                 mock.patch.object(server_module, "ThreadingHTTPServer", FakeServer), \
+                 mock.patch.object(server_module.time, "time",
+                                   side_effect=lambda: next(times)), \
+                 mock.patch.object(server_module.watchlist, "load",
+                                   return_value={"items": {"1": {
+                                       "name": "Private watched item",
+                                       "alert_margin_above": 1}}}) as load_watchlist, \
+                 mock.patch.object(server_module.alerts, "push_alert") as push_alert, \
+                 mock.patch.object(server_module.alerts, "watch_triggered",
+                                   return_value=False) as watch_triggered, \
+                 mock.patch.object(server_module.alerts, "set_watch_triggered") as set_triggered, \
+                 mock.patch.object(server_module.EventHub, "broadcast") as broadcast:
+                server_module.run(bind="127.0.0.1", port=0,
+                                  access_mode="public-demo")
+
+        self.assertEqual(response_codes, [200])
+        load_watchlist.assert_not_called()
+        push_alert.assert_not_called()
+        watch_triggered.assert_not_called()
+        set_triggered.assert_not_called()
+        broadcast.assert_not_called()
 
 
 class TestItemToDict(unittest.TestCase):
@@ -77,7 +379,7 @@ class TestHandlerRouting(unittest.TestCase):
         self.handler.path = "/"
         self.handler.request_version = "HTTP/1.1"
         self.handler.command = "GET"
-        self.handler.headers = {}
+        self.handler.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         self.handler.response_code = None
         self.handler.response_headers = []
 
@@ -227,7 +529,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/prices?ids=561,2"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.response_code = None
         h.response_headers = []
         h.wfile = io.BytesIO()
@@ -265,7 +567,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/process"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.response_code = None
         h.response_headers = []
         h.wfile = io.BytesIO()
@@ -288,7 +590,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/meta"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -309,7 +611,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/watchlist"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -329,7 +631,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"action": "add", "item_id": 5}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
@@ -349,7 +651,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"action": "open", "item": "nature rune", "qty": 5}).encode()
-        h.headers = {"Content-Length": str(len(payload)), "Host": "127.0.0.1:5555"}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload)), "Host": "127.0.0.1:5555"}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
@@ -368,7 +670,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/trader"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -387,7 +689,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/timeseries?id=561"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -406,7 +708,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/timeseries?id=abc"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_error = lambda code, message=None: setattr(h, "error_code", code)
         h.do_GET()
@@ -426,7 +728,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/positions"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -446,7 +748,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"action": "add", "item_id": 5}).encode()
-        h.headers = {"Content-Length": str(len(payload)), "Host": "127.0.0.1:5555",
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload)), "Host": "127.0.0.1:5555",
                      "Origin": "https://evil.example"}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
@@ -467,7 +769,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"action": "add", "item_id": 5}).encode()
-        h.headers = {"Content-Length": str(len(payload)),
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload)),
                      "Host": "rs.reidar.tech",
                      "Origin": "https://rs.reidar.tech"}
         h.rfile = io.BytesIO(payload)
@@ -490,7 +792,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"action": "add", "item_id": 5}).encode()
-        h.headers = {"Content-Length": str(len(payload)),
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload)),
                      "Host": "evil.com", "Origin": "http://evil.com"}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
@@ -529,7 +831,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.path = "/api/scan"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.response_code = None
         h.response_headers = []
         h.wfile = io.BytesIO()
@@ -672,7 +974,7 @@ class TestTemplate(unittest.TestCase):
         self.assertIn("</body>", INDEX_HTML)
 
     def test_html_has_fetch_api(self):
-        self.assertIn("fetch('/api/scan')", INDEX_HTML)
+        self.assertIn("apiFetch('/api/scan')", INDEX_HTML)
 
     def test_html_has_esc_html(self):
         self.assertIn("function escHtml", INDEX_HTML)
@@ -740,11 +1042,12 @@ class TestNewRoutes(unittest.TestCase):
         from http.server import BaseHTTPRequestHandler
         from rshelper.scanner import FlipScanner
         scanner = fns.pop("scanner", FlipScanner(direction="arbitrage"))
-        Handler = make_handler(scanner, lambda: [], **fns)
+        control = fns.pop("control", False)
+        Handler = make_handler(scanner, lambda: [], control=control, **fns)
         h = BaseHTTPRequestHandler.__new__(Handler)
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.response_code = None
         h.response_headers = []
         h.wfile = io.BytesIO()
@@ -772,7 +1075,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/alerts/read"
         h.command = "POST"
         payload = json.dumps({"all": True}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
         self.assertEqual(calls, [(None, True)])
@@ -810,7 +1113,7 @@ class TestNewRoutes(unittest.TestCase):
         h.command = "POST"
         payload = json.dumps({"action": "alerts", "item_id": 5,
                               "alert_above": 100, "alert_below": None}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
         self.assertEqual(calls, [("alerts", 5, 100, None)])
@@ -822,7 +1125,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/positions"
         h.command = "POST"
         payload = json.dumps({"action": "close", "position_id": 7}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
         self.assertEqual(calls, [(7, None)])
@@ -834,7 +1137,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/trader"
         h.command = "POST"
         payload = json.dumps({"action": "stop"}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.send_error = lambda code, message=None: setattr(h, "error_code", code)
         h.do_POST()
@@ -842,11 +1145,12 @@ class TestNewRoutes(unittest.TestCase):
 
     def test_api_trader_control_start(self):
         calls = []
-        h = self._make(trader_control_fn=lambda a: calls.append(a) or {"ok": True})
+        h = self._make(control=True,
+                       trader_control_fn=lambda a: calls.append(a) or {"ok": True})
         h.path = "/api/trader"
         h.command = "POST"
         payload = json.dumps({"action": "start"}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
         self.assertEqual(calls, ["start"])
@@ -858,7 +1162,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/monitor"
         h.command = "POST"
         payload = json.dumps({"action": "stop"}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.send_error = lambda code, message=None: setattr(h, "error_code", code)
         h.do_POST()
@@ -870,7 +1174,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/trades/delete"
         h.command = "POST"
         payload = json.dumps({"trade_id": 3}).encode()
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
         self.assertEqual(calls, [3])
@@ -912,7 +1216,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/events?ttl=1"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -931,7 +1235,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/timeseries?id=561&step=1h&points=48"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None
@@ -952,7 +1256,7 @@ class TestNewRoutes(unittest.TestCase):
         h.command = "POST"
         h.request_version = "HTTP/1.1"
         payload = json.dumps({"all": "false"}).encode()  # string, not bool
-        h.headers = {"Content-Length": str(len(payload))}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
@@ -973,7 +1277,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/timeseries?id=561"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_error = lambda code, message=None: setattr(h, "error_code", code)
         h.send_response = lambda code, message=None: None
@@ -1000,7 +1304,7 @@ class TestNewRoutes(unittest.TestCase):
                 h.request_version = "HTTP/1.1"
                 payload = json.dumps({"item_id": 1, "name": "X", "qty": 0,
                                       "buy_price": 100, "sell_price": 110}).encode()
-                h.headers = {"Content-Length": str(len(payload))}
+                h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
                 h.rfile = io.BytesIO(payload)
                 h.wfile = io.BytesIO()
                 h.send_error = lambda code, message=None: setattr(h, "error_code", code)
@@ -1023,7 +1327,7 @@ class TestNewRoutes(unittest.TestCase):
         h.path = "/api/confidence?ids=1,2"
         h.request_version = "HTTP/1.1"
         h.command = "GET"
-        h.headers = {}
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", }
         h.wfile = io.BytesIO()
         h.send_response = lambda code, message=None: None
         h.send_header = lambda key, value: None

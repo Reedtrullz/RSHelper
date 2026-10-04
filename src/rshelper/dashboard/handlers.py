@@ -1,6 +1,7 @@
 """HTTP request handlers for the RSHelper dashboard."""
 
 import json
+import re
 import sys
 import time
 from http.server import BaseHTTPRequestHandler
@@ -8,6 +9,45 @@ from typing import Callable
 from urllib.parse import parse_qs, urlparse
 
 from rshelper.dashboard.templates import INDEX_HTML
+
+
+_GET_RESOURCES = {
+    "/": "static",
+    "/api/capabilities": "capabilities",
+    "/api/health": "sanitized-health",
+    "/api/scan": "public-market",
+    "/api/prices": "public-market",
+    "/api/timeseries": "public-market",
+    "/api/process": "public-market",
+    "/api/alch": "public-market",
+    "/api/confidence": "public-market",
+    "/api/monitor": "private-state",
+    "/api/signals": "private-state",
+    "/api/trades": "private-state",
+    "/api/pnl": "private-state",
+    "/api/history": "private-state",
+    "/api/meta": "private-state",
+    "/api/watchlist": "private-state",
+    "/api/watchlist/check": "private-state",
+    "/api/positions": "private-state",
+    "/api/trader": "private-state",
+    "/api/ge": "private-state",
+    "/api/bank": "private-state",
+    "/api/alerts": "private-state",
+    "/api/events": "private-state",
+}
+
+_POST_RESOURCES = {
+    "/api/trades": "private-state",
+    "/api/watchlist": "private-state",
+    "/api/paper": "private-state",
+    "/api/ge/collect": "private-state",
+    "/api/positions": "private-state",
+    "/api/trader": "daemon-control",
+    "/api/monitor": "daemon-control",
+    "/api/alerts/read": "private-state",
+    "/api/trades/delete": "private-state",
+}
 
 
 def _item_to_dict(item) -> dict:
@@ -57,7 +97,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  delete_trade_fn: Callable[[int], dict] | None = None,
                  log_trade_fn: Callable[..., dict] | None = None,
                  event_hub=None,
-                 allowed_hosts: list[str] | None = None) -> type:
+                 allowed_hosts: list[str] | None = None,
+                 mode: str = "owner", owner_token: str | None = None,
+                 control: bool = False) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -98,8 +140,13 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def do_GET(self):
             path = self.path.split("?", 1)[0]
+            resource = _GET_RESOURCES.get(path)
+            if resource is not None and not self._authorize(resource, False):
+                return
             if path == "/":
                 self._serve_html()
+            elif path == "/api/capabilities":
+                self._serve_capabilities()
             elif path == "/api/scan":
                 self._serve_scan()
             elif path == "/api/health":
@@ -147,8 +194,15 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def do_POST(self):
             path = self.path.split("?", 1)[0]
+            resource = _POST_RESOURCES.get(path)
+            if resource is not None:
+                if not self._authorize(resource, True):
+                    return
             if not self._origin_ok():
                 self.send_error(403, "Origin check failed")
+                return
+            if resource == "daemon-control" and not control:
+                self.send_error(403, "Daemon control is disabled")
                 return
             if path == "/api/trades":
                 self._handle_log_trade()
@@ -199,6 +253,23 @@ def make_handler(scanner, scan_items: Callable[[], list],
             from rshelper import __version__
             version = os.environ.get("VERSION") or __version__
             self._serve_json({"status": "healthy", "version": version})
+
+        def _serve_capabilities(self):
+            features = ["market", "static", "health"]
+            if mode == "owner":
+                features.append("private-state")
+                if control:
+                    features.append("daemon-control")
+            self._serve_json({"mode": mode, "features": features})
+
+        def _authorize(self, resource: str, mutation: bool) -> bool:
+            from rshelper.dashboard.access import authorize
+            if authorize(mode, self.headers.get("Authorization"), owner_token,
+                         resource, mutation):
+                return True
+            status = 401 if mode == "owner" else 403
+            self.send_error(status, "Authorization required")
+            return False
 
         def _serve_signals(self):
             if signal_detector is None:
@@ -689,6 +760,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
             return urlparse(origin).netloc == host
 
         def log_message(self, format, *args):
-            print(f"[dashboard] {format % args}", file=sys.stderr)
+            message = format % args
+            message = re.sub(r"\?[^\s\"']*", "?[redacted]", message)
+            message = re.sub(r"(?i)(authorization\s*[:=]\s*)[^\r\n]*",
+                             r"\1[redacted]", message)
+            print(f"[dashboard] {message}", file=sys.stderr)
 
     return DashboardHandler
