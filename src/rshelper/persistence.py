@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import stat
 import threading
+from uuid import UUID
 
 MAX_STATE_BYTES = 64 * 1024 * 1024
 MAX_STATE_DEPTH = 64
@@ -57,6 +58,49 @@ def _bounded_json(data, path):
             _fail(path, 'state contains a non-finite or unsupported value')
 
 
+IDENTITY_FIELDS = frozenset({'record_uuid', 'origin_uuid', 'revision', 'tombstone'})
+
+
+def canonical_uuid(value):
+    if type(value) is not str:
+        raise ValueError('identity must be a canonical UUID')
+    try:
+        parsed = UUID(value)
+    except ValueError as exc:
+        raise ValueError('identity must be a canonical UUID') from exc
+    if str(parsed) != value or parsed.version not in (4, 5):
+        raise ValueError('identity must be a canonical UUID4 or UUID5')
+    return value
+
+
+
+def validate_record_identity(row, kind):
+    """Return known identity, or None for an entirely legacy row."""
+    if kind not in ('positions', 'trades', 'alerts') or not isinstance(row, dict):
+        raise ValueError('unsupported identity row kind')
+    present = IDENTITY_FIELDS.intersection(row)
+    if not present:
+        if 'lot_uid' in row or 'legacy_id' in row:
+            raise ValueError('migration lineage without record identity')
+        return None
+    if present != IDENTITY_FIELDS:
+        raise ValueError('partial record identity')
+    record = canonical_uuid(row['record_uuid'])
+    canonical_uuid(row['origin_uuid'])
+    if type(row['revision']) is not int or row['revision'] < 0 or row['revision'] > 2**63 - 1:
+        raise ValueError('invalid record revision')
+    if 'legacy_id' in row and (type(row['legacy_id']) is not int or row['legacy_id'] <= 0):
+        raise ValueError('invalid original legacy identity')
+    if type(row['tombstone']) is not bool:
+        raise ValueError('invalid record tombstone')
+    if kind == 'positions':
+        if row.get('lot_uid') != record:
+            raise ValueError('lot identity must match record identity')
+    elif 'lot_uid' in row:
+        raise ValueError('lot identity belongs only to positions')
+    return record
+
+
 def validate_state(data, kind, path):
     if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic'):
         _fail(path, 'unknown state kind')
@@ -76,6 +120,11 @@ def validate_state(data, kind, path):
     for row in rows:
         if not isinstance(row, dict):
             _fail(path, 'state row must be an object')
+        if kind in ('trades', 'positions', 'alerts'):
+            try:
+                validate_record_identity(row, kind)
+            except ValueError as exc:
+                _fail(path, str(exc))
         if kind in ('trades', 'positions'):
             for field in ('id', 'qty', 'buy_price'):
                 if not _integer(row.get(field), 1):
@@ -212,3 +261,20 @@ def locked_state(path: Path):
                     fcntl.flock(fd, fcntl.LOCK_UN)
             finally:
                 os.close(fd)
+
+
+def validate_writable_state(store: dict, kind: str, path: Path):
+    """A compatibility reader is not yet an identity-aware merge/writer."""
+    validate_state(store, kind, path)
+    if kind in ('positions', 'trades', 'alerts'):
+        if any(IDENTITY_FIELDS.intersection(row) or 'lot_uid' in row for row in store[kind]):
+            _fail(path, 'identified state requires an identity-aware writer; migration not activated')
+    return store
+
+
+@contextlib.contextmanager
+def locked_writable_state(path: Path, kind: str):
+    """Legacy writers refuse identified state during staged reader rollout."""
+    with locked_state(path):
+        validate_writable_state(read_state(path, kind), kind, path)
+        yield

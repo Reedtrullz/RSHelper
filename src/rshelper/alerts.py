@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
+from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 ALERTS_PATH = "alerts.json"
@@ -20,7 +20,7 @@ _fallback_id = 0  # per-process monotonic ids when persistence fails
 
 
 def _file_lock(profile: str | None = None):
-    return locked_state(_alerts_path(profile))
+    return locked_writable_state(_alerts_path(profile), "alerts")
 
 
 @dataclass

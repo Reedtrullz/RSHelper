@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
-from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
+from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 POSITIONS_PATH = Path.home() / ".config" / "rshelper" / "positions.json"
@@ -21,7 +21,7 @@ _LOCK = threading.Lock()
 
 
 def _positions_lock(profile: str | None = None):
-    return locked_state(_positions_path(profile))
+    return locked_writable_state(_positions_path(profile), "positions")
 
 
 @dataclass

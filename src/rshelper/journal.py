@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
-from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
+from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 TRADES_PATH = Path.home() / ".config" / "rshelper" / "trades.json"
@@ -19,7 +19,7 @@ def _trades_path(profile: str | None = None) -> Path:
 
 
 def _trade_lock(profile: str | None = None):
-    return locked_state(_trades_path(profile))
+    return locked_writable_state(_trades_path(profile), "trades")
 
 
 @dataclass
