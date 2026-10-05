@@ -1,6 +1,6 @@
 """Historical price analysis for margin confidence scoring."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from rshelper.market import MAX_PRICE_RATIO, ge_tax
 
@@ -28,6 +28,7 @@ class MarginAnalysis:
     rs_score: float = 0.0        # 0-100 composite score (= confidence * 100)
     current_profit: int = 0        # current margin after tax per item
     expected_gp_per_hour: int = 0  # confidence * current_profit * throughput
+    market_data: dict = field(default_factory=dict)
 
 
 def analyze_timeseries(

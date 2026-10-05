@@ -261,15 +261,23 @@ async function refreshExtBadges(){
   }catch(e){}
 }
 function updateFooter(){
-  const src=meta.source||'none';
+  const evidence=meta.market_data||{};
+  const quote=evidence.latest||{source:'unknown'};
+  const volume=evidence['5m']||{volume_kind:'unknown'};
+  const src=quote.source;
   const el=document.getElementById('sourceBadge');
-  el.textContent=src==='ge_tracker'?'GE Tracker fallback':src==='wiki'?'OSRS Wiki':'-';
-  el.className='source-badge '+(src==='wiki'?'wiki':src==='ge_tracker'?'tracker':'none');
-  if(meta.last_fetch){
-    document.getElementById('lastUpdated').textContent='Last updated: '+new Date(meta.last_fetch*1000).toLocaleTimeString();
-  }
+  el.textContent=(src==='ge-tracker'?'GE Tracker':src==='wiki'?'OSRS Wiki':'Unknown source')+(quote.stale?' · stale':'');
+  if(evidence['5m']&&volume.source!==src)el.textContent+=' · mixed sources';
+  el.className='source-badge '+(src==='wiki'?'wiki':src==='ge-tracker'?'tracker':'none');
+  el.title='Delivery: '+(quote.delivery||'unknown')+'; volume: '+volume.volume_kind;
+  document.getElementById('lastUpdated').textContent=quote.last_success_at
+    ?'Last success: '+new Date(quote.last_success_at*1000).toLocaleTimeString()
+    :'Last success unknown';
+  document.getElementById('lastUpdated').title=quote.last_attempt_at
+    ?'Last attempt: '+new Date(quote.last_attempt_at*1000).toLocaleTimeString():'Last attempt unknown';
   const kbd=document.getElementById('kbdHint');
-  if(src==='ge_tracker')kbd.textContent='signals limited on fallback';
+  if(volume.volume_kind==='standing-orders')kbd.textContent='GP/hr uses proxy quantities; fills unavailable';
+  else if(volume.stale||volume.volume_kind!=='executed-trades')kbd.textContent='Execution volume unavailable';
   else if(!sseOk)kbd.textContent='polling '+refreshSecs+'s';
   else kbd.textContent='live via SSE';
   // Bell also lives in the footer for always-visible alert access.
@@ -468,7 +476,7 @@ async function fetchData(){
     const [r,m,s]=await Promise.all(requests);
     if(epoch!==authEpoch)return;
     if(!r.ok||(privateReady&&(!m.ok||!s.ok)))throw new Error('api error');
-    allItems=(await r.json()).items||[];
+    const scan=await r.json();allItems=scan.items||[];
     if(epoch!==authEpoch)return;
     signalsMap={};
     if(privateReady){
@@ -476,7 +484,7 @@ async function fetchData(){
       (await s.json()).signals.forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
       watchIds=new Set(meta.watch_ids||[]);
       if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
-    }else{meta={};watchIds=new Set();alertsData={alerts:[],unread:0};}
+    }else{meta={market_data:scan.market_data||{}};watchIds=new Set();alertsData={alerts:[],unread:0};}
     if(epoch!==authEpoch)return;
     setStatus('Connected',false);
     renderTopbar();
@@ -578,18 +586,19 @@ function drawSpark(id){
   const cv=document.getElementById('spark');
   if(!cv)return;
   const seq=++sparkSeq;
-  let pts=[];
+  let pts=[],historyReason='No recent trade history for this item.';
   (async()=>{
     try{
       const r=await apiFetch('/api/timeseries?id='+id);
-      pts=(await r.json()).points||[];
+      const history=await r.json();pts=history.points||[];
+      historyReason=history.capability?.reason||historyReason;
     }catch(e){}
     if(pts.length<2){
       if(seq!==sparkSeq)return;
       cv.style.display='none';
       const note=document.createElement('div');
       note.className='loading';
-      note.textContent='No recent trade history for this item.';
+      note.textContent=historyReason;
       cv.parentNode.appendChild(note);
       return;
     }
@@ -628,17 +637,18 @@ function drawMargin(id){
   if(!cv)return;
   const seq=++sparkSeq;
   (async()=>{
-    let pts=[];
+    let pts=[],historyReason='No hourly history for a margin chart.';
     try{
       const r=await apiFetch('/api/timeseries?id='+id+'&step=1h&points=192');
-      pts=(await r.json()).points||[];
+      const history=await r.json();pts=history.points||[];
+      historyReason=history.capability?.reason||historyReason;
     }catch(e){}
     if(pts.length<2){
       if(seq!==sparkSeq)return;
       cv.style.display='none';
       const note=document.createElement('div');
       note.className='loading';
-      note.textContent='No hourly history for a margin chart.';
+      note.textContent=historyReason;
       cv.parentNode.appendChild(note);
       return;
     }
@@ -946,8 +956,8 @@ async function renderSignals(){
     return true;
   }).map(s=>({id:s.item_id,name:s.name}));
   if(!signals.length){
-    const note=meta.source==='ge_tracker'
-      ?'No active signals. The GE Tracker fallback carries only offer quantities, so signals are disabled by design on this source.'
+    const note=(meta.market_data?.['5m']?.volume_kind!=='executed-trades'||meta.market_data?.['5m']?.stale)
+      ?'No active signals. Executed 5m volume is unavailable, stale or unverified.'
       :'No active signals — the market is calm right now.';
     body.innerHTML='<div class="loading">'+note+'</div>';
     renderContextEmpty();

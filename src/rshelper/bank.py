@@ -22,7 +22,7 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
     convention the CLI uses when closing.
     """
     now = now if now is not None else time.time()
-    latest = latest or {}
+    latest = latest if latest is not None else {}
     groups: dict[int, dict] = {}
     for p in list_positions(profile):
         g = groups.setdefault(p.item_id, {
@@ -76,7 +76,8 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
             "icon_url_detail": resolve_icon_url(g["name"], detail=True),
         })
     items.sort(key=lambda i: i["total_value"], reverse=True)
-    return {
+    from rshelper.market_data import provenance
+    return {"market_data":{"latest":provenance(latest)},
         "items": items,
         "total_value": sum(i["total_value"] for i in items),
         "unrealized_pnl": sum(i["unrealized_pnl"] for i in items),

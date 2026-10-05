@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from rshelper.journal import log_trade
 from rshelper.market import ge_tax, price_issue, safe_int
+from rshelper.market_data import executed_volume_supported, provenance
 from rshelper.positions import close_positions, list_positions
 
 MAX_GE_SLOTS = 8
@@ -91,12 +92,14 @@ def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
     offer. Realized offer_type is the *open side* of the position.
     """
     now = now if now is not None else time.time()
-    latest = latest or {}
-    vol_5m = vol_5m or {}
+    latest = latest if latest is not None else {}
+    vol_5m = vol_5m if vol_5m is not None else {}
+    execution_supported = executed_volume_supported(vol_5m)
     slots = []
     for index, p in enumerate(list_positions(profile)[:MAX_GE_SLOTS]):
-        fill = compute_fill_pct(p.qty, _item_volume_5m(vol_5m.get(str(p.item_id))),
-                                p.opened_at, now)
+        item_volume = _item_volume_5m(vol_5m.get(str(p.item_id)))
+        fill = compute_fill_pct(p.qty, item_volume,
+                                p.opened_at, now) if execution_supported and item_volume > 0 else 0.0
         if fill >= 1.0:
             status = "filled"
         elif fill <= 0.0:
@@ -123,6 +126,9 @@ def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
             "name": p.name,
             "qty": p.qty,
             "fill_pct": round(fill, 4),
+            "fill_reason": ("execution-volume model" if execution_supported else
+                            "execution volume unavailable: proxy, stale or unknown evidence"),
+            "market_data": {"latest":provenance(latest),"5m":provenance(vol_5m)},
             "status": status,
             "price": p.qty * p.buy_price,
             "price_each": p.buy_price,
@@ -180,6 +186,7 @@ def collect_offer(position_id: int, profile=None, latest=None) -> dict:
         "qty": position.qty,
         "sell_price": sell_price,
         "profit": sum(lot["profit"] for lot in lots),
+        "market_data": {"latest": provenance(latest)},
     }
 
 
@@ -191,7 +198,7 @@ def close_market_price(position, latest: dict | None) -> int:
     when no usable price exists (the same fallback collect_offer uses).
     Shared by the dashboard's manual position close and GE collect.
     """
-    latest = latest or {}
+    latest = latest if latest is not None else {}
     sell_price = position.buy_price
     price = latest.get(str(position.item_id))
     if isinstance(price, dict) and price_issue(price) is None:

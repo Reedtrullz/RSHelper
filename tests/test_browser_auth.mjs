@@ -119,3 +119,12 @@ assert.equal(rejectedForm.context.document.getElementById('wlAbove').value, '-1'
 assert.equal(removed, false, 'validation error keeps the form open');
 
 console.log('browser owner flow and mutation error regressions passed');
+
+// Successful observations and failed attempts remain separate in the visible footer.
+vm.runInContext("meta={market_data:{latest:{source:'wiki',delivery:'stale-cache',stale:true,last_success_at:100,last_attempt_at:200},'5m':{source:'ge-tracker',volume_kind:'standing-orders',stale:false}}};updateFooter()",ownerHarness.context);
+assert.match(ownerHarness.context.document.getElementById('sourceBadge').textContent,/stale.*mixed sources/);
+assert.match(ownerHarness.context.document.getElementById('kbdHint').textContent,/proxy.*fills unavailable/);
+assert.match(ownerHarness.context.document.getElementById('lastUpdated').textContent,/Last success:/);
+assert.match(ownerHarness.context.document.getElementById('lastUpdated').title,/Last attempt:/);
+vm.runInContext("meta={market_data:{latest:{source:'unknown'},'5m':{volume_kind:'unknown'}}};updateFooter()",ownerHarness.context);
+assert.equal(ownerHarness.context.document.getElementById('lastUpdated').textContent,'Last success unknown');

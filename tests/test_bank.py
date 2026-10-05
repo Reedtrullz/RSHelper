@@ -31,6 +31,7 @@ def _clean():
 def test_empty_bank():
     _clean()
     d = build_bank_items()
+    assert d.pop("market_data")["latest"]["source"] == "unknown"
     assert d == {"items": [], "total_value": 0, "unrealized_pnl": 0,
                  "cost_basis": 0, "slot_count": 0}
     print("  PASSED test_empty_bank")
