@@ -1,0 +1,15 @@
+# State identity rollout contract
+
+The identity boundary is shared by proposals #8 and #10. It is preparatory read/migration compatibility with legacy writer refusal; active merges and realization writes remain pending. No application command invokes migration in this slice.
+
+Each source must have an explicitly selected, durable `origin_uuid` and a private migration manifest. Do not infer origins from paths, hostnames, profile labels or integer IDs. Copies of one lineage must carry its original manifest; independently created lineages use different origins. Two indistinguishable legacy rows cannot establish independent ownership on their own and are refused rather than guessed.
+
+Rows retain integer `id` for display and add `record_uuid`, `origin_uuid`, nonnegative `revision` and boolean `tombstone`. A position's `lot_uid` equals its `record_uuid`; proposal #8 must use that exact lot identity. Later close operation IDs refer to a lot without deriving ownership from its display ID. Alert read state and position remaining quantity are mutable and cannot change record identity. Exact duplicate identities in one migration input are ambiguous and fail.
+
+Legacy migration deterministically maps a source's immutable row key to UUID5 using its UUID origin; the manifest records that mapping and validates it on replay. Source migration happens before any display-ID renumbering. Identified migrated records retain their original `legacy_id`; manifest replay binds the UUID to that original ID and immutable source fields even when the display ID changes. Altered UUIDs, swaps between records or changed immutable economics are refused. Foreign identified records retain their lineage without attesting a manifest not supplied to this call. Mutable changes reuse the migration mapping. No new identity is created merely because a legacy ID collides with an independent source.
+
+Before writer activation, back up original state, durably publish the manifest under the ordered writer locks, upgrade both local and deployed readers, then enable all coordinated writers. Interrupted manifest/state publication must recover from durable intent. Legacy writers must refuse identified state after cutover; rollback must drain/recover intents and use compatible readers. This slice performs no filesystem, Git, network, service, source-history or live-state mutation.
+
+Tombstone reconciliation, retention relative to offline peers, durable manifest installation, financial-operation recovery and conflict quarantine remain acceptance work in #10B, #11 and #8. No automatic conversion, deletion, merge precedence or state replacement is activated here.
+
+Shared persistence and its standalone deployment validator preserve valid identity metadata and reject partial/invalid groups. Current position/journal/alert writers and the deployment merge refuse identified state before mutation; legacy-only files keep their current behavior. This fail-closed guard is removed only by the separately implemented identity-aware writer generation.

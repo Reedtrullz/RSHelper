@@ -30,7 +30,7 @@ def _validation_module(path=None):
         raise ValueError("unable to load validation module")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    required = ("StateCorruptionError", "read_state", "validate_state", "locked_state")
+    required = ("StateCorruptionError", "read_state", "validate_state", "validate_writable_state", "locked_state")
     if any(not hasattr(module, name) for name in required):
         raise ValueError("validation module does not implement the state contract")
     return module
@@ -212,6 +212,9 @@ def merge_dir(stage: str, volume: str, chown: str | None,
         staged_data = _preflight(staged, validation)
         live = _entries(volume_root) if volume_root.exists() else {}
         live_data = _preflight(live, validation)
+        for sources in (staged_data, live_data):
+            for relative, data in sources.items():
+                validation.validate_writable_state(data, _kind(relative), relative)
         planned = []
         for relative in sorted(staged):
             src = staged[relative]
