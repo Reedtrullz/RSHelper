@@ -119,7 +119,8 @@ def _prune(store: dict) -> None:
 def list_alerts(limit: int = 50, profile: str | None = None) -> list[Alert]:
     """Newest-first alert feed, capped at `limit`."""
     store = _load(profile)
-    alerts = [Alert(**filter_fields(Alert, a)) for a in store.get("alerts", []) if isinstance(a, dict)]
+    alerts = [Alert(**filter_fields(Alert, a)) for a in store.get("alerts", [])
+              if isinstance(a, dict) and not a.get('tombstone', False)]
     alerts.sort(key=lambda a: a.ts, reverse=True)
     return alerts[:limit]
 

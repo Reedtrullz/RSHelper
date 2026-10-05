@@ -19,6 +19,7 @@ IMMUTABLE_FIELDS = {
     'positions': ('id', 'item_id', 'buy_price', 'direction', 'opened_at'),
     'trades': ('id', 'item_id', 'qty', 'buy_price', 'sell_price', 'tax_paid', 'profit', 'timestamp'),
     'alerts': ('id', 'ts', 'type', 'item_id'),
+    'watchlist': ('item_id', 'added'),
 }
 MAX_MAPPINGS = 100_000
 
@@ -38,7 +39,7 @@ def validate_manifest(manifest):
         raise ValueError('identity manifest exceeds mapping limit')
     for key, value in mappings.items():
         if (type(key) is not str
-                or not re.fullmatch(r'(positions|trades|alerts):[0-9a-f]{64}', key)):
+                or not re.fullmatch(r'(positions|trades|alerts|watchlist):[0-9a-f]{64}', key)):
             raise ValueError('invalid identity mapping key')
         canonical_uuid(value)
         if value != str(uuid5(UUID(origin), key)):
@@ -48,8 +49,9 @@ def validate_manifest(manifest):
 
 def _migration_key(row, kind):
     body = {field: row.get(field) for field in IMMUTABLE_FIELDS[kind]}
-    body['id'] = row.get('legacy_id', row['id'])
-    for field in ('opened_at', 'timestamp'):
+    if kind != 'watchlist':
+        body['id'] = row.get('legacy_id', row['id'])
+    for field in ('opened_at', 'timestamp', 'added'):
         if field in body:
             instant = datetime.fromisoformat(body[field].replace('Z', '+00:00'))
             if instant.tzinfo is None:
@@ -72,7 +74,7 @@ def migrate_rows(rows, kind, manifest):
     changing either input; supplied stable UUIDs survive display renumbering.
     Caller owns backup, durable manifest publication and writer activation.
     """
-    if kind not in IMMUTABLE_FIELDS or not isinstance(rows, list):
+    if kind not in ('positions', 'trades', 'alerts') or not isinstance(rows, list):
         raise ValueError('unsupported identity row kind')
     validate_manifest(manifest)
     validate_state({kind: rows}, kind, kind + '.json')
@@ -101,4 +103,34 @@ def migrate_rows(rows, kind, manifest):
         seen_keys.add(lineage)
         seen_records.add(identity)
     validate_manifest(result)
+    return upgraded, result
+
+
+def migrate_watchlist(store, manifest):
+    """Explicitly bind each item/creation generation, retaining deleted watches.
+
+    Never infer a host origin or reactivate a deletion. A re-add must carry a
+    new creation instant before migration. Caller owns durable publication.
+    """
+    validate_manifest(manifest)
+    validate_state(store, 'watchlist', 'watchlist.json')
+    upgraded, result = copy.deepcopy(store), copy.deepcopy(manifest)
+    origin = result['origin_uuid']
+    for item_id, row in upgraded['items'].items():
+        if record_identity(row, 'watchlist') is None:
+            if 'item_id' in row and row['item_id'] != int(item_id):
+                raise ValueError('watch item lineage conflicts with dictionary key')
+            row['item_id'] = int(item_id)
+    rows = list(upgraded['items'].values()) + list(upgraded.get('tombstones', {}).values())
+    for row in rows:
+        identity = record_identity(row, 'watchlist')
+        key = _migration_key(row, 'watchlist')
+        if identity is None:
+            identity = str(uuid5(UUID(origin), key))
+            result['mappings'][key] = identity
+            row.update(record_uuid=identity, origin_uuid=origin, revision=0, tombstone=False)
+        elif row['origin_uuid'] == origin and result['mappings'].get(key) != identity:
+            raise ValueError('identity manifest conflict: original watch lineage does not match')
+    validate_manifest(result)
+    validate_state(upgraded, 'watchlist', 'watchlist.json')
     return upgraded, result

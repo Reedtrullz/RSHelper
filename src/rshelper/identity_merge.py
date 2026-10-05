@@ -17,6 +17,7 @@ IMMUTABLE = {
     'trades': ('record_uuid','origin_uuid','legacy_id','item_id','qty','buy_price','sell_price',
                'tax_paid','profit','timestamp','operation_id','closed_lot_uid'),
     'alerts': ('record_uuid','origin_uuid','legacy_id','ts','type','item_id'),
+    'watchlist': ('record_uuid','origin_uuid','item_id','added'),
 }
 
 
@@ -24,9 +25,11 @@ def _json(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
 
 
-def _canonical(row, kind):
+def canonical_record(row, kind):
+    """Copy a schema-validated row using the shared UTC/time representation."""
     values = copy.deepcopy(row)
-    for timestamp in {'positions':('opened_at',),'trades':('timestamp',),'alerts':()}[kind]:
+    for timestamp in {'positions':('opened_at',),'trades':('timestamp',),'alerts':(),
+                      'watchlist':('added',)}[kind]:
         if timestamp in values:
             parsed=datetime.fromisoformat(values[timestamp].replace('Z','+00:00'))
             if parsed.tzinfo is None:parsed=parsed.replace(tzinfo=timezone.utc)
@@ -62,7 +65,7 @@ def _indexed(rows,kind):
                 if field in row:canonical_uuid(row[field])
             if all(present) and identity != str(uuid5(UUID(row['origin_uuid']), row['operation_id'])):
                 raise ValueError('realization trade identity does not match operation')
-        indexed[identity]=_canonical(row,kind)
+        indexed[identity]=canonical_record(row,kind)
     return indexed
 
 
@@ -91,7 +94,7 @@ def merge_rows(left,right,kind):
     Original legacy_id stays fixed; numeric id is a display alias regenerated
     in UUID order. No filesystem, host precedence, mtime or inferred origin.
     """
-    if type(kind) is not str or kind not in IMMUTABLE:raise ValueError('unsupported identity merge kind')
+    if type(kind) is not str or kind not in ('positions','trades','alerts'):raise ValueError('unsupported identity merge kind')
     peers=[_indexed(rows,kind) for rows in (left,right)]
     identities=set(peers[0])|set(peers[1])
     if len(identities)>MAX_ROWS:raise ValueError('identity merge row budget exceeded')
@@ -112,3 +115,48 @@ def merge_rows(left,right,kind):
     if len(_json({kind:merged}).encode('utf-8'))>MAX_STATE_BYTES:
         raise ValueError('identity merge exceeds byte budget')
     return merged
+
+
+def merge_watchlists(left, right):
+    """Retain deleted generations while reconciling the one active item slot.
+
+    Different live generations for one item are an explicit conflict. A stale
+    generation with a retained tombstone cannot replace a later re-add.
+    Unknown root metadata must agree; this boundary never silently drops it.
+    """
+    peers, metadata = [], []
+    for store in (left, right):
+        validate_state(store, 'watchlist', 'watchlist.json')
+        metadata.append({key: value for key, value in store.items()
+                         if key not in ('items', 'tombstones', 'schema_version')})
+        rows = list(store['items'].values()) + list(store.get('tombstones', {}).values())
+        if len(rows) > MAX_ROWS:
+            raise ValueError('watch identity merge row budget exceeded')
+        indexed = {}
+        for row in rows:
+            identity = validate_record_identity(row, 'watchlist')
+            if identity is None:
+                raise ValueError('watch merge requires explicit legacy migration')
+            indexed[identity] = canonical_record(row, 'watchlist')
+        peers.append(indexed)
+    if _json(metadata[0]) != _json(metadata[1]):
+        raise ValueError('watch root metadata conflict')
+    identities = set(peers[0]) | set(peers[1])
+    if len(identities) > MAX_ROWS:
+        raise ValueError('watch identity merge row budget exceeded')
+    result = {**copy.deepcopy(metadata[0]), 'items': {}, 'tombstones': {}}
+    for identity in sorted(identities):
+        a, b = (peer.get(identity) for peer in peers)
+        row = _pick(a, b, 'watchlist') if a is not None and b is not None else a if a is not None else b
+        if row['tombstone']:
+            result['tombstones'][identity] = row
+        else:
+            item = str(row['item_id'])
+            if item in result['items']:
+                raise ValueError('conflicting active watch generations for one item')
+            result['items'][item] = row
+    result = json.loads(_json(result))
+    validate_state(result, 'watchlist', 'watchlist.json')
+    if len(_json(result).encode('utf-8')) > MAX_STATE_BYTES:
+        raise ValueError('watch identity merge exceeds byte budget')
+    return result

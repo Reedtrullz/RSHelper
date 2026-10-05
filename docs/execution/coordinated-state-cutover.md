@@ -6,12 +6,12 @@ The identity readers/legacy writer guard, recoverable exact-lot realization and 
 
 | Path | Current boundary | Required coordinated change/proof |
 | --- | --- | --- |
-| `src/rshelper/positions.py` | Legacy opens/FIFO closes; identified rows refuse old writers | Explicit identified opens; exact UUID close selection; retained full-close tombstone; filter tombstones in all readers |
-| `src/rshelper/journal.py` | Legacy logs/removal; identified writer guard | Native creation lineage; mutable revision/deletion tombstones; retain immutable financial evidence for operation recovery |
-| `src/rshelper/alerts.py` | Legacy append/read/prune; identified writer guard | Read revisions, deletion/pruning tombstones; offline-peer horizon before any purge |
-| `src/rshelper/watchlist.py` | Dictionary keyed by item ID; physical remove; replacement drops extension identity | Explicit watch lineage/creation generation, revisioned threshold edits, retained deletes and re-add semantics; guard old writers before activation |
+| `src/rshelper/positions.py` | Legacy opens/FIFO closes; identified rows refuse old writers; readers filter retained tombstones | Explicit identified opens; exact UUID close caller selection |
+| `src/rshelper/journal.py` | Legacy logs/removal; identified writer guard; readers/P&L filter retained tombstones | Native creation lineage; mutable revision/deletion writers; retain immutable financial evidence for operation recovery |
+| `src/rshelper/alerts.py` | Legacy append/read/prune; identified writer guard; feed/count filter tombstones | Read revisions, deletion/pruning writers; offline-peer horizon before any purge |
+| `src/rshelper/watchlist.py` | Legacy writers refuse identified active/deleted generations; validated dual readers | Durable native creation generation and revision/deletion writers; re-add must create a fresh generation even in the same clock tick |
 | `src/rshelper/state_identity.py` | Pure explicit legacy mapping; own-origin mapping attestation | Durable profile manifest publication; attestation of newly created operation records without reassigning UUIDs |
-| `src/rshelper/realization.py` | Inactive intent/receipt core; exact pinned row IDs/timestamps; full close currently removes row | Coordinate canonical timestamps/display aliases and tombstones; audit deleted journal financial evidence; startup recovery before writers |
+| `src/rshelper/realization.py` | Inactive intent/receipt core retains full-close tombstones; UUID/economics proof accepts safe display aliases and canonical times, audits retained deleted trades | Startup recovery before writers; all close callers; durable manifest/native lineage; cross-origin receipt integration |
 | `src/rshelper/trader.py`, `ge_offers.py`, `dashboard/server.py`, `cli.py` | Legacy close/log sequences still active | All closes route to shared UUID operation and stable retry receipt, preserving strategy/quotes/hold/fill metadata and current decisions |
 | `deploy/merge_state.py` | Ordered shared locks, full preflight; per-file replacement; identified state refused | Identity-aware union plus conflict quarantine, validated revision manifest and no-op/obsolete/applied hash receipt; recoverable publication before receipt |
 | `deploy/playbook.yml` and `deploy/playbook-state.yml` | Shared `state-stage` and `state-validation.py`; success-path cleanup | Run-owned private staging/helper paths; always clean only own staging; independent revision rejection and host merge lease |
@@ -28,3 +28,11 @@ The identity readers/legacy writer guard, recoverable exact-lot realization and 
 5. Freeze/review/full offline and exact-index tests; live-source/JSON/caller UI checks where touched; dual-host migration rehearsal, backups and rollback; verify release identity and applied receipt. Cutover uses the app migration path and planned writer lease, preserving primary WIP and installed state until that concrete boundary is ready.
 
 These prerequisites do not change strategy/tax/defaults, infer FIFO ownership, rewrite private publication/history, prune receipts or close parent issues. E08B publication remains a separate pending owner choice.
+
+## Watch and financial deletion contract (implemented compatibility boundary)
+
+An identified watch has `item_id`, `record_uuid`, `origin_uuid`, `revision` and `tombstone` in addition to legacy name/time/threshold fields. Live generations occupy the `items` dictionary keyed by item ID. Removed generations remain in `tombstones`, keyed by their UUID. The pure legacy migration explicitly binds item ID plus UTC creation instant to the supplied origin manifest; mutable names/thresholds reuse that binding. Re-adds require a new creation generation. Two distinct live generations for one item are reported as a conflict. Unknown watch root metadata must agree rather than being dropped.
+
+A fully realized lot remains as a tombstone at the next revision, preserving its last open quantity as historical evidence. That quantity contributes zero open units; all current position readers filter the tombstone. Journal deletion similarly hides the trade from lists/P&L while retaining the exact financial record for operation proof. Alert feed/count readers hide retained deletions. Compatibility writers and the current deploy merger refuse identified state before mutation.
+
+Realization receipts now return authoritative `trade_uuids` and the current numeric `trade_ids` aliases. The durable intent retains its original alias; safe peer alias/time normalization does not change economics or invalidate recovery. A pending journal append can allocate another numeric alias if a peer has used the original number, while retaining the same operation UUID. Deleted journal evidence must still preserve cost basis, tax, profit, lot linkage and metadata; it cannot excuse financial disagreement. No tombstone or receipt purge is enabled.

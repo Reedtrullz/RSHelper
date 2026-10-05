@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rshelper.persistence import read_state, locked_state, StateCorruptionError, validate_state
+from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, resolve_config_path
 
 WATCHLIST_PATH = Path.home() / ".config" / "rshelper" / "watchlist.json"
@@ -18,7 +18,7 @@ def _watchlist_path(profile: str | None = None) -> Path:
 
 
 def _watchlist_lock(profile: str | None = None):
-    return locked_state(_watchlist_path(profile))
+    return locked_writable_state(_watchlist_path(profile), 'watchlist')
 
 
 def load(profile: str | None = None):

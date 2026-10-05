@@ -90,7 +90,8 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
 def list_positions(profile: str | None = None) -> list[Position]:
     """Return open positions, oldest first."""
     with _LOCK:
-        positions = [Position(**filter_fields(Position, p)) for p in _load(profile)]
+        positions = [Position(**filter_fields(Position, p)) for p in _load(profile)
+                     if not p.get('tombstone', False)]
     positions.sort(key=lambda p: p.opened_at)
     return positions
 
