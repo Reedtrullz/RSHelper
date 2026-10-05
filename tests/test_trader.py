@@ -27,6 +27,12 @@ from rshelper.trader import (
 )
 
 
+from rshelper.market_data import MarketDataResult, market_payload
+
+def _wiki_volume(data):
+    return market_payload(MarketDataResult(data,'wiki','network',100,100,100,False,
+                          'executed-trades',{'wiki':len(data)}))
+
 def _clean():
     tmod._RECENT_EXITS.clear()
     if tmod.EXITS_PATH.exists():
@@ -207,7 +213,7 @@ def test_stop_on_thin_print_fills_at_window_avg():
     vol_5m = {"1": {"avgLowPrice": 100, "lowPriceVolume": 5,
                     "highPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "stop_loss"
@@ -231,7 +237,7 @@ def test_stop_on_real_crash_keeps_print_fill():
     vol_5m = {"1": {"avgLowPrice": 82, "lowPriceVolume": 2000,
                     "highPriceVolume": 3000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["fill_guard"] is False
@@ -253,7 +259,7 @@ def test_stop_normal_decline_not_guarded():
     vol_5m = {"1": {"avgLowPrice": 95, "lowPriceVolume": 5,
                     "highPriceVolume": 5000}}  # thin but not an outlier
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg(stop_grace_minutes=0))
     assert len(result["closed"]) == 1
     assert result["closed"][0]["fill_guard"] is False
@@ -348,7 +354,7 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         result = run_cycle(cfg)
     assert len(result["opened"]) == 1, result
     positions = pmod.list_positions()
@@ -358,7 +364,7 @@ def test_run_cycle_opens_and_closes(monkeypatch_cleanup=None):
     # next cycle: offer 103 -> (103-97-2)/97 = +4.1% -> take profit at offer
     latest2 = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest2, vol_5m, items)):
+                    return_value=([], latest2, _wiki_volume(vol_5m), items)):
         result2 = run_cycle(cfg)
     assert len(result2["closed"]) == 1
     assert result2["closed"][0]["reason"] == "take_profit"
@@ -527,7 +533,7 @@ def test_auto_ge_fill_closes_at_offer():
     vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
                     "lowPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg())
     assert len(result["closed"]) == 1, result
     assert result["closed"][0]["reason"] == "ge_fill"
@@ -554,7 +560,7 @@ def test_manual_position_not_auto_closed_by_ge_fill():
     vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
                     "lowPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg())
     assert result["closed"] == [], result  # manual positions untouched
     assert len(pmod.list_positions()) == 1
@@ -582,7 +588,7 @@ def test_ge_fill_skips_when_offer_collapsed():
     vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
                     "lowPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg())
     assert result["closed"] == [], result
     assert len(pmod.list_positions()) == 1
@@ -609,14 +615,14 @@ def test_ge_fill_requires_net_profit_after_tax():
     vol_5m = {"1": {"avgLowPrice": 100, "highPriceVolume": 5000,
                     "lowPriceVolume": 5000}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, [])):
+                    return_value=([], latest, _wiki_volume(vol_5m), [])):
         result = run_cycle(_cfg())
     assert result["closed"] == [], result
     assert len(pmod.list_positions()) == 1
     # Offer 100: net (100 - 97 - 2)/97 = +1.03% > 0 -> ge_fill fires.
     latest_ok = _latest(now, **{"1": (100, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest_ok, vol_5m, [])):
+                    return_value=([], latest_ok, _wiki_volume(vol_5m), [])):
         result_ok = run_cycle(_cfg())
     assert len(result_ok["closed"]) == 1
     assert result_ok["closed"][0]["reason"] == "ge_fill"
@@ -637,7 +643,7 @@ def test_no_auto_open_on_item_with_manual_position():
     latest = _latest(now, **{"1": (100, 97)})
     vol_5m = {"1": {"avgLowPrice": 100}}
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         result = run_cycle(_cfg())
     assert result["opened"] == [], result  # must NOT stack auto on manual
     positions = pmod.list_positions()
@@ -740,17 +746,17 @@ def test_reentry_cooldown():
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg()
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         run_cycle(cfg)  # opens position 1
     # price hits take profit -> closes and starts the cooldown
     latest2 = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest2, vol_5m, items)):
+                    return_value=([], latest2, _wiki_volume(vol_5m), items)):
         result = run_cycle(cfg)
     assert len(result["closed"]) == 1
     # dip returns immediately, but the item is on cooldown
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         result3 = run_cycle(cfg)
     assert result3["opened"] == [], result3
     assert pmod.list_positions() == []
@@ -767,12 +773,12 @@ def test_stop_loss_cooldown_is_longer():
     cfg = _cfg(stop_grace_minutes=0)  # bypass grace: test cooldown timing
     from unittest import mock
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         run_cycle(cfg)  # opens position 1
     # bid falls 2% below entry -> stop loss
     latest_sl = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest_sl, vol_5m, items)):
+                    return_value=([], latest_sl, _wiki_volume(vol_5m), items)):
         result = run_cycle(cfg)
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "stop_loss"
@@ -791,11 +797,11 @@ def test_stop_loss_cooldown_is_longer():
     # For contrast, a take-profit exit is eligible again after 40 min.
     _clean()
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         run_cycle(cfg)  # opens position 1
     latest_tp = _latest(now, **{"1": (103, 97)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest_tp, vol_5m, items)):
+                    return_value=([], latest_tp, _wiki_volume(vol_5m), items)):
         result_tp = run_cycle(cfg)
     assert result_tp["closed"][0]["reason"] == "take_profit"
     t40b = now + 40 * 60
@@ -815,18 +821,18 @@ def test_stop_cooldown_survives_restart():
     vol_5m = {"1": {"avgLowPrice": 100}}
     cfg = _cfg(stop_grace_minutes=0)  # bypass grace: test restart persistence
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         run_cycle(cfg)  # opens position 1
     latest_sl = _latest(now, **{"1": (100, 94)})
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest_sl, vol_5m, items)):
+                    return_value=([], latest_sl, _wiki_volume(vol_5m), items)):
         result = run_cycle(cfg)
     assert len(result["closed"]) == 1
     assert result["closed"][0]["reason"] == "stop_loss"
     assert tmod.EXITS_PATH.exists(), "exit cooldown must be persisted"
     tmod._RECENT_EXITS.clear()  # simulate a daemon restart
     with mock.patch("rshelper.cli._fetch_bootstrap",
-                    return_value=([], latest, vol_5m, items)):
+                    return_value=([], latest, _wiki_volume(vol_5m), items)):
         result2 = run_cycle(cfg)
     assert result2["opened"] == [], result2  # still on the stop cooldown
     print("  PASSED test_stop_cooldown_survives_restart")

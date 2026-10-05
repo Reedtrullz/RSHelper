@@ -23,6 +23,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from rshelper.market_data import market_snapshot
 from rshelper.market import ge_tax, price_issue, safe_int, quote_time_issue
 from rshelper.profile import atomic_write_json, resolve_config_path, resolve_profile
 from rshelper.daemon import (LeaseBusy, LeaseError, acquire_lease, daemon_status,
@@ -391,8 +392,13 @@ def _ge_fill_pct(position, vol_5m: dict, now: float) -> float:
     would show it as "filled" — no manual Collect click for auto trades.
     """
     from rshelper.ge_offers import compute_fill_pct, _item_volume_5m
-    return compute_fill_pct(position.qty,
-                            _item_volume_5m(vol_5m.get(str(position.item_id))),
+    from rshelper.market_data import executed_volume_supported
+    if not executed_volume_supported(vol_5m):
+        return 0.0
+    volume = _item_volume_5m(vol_5m.get(str(position.item_id)))
+    if volume <= 0:
+        return 0.0
+    return compute_fill_pct(position.qty, volume,
                             position.opened_at, now)
 
 
@@ -587,7 +593,8 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         opened.append({"item_id": cand.id, "name": cand.name,
                        "qty": qty, "buy_price": cand.sell_price})
     return {"candidates": len(candidates), "opened": opened, "closed": closed,
-            "closed_pnl": sum(c["profit"] for c in closed)}
+            "closed_pnl": sum(c["profit"] for c in closed),
+            "market_data": market_snapshot(_mapping,latest,vol_5m)}
 
 
 def run_trader(cfg, interval: int | None = None, profile: str | None = None,

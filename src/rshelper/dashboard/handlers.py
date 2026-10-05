@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler
 from typing import Callable
 from urllib.parse import urlparse
 
+from rshelper.market_data import market_snapshot
 from rshelper.dashboard.templates import INDEX_HTML
 from rshelper.dashboard.http_inputs import (
     HttpInputError, MAX_BODY_BYTES, decode_object, parse_query, validate_operation,
@@ -68,6 +69,7 @@ def _item_to_dict(item) -> dict:
         "profit": item.profit,
         "gp_per_hour": item.gp_per_hour,
         "rs_score": getattr(item, "rs_score", 0.0),
+        "market_data": getattr(item, "market_data", {}),
     }
 
 
@@ -259,6 +261,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 results = scanner.scan(items, **(scan_kwargs or {}))
                 data = {
                     "items": [_item_to_dict(r) for r in results],
+                    "market_data": getattr(items[0],"market_data",{}) if items else market_snapshot(None, None, None),
                     "count": len(results),
                     "timestamp": time.time(),
                 }
@@ -301,7 +304,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                     "signals": [
                         {"type": s.type, "item_id": s.item_id, "name": s.name,
                          "severity": s.severity, "current_price": s.current_price,
-                         "deviation": s.deviation, "message": s.message}
+                         "deviation": s.deviation, "message": s.message,
+                         "market_data":getattr(s,"market_data",{})}
                         for s in signals
                     ],
                     "count": len(signals),

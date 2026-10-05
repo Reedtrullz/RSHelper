@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from rshelper.models import Item
+from rshelper.market_data import executed_volume_supported, provenance
 
 from rshelper.profile import resolve_config_path
 COOLDOWN_DIR = resolve_config_path("")
@@ -50,6 +51,7 @@ class Signal:
     current_price: int
     deviation: float  # percentage (e.g. -14.3 for 14.3% drop)
     message: str
+    market_data: dict = field(default_factory=dict)
 
 
 def _load_cooldowns(profile: str | None = None) -> dict:
@@ -201,7 +203,7 @@ def detect_signals(
         # carries offer quantities, which would produce misleading signals.
         # FLIP is gated too: its liquidity test reads five_min_vol, which is
         # offer quantity on the fallback, not executed trade volume.
-        has_real_5m = "avgHighPrice" in vol_data or "avgLowPrice" in vol_data
+        has_real_5m = executed_volume_supported(volume_5m) and ("avgHighPrice" in vol_data or "avgLowPrice" in vol_data)
 
         # DUMP: sell price >10% below 5m average sell price, with some volume
         if has_real_5m and avg_low > 0 and five_min_vol >= 100:
@@ -278,6 +280,9 @@ def detect_signals(
     # Sort: HIGH severity first, then by type
     severity_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
     signals.sort(key=lambda s: (severity_order.get(s.severity, 3), s.type, s.name))
+    evidence={item.id:item.market_data for item in items}
+    for signal in signals:
+        signal.market_data={"current":evidence.get(signal.item_id,{}),"5m":provenance(volume_5m)}
     return signals
 
 

@@ -54,6 +54,7 @@ class AlchScanner:
                 buy_limit=item.buy_limit, alch_value=item.alch_value,
                 buy_price=item.buy_price, sell_price=item.sell_price,
                 volume=item.volume, profit=profit, gp_per_hour=gp_per_hour,
+                market_data=item.market_data,
             )
             results.append(result)
         results.sort(key=lambda i: i.gp_per_hour, reverse=True)
@@ -66,6 +67,8 @@ def build_items_from_api(
     volume_5m: dict[str, dict],
 ) -> list[Item]:
     """Merge API responses into Item list, dropping stale/manipulated prices."""
+    from rshelper.market_data import market_snapshot
+    evidence = market_snapshot(mapping, latest, volume_5m)
     items: list[Item] = []
     skipped = {"stale": 0, "depth": 0, "ratio": 0}
     for entry in mapping:
@@ -93,7 +96,7 @@ def build_items_from_api(
             alch_value=safe_int(entry.get("highalch")),
             buy_price=buy_price,
             sell_price=sell_price,
-            volume=volume,
+            volume=volume, market_data=evidence,
         ))
     total = sum(skipped.values())
     if total:
@@ -169,6 +172,7 @@ class FlipScanner:
                 buy_limit=item.buy_limit, alch_value=item.alch_value,
                 buy_price=item.buy_price, sell_price=item.sell_price,
                 volume=item.volume, profit=profit, gp_per_hour=gp_per_hour,
+                market_data=item.market_data,
             )
             results.append(result)
         results.sort(key=lambda i: i.gp_per_hour, reverse=True)
@@ -232,6 +236,8 @@ class MarginScanner:
             # throughput = items per hour given market constraints
             trades_per_hour = min(item.buy_limit / 4, item.volume * 12)
 
+            from rshelper.market_data import provenance
+            analysis.market_data = {"history":provenance(ts_data), "current":item.market_data}
             analysis.current_profit = max(0, current_profit)
             analysis.expected_gp_per_hour = int(analysis.confidence * max(0, current_profit) * trades_per_hour)
 
@@ -325,6 +331,7 @@ class ProcessScanner:
                 buy_limit=output.buy_limit, alch_value=output.alch_value,
                 buy_price=output.buy_price, sell_price=output.sell_price,
                 volume=output.volume, profit=profit, gp_per_hour=gp_per_hour,
+                market_data=output.market_data,
                 input_cost=int(per_unit_cost), output_id=recipe.output_id,
             ))
 

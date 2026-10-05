@@ -8,7 +8,8 @@ import math
 import sys
 from datetime import date
 
-from rshelper.api import fetch_mapping, fetch_latest, fetch_5m, cleanup_stale_cache, fetch_timeseries_batch, fetch_timeseries
+from rshelper.api import fetch_mapping_result, fetch_latest_result, fetch_5m_result, cleanup_stale_cache, fetch_timeseries_batch_results, fetch_timeseries_result
+from rshelper.market_data import market_payload, provenance, market_snapshot
 from rshelper.scanner import AlchScanner, FlipScanner, MarginScanner, build_items_from_api, trade_size
 from rshelper.market import MAX_PRICE_RATIO, ge_tax, price_issue, safe_int
 from rshelper.config import load_config
@@ -24,20 +25,47 @@ def _fetch_bootstrap(profile: str | None = None):
         print(f"  Cleaned {removed} stale cache files", file=sys.stderr)
 
     print("Fetching OSRS Wiki prices...", file=sys.stderr)
-    mapping = fetch_mapping(profile)
+    mapping = market_payload(fetch_mapping_result(profile), sequence=True)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
-    latest = fetch_latest(profile)
+    latest = market_payload(fetch_latest_result(profile))
     if not latest:
         print("Error: could not fetch latest prices.", file=sys.stderr)
         sys.exit(1)
-    volume_5m = fetch_5m(profile) or {}
+    volume_5m = market_payload(fetch_5m_result(profile))
 
     print("Building item list...", file=sys.stderr)
     items = build_items_from_api(mapping, latest, volume_5m)
     print(f"  {len(items)} items with price data", file=sys.stderr)
+    print(_market_description(mapping,latest,volume_5m), file=sys.stderr)
     return mapping, latest, volume_5m, items
+
+
+
+_EVIDENCE_FIELDS = ("source", "delivery", "stale", "fetched_at", "last_success_at", "last_attempt_at")
+_CSV_MARKET_FIELDS = tuple(prefix + "_" + field
+                          for prefix in ("mapping", "price", "volume")
+                          for field in _EVIDENCE_FIELDS) + ("volume_kind",)
+
+
+def _market_description(mapping, latest, volume=None):
+    counts = provenance(volume)
+    return (f"Market: {_quote_description(provenance(latest))}; "
+            f"mapping: {_quote_description(provenance(mapping))}; "
+            f"5m volume: {counts['volume_kind']} ({_quote_description(counts)}). "
+            "GP/hr uses the stated volume basis.")
+
+
+def _csv_market(evidence):
+    row = {}
+    unknown = provenance(None)
+    for key, prefix in (("mapping", "mapping"), ("latest", "price"), ("5m", "volume")):
+        meta = evidence.get(key, {})
+        row.update({prefix + "_" + field: meta.get(field, unknown[field])
+                    for field in _EVIDENCE_FIELDS})
+    row["volume_kind"] = evidence.get("5m", {}).get("volume_kind", "unknown")
+    return row
 
 
 def _format_table(results, top: int) -> str:
@@ -107,7 +135,7 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
                 f"{item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
-def _html_output(rows: list[dict], columns: list[str], title: str) -> str:
+def _html_output(rows: list[dict], columns: list[str], title: str, caption: str = "") -> str:
     """Render results as a self-contained sortable HTML table."""
     from html import escape
     from datetime import datetime
@@ -137,6 +165,7 @@ def _html_output(rows: list[dict], columns: list[str], title: str) -> str:
 </head>
 <body>
 <h1>{escape(title)}</h1>
+<p>{escape(caption)}</p>
 <table id="results">
 <thead><tr>{col_headers}</tr></thead>
 <tbody>{tbody}</tbody>
@@ -220,11 +249,12 @@ def alch_scan(args: argparse.Namespace) -> None:
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
             "rank", "name", "buy_price", "alch_value", "profit", "gp_per_hour",
-            "sell_price", "volume", "buy_limit",
+            "sell_price", "volume", "buy_limit", *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
+            row.update(_csv_market(item.market_data))
             row["rank"] = i
             writer.writerow(row)
         print(out.getvalue())
@@ -232,6 +262,7 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(json.dumps([
             {
                 "rank": i + 1,
+                "market_data": r.market_data,
                 "name": r.name,
                 "buy_price": r.buy_price,
                 "alch_value": r.alch_value,
@@ -249,9 +280,10 @@ def alch_scan(args: argparse.Namespace) -> None:
              "Alch": f"{r.alch_value:,}", "Profit": f"{r.profit:,}",
              "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
             for i, r in enumerate(results[:args.top])
-        ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "RS", "Limit"], "Alchemy Scan"))
+        ], ["Rank", "Item", "Buy", "Alch", "Profit", "GP/hr", "RS", "Limit"], "Alchemy Scan", _market_description(mapping, latest, volume_5m)))
     else:
         print(_format_table(results, args.top))
+        print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
         _save_alch_snapshot(snap_results, args.profile)
@@ -295,11 +327,12 @@ def flip_scan(args: argparse.Namespace) -> None:
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
             "rank", "name", "buy_price", "sell_price", "profit", "roi",
-            "capital_per_unit", "gp_per_hour", "volume", "buy_limit",
+            "capital_per_unit", "gp_per_hour", "volume", "buy_limit", *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
+            row.update(_csv_market(item.market_data))
             row["rank"] = i
             row["roi"] = round(_process_roi(item), 2)
             row["capital_per_unit"] = item.buy_price
@@ -309,6 +342,7 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(json.dumps([
             {
                 "rank": i + 1,
+                "market_data": r.market_data,
                 "name": r.name,
                 "buy_price": r.buy_price,
                 "sell_price": r.sell_price,
@@ -333,7 +367,7 @@ def flip_scan(args: argparse.Namespace) -> None:
             cols.insert(-1, "Qty")
             for i, row in enumerate(rows):
                 row["Qty"] = f"{trade_size(results[i], capital):,}"
-        print(_html_output(rows, cols, "Flip Scan"))
+        print(_html_output(rows, cols, "Flip Scan", _market_description(mapping, latest, volume_5m)))
     else:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
@@ -370,11 +404,12 @@ def process_scan(args: argparse.Namespace) -> None:
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
             "rank", "name", "input_cost", "sell_price", "profit", "roi",
-            "gp_per_hour", "volume", "buy_limit",
+            "gp_per_hour", "volume", "buy_limit", *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
             row = asdict(item)
+            row.update(_csv_market(item.market_data))
             row["rank"] = i
             row["roi"] = round(_process_roi(item), 2)
             writer.writerow(row)
@@ -383,6 +418,7 @@ def process_scan(args: argparse.Namespace) -> None:
         print(json.dumps([
             {
                 "rank": i + 1,
+                "market_data": r.market_data,
                 "name": r.name,
                 "input_cost": r.input_cost,
                 "sell_price": r.sell_price,
@@ -401,9 +437,10 @@ def process_scan(args: argparse.Namespace) -> None:
                  "Profit": f"{r.profit:,}", "ROI%": f"{_process_roi(r):.1f}",
                  "GP/hr": f"{r.gp_per_hour:,}"}
                 for i, r in enumerate(results[:args.top])]
-        print(_html_output(rows, cols, "Materials Processing"))
+        print(_html_output(rows, cols, "Materials Processing", _market_description(mapping, latest, volume_5m)))
     else:
         print(_format_process_table(results, args.top))
+        print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
         _save_process_snapshot(snap_results, args.profile)
@@ -490,9 +527,9 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
 
 def _resolve_item(args: argparse.Namespace) -> dict:
     """Look up an item by exact name or unique substring; exits on failure."""
-    from rshelper.api import fetch_mapping
+    from rshelper.api import fetch_mapping_result
     profile = getattr(args, "profile", None)
-    mapping = fetch_mapping(profile) or []
+    mapping = market_payload(fetch_mapping_result(profile), sequence=True)
     q = args.item.lower()
     entry = next((e for e in mapping if (e.get("name") or "").lower() == q), None)
     if entry is not None:
@@ -509,11 +546,19 @@ def _resolve_item(args: argparse.Namespace) -> dict:
     sys.exit(1)
 
 
+def _quote_description(meta: dict) -> str:
+    return (f"{meta.get('source', 'unknown')} / {meta.get('delivery', 'unknown')}"
+            + (" (stale)" if meta.get('stale', True) else "")
+            + f"; fetched: {meta.get('fetched_at') if meta.get('fetched_at') is not None else 'unknown'}"
+            + f"; last success: {meta.get('last_success_at') if meta.get('last_success_at') is not None else 'unknown'}"
+            + f"; last attempt: {meta.get('last_attempt_at') if meta.get('last_attempt_at') is not None else 'unknown'}")
+
+
 def _resolve_paper_prices(entry: dict, profile: str | None, direction: str
-                          ) -> tuple[int, int]:
-    """Live guarded (buy_price, sell_price) for the given flip direction."""
-    from rshelper.api import fetch_latest
-    latest = fetch_latest(profile) or {}
+                          ) -> tuple[int, int, dict]:
+    """Live guarded prices with their explicit acquisition evidence."""
+    from rshelper.api import fetch_latest_result
+    latest = market_payload(fetch_latest_result(profile))
     price = latest.get(str(entry["id"])) or {}
     if not isinstance(price, dict) or price_issue(price):
         print(f"No reliable live price data for {entry.get('name')} "
@@ -528,7 +573,7 @@ def _resolve_paper_prices(entry: dict, profile: str | None, direction: str
     if buy_price <= 0 or sell_price <= 0:
         print(f"No live price data for {entry.get('name')}.", file=sys.stderr)
         sys.exit(1)
-    return buy_price, sell_price
+    return buy_price, sell_price, provenance(latest)
 
 
 def _size_qty(args: argparse.Namespace, entry: dict, buy_price: int) -> int:
@@ -551,7 +596,7 @@ def _trade_paper(args: argparse.Namespace) -> None:
     from rshelper.journal import log_trade
     profile = getattr(args, "profile", None)
     entry = _resolve_item(args)
-    buy_price, sell_price = _resolve_paper_prices(
+    buy_price, sell_price, quote = _resolve_paper_prices(
         entry, profile, args.flip_direction)
     qty = _size_qty(args, entry, buy_price)
     trade = log_trade(entry["id"], entry["name"], qty, buy_price,
@@ -562,6 +607,7 @@ def _trade_paper(args: argparse.Namespace) -> None:
           f"({mode}) buy {trade.buy_price:,} gp, sell {trade.sell_price:,} gp "
           f"— profit: {trade.profit:+,} gp "
           f"(tax: {trade.tax_paid:,})")
+    print("Quote: " + _quote_description(quote))
 
 
 def _trade_open(args: argparse.Namespace) -> None:
@@ -569,7 +615,7 @@ def _trade_open(args: argparse.Namespace) -> None:
     from rshelper.positions import open_position
     profile = getattr(args, "profile", None)
     entry = _resolve_item(args)
-    buy_price, sell_price = _resolve_paper_prices(
+    buy_price, sell_price, quote = _resolve_paper_prices(
         entry, profile, args.flip_direction)
     qty = _size_qty(args, entry, buy_price)
     entry_offer = sell_price if args.flip_direction == "traditional" else None
@@ -579,6 +625,7 @@ def _trade_open(args: argparse.Namespace) -> None:
                         entry_sell=sell_price, entry_offer=entry_offer)
     print(f"Opened position #{pos.id}: {pos.qty:,}x {pos.name} at "
           f"{pos.buy_price:,} gp ({pos.direction})")
+    print("Quote: " + _quote_description(quote))
 
 
 def _trade_close(args: argparse.Namespace) -> None:
@@ -605,14 +652,16 @@ def _trade_close(args: argparse.Namespace) -> None:
     remaining = qty
     total_profit = 0
     total_tax = 0
+    quotes = set()
     for p in sorted(open_positions, key=lambda x: x.id):
         if remaining <= 0:
             break
         take = min(remaining, p.qty)
         if p.direction == "traditional":
-            _, sell_price = _resolve_paper_prices(entry, profile, "traditional")
+            _, sell_price, quote = _resolve_paper_prices(entry, profile, "traditional")
         else:
-            _buy, sell_price = _resolve_paper_prices(entry, profile, "arbitrage")
+            _buy, sell_price, quote = _resolve_paper_prices(entry, profile, "arbitrage")
+        quotes.add(_quote_description(quote))
         try:
             lots = close_positions(entry["id"], take, sell_price, profile,
                                    position_id=p.id)
@@ -628,16 +677,17 @@ def _trade_close(args: argparse.Namespace) -> None:
         remaining -= take
     print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
           f"(tax: {total_tax:,})")
+    print("Quote: " + "; ".join(sorted(quotes)))
 
 
 def _trade_positions(args: argparse.Namespace) -> None:
     """List open paper positions with unrealized P&L at live prices."""
     from rshelper.positions import list_positions
-    from rshelper.api import fetch_latest
+    from rshelper.api import fetch_latest_result
     from rshelper.market import ge_tax
     profile = getattr(args, "profile", None)
     positions = list_positions(profile)
-    latest = fetch_latest(profile) or {}
+    latest = market_payload(fetch_latest_result(profile))
     rows = []
     for p in positions:
         price = latest.get(str(p.item_id))
@@ -655,6 +705,7 @@ def _trade_positions(args: argparse.Namespace) -> None:
             "buy_price": p.buy_price, "direction": p.direction,
             "opened_at": p.opened_at, "current": sell,
             "unrealized": unrealized, "note": p.note,
+            "market_data": {"latest":provenance(latest)},
         })
     if args.json:
         print(json.dumps(rows, indent=2))
@@ -679,12 +730,12 @@ def _trade_positions(args: argparse.Namespace) -> None:
 def trade_status(args: argparse.Namespace) -> None:
     """One-shot summary: open positions, unrealized, realized P&L, trader."""
     from rshelper.positions import list_positions
-    from rshelper.api import fetch_latest
+    from rshelper.api import fetch_latest_result
     from rshelper.journal import compute_pnl
     from rshelper.market import ge_tax
     from rshelper.trader import trader_status
     profile = getattr(args, "profile", None)
-    latest = fetch_latest(profile) or {}
+    latest = market_payload(fetch_latest_result(profile))
     positions = list_positions(profile)
     rows = []
     unreal = 0
@@ -705,12 +756,14 @@ def trade_status(args: argparse.Namespace) -> None:
             "buy_price": p.buy_price, "direction": p.direction,
             "opened_at": p.opened_at, "current": sell,
             "unrealized": unrealized, "note": p.note,
+            "market_data": {"latest":provenance(latest)},
         })
     pnl = compute_pnl(profile=profile, strategy="auto")
     trader = trader_status(profile) or {"running": False}
     if args.json:
         print(json.dumps({
             "positions": rows,
+            "market_data": {"latest":provenance(latest)},
             "unrealized": unreal,
             "realized_pnl": pnl.total_profit,
             "auto_trades": pnl.trade_count,
@@ -896,7 +949,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     print(f"\nFetching timeseries for top {len(candidates)} candidates...", file=sys.stderr)
     candidate_ids = [c.id for c in candidates]
-    ts_data = fetch_timeseries_batch(
+    ts_data = fetch_timeseries_batch_results(
         candidate_ids,
         timestep="5m",
         on_progress=lambda cur, tot: print(
@@ -907,7 +960,7 @@ def margin_check(args: argparse.Namespace) -> None:
     print(f"\n  {len(ts_data)}/{len(candidate_ids)} items have timeseries data", file=sys.stderr)
 
     if not ts_data:
-        print("No timeseries data available.", file=sys.stderr)
+        print("Wiki-only historical data unavailable; Tracker has no candle history.", file=sys.stderr)
         return
 
     # Analyze
@@ -923,10 +976,16 @@ def margin_check(args: argparse.Namespace) -> None:
             "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
             "avg_volume", "spread_score", "volume_score", "volatility_score",
             "datapoints", "window_hours", "margin_trend",
+            *("history_" + field for field in _EVIDENCE_FIELDS),
+            *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, a in enumerate(results[:args.top], 1):
             row = asdict(a)
+            row.update(_csv_market(a.market_data.get("current", {})))
+            history = a.market_data.get("history", {})
+            row.update({"history_" + field: history.get(field, provenance(None)[field])
+                        for field in _EVIDENCE_FIELDS})
             row["rank"] = i
             row["name"] = lookup[a.item_id].name if a.item_id in lookup else str(a.item_id)
             for k in ("confidence", "reliability", "profitability_score",
@@ -946,6 +1005,7 @@ def margin_check(args: argparse.Namespace) -> None:
                 "rank": i,
                 "name": item.name if item else str(a.item_id),
                 "item_id": a.item_id,
+                "market_data": a.market_data,
                 "current_profit": a.current_profit,
                 "expected_gp_per_hour": a.expected_gp_per_hour,
                 "confidence": round(a.confidence, 3),
@@ -989,6 +1049,9 @@ def margin_check(args: argparse.Namespace) -> None:
         print(_format_margin_table(results, args.top, lookup,
                                    getattr(args, 'capital', 0),
                                    risk if risk else None))
+        print(_market_description(mapping, latest, volume_5m))
+        histories = sorted({_quote_description(a.market_data.get("history", {})) for a in results[:args.top]})
+        print("History: " + "; ".join(histories))
 
     if getattr(args, 'save_snapshot', False):
         _save_margin_snapshot(results[:args.top], lookup, args.profile)
@@ -1004,11 +1067,11 @@ def item_info(args: argparse.Namespace) -> None:
         print("Fetching data...", file=sys.stderr)
     else:
         print("Fetching data...", file=sys.stderr)
-    mapping = fetch_mapping(args.profile if hasattr(args, "profile") else None)
+    mapping = market_payload(fetch_mapping_result(args.profile if hasattr(args, "profile") else None), sequence=True)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
-    latest = fetch_latest(args.profile if hasattr(args, "profile") else None)
+    latest = market_payload(fetch_latest_result(args.profile if hasattr(args, "profile") else None))
     if not latest:
         print("Error: could not fetch latest prices.", file=sys.stderr)
         sys.exit(1)
@@ -1060,6 +1123,7 @@ def item_info(args: argparse.Namespace) -> None:
             "buy_limit": buy_limit, "alch_value": alch_value,
             "buy_price": buy_price, "sell_price": sell_price,
             "price_warning": issue if issue else None,
+            "market_data": {"mapping":provenance(mapping), "latest":provenance(latest)},
         }
         # Alch
         nature_cost = _fetch_nature_rune_cost(mapping, latest)
@@ -1085,7 +1149,9 @@ def item_info(args: argparse.Namespace) -> None:
                                  - ge_tax(int(buy_price * m))}
                                 for m in steps]
         if (args.timeseries or getattr(args, "predict", False)) and buy_price > 0:
-            ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
+            ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
+            out["historical"] = {"market_data":provenance(ts),"available":bool(ts),
+                                 "reason":None if ts else "Wiki-only historical data unavailable; Tracker has no candle history"}
             if ts:
                 from rshelper.analysis import analyze_timeseries
                 analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
@@ -1176,7 +1242,7 @@ def item_info(args: argparse.Namespace) -> None:
                 print(f"  {sp:>12,}  {tax:>10,}  {profit:>+10,}  {roi:>5.1f}%{cap_mark}")
     # Timeseries if requested
     if not args.json and (args.timeseries or getattr(args, "predict", False)):
-        ts = fetch_timeseries(item_id, "5m", args.profile if hasattr(args, "profile") else None)
+        ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
         if ts:
             from rshelper.analysis import analyze_timeseries
             analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
@@ -1219,9 +1285,9 @@ def item_info(args: argparse.Namespace) -> None:
 
 def watch_add(args: argparse.Namespace) -> None:
     """Add an item to the watchlist by name or ID."""
-    from rshelper.api import fetch_mapping
+    from rshelper.api import fetch_mapping_result
     print("Looking up item...", file=sys.stderr)
-    mapping = fetch_mapping(args.profile if hasattr(args, "profile") else None)
+    mapping = market_payload(fetch_mapping_result(args.profile if hasattr(args, "profile") else None), sequence=True)
     if not mapping:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
@@ -1282,7 +1348,7 @@ def watch_list(args: argparse.Namespace) -> None:
 
 def watch_check(args: argparse.Namespace) -> None:
     """Check all watched items against current prices."""
-    from rshelper.api import fetch_latest
+    from rshelper.api import fetch_latest_result
     import json as _json
 
     json_mode = getattr(args, "json", False)
@@ -1295,7 +1361,7 @@ def watch_check(args: argparse.Namespace) -> None:
         return
 
     print("Fetching latest prices...", file=sys.stderr)
-    latest = fetch_latest(args.profile if hasattr(args, "profile") else None)
+    latest = market_payload(fetch_latest_result(args.profile if hasattr(args, "profile") else None))
     if not latest:
         print("Error: could not fetch prices.", file=sys.stderr)
         sys.exit(1)
@@ -2042,9 +2108,9 @@ def _main() -> None:
     elif args.command == "trade":
         if args.trade_action == "log":
             from rshelper.journal import log_trade
-            from rshelper.api import fetch_mapping
+            from rshelper.api import fetch_mapping_result
             profile = args.profile if hasattr(args, "profile") else None
-            mapping = fetch_mapping(profile)
+            mapping = market_payload(fetch_mapping_result(profile), sequence=True)
             item_id = 0
             if mapping:
                 q = args.item.lower()

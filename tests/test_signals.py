@@ -20,6 +20,13 @@ _s._save_baselines = lambda data, profile=None: _baseline_state.update(data)
 
 
 
+from rshelper.market_data import MarketDataResult, market_payload
+
+def _fixture_signals(items, volume, *args, **kwargs):
+    evidence=MarketDataResult(volume,'wiki','network',100,100,100,False,
+                              'executed-trades',{'wiki':len(volume)})
+    return detect_signals(items,market_payload(evidence),*args,**kwargs)
+
 # --- RS Score tests ---
 
 def test_rs_score_flip_basic():
@@ -134,7 +141,7 @@ def test_dump_detection():
     """Sell price >10% below 5m avg -> DUMP signal."""
     items = [_make_item(sell=80)]
     vol_5m = {"1": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0)
+    signals = _fixture_signals(items, vol_5m, cooldown_sec=0)
     dump_signals = [s for s in signals if s.type == "DUMP"]
     assert len(dump_signals) == 1
     print("  PASSED test_dump_detection")
@@ -144,7 +151,7 @@ def test_crash_detection():
     """Sell price >20% below 5m avg -> CRASH signal."""
     items = [_make_item(sell=70)]
     vol_5m = {"1": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0)
+    signals = _fixture_signals(items, vol_5m, cooldown_sec=0)
     crash_signals = [s for s in signals if s.type == "CRASH"]
     assert len(crash_signals) == 1
     print("  PASSED test_crash_detection")
@@ -155,11 +162,11 @@ def test_surge_detection():
     _baseline_state.clear()
     item = _make_item(item_id=777, volume=100)
     items = [item]
-    first = detect_signals(items, {"777": _make_vol(high_vol=50, low_vol=50)},
+    first = _fixture_signals(items, {"777": _make_vol(high_vol=50, low_vol=50)},
                            cooldown_sec=0)  # seeds baseline 100
     assert not [s for s in first if s.type == "SURGE"], \
         "First scan has no baseline, so no SURGE yet"
-    signals = detect_signals(items, {"777": _make_vol(high_vol=200, low_vol=200)},
+    signals = _fixture_signals(items, {"777": _make_vol(high_vol=200, low_vol=200)},
                              cooldown_sec=0)  # 400 > 3x100
     surge_signals = [s for s in signals if s.type == "SURGE"]
     assert len(surge_signals) == 1
@@ -176,7 +183,7 @@ def test_flip_detection():
     item.rs_score = 50
     items = [item]
     vol_5m = {"60": _make_vol(high_vol=300, low_vol=300)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0)
+    signals = _fixture_signals(items, vol_5m, cooldown_sec=0)
     flip_signals = [s for s in signals if s.type == "FLIP"]
     assert len(flip_signals) == 1
     assert flip_signals[0].severity == "MEDIUM"
@@ -193,7 +200,7 @@ def test_flip_ids_restrict_flip_detection():
     items[1].rs_score = 80
     vol_5m = {"1": _make_vol(avg_low=95, high_vol=300, low_vol=300),
               "2": _make_vol(avg_low=95, high_vol=300, low_vol=300)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0, flip_ids={2})
+    signals = _fixture_signals(items, vol_5m, cooldown_sec=0, flip_ids={2})
     flips = [s for s in signals if s.type == "FLIP"]
     assert [s.item_id for s in flips] == [2], \
         f"FLIP must be restricted to flip_ids, got {[s.item_id for s in flips]}"
@@ -218,7 +225,7 @@ def test_cooldown_save_failure_does_not_kill_scan():
     try:
         items = [_make_item(item_id=77, sell=70)]
         vol_5m = {"77": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
-        signals = detect_signals(items, vol_5m, cooldown_sec=0)
+        signals = _fixture_signals(items, vol_5m, cooldown_sec=0)
         assert len(signals) == 1, "signal must survive a cooldown save failure"
     finally:
         _s._save_cooldowns = orig_save
@@ -231,7 +238,7 @@ def test_no_signals_without_real_5m_data():
     item = _make_item(item_id=99, buy=100, sell=90, volume=600)
     item.rs_score = 50
     vol_5m = {"99": {"highPriceVolume": 300, "lowPriceVolume": 300}}
-    signals = detect_signals([item], vol_5m, cooldown_sec=0)
+    signals = _fixture_signals([item], vol_5m, cooldown_sec=0)
     assert signals == []
     print("  PASSED test_no_signals_without_real_5m_data")
 
@@ -274,11 +281,11 @@ def test_cooldown_suppression():
         items = [_make_item(item_id=99, sell=70)]
         vol_5m = {"99": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
 
-        s1 = detect_signals(items, vol_5m, cooldown_sec=999)  # long cooldown
+        s1 = _fixture_signals(items, vol_5m, cooldown_sec=999)  # long cooldown
         crash1 = [s for s in s1 if s.type == "CRASH"]
         assert len(crash1) == 1, f"Expected 1 CRASH, got {len(crash1)}: {[s.type for s in s1]}"
 
-        s2 = detect_signals(items, vol_5m, cooldown_sec=999)
+        s2 = _fixture_signals(items, vol_5m, cooldown_sec=999)
         crash2 = [s for s in s2 if s.type == "CRASH"]
         assert len(crash2) == 0, "Signal should be suppressed by cooldown"
     finally:
@@ -292,11 +299,11 @@ def test_cooldown_expiry():
         items = [_make_item(item_id=98, sell=70)]
         vol_5m = {"98": _make_vol(avg_low=90, high_vol=60, low_vol=60)}
 
-        s1 = detect_signals(items, vol_5m, cooldown_sec=0)
+        s1 = _fixture_signals(items, vol_5m, cooldown_sec=0)
         crash1 = [s for s in s1 if s.type == "CRASH"]
         assert len(crash1) == 1
 
-        s2 = detect_signals(items, vol_5m, cooldown_sec=0)
+        s2 = _fixture_signals(items, vol_5m, cooldown_sec=0)
         crash2 = [s for s in s2 if s.type == "CRASH"]
         assert len(crash2) == 1, "Signal should fire again after 0 cooldown"
     finally:
@@ -323,14 +330,14 @@ def test_no_false_positives():
     """Normal prices produce no signals."""
     items = [_make_item(item_id=70, buy=100, sell=99, volume=50)]
     vol_5m = {"70": _make_vol(avg_high=100, avg_low=99, high_vol=25, low_vol=25)}
-    signals = detect_signals(items, vol_5m, cooldown_sec=0)
+    signals = _fixture_signals(items, vol_5m, cooldown_sec=0)
     assert len(signals) == 0, f"Expected 0 signals, got {len(signals)}"
     print("  PASSED test_no_false_positives")
 
 
 def test_empty_input():
     """Empty items list produces empty signals."""
-    signals = detect_signals([], {}, cooldown_sec=0)
+    signals = _fixture_signals([], {}, cooldown_sec=0)
     assert len(signals) == 0
     print("  PASSED test_empty_input")
 

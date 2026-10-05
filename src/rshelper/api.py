@@ -887,3 +887,22 @@ def fetch_timeseries_batch(
                 if on_progress:
                     on_progress(completed, total)
     return results
+
+
+def fetch_timeseries_batch_results(item_ids, timestep='5m', on_progress=None,
+                                  workers=4, profile=None):
+    """Internal historical acquisition retaining evidence for each item."""
+    from rshelper.market_data import market_payload
+    results = {}
+    completed = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(fetch_timeseries_result, iid, timestep, profile):iid
+                   for iid in item_ids}
+        for future in concurrent.futures.as_completed(futures):
+            value = market_payload(future.result(), sequence=True)
+            if value:
+                results[futures[future]] = value
+            completed += 1
+            if on_progress:
+                on_progress(completed,len(item_ids))
+    return results

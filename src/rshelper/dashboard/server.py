@@ -9,6 +9,7 @@ import time
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
+from rshelper.market_data import market_payload, provenance, market_snapshot
 from rshelper.config import load_config
 from rshelper.market import price_issue, safe_int
 from rshelper.scanner import FlipScanner
@@ -206,10 +207,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     hub = EventHub()
 
     def _source(latest: dict) -> str:
-        if not latest:
-            return "none"
-        sample = next(iter(latest.values()), {}) if latest else {}
-        return "ge_tracker" if isinstance(sample, dict) and "high_volume" in sample else "wiki"
+        return provenance(latest)['source']
 
     # ponytail: closure-based TTL cache, re-fetch every 120s.
     cache = {"mapping": _mapping, "items": items, "vol": _vol_5m, "latest": _latest,
@@ -338,7 +336,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 # Snapshot items+vol together so a refresh mid-scan can't mix
                 # old flips with new volume (spurious/missed signals).
                 items_snap = list(cache["items"])
-                vol_snap = dict(cache["vol"])
+                vol_snap = market_payload(cache["vol"]).copy()
                 flips = scanner.scan(items_snap, **scan_kwargs)
                 # DUMP/CRASH/SURGE must see the full priced universe (mirror
                 # the monitor); FLIP stays restricted to scan candidates.
@@ -382,6 +380,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         watched = watchlist.get_watched_ids(profile)  # single disk read
         return {
             "source": cache["source"],
+            "market_data": market_snapshot(cache["mapping"],cache["latest"],cache["vol"]),
             "items": len(cache["items"]),
             "flips": sig_cache["flips"],
             "signals": len(signals),
@@ -405,7 +404,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "added": entry.get("added", ""),
                    "alert_above": entry.get("alert_margin_above"),
                    "alert_below": entry.get("alert_margin_below"),
-                   "usable": issue is None}
+                   "usable": issue is None, "market_data":{"latest":provenance(latest)}}
             if issue is None:
                 row["buy"] = safe_int(price.get("high", 0))
                 row["sell"] = safe_int(price.get("low", 0))
@@ -444,9 +443,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_timeseries(item_id: int, step: str = "5m",
                        points: int = 96) -> dict:
-        from rshelper.api import fetch_timeseries
+        from rshelper.api import fetch_timeseries_result
         from rshelper.market import safe_int
-        ts = fetch_timeseries(item_id, step, profile)
+        ts = market_payload(fetch_timeseries_result(item_id, step, profile), sequence=True)
         points_out = []
         for dp in (ts or [])[-points:]:
             high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
@@ -456,7 +455,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             if h <= 0 or l <= 0:
                 continue
             points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
-        return {"points": points_out}
+        return {"points": points_out, "market_data":provenance(ts),
+                "capability": {"available":bool(ts), "reason":None if ts else
+                               "Wiki-only historical data unavailable; Tracker has no candle history"}}
 
     def get_positions() -> dict:
         refresh()
@@ -471,7 +472,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "qty": p.qty, "buy_price": p.buy_price,
                    "direction": p.direction, "opened_at": p.opened_at,
                    "note": p.note, "auto": p.note == "auto",
-                   "usable": issue is None}
+                   "usable": issue is None, "market_data":{"latest":provenance(latest)}}
             if issue is None:
                 sell = safe_int(price.get("low", 0)) if p.direction == "arbitrage" \
                     else safe_int(price.get("high", 0))
@@ -513,9 +514,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         # otherwise fall back to the entry buy_price (like collect_offer) so a
         # stale-data position is never stranded forever. The response flags
         # the fallback so the UI can surface the warning.
-        price = (cache["latest"] or {}).get(str(position.item_id))
+        latest = cache["latest"]
+        price = latest.get(str(position.item_id))
         usable = isinstance(price, dict) and price_issue(price) is None
-        sell_price = close_market_price(position, cache["latest"])
+        sell_price = close_market_price(position, latest)
         at_entry = not usable
         lots = close_positions(position.item_id, close_qty, sell_price,
                                profile, position_id=position.id)
@@ -531,6 +533,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             "sell_price": sell_price,
             "profit": sum(lot["profit"] for lot in lots),
             "closed_at_entry": at_entry,
+            "market_data": {"latest": provenance(latest)},
         }
 
     def paper_trade(action: str, query: str, qty: int) -> dict:
@@ -553,7 +556,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 raise ValueError(f"multiple items match '{query}': {names}")
             else:
                 raise ValueError(f"no item found matching '{query}'")
-        price = (cache["latest"] or {}).get(str(entry["id"]))
+        latest = cache["latest"]
+        price = latest.get(str(entry["id"]))
         issue = price_issue(price) if isinstance(price, dict) else "no data"
         if issue:
             raise ValueError(f"no reliable live price for {entry.get('name')} ({issue})")
@@ -583,7 +587,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 pos = open_position(entry["id"], entry["name"], qty, high,
                                     direction="arbitrage", note="paper",
                                     entry_sell=low, profile=profile)
-            return {"ok": True, "position": asdict(pos)}
+            return {"ok": True, "position": asdict(pos),
+                    "market_data": {"latest": provenance(latest)}}
         if action == "instant":
             if qty <= 0:
                 raise ValueError("qty must be positive")
@@ -595,7 +600,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 trade = log_trade(entry["id"], entry["name"], qty, high, low,
                                   note="paper", strategy="manual",
                                   profile=profile)
-            return {"ok": True, "trade": asdict(trade)}
+            return {"ok": True, "trade": asdict(trade),
+                    "market_data": {"latest": provenance(latest)}}
         raise ValueError(f"unknown action '{action}'")
 
     def get_trader_status() -> dict:
@@ -678,7 +684,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "buy_price": it.buy_price if it else 0,
                     })
             out.append({
-                "name": r.name, "item_id": r.id,
+                "name": r.name, "item_id": r.id, "market_data":r.market_data,
                 "skill": recipe.skill if recipe else "",
                 "input_cost": r.input_cost, "sell_price": r.sell_price,
                 "profit": r.profit,
@@ -724,10 +730,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         if want:
             # Fetch OUTSIDE the lock — a throttled batch can take ~30s and
             # must not block other /api/confidence requests.
-            from rshelper.api import fetch_timeseries_batch
+            from rshelper.api import fetch_timeseries_batch_results
             from rshelper.scanner import MarginScanner
             lookup = {i.id: i for i in cache["items"]}
-            ts_data = fetch_timeseries_batch(
+            ts_data = fetch_timeseries_batch_results(
                 want, timestep="5m", workers=2, profile=profile)
             results = MarginScanner().scan(
                 lookup, ts_data, direction=cfg.flip.direction)
@@ -735,6 +741,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             with conf_lock:
                 for a in results:
                     confidence_cache["data"][str(a.item_id)] = {
+                        "market_data": a.market_data,
                         "confidence": round(a.confidence, 4),
                         "reliability": round(a.reliability, 4),
                         "profitability_score": round(a.profitability_score, 4),

@@ -1,6 +1,6 @@
 """Item data model."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -18,3 +18,4 @@ class Item:
     rs_score: float = 0.0  # 0-100 composite flip quality score
     input_cost: int = 0  # total input cost per output unit (process scan)
     output_id: int = 0  # output item id (process scan result; == id)
+    market_data: dict = field(default_factory=dict)  # explicit acquisition evidence

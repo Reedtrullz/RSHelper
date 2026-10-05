@@ -153,9 +153,9 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             jmod.TRADES_PATH = Path(tmp) / "trades.json"
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "1": {"high": 150, "low": 140,
                                   "highTime": int(time.time()) - 60,
                                   "lowTime": int(time.time()) - 60}}):
@@ -186,9 +186,9 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             jmod.TRADES_PATH = Path(tmp) / "trades.json"
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "1": {"high": 150, "low": 140,
                                   "highTime": int(time.time()) - 60,
                                   "lowTime": int(time.time()) - 60}}):
@@ -214,9 +214,9 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             jmod.TRADES_PATH = Path(tmp) / "trades.json"
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "1": {"high": 150, "low": 140,
                                   "highTime": int(time.time()) - 60,
                                   "lowTime": int(time.time()) - 60}}):
@@ -242,9 +242,9 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             jmod.TRADES_PATH = Path(tmp) / "trades.json"
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "1": {"high": 150, "low": 140,
                                   "highTime": int(time.time()) - 60,
                                   "lowTime": int(time.time()) - 60}}):
@@ -273,9 +273,9 @@ class TestCLI(unittest.TestCase):
             jmod.TRADES_PATH = Path(tmp) / "trades.json"
             pmod.POSITIONS_PATH = Path(tmp) / "positions.json"
             try:
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 561, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "561": {"high": 150, "low": 140,
                                     "highTime": int(time.time()) - 60,
                                     "lowTime": int(time.time()) - 60}}):
@@ -312,7 +312,7 @@ class TestCLI(unittest.TestCase):
             try:
                 pmod.open_position(561, "Nature rune", 5, 100,
                                    direction="arbitrage")
-                with mock.patch.object(amod, "fetch_latest", return_value={
+                with mock.patch.object(amod, "fetch_latest_result", return_value={
                         "561": {"high": 150, "low": 140,
                                 "highTime": int(time.time()) - 60,
                                 "lowTime": int(time.time()) - 60}}):
@@ -379,9 +379,9 @@ class TestCLI(unittest.TestCase):
                     "453": {"avgHighPrice": 130, "avgLowPrice": 120,
                             "highPriceVolume": 5000, "lowPriceVolume": 5000},
                 }
-                with mock.patch.object(cmod, "fetch_mapping", return_value=mapping), \
-                     mock.patch.object(cmod, "fetch_latest", return_value=latest), \
-                     mock.patch.object(cmod, "fetch_5m", return_value=vol), \
+                with mock.patch.object(cmod, "fetch_mapping_result", return_value=mapping), \
+                     mock.patch.object(cmod, "fetch_latest_result", return_value=latest), \
+                     mock.patch.object(cmod, "fetch_5m_result", return_value=vol), \
                      contextlib.redirect_stdout(io.StringIO()) as out:
                     cmod.process_scan(Namespace(profile=None, members_only=False,
                                                 min_volume=0, min_profit=0,
@@ -425,7 +425,7 @@ class TestCLI(unittest.TestCase):
             try:
                 wl.add(561, "Nature rune", alert_margin_above=50)
                 now = int(time.time())
-                with mock.patch.object(amod, "fetch_latest", return_value={
+                with mock.patch.object(amod, "fetch_latest_result", return_value={
                         "561": {"high": 100, "low": 200,
                                 "highTime": now - 60, "lowTime": now - 60}}), \
                      contextlib.redirect_stdout(io.StringIO()) as out, \
@@ -570,9 +570,9 @@ class TestCLI(unittest.TestCase):
             try:
                 pmod.open_position(561, "Nature rune", 5, 100,
                                    direction="arbitrage", note="auto")
-                with mock.patch.object(amod, "fetch_mapping", return_value=[
+                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
                         {"id": 561, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest", return_value={
+                    with mock.patch.object(amod, "fetch_latest_result", return_value={
                             "561": {"high": 150, "low": 140,
                                     "highTime": int(time.time()) - 60,
                                     "lowTime": int(time.time()) - 60}}):
@@ -600,13 +600,13 @@ class TestCLI(unittest.TestCase):
             orig_cache = amod._cache_path
             amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
             try:
-                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping_result", return_value=[
                         {"id": 1397, "name": "Air battlestaff", "members": True,
                          "limit": 18000, "highalch": 9300}]):
-                    with mock.patch.object(cmod, "fetch_latest", return_value={
+                    with mock.patch.object(cmod, "fetch_latest_result", return_value={
                             "1397": {"high": 8780, "low": 8750,
                                      "highTime": now - 60, "lowTime": now - 60}}):
-                        with mock.patch.object(cmod, "fetch_timeseries",
+                        with mock.patch.object(cmod, "fetch_timeseries_result",
                                                return_value=ts_data):
                             import contextlib, io
                             with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -634,10 +634,10 @@ class TestCLI(unittest.TestCase):
             try:
                 # Patch the cli-module bindings — item_info calls the
                 # module-global fetch_mapping/fetch_latest, not api's.
-                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping_result", return_value=[
                         {"id": 555555, "name": "Zzz unique flip tax", "members": False,
                          "limit": 100, "highalch": 0}]), \
-                     mock.patch.object(cmod, "fetch_latest", return_value={
+                     mock.patch.object(cmod, "fetch_latest_result", return_value={
                             "555555": {"high": 1000, "low": 900,
                                        "highTime": now - 60, "lowTime": now - 60}}):
                     import contextlib, io
@@ -673,13 +673,13 @@ class TestCLI(unittest.TestCase):
             orig_cache = amod._cache_path
             amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
             try:
-                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping_result", return_value=[
                         {"id": 1397, "name": "Air battlestaff", "members": True,
                          "limit": 18000, "highalch": 9300}]):
-                    with mock.patch.object(cmod, "fetch_latest", return_value={
+                    with mock.patch.object(cmod, "fetch_latest_result", return_value={
                             "1397": {"high": 8780, "low": 8750,
                                      "highTime": now - 60, "lowTime": now - 60}}):
-                        with mock.patch.object(cmod, "fetch_timeseries",
+                        with mock.patch.object(cmod, "fetch_timeseries_result",
                                                return_value=ts_data):
                             import contextlib, io
                             with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -706,10 +706,10 @@ class TestCLI(unittest.TestCase):
             orig_cache = amod._cache_path
             amod._cache_path = lambda name, profile=None: Path(tmp) / (name + ".json")
             try:
-                with mock.patch.object(cmod, "fetch_mapping", return_value=[
+                with mock.patch.object(cmod, "fetch_mapping_result", return_value=[
                         {"id": 555556, "name": "Zzz unique prose leak", "members": False,
                          "limit": 100, "highalch": 0}]), \
-                     mock.patch.object(cmod, "fetch_latest", return_value={
+                     mock.patch.object(cmod, "fetch_latest_result", return_value={
                             "555556": {"high": 100, "low": 90,
                                        "highTime": now - 60, "lowTime": now - 60}}):
                     import contextlib, io

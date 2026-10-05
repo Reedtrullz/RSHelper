@@ -240,7 +240,9 @@ def test_collect_closes_and_logs():
     _clean()
     p = open_position(561, "Nature rune", 10, 100, direction="traditional")
     r = collect_offer(p.id, latest={"561": _fresh_price(120, 110, time.time())})
-    assert r == {"ok": True, "name": "Nature rune", "qty": 10,
+    assert r["market_data"]["latest"]["source"] == "unknown"
+    assert r["market_data"]["latest"]["last_success_at"] is None
+    assert {key: value for key, value in r.items() if key != "market_data"} == {"ok": True, "name": "Nature rune", "qty": 10,
                  "sell_price": 120, "profit": 180}  # (120-100)*10 - 2*10
     assert list_positions() == []
     trades = list_trades()
