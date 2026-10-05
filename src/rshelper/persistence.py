@@ -76,7 +76,7 @@ def canonical_uuid(value):
 
 def validate_record_identity(row, kind):
     """Return known identity, or None for an entirely legacy row."""
-    if kind not in ('positions', 'trades', 'alerts') or not isinstance(row, dict):
+    if kind not in ('positions', 'trades', 'alerts', 'watchlist') or not isinstance(row, dict):
         raise ValueError('unsupported identity row kind')
     present = IDENTITY_FIELDS.intersection(row)
     if not present:
@@ -101,6 +101,53 @@ def validate_record_identity(row, kind):
     return record
 
 
+def _watch_row(row, path):
+    if not isinstance(row, dict):
+        _fail(path, 'state row must be an object')
+    try:
+        identity = validate_record_identity(row, 'watchlist')
+    except ValueError as exc:
+        _fail(path, str(exc))
+    if not isinstance(row.get('name'), str) or not isinstance(row.get('added'), str):
+        _fail(path, 'invalid watched item name/time')
+    for field in ('alert_margin_above', 'alert_margin_below'):
+        if row.get(field) is not None and not _integer(row[field]):
+            _fail(path, f'invalid {field}')
+    if identity is not None:
+        if not _integer(row.get('item_id'), 1):
+            _fail(path, 'invalid watched item id')
+        try:
+            datetime.fromisoformat(row['added'].replace('Z', '+00:00'))
+        except ValueError:
+            _fail(path, 'invalid watched item creation time')
+    return identity
+
+
+def _validate_watchlist(data, path):
+    deleted = data.get('tombstones', {})
+    if not isinstance(deleted, dict):
+        _fail(path, 'watch tombstones must be an object')
+    seen = set()
+    for item_id, row in data['items'].items():
+        if (type(item_id) is not str or not item_id.isascii() or not item_id.isdigit()
+                or len(item_id) > 19 or int(item_id) <= 0):
+            _fail(path, 'invalid watched item id')
+        identity = _watch_row(row, path)
+        if identity is not None:
+            if row['item_id'] != int(item_id) or row['tombstone']:
+                _fail(path, 'active watch identity must match item and be live')
+            if identity in seen:
+                _fail(path, 'duplicate watch identity')
+            seen.add(identity)
+    for identity, row in deleted.items():
+        record = _watch_row(row, path)
+        if record is None or record != identity or not row['tombstone']:
+            _fail(path, 'watch tombstone must match its deleted identity')
+        if record in seen:
+            _fail(path, 'duplicate watch identity')
+        seen.add(record)
+
+
 def validate_state(data, kind, path):
     if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic'):
         _fail(path, 'unknown state kind')
@@ -116,6 +163,9 @@ def validate_state(data, kind, path):
     expected = dict if kind == 'watchlist' else list
     if key not in data or not isinstance(data[key], expected):
         _fail(path, f'{key} must be a {expected.__name__}')
+    if kind == 'watchlist':
+        _validate_watchlist(data, path)
+        return data
     rows = data[key].values() if kind == 'watchlist' else data[key]
     for row in rows:
         if not isinstance(row, dict):
@@ -167,18 +217,8 @@ def validate_state(data, kind, path):
                 _fail(path, 'invalid alert read flag')
             if row.get('data') is not None and not isinstance(row['data'], dict):
                 _fail(path, 'invalid alert data')
-        elif kind == 'watchlist':
-            if not isinstance(row.get('name'), str) or not isinstance(row.get('added'), str):
-                _fail(path, 'invalid watched item name/time')
-            for field in ('alert_margin_above', 'alert_margin_below'):
-                if row.get(field) is not None and not _integer(row[field]):
-                    _fail(path, f'invalid {field}')
         else:
             _fail(path, 'unknown state kind')
-    if kind == 'watchlist':
-        for item_id in data[key]:
-            if not isinstance(item_id, str) or not item_id.isdigit() or len(item_id) > 19 or int(item_id) <= 0:
-                _fail(path, 'invalid watched item id')
     if kind == 'alerts':
         triggered = data.get('watch_triggered', {})
         if not isinstance(triggered, dict) or any(not _finite(value) or value < 0 for value in triggered.values()):
@@ -268,6 +308,9 @@ def validate_writable_state(store: dict, kind: str, path: Path):
     validate_state(store, kind, path)
     if kind in ('positions', 'trades', 'alerts'):
         if any(IDENTITY_FIELDS.intersection(row) or 'lot_uid' in row for row in store[kind]):
+            _fail(path, 'identified state requires an identity-aware writer; migration not activated')
+    if kind == 'watchlist':
+        if store.get('tombstones') or any(IDENTITY_FIELDS.intersection(row) for row in store['items'].values()):
             _fail(path, 'identified state requires an identity-aware writer; migration not activated')
     return store
 

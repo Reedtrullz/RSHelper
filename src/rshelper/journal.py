@@ -141,7 +141,7 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
     """
     with _TRADE_LOCK:
         trades = _load(profile)
-    result = [Trade(**filter_fields(Trade, t)) for t in trades]
+    result = [Trade(**filter_fields(Trade, t)) for t in trades if not t.get('tombstone', False)]
     if item_name:
         q = item_name.lower()
         result = [t for t in result if q in t.name.lower()]

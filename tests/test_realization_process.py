@@ -70,8 +70,11 @@ class RealizationProcessTest(unittest.TestCase):
         self.assertEqual(len(trades), 1)
         self.assertEqual((trades[0]['qty'], trades[0]['buy_price'], trades[0]['profit']), (10,100,180))
         self.assertEqual(trades[0]['closed_lot_uid'], rows[0]['lot_uid'])
-        self.assertEqual([(lot['lot_uid'],lot['qty']) for lot in lots], [(rows[1]['lot_uid'],7)])
-        self.assertEqual(sum(lot['qty'] for lot in lots)+sum(trade['qty'] for trade in trades),17)
+        closed=[lot for lot in lots if lot['tombstone']]
+        self.assertEqual([(lot['lot_uid'],lot['revision']) for lot in closed],[(rows[0]['lot_uid'],1)])
+        active=[lot for lot in lots if not lot['tombstone']]
+        self.assertEqual([(lot['lot_uid'],lot['qty']) for lot in active], [(rows[1]['lot_uid'],7)])
+        self.assertEqual(sum(lot['qty'] for lot in active)+sum(trade['qty'] for trade in trades),17)
 
     def test_killed_process_before_and_after_every_durable_step(self):
         fixture = helpers.RealizationTest()
@@ -102,6 +105,33 @@ class RealizationProcessTest(unittest.TestCase):
 
     def test_two_processes_competing_operations_cannot_consume_same_units(self):
         self.race(same_operation=False)
+
+    def test_killed_writer_recovers_after_peer_alias_merge_and_journal_deletion(self):
+        from rshelper import identity_merge
+        fixture=helpers.RealizationTest();api=fixture.api()
+        with fixture.fixture(api) as (root,rows):
+            child=self.start(root,rows[0]['lot_uid'],OP,'kill:positions')
+            self.assertEqual(self.line(child),'checkpoint:positions')
+            child.kill();child.communicate(timeout=5)
+            self.assertLess(child.returncode,0)
+            for filename,kind in (('positions.json','positions'),('trades.json','trades')):
+                path=root/filename;store=json.loads(path.read_text())
+                store[kind]=identity_merge.merge_rows(store[kind],[],kind)
+                for row in store[kind]:row['id']+=20
+                if kind=='trades':store[kind][0].update(tombstone=True,revision=1)
+                path.write_text(json.dumps(store))
+            recovery=WORKER.split("lot,operation,mode=sys.argv[2:5]")[0]+"print(json.dumps(api.recover_pending('default')),flush=True)"
+            environment={**os.environ,'HOME':str(root)}
+            environment['PYTHONPATH']=os.pathsep.join(filter(None,(
+                environment.get('PYTHONPATH'),str(Path(__file__).resolve().parents[1]/'src'))))
+            recovered=subprocess.run([sys.executable,'-c',recovery,str(root)],env=environment,
+                                     capture_output=True,text=True,timeout=10)
+            self.assertEqual(recovered.returncode,0,recovered.stderr)
+            receipt=json.loads(recovered.stdout)[0]
+            self.assertTrue(receipt['replayed']);self.assertEqual(receipt['trade_ids'],[21])
+            self.assertEqual(receipt['trade_uuids'],['61396d92-7faa-5629-b99c-b073e1e76122'])
+            self.assert_reconciled(root,rows)
+            self.assertFalse(list(root.glob('.realization-*')))
 
     def race(self,same_operation):
         fixture=helpers.RealizationTest();api=fixture.api()

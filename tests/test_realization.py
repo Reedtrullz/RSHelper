@@ -298,4 +298,90 @@ class RealizationTest(unittest.TestCase):
             with self.assertRaises(ValueError):api.close_and_realize('default',rows[0]['lot_uid'],4,120,OP,'manual',metadata={'market_data':{'volume':1}})
             self.assertEqual(before,path.read_bytes())
 
+    def test_full_close_retains_mergeable_tombstone_without_counting_open_units(self):
+        from rshelper import identity_merge
+        api=self.api()
+        with self.fixture(api) as (root,rows):
+            receipt=api.close_and_realize('default',rows[0]['lot_uid'],10,120,OP,'manual')
+            state=json.loads((root/'positions.json').read_text())['positions']
+            closed=[row for row in state if row['lot_uid']==rows[0]['lot_uid']]
+            self.assertEqual(len(closed),1,'full close lost deletion evidence')
+            self.assertTrue(closed[0]['tombstone']);self.assertEqual(closed[0]['revision'],1)
+            self.assertEqual(positions.open_qty(2),7);self.assertEqual(len(positions.list_positions()),1)
+            merged=identity_merge.merge_rows(rows,state,'positions')
+            self.assertTrue(next(row for row in merged if row['lot_uid']==rows[0]['lot_uid'])['tombstone'])
+            self.assertEqual(receipt['remaining_qty'],0)
+
+    def test_recovery_accepts_merge_aliases_canonical_times_and_retained_journal_delete(self):
+        from rshelper import identity_merge
+        api=self.api()
+        with self.fixture(api) as (root,rows):
+            args=('default',rows[0]['lot_uid'],4,120,OP,'manual')
+            first=api.close_and_realize(*args)
+            position_path=root/'positions.json';store=json.loads(position_path.read_text())
+            store['positions']=identity_merge.merge_rows(store['positions'],[],'positions')
+            for row in store['positions']:row['id']+=20
+            position_path.write_text(json.dumps(store))
+            trade_path=root/'trades.json';store=json.loads(trade_path.read_text())
+            store['trades']=identity_merge.merge_rows(store['trades'],[],'trades')
+            store['trades'][0].update(id=71,revision=1,tombstone=True)
+            trade_uuid=store['trades'][0]['record_uuid'];trade_path.write_text(json.dumps(store))
+            before={name:(root/name).read_bytes() for name in ('positions.json','trades.json','realizations.json')}
+            api.recover_pending('default');replayed=api.close_and_realize(*args)
+            self.assertTrue(replayed['replayed']);self.assertEqual(replayed['trade_ids'],[71])
+            self.assertEqual(replayed['trade_uuids'],[trade_uuid])
+            self.assertEqual(journal.list_trades(),[])
+            self.assertEqual(before,{name:(root/name).read_bytes() for name in before})
+            api.close_and_realize('default',rows[0]['lot_uid'],6,120,'33333333-3333-4333-8333-333333333333','manual')
+            self.assertEqual(positions.open_qty(2),7)
+            self.assertEqual(api.close_and_realize(*args)['trade_uuids'],[trade_uuid])
+
+    def test_pending_close_recovers_after_safe_merge_alias_normalization(self):
+        from rshelper import identity_merge
+        api=self.api()
+        for checkpoint in ('intent','journal','positions'):
+            with self.subTest(checkpoint=checkpoint),self.fixture(api) as (root,rows):
+                with mock.patch.object(api,'_checkpoint',side_effect=self.crash_at(checkpoint)):
+                    with self.assertRaises(RuntimeError):api.close_and_realize('default',rows[0]['lot_uid'],10,120,OP,'manual')
+                for filename,kind in (('positions.json','positions'),('trades.json','trades')):
+                    path=root/filename;store=json.loads(path.read_text())
+                    store[kind]=identity_merge.merge_rows(store[kind],[],kind)
+                    for row in store[kind]:row['id']+=20
+                    path.write_text(json.dumps(store))
+                api.recover_pending('default')
+                receipt=api.close_and_realize('default',rows[0]['lot_uid'],10,120,OP,'manual')
+                self.assertTrue(receipt['replayed']);self.assertEqual(positions.open_qty(2),7)
+                self.assertEqual(sum(row.qty for row in journal.list_trades()),10)
+
+    def test_deleted_journal_still_requires_original_economics_and_lot_link(self):
+        api=self.api()
+        for field,value in (('buy_price',101),('profit',999),('closed_lot_uid',ORIGIN),
+                            ('market_data',{'volume':True})):
+            with self.subTest(field=field),self.fixture(api) as (root,rows):
+                api.close_and_realize('default',rows[0]['lot_uid'],4,120,OP,'manual',metadata={'market_data':{'volume':1}})
+                path=root/'trades.json';store=json.loads(path.read_text())
+                store['trades'][0].update({field:value,'revision':1,'tombstone':True})
+                path.write_text(json.dumps(store))
+                before={name:(root/name).read_bytes() for name in ('positions.json','trades.json','realizations.json')}
+                with self.assertRaises(ValueError):api.recover_pending('default')
+                self.assertEqual(before,{name:(root/name).read_bytes() for name in before})
+
+    def test_pending_intent_reassigns_colliding_display_alias_without_reassigning_uuid(self):
+        from rshelper import identity_merge
+        api=self.api()
+        with self.fixture(api) as (root,rows):
+            with mock.patch.object(api,'_checkpoint',side_effect=self.crash_at('intent')):
+                with self.assertRaises(RuntimeError):api.close_and_realize('default',rows[0]['lot_uid'],4,120,OP,'manual')
+            original=json.loads((root/'realizations.json').read_text())['operations'][OP]['trade']
+            unrelated={'id':1,'item_id':3,'name':'Other','qty':1,'buy_price':10,'sell_price':20,
+                       'tax_paid':0,'profit':10,'timestamp':'2026-01-01T00:00:00Z'}
+            other,_=state_identity.migrate_rows([unrelated],'trades',state_identity.new_manifest(ORIGIN))
+            (root/'trades.json').write_text(json.dumps({'trades':other}))
+            api.recover_pending('default')
+            receipt=api.close_and_realize('default',rows[0]['lot_uid'],4,120,OP,'manual')
+            self.assertEqual(receipt['trade_ids'],[2]);self.assertEqual(receipt['trade_uuids'],[original['record_uuid']])
+            trades=json.loads((root/'trades.json').read_text())['trades']
+            self.assertEqual(len(trades),2);self.assertEqual(len({trade['id'] for trade in trades}),2)
+            self.assertEqual(next(trade for trade in trades if trade['record_uuid']==original['record_uuid'])['profit'],72)
+
 if __name__=='__main__':unittest.main()

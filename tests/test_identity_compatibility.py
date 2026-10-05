@@ -94,4 +94,43 @@ class CompatibilityTest(unittest.TestCase):
                 self.assertIn('identity-aware writer',warning.getvalue())
                 self.assertEqual(before,path.read_bytes())
 
+    def test_position_readers_exclude_retained_closed_lots(self):
+        from unittest import mock
+        from rshelper import positions
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'positions.json'
+            path.write_text(json.dumps({'positions':[{**self.row(),'tombstone':True,'revision':1}]}))
+            before=path.read_bytes()
+            with mock.patch.object(positions,'POSITIONS_PATH',path):
+                self.assertEqual(positions.list_positions(),[])
+                self.assertEqual(positions.open_qty(2),0)
+            self.assertEqual(path.read_bytes(),before)
+
+    def test_journal_readers_exclude_deleted_financial_evidence(self):
+        from unittest import mock
+        from rshelper import journal
+        trade={'id':1,'item_id':2,'name':'Fixture','qty':1,'buy_price':100,'sell_price':120,
+               'tax_paid':2,'profit':18,'timestamp':'2026-01-01T00:00:00Z'}
+        rows,_=state_identity.migrate_rows([trade],'trades',state_identity.new_manifest(ORIGIN))
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'trades.json';rows[0].update(tombstone=True,revision=1)
+            path.write_text(json.dumps({'trades':rows}));before=path.read_bytes()
+            with mock.patch.object(journal,'TRADES_PATH',path):
+                self.assertEqual(journal.list_trades(),[])
+                pnl=journal.compute_pnl();self.assertEqual(pnl.trade_count,0);self.assertEqual(pnl.total_profit,0)
+            self.assertEqual(path.read_bytes(),before)
+
+    def test_alert_readers_exclude_deleted_unread_alerts(self):
+        from unittest import mock
+        from rshelper import alerts
+        row={'id':1,'ts':100.5,'type':'system','severity':'INFO','item_id':None,
+             'item_name':'','title':'Fixture','message':'Message','read':False}
+        rows,_=state_identity.migrate_rows([row],'alerts',state_identity.new_manifest(ORIGIN))
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'alerts.json';rows[0].update(tombstone=True,revision=1)
+            path.write_text(json.dumps({'alerts':rows,'watch_triggered':{}}));before=path.read_bytes()
+            with mock.patch.object(alerts,'_alerts_path',return_value=path):
+                self.assertEqual(alerts.list_alerts(),[]);self.assertEqual(alerts.unread_count(),0)
+            self.assertEqual(path.read_bytes(),before)
+
 if __name__=='__main__':unittest.main()
