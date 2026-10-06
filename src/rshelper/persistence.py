@@ -231,6 +231,9 @@ def read_state(path: Path, kind: str) -> dict:
                 'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}}
     if kind not in defaults:
         _fail(path, 'unknown state kind')
+    marker = path.with_name('.' + path.name + '.publishing')
+    if marker.exists():
+        _fail(path, 'publication in progress; retry after recovery')
     try:
         state_path = Path(path)
         info = state_path.lstat()
@@ -319,5 +322,13 @@ def validate_writable_state(store: dict, kind: str, path: Path):
 def locked_writable_state(path: Path, kind: str):
     """Legacy writers refuse identified state during staged reader rollout."""
     with locked_state(path):
+        activation = path.with_name('identity-activation.json')
+        try:
+            activated = bool(read_state(activation, 'generic'))
+        except StateCorruptionError:
+            activated = True
+        if activated:
+            raise StateCorruptionError(
+                f'{path.name}: identified profile is active; legacy writer refused')
         validate_writable_state(read_state(path, kind), kind, path)
         yield
