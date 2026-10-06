@@ -12,6 +12,7 @@ from rshelper.models import Item
 from rshelper.market_data import executed_volume_supported, provenance
 
 from rshelper.profile import resolve_config_path
+from rshelper import state_transaction
 COOLDOWN_DIR = resolve_config_path("")
 COOLDOWN_PATH = resolve_config_path("signal_cooldowns.json")
 BASELINE_PATH = resolve_config_path("volume_baseline.json")
@@ -67,18 +68,18 @@ def _load_cooldowns(profile: str | None = None) -> dict:
 
 def _save_cooldowns(data: dict, profile: str | None = None) -> None:
     path = _cooldown_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp, path)
-    except Exception:
+    with state_transaction._ProfileLock(path.parent):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
         try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+            with os.fdopen(fd, "w") as f:
+                json.dump(data, f)
+            os.replace(tmp, path)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def _cooldown_key(item_id: int, signal_type: str) -> str:
@@ -133,17 +134,18 @@ def _load_baselines(profile: str | None = None) -> dict[str, float]:
 
 def _save_baselines(data: dict, profile: str | None = None) -> None:
     path = _baseline_path(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp, path)
-    except Exception:
+    with state_transaction._ProfileLock(path.parent):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
         try:
-            os.unlink(tmp)
-        except OSError:
-            pass
+            with os.fdopen(fd, "w") as f:
+                json.dump(data, f)
+            os.replace(tmp, path)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
         raise
 
 

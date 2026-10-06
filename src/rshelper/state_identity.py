@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import re
+from pathlib import Path
 from uuid import UUID, uuid5
 
 from rshelper.persistence import (validate_state, canonical_uuid,
@@ -22,6 +23,59 @@ IMMUTABLE_FIELDS = {
     'watchlist': ('item_id', 'added'),
 }
 MAX_MAPPINGS = 100_000
+
+REPLICATION_OWNERSHIP = {
+    # financial: Mac authority only; replicated as owned financial data.
+    'positions.json': 'financial', 'trades.json': 'financial',
+    'alerts.json': 'financial',
+    'watchlist.json': 'financial',
+    # informational: replicated for operator visibility only.
+    'tuning_log.json': 'informational', 'trader_state.json': 'informational',
+    'monitor_state.json': 'informational',
+    # local-only: never leaves the owning host.
+    'signal_cooldowns.json': 'local-only', 'volume_baseline.json': 'local-only',
+    'active_profile': 'local-only',
+}
+
+_LOCAL_ONLY_SUFFIXES = ('.pid', '.lock', '.sock', '.socket')
+
+
+def new_record_identity(origin_uuid: str, kind: str, operation_id: str) -> dict:
+    """Deterministic identity for a natively created record (replay-safe)."""
+    canonical_uuid(origin_uuid)
+    canonical_uuid(operation_id)
+    if kind not in ('positions', 'trades', 'alerts', 'watchlist'):
+        raise ValueError('unsupported identity row kind')
+    record = str(uuid5(UUID(origin_uuid), kind + ':native:' + operation_id))
+    row = {'record_uuid': record, 'origin_uuid': origin_uuid,
+           'revision': 0, 'tombstone': False}
+    if kind == 'positions':
+        row['lot_uid'] = record
+    return row
+
+
+def require_financial_authority(manifest) -> None:
+    """Refuse financial writes unless the manifest grants authority."""
+    if (not isinstance(manifest, dict) or manifest.get('mode') != 'identified'
+            or manifest.get('financial_authority') is not True
+            or 'origin_uuid' not in manifest):
+        raise ValueError('financial writes require the profile financial authority')
+    canonical_uuid(manifest['origin_uuid'])
+
+
+def activation_manifest(path):
+    """Read the activation manifest at path; None when legacy/unactivated."""
+    try:
+        data = json.loads(Path(path).read_text())
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError) as exc:
+        raise ValueError(f'activation manifest is corrupt: {exc}') from None
+    if (not isinstance(data, dict) or data.get('mode') != 'identified'
+            or 'origin_uuid' not in data):
+        raise ValueError('activation manifest is not an identified profile')
+    canonical_uuid(data['origin_uuid'])
+    return data
 
 
 def new_manifest(origin_uuid):

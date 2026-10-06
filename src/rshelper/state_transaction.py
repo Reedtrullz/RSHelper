@@ -181,11 +181,13 @@ def _publish_marker_only(path: Path) -> None:
     _durable_write(_marker_path(path), b'{"publishing": true}', 0o600)
 
 
-def activate_profile(root: Path, origin_uuid: str) -> dict:
-    """Publish the schema-2 activation marker for a profile state root."""
+def activate_profile(root: Path, origin_uuid: str,
+                     financial_authority: bool = True) -> dict:
+    """Publish the activation manifest for a profile state root."""
     persistence.canonical_uuid(origin_uuid)
     manifest = {'schema_version': SCHEMA_VERSION, 'origin_uuid': origin_uuid,
-                'mode': 'identified'}
+                'mode': 'identified',
+                'financial_authority': bool(financial_authority)}
     _publish_receipt(activation_path(root), manifest)
     return manifest
 

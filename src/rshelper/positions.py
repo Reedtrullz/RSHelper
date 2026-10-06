@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
+from rshelper import state_identity, state_transaction
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
@@ -66,7 +67,8 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   direction: str = "arbitrage", note: str = "",
                   entry_sell: int | None = None,
                   entry_offer: int | None = None,
-                  profile: str | None = None) -> Position:
+                  profile: str | None = None,
+                  operation_id: str | None = None) -> Position:
     """Open a hold position at buy_price. Returns the Position."""
     if qty <= 0:
         raise ValueError(f"qty must be positive, got {qty}")
@@ -74,6 +76,33 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         raise ValueError(f"buy_price must be positive, got {buy_price}")
     if direction not in ("arbitrage", "traditional"):
         raise ValueError(f"direction must be 'arbitrage' or 'traditional', got '{direction}'")
+    path = _positions_path(profile)
+    manifest = state_identity.activation_manifest(
+        path.with_name('identity-activation.json'))
+    if manifest is not None:
+        state_identity.require_financial_authority(manifest)
+        if operation_id is None:
+            raise ValueError('identified financial writes require operation_id')
+        identity = state_identity.new_record_identity(
+            manifest['origin_uuid'], 'positions', operation_id)
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            positions_list = _load(profile)
+            for row in positions_list:
+                if row.get('record_uuid') == identity['record_uuid']:
+                    return Position(**filter_fields(Position, row))
+            position = {
+                "id": _next_id(positions_list), "item_id": item_id,
+                "name": name, "qty": qty, "buy_price": buy_price,
+                "direction": direction, "note": note,
+                "opened_at": datetime.now(timezone.utc).isoformat(),
+                "entry_sell": entry_sell, "entry_offer": entry_offer,
+                **identity,
+            }
+            positions_list.append(position)
+            txn.stage('positions.json', {'positions': positions_list})
+            txn.commit(operation_id=operation_id)
+        return Position(**filter_fields(Position, position))
     with _positions_lock(profile):
         positions = _load(profile)
         position = {

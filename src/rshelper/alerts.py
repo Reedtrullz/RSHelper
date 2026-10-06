@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
+from rshelper import state_identity, state_transaction
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
 ALERTS_PATH = "alerts.json"
@@ -61,12 +62,51 @@ def _next_alert_id(store: dict) -> int:
 def push_alert(type: str, severity: str, item_id: int | None,
                item_name: str, title: str, message: str,
                profile: str | None = None,
-               data: dict | None = None) -> Alert:
+               data: dict | None = None,
+               operation_id: str | None = None) -> Alert:
     """Append an alert to the feed. Returns the created Alert.
 
     Caller-facing, thread-safe, atomic. A failure must never raise: alert
-    delivery is best-effort for daemons and the dashboard.
+    delivery is best-effort for daemons and the dashboard. Identified
+    profiles mint a native identity per operation; callers supply
+    operation_id so retries reuse the same identity.
     """
+    path = _alerts_path(profile)
+    manifest = state_identity.activation_manifest(
+        path.with_name('identity-activation.json'))
+    if manifest is not None:
+        try:
+            if operation_id is None:
+                raise ValueError('identified alert writes require operation_id')
+            identity = state_identity.new_record_identity(
+                manifest['origin_uuid'], 'alerts', operation_id)
+            with state_transaction.profile_transaction(profile or 'default',
+                                                       path.parent) as txn:
+                store = _load(profile)
+                alert = {
+                    "id": _next_alert_id(store),
+                    "ts": time.time(),
+                    "type": type,
+                    "severity": severity,
+                    "item_id": item_id,
+                    "item_name": item_name,
+                    "title": title,
+                    "message": message,
+                    "read": False,
+                    "data": data,
+                    **identity,
+                }
+                store["alerts"].append(alert)
+                _prune(store)
+                txn.stage('alerts.json', store)
+                txn.commit(operation_id=operation_id)
+            return Alert(**filter_fields(Alert, alert))
+        except (OSError, StateCorruptionError, ValueError) as exc:
+            import sys
+            print(f"[alerts] warning: could not persist alert: {exc}", file=sys.stderr)
+            return Alert(id=_next_id(), ts=time.time(), type=type, severity=severity,
+                         item_id=item_id, item_name=item_name, title=title,
+                         message=message, data=data)
     try:
         with _file_lock(profile):
             store = _load(profile)
@@ -143,12 +183,16 @@ def mark_read(ids: list[int] | None = None, all: bool = False,
             for a in store.get("alerts", []):
                 if not a.get("read"):
                     a["read"] = True
+                    if 'record_uuid' in a:
+                        a['revision'] = a.get('revision', 0) + 1
                     changed += 1
         elif ids:
             id_set = set(ids)
             for a in store.get("alerts", []):
                 if a.get("id") in id_set and not a.get("read"):
                     a["read"] = True
+                    if 'record_uuid' in a:
+                        a['revision'] = a.get('revision', 0) + 1
                     changed += 1
         if changed:
             _save(store, profile)
