@@ -37,6 +37,7 @@ class Position:
     note: str = ""
     entry_sell: int | None = None  # sell quote (low) when the position opened
     entry_offer: int | None = None  # offer quote (high) when the position opened
+    lot_uid: str | None = None  # identified lot UUID on migrated profiles
 
 
 def _positions_path(profile: str | None = None) -> Path:

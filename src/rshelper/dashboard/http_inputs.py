@@ -78,6 +78,8 @@ def validate_operation(path, body):
         if path == '/api/positions':
             action(('close',))
             if body.get('qty') is not None: positive_int(body['qty'], 'qty')
+            if body.get('operation_id') is not None:
+                text(body['operation_id'], 'operation_id', limit=64)
     elif path in ('/api/trader', '/api/monitor'):
         action(('start', 'stop'))
     elif path == '/api/trades/delete':

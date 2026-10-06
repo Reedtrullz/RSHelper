@@ -630,10 +630,18 @@ def _trade_open(args: argparse.Namespace) -> None:
 
 def _trade_close(args: argparse.Namespace) -> None:
     """Close open paper positions for an item at the live price."""
-    from rshelper.positions import close_positions, list_positions, open_qty
-    from rshelper.journal import log_trade
+    from rshelper.positions import list_positions
+    from rshelper.market import ge_tax
     profile = getattr(args, "profile", None)
     entry = _resolve_item(args)
+    operation_id = getattr(args, "operation_id", None)
+    if operation_id is not None:
+        from rshelper.persistence import canonical_uuid
+        try:
+            canonical_uuid(operation_id)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
     open_positions = [p for p in list_positions(profile) if p.item_id == entry["id"]]
     if not open_positions:
         print(f"No open positions for {entry['name']}.", file=sys.stderr)
@@ -649,6 +657,45 @@ def _trade_close(args: argparse.Namespace) -> None:
     # arbitrage stack must not sell both at the oldest lot's leg (one would
     # book a guaranteed loss).
     qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
+    from rshelper import realization
+    gate = realization._financial_activation(profile)
+    if gate is not None:
+        # Identified profile: pin the exact lots and per-direction prices in
+        # one durable batch, then realize through recoverable operations.
+        legs = {}
+        quotes = set()
+        market_data = {}
+        for direction in sorted({p.direction for p in open_positions}):
+            _buy, sell_price, quote = _resolve_paper_prices(entry, profile, direction)
+            if sell_price <= 0:
+                print(f"No live price data for {entry['name']}.", file=sys.stderr)
+                sys.exit(1)
+            legs[direction] = sell_price
+            quotes.add(_quote_description(quote))
+            market_data[direction] = quote
+        if operation_id is None:
+            operation_id = realization.new_operation_id(
+                gate["origin_uuid"], "trade:close", str(entry["id"]))
+        try:
+            plan = realization.prepare_close_batch(
+                profile, entry["id"], qty, operation_id, legs, reason="manual",
+                metadata={"note": "paper", "strategy": "manual",
+                          "market_data": {"latest": market_data}})
+            receipts = realization.realize_close_batch(profile, operation_id)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        total_profit = sum((child["sell_price"] - child["buy_price"]) * child["qty"]
+                           - ge_tax(child["sell_price"]) * child["qty"]
+                           for child in plan["operations"])
+        total_tax = sum(ge_tax(child["sell_price"]) * child["qty"]
+                        for child in plan["operations"])
+        print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
+              f"(tax: {total_tax:,})")
+        print("Quote: " + "; ".join(sorted(quotes)))
+        return
+    from rshelper.positions import close_positions
+    from rshelper.journal import log_trade
     remaining = qty
     total_profit = 0
     total_tax = 0
@@ -1870,6 +1917,8 @@ def _main() -> None:
     trade_close.add_argument("item", help="Item name")
     trade_close.add_argument("qty", type=int, nargs="?", default=0,
                              help="Units to close (default: all open)")
+    trade_close.add_argument("--operation-id", type=str, default=None,
+                             help="Stable operation UUID; reuse it to replay a lost response")
     trade_pos = trade_sub.add_parser(
         "positions", help="List open paper positions with unrealized P&L")
     trade_pos.add_argument("--json", action="store_true")

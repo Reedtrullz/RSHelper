@@ -7,6 +7,8 @@ import unittest
 from contextlib import redirect_stderr
 
 sys.path.insert(0, "src")
+OP_HEADER = "33333333-3333-4333-8333-333333333333"
+
 
 from rshelper.dashboard.templates import INDEX_HTML
 from rshelper.dashboard.handlers import make_handler as _make_handler, _item_to_dict
@@ -1121,15 +1123,23 @@ class TestNewRoutes(unittest.TestCase):
 
     def test_api_positions_close(self):
         calls = []
-        h = self._make(close_position_fn=lambda pid, qty: calls.append((pid, qty))
-                       or {"ok": True})
+        h = self._make(close_position_fn=lambda pid, qty, operation_id=None:
+                       calls.append((pid, qty, operation_id)) or {"ok": True})
         h.path = "/api/positions"
         h.command = "POST"
         payload = json.dumps({"action": "close", "position_id": 7}).encode()
         h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
         h.rfile = io.BytesIO(payload)
         h.do_POST()
-        self.assertEqual(calls, [(7, None)])
+        self.assertEqual(calls, [(7, None, None)])
+        # A browser-allocated operation id passes through to the close fn.
+        calls.clear()
+        payload = json.dumps({"action": "close", "position_id": 8,
+                              "operation_id": OP_HEADER}).encode()
+        h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload))}
+        h.rfile = io.BytesIO(payload)
+        h.do_POST()
+        self.assertEqual(calls, [(8, None, OP_HEADER)])
 
     def test_api_trader_control_denied_without_control(self):
         def deny(action):

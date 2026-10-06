@@ -120,6 +120,33 @@ assert.equal(removed, false, 'validation error keeps the form open');
 
 console.log('browser owner flow and mutation error regressions passed');
 
+// One close action keeps a single operation id across ambiguous retries: the
+// id is allocated on first click and only cleared by a successful response.
+const closeHarness = harness(async (url, options = {}) => {
+  closeCalls.push({ url: String(url), body: options.body ? JSON.parse(options.body) : null });
+  if (closeCalls.length === 1) return new Response(JSON.stringify({ ok: false, code: 'network', message: 'lost' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ ok: true, name: 'Nature rune', profit: 436 }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+});
+const closeCalls = [];
+vm.runInContext("accessReady=true;accessMode='owner';authenticated=true;ownerToken='synthetic';meta={control:false};capabilities={mode:'owner',features:['market','private-state']}", closeHarness.context);
+closeHarness.context.confirm = () => true;
+closeHarness.context.fetchData = () => {};
+closeHarness.context.setStatus = () => {};
+await closeHarness.context.closePosition(7);
+await closeHarness.context.closePosition(7);
+assert.equal(closeCalls.length, 2, 'both retry clicks reached the API');
+assert.equal(closeCalls[0].url, '/api/positions');
+assert.equal(closeCalls[0].body.operation_id, closeCalls[1].body.operation_id,
+  'a retried close reuses the same operation id');
+assert.match(closeCalls[0].body.operation_id,
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+  'close operation id is a canonical UUID4');
+assert.equal(closeCalls[1].body.operation_id, closeCalls[0].body.operation_id);
+// A successful close clears the id, so the next close is a distinct action.
+assert.ok(!(vm.runInContext('JSON.stringify(pendingCloseOps)', closeHarness.context)).includes('7'),
+  'success clears the retained operation id');
+console.log('browser close retry operation-id reuse passed');
+
 // Successful observations and failed attempts remain separate in the visible footer.
 vm.runInContext("meta={market_data:{latest:{source:'wiki',delivery:'stale-cache',stale:true,last_success_at:100,last_attempt_at:200},'5m':{source:'ge-tracker',volume_kind:'standing-orders',stale:false}}};updateFooter()",ownerHarness.context);
 assert.match(ownerHarness.context.document.getElementById('sourceBadge').textContent,/stale.*mixed sources/);

@@ -621,6 +621,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 position_id = int(body.get("position_id", 0))
                 qty = body.get("qty")
                 qty = int(qty) if qty not in (None, "") else None
+                operation_id = body.get("operation_id")
             except Exception:
                 self.send_error(400, "Invalid JSON")
                 return
@@ -631,7 +632,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(400, "Unknown action")
                 return
             try:
-                self._serve_json(close_position_fn(position_id, qty))
+                self._serve_json(
+                    close_position_fn(position_id, qty, operation_id))
             except (ValueError, TypeError) as e:
                 print(f"[dashboard] close position error: {e}", file=sys.stderr)
                 self.send_error(400, str(e))

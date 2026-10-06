@@ -118,6 +118,8 @@ class HttpInputsTest(unittest.TestCase):
                    ('/api/watchlist', {'action': 'add', 'item_id': '2'}),
                    ('/api/watchlist', {'action': 'alerts', 'item_id': 2, 'alert_above': -1}),
                    ('/api/positions', {'action': 'close', 'position_id': 1, 'qty': 0}),
+                   ('/api/positions', {'action': 'close', 'position_id': 1, 'operation_id': 7}),
+                   ('/api/positions', {'action': 'close', 'position_id': 1, 'operation_id': ''}),
                    ('/api/trader', {'action': []}),
                    ('/api/monitor', {'action': 'restart'}),
                    ('/api/alerts/read', {'all': 'false'}),
@@ -128,6 +130,19 @@ class HttpInputsTest(unittest.TestCase):
             with self.subTest(path=path, data=data):
                 self.assert_error(*self.request(path, json.dumps(data).encode()))
                 self.assertEqual(self.calls, [])
+
+    def test_close_operation_id_passes_through(self):
+        uuid_value = '22222222-2222-4222-8222-222222222222'
+        status, payload = self.request('/api/positions',
+            json.dumps({'action': 'close', 'position_id': 3,
+                        'operation_id': uuid_value}).encode())
+        self.assertEqual(status, 200); self.assertTrue(payload['ok'])
+        self.assertEqual(self.calls, [(3, None, uuid_value)])
+        self.calls.clear()
+        status, payload = self.request('/api/positions',
+            json.dumps({'action': 'close', 'position_id': 3}).encode())
+        self.assertEqual(status, 200); self.assertTrue(payload['ok'])
+        self.assertEqual(self.calls, [(3, None, None)])
 
     def test_keepalive_uses_each_requests_body(self):
         connection = http.client.HTTPConnection(*self.server.server_address, timeout=2)

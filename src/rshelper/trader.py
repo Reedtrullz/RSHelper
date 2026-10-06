@@ -535,14 +535,38 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
         # write and the positions write leaves the position open with a
         # realized journal entry — recoverable — instead of a closed
         # position with no journal entry (lost P&L).
-        preview = _preview_lots(p, sell)
-        for lot in preview:
-            log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
-                      sell, note="paper", profile=profile, strategy="auto",
-                      exit_reason=reason, hold_minutes=hold_minutes,
-                      quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
-                      fill_guard=guarded_fill is not None)
-        lots = close_positions(p.item_id, p.qty, sell, profile)
+        from rshelper import realization
+        gate = realization._financial_activation(profile)
+        if gate is not None:
+            # Identified profile: close the exact auto-owned lot through one
+            # durable recoverable operation keyed by the lot itself.
+            operation_id = realization.new_operation_id(
+                gate["origin_uuid"], "trade:auto", str(p.lot_uid))
+            metadata = {"note": "paper", "strategy": "auto",
+                        "hold_minutes": hold_minutes,
+                        "quote_sell": quote_sell,
+                        "entry_spread_pct": entry_spread_pct,
+                        "fill_guard": guarded_fill is not None}
+            plan = realization.prepare_close_batch(
+                profile, p.item_id, p.qty, operation_id,
+                {p.direction or "traditional": sell}, lot_uids=[p.lot_uid],
+                reason=reason, metadata=metadata)
+            realization.realize_close_batch(profile, operation_id)
+            lots = [{"position_id": p.id, "name": p.name, "qty": child["qty"],
+                     "buy_price": child["buy_price"], "sell_price": child["sell_price"],
+                     "tax_paid": ge_tax(child["sell_price"]) * child["qty"],
+                     "profit": (child["sell_price"] - child["buy_price"]) * child["qty"]
+                               - ge_tax(child["sell_price"]) * child["qty"]}
+                    for child in plan["operations"]]
+        else:
+            preview = _preview_lots(p, sell)
+            for lot in preview:
+                log_trade(p.item_id, lot["name"], lot["qty"], lot["buy_price"],
+                          sell, note="paper", profile=profile, strategy="auto",
+                          exit_reason=reason, hold_minutes=hold_minutes,
+                          quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
+                          fill_guard=guarded_fill is not None)
+            lots = close_positions(p.item_id, p.qty, sell, profile)
         profit_sum = sum(l["profit"] for l in lots)
         try:
             from rshelper.alerts import push_alert
