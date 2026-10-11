@@ -315,6 +315,41 @@ class SyncIndexTest(unittest.TestCase):
                 self.sync.run_sync(self.repo,self.source,unsigned=True)
         self.assertEqual(self.git('ls-remote','origin','refs/heads/main'),original)
 
+    def test_empty_identified_profile_never_reaches_raw_git_publication(self):
+        (self.source / 'trades.json').write_text('{"schema_version": 2, "trades": []}')
+        (self.source / 'identity-activation.json').write_text('{"mode": "identified"}')
+        remote = self.git('ls-remote', 'origin', 'refs/heads/main')
+        index = (self.repo / '.git/index').read_bytes()
+        with self.assertRaisesRegex(self.sync.SyncError, 'authenticated SSH'):
+            self.sync.run_sync(self.repo, self.source, unsigned=True)
+        self.assertEqual(self.git('ls-remote', 'origin', 'refs/heads/main'), remote)
+        self.assertEqual((self.repo / '.git/index').read_bytes(), index)
+
+    def test_copy_only_dry_run_does_not_publish_destination(self):
+        import contextlib
+        import io
+        destination = self.repo/'data/state'
+        before = (destination/'trades.json').read_bytes()
+        output = io.StringIO()
+        with mock.patch.object(self.sync, 'collect', return_value={'data/state/trades.json':b'{"trades":[]}'}), \
+                mock.patch.object(self.sync, 'DEST', destination), contextlib.redirect_stdout(output):
+            self.assertEqual(self.sync.main(['--copy-only','--dry-run']), 0)
+        self.assertEqual((destination/'trades.json').read_bytes(), before)
+        self.assertFalse((destination/'.profile.lock').exists())
+        self.assertEqual(json.loads(output.getvalue())['copied_paths'], [])
+
+    def test_copy_only_initializes_a_missing_destination_transactionally(self):
+        import contextlib
+        import io
+        destination = self.repo/'new-state'
+        output = io.StringIO()
+        with mock.patch.object(self.sync, 'collect', return_value={'data/state/trades.json':b'{"trades":[]}'}), \
+                mock.patch.object(self.sync, 'DEST', destination), contextlib.redirect_stdout(output):
+            self.assertEqual(self.sync.main(['--copy-only']), 0)
+        self.assertEqual(json.loads((destination/'trades.json').read_text())['trades'], [])
+        self.assertIn('operation_id', json.loads(output.getvalue()))
+        self.assertFalse((destination/'.profile-pending.json').exists())
+
     def fake_git(self,code):
         directory=self.home/'fake-git';directory.mkdir()
         executable=directory/'git';executable.write_text('#!'+sys.executable+'\n'+code);executable.chmod(0o700)

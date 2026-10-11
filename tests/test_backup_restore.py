@@ -43,6 +43,45 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(receipt['operation_id'], OP)
         self.assertEqual(backup.restore_profile('restored', target, expected_profile_uuid=PROFILE, operation_id=OP), receipt)
 
+    def test_legacy_restore_requires_explicit_revision_and_empty_target(self):
+        legacy = profile.resolve_config_path('', 'legacy')
+        legacy.mkdir(parents=True)
+        original = b'{"positions":[{"id":1,"item_id":2,"name":"Synthetic","qty":10,"buy_price":100,"direction":"traditional","opened_at":"2026-01-01T00:00:00Z"}]}'
+        (legacy / 'positions.json').write_bytes(original)
+        source = self.base / 'legacy.zip'
+        manifest = backup.export_profile('legacy', source)
+        with self.assertRaises(ValueError):
+            backup.restore_profile('legacy-restored', source, expected_profile_uuid=PROFILE, operation_id=OP)
+        receipt = backup.restore_profile('legacy-restored', source, expected_profile_uuid=PROFILE,
+            operation_id=OP, expected_source_revision=manifest['source_revision'])
+        target = profile.resolve_config_path('positions.json', 'legacy-restored')
+        self.assertEqual(target.read_bytes(), original)
+        self.assertEqual(receipt['profile_uuid'], PROFILE)
+        with self.assertRaises(ValueError):
+            backup.restore_profile('legacy-restored', source, expected_profile_uuid=PROFILE,
+                operation_id=ORIGIN, expected_source_revision=manifest['source_revision'])
+
+    def test_legacy_restore_cli_does_not_initialize_target_config(self):
+        import contextlib
+        import io
+        from rshelper import cli
+        legacy = profile.resolve_config_path('', 'legacy-cli')
+        legacy.mkdir(parents=True)
+        original = b'{"positions":[]}'
+        (legacy/'positions.json').write_bytes(original)
+        archive = self.base/'legacy-cli.zip'
+        manifest = backup.export_profile('legacy-cli', archive)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output), mock.patch.object(sys, 'argv',
+                ['rshelper','--profile','restored-cli','backup','restore','--input',str(archive),
+                 '--expected-profile-uuid',PROFILE,'--expected-source-revision',manifest['source_revision'],
+                 '--operation-id',OP,'--json']):
+            cli.main()
+        self.assertEqual(json.loads(output.getvalue())['status'], 'restored')
+        restored = profile.resolve_config_path('', 'restored-cli')
+        self.assertEqual((restored/'positions.json').read_bytes(), original)
+        self.assertFalse((restored/'config.toml').exists())
+
     def test_wrong_profile_restore_leaves_live_bytes_unchanged(self):
         target = self.base / 'private.zip'
         backup.export_profile('source', target)

@@ -11,6 +11,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 from rshelper.market import ge_tax
 from rshelper import state_identity, state_transaction
@@ -38,6 +39,9 @@ class Position:
     entry_sell: int | None = None  # sell quote (low) when the position opened
     entry_offer: int | None = None  # offer quote (high) when the position opened
     lot_uid: str | None = None  # identified lot UUID on migrated profiles
+    record_uuid: str | None = None
+    origin_uuid: str | None = None
+    revision: int | None = None
 
 
 def _positions_path(profile: str | None = None) -> Path:
@@ -47,7 +51,8 @@ def _positions_path(profile: str | None = None) -> Path:
 
 
 def _load(profile: str | None = None):
-    return read_state(_positions_path(profile), "positions")["positions"]
+    path = _positions_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'positions'), 'positions', path)['positions']
 
 
 def _save(positions: list[dict], profile: str | None = None) -> None:
@@ -82,15 +87,20 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         path.with_name('identity-activation.json'))
     if manifest is not None:
         state_identity.require_financial_authority(manifest)
-        if operation_id is None:
-            raise ValueError('identified financial writes require operation_id')
+        operation_id = operation_id or str(uuid4())
+        request = dict(item_id=item_id, name=name, qty=qty, buy_price=buy_price,
+                       direction=direction, note=note, entry_sell=entry_sell,
+                       entry_offer=entry_offer)
         identity = state_identity.new_record_identity(
             manifest['origin_uuid'], 'positions', operation_id)
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
-            positions_list = _load(profile)
+            store = read_state(path, 'positions')
+            state_identity.validate_activated_store(store, 'positions', path)
+            positions_list = store['positions']
             for row in positions_list:
                 if row.get('record_uuid') == identity['record_uuid']:
+                    state_identity.validate_native_retry(path.parent, 'positions', row, request)
                     return Position(**filter_fields(Position, row))
             position = {
                 "id": _next_id(positions_list), "item_id": item_id,
@@ -101,7 +111,8 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
                 **identity,
             }
             positions_list.append(position)
-            txn.stage('positions.json', {'positions': positions_list})
+            state_identity.attest_native(txn, path.parent, 'positions', position, operation_id, request)
+            txn.stage('positions.json', store)
             txn.commit(operation_id=operation_id)
         return Position(**filter_fields(Position, position))
     with _positions_lock(profile):

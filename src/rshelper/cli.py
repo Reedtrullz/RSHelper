@@ -1744,10 +1744,9 @@ def _main() -> None:
     # An invalid active marker must remain repairable through the app.
     repair = sys.argv[1:3] == ["profile", "switch"]
     launch_profile = resolve_profile("default" if repair and selected.profile is None else selected.profile)
-    # Evidence capture remains available when the config itself is corrupt.
-    # It runs no strategy work and labels its bytes as unvalidated.
-    evidence_capture = remaining[:2] == ["profile", "backup"] and "--evidence" in remaining
-    if evidence_capture:
+    # Maintenance validates its own inputs without initializing the target profile.
+    maintenance = remaining[:1] in (["state"], ["backup"]) or remaining[:2] == ["profile", "backup"]
+    if maintenance:
         from rshelper.config import Config
         cfg = Config()
     else:
@@ -2082,6 +2081,16 @@ def _main() -> None:
         command = state_sub.add_parser(action)
         command.add_argument(flag, required=True)
         command.add_argument('--json', action='store_true')
+    state_sub.add_parser('check').add_argument('--json', action='store_true')
+    migration_plan = state_sub.add_parser('migration-plan')
+    migration_plan.add_argument('--origin', required=True)
+    migration_plan.add_argument('--profile-uuid', required=True)
+    migration_plan.add_argument('--lineage', required=True)
+    migration_plan.add_argument('--json', action='store_true')
+    migration_apply = state_sub.add_parser('migrate')
+    migration_apply.add_argument('--plan', required=True)
+    migration_apply.add_argument('--operation-id', required=True)
+    migration_apply.add_argument('--json', action='store_true')
 
     backup_p = sub.add_parser('backup', help='Inspect and restore private profile backups')
     backup_sub = backup_p.add_subparsers(dest='backup_action', required=True)
@@ -2092,6 +2101,7 @@ def _main() -> None:
     restore_p.add_argument('--input', required=True)
     restore_p.add_argument('--expected-profile-uuid', required=True)
     restore_p.add_argument('--operation-id', required=True)
+    restore_p.add_argument('--expected-source-revision')
     restore_p.add_argument('--json', action='store_true')
 
     args, unknown = parser.parse_known_args(remaining)
@@ -2124,7 +2134,8 @@ def _main() -> None:
         else:
             result = backup.restore_profile(args.profile, Path(args.input),
                                            expected_profile_uuid=args.expected_profile_uuid,
-                                           operation_id=args.operation_id)
+                                           operation_id=args.operation_id,
+                                           expected_source_revision=args.expected_source_revision)
         print(json.dumps(result, sort_keys=True))
     elif args.command == 'state':
         from pathlib import Path
@@ -2134,6 +2145,19 @@ def _main() -> None:
             result = {key: value for key, value in result.items() if key != 'files'}
         elif args.state_action == 'apply':
             result = state_replication.apply_packet(args.profile, Path(args.input))
+        elif args.state_action == 'check':
+            result = state_replication.validate_profile(args.profile)
+        elif args.state_action in ('migration-plan', 'migrate'):
+            from rshelper import persistence, state_migration
+            from rshelper.backup import _read_file
+            source = Path(args.lineage if args.state_action == 'migration-plan' else args.plan)
+            document = persistence.decode_json(_read_file(source))
+            if args.state_action == 'migration-plan':
+                result = state_migration.plan_migration(args.profile, origin_uuid=args.origin,
+                    profile_uuid=args.profile_uuid, lineage=document)
+            else:
+                result = state_migration.migrate_profile(args.profile, plan=document,
+                                                        operation_id=args.operation_id)
         else:
             result = state_replication.read_receipt(args.profile, args.origin)
         print(json.dumps(result, sort_keys=True))

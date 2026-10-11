@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: rshelper-production
+  cancel-in-progress: false
+
 jobs:
   sync-state:
     name: Sync state to VPS (no deploy)
@@ -23,10 +27,11 @@ jobs:
       - name: Configure SSH key
         env:
           VPS_SSH_HOST_KEY: ${{ vars.VPS_SSH_HOST_KEY || secrets.VPS_SSH_HOST_KEY }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_racknerd
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa_racknerd
           chmod 600 ~/.ssh/id_rsa_racknerd
 
           normalize_host_keys() {
@@ -51,24 +56,34 @@ jobs:
           fi
 
           printf '%s\n' "$expected_host_key" > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
 
-      - name: Push state to VPS with merge
+      - name: Apply legacy feed through the verified running application
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          scp -r -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            data/state deploy@198.23.137.16:/tmp/rshelper-state-${{ github.sha }}
-          scp -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            deploy/merge_state.py deploy@198.23.137.16:/tmp/rshelper-merge-state-${{ github.sha }}.py
-          scp -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            src/rshelper/persistence.py deploy@198.23.137.16:/tmp/rshelper-state-validation-${{ github.sha }}.py
-          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
-            "sudo -n python3 /tmp/rshelper-merge-state-${{ github.sha }}.py /tmp/rshelper-state-${{ github.sha }} /opt/apps/rshelper/data/.config/rshelper --chown 1000:1000 \
-             --validation-module /tmp/rshelper-state-validation-${{ github.sha }}.py \
-             && sudo -n rm -rf /tmp/rshelper-state-${{ github.sha }} /tmp/rshelper-merge-state-${{ github.sha }}.py /tmp/rshelper-state-validation-${{ github.sha }}.py"
+          current="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$current" != "$GITHUB_SHA" ]]; then
+            echo 'Obsolete state revision skipped.'
+            exit 0
+          fi
+          stage=/tmp/rshelper-state-${{ github.run_id }}-${{ github.run_attempt }}
+          ssh_args=(-i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes)
+          ssh "${ssh_args[@]}" deploy@198.23.137.16 "umask 077; mkdir '$stage'"
+          scp -r "${ssh_args[@]}" data/state deploy@198.23.137.16:"$stage/source"
+          ssh "${ssh_args[@]}" deploy@198.23.137.16 \
+            "sudo -n chown -R 1000:1000 '$stage/source' && sudo -n find '$stage/source' -type d -exec chmod 700 {} + && sudo -n find '$stage/source' -type f -exec chmod 600 {} + && sudo -n python3 /opt/apps/rshelper/private-state.py --action legacy --stage '$stage/source'"
+
+      - name: Clean only this run staging after success or failure
+        if: always()
+        run: |
+          stage=/tmp/rshelper-state-${{ github.run_id }}-${{ github.run_attempt }}
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+            "sudo -n rm -rf -- '$stage'"
 
       - name: Verify authenticated private state without exposing records
         run: |
           set -euo pipefail
-          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes deploy@198.23.137.16 \
             'sudo -n docker exec -i rshelper python -' < deploy/check_state.py

@@ -11,7 +11,7 @@ from uuid import UUID, uuid5
 import zipfile
 
 from rshelper import identity_merge, persistence, state_identity, state_transaction
-from rshelper.backup import _read_file
+from rshelper.backup import _read_file, _files as _backup_files
 from rshelper.profile import resolve_config_path
 from rshelper.persistence import decode_json as _decode
 
@@ -22,7 +22,8 @@ CORE = {'positions.json': 'positions', 'trades.json': 'trades',
         'alerts.json': 'alerts', 'watchlist.json': 'watchlist'}
 FILES = {**CORE, 'identity-manifest.json': 'identity',
          'identity-lineage.json': 'lineage', 'realizations.json': 'realizations',
-         'realization-batches.json': 'batches', 'replication-receipts.json': 'receipts'}
+         'realization-batches.json': 'batches', 'replication-receipts.json': 'receipts',
+         'information.json': 'information'}
 
 
 def _json(value):
@@ -56,6 +57,7 @@ def _activation(root):
     persistence.canonical_uuid(data.get('profile_uuid'))
     origins = data.get('replication_origins')
     if (not isinstance(origins, list) or not origins or len(origins) > MAX_FILES
+            or any(type(origin) is not str for origin in origins)
             or len(set(origins)) != len(origins)):
         raise ValueError('explicit replication origins required')
     for origin in origins:
@@ -117,9 +119,31 @@ def _validate_receipt(receipt):
     return receipt
 
 
+def _information(data):
+    if (not isinstance(data, dict) or set(data) != {'schema_version', 'origin_uuid', 'files'}
+            or type(data['schema_version']) is not int or data['schema_version'] != 1
+            or not isinstance(data['files'], dict) or len(data['files']) > MAX_FILES):
+        raise ValueError('invalid informational packet')
+    persistence.canonical_uuid(data['origin_uuid'])
+    count = 0
+    for relative, value in data['files'].items():
+        if relative != 'tuning_log.json' and not relative.startswith('snapshots/'):
+            raise ValueError('unapproved informational source')
+        state_transaction._kind(relative)
+        persistence.validate_state(value, 'generic', relative)
+        rows = value.get('entries' if relative == 'tuning_log.json' else 'items', [])
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            raise ValueError('invalid informational record collection')
+        count += len(rows)
+    if count > MAX_ROWS:
+        raise ValueError('informational record budget exceeded')
+    return count
+
+
 def _validate_files(files):
     parsed = {}
     count = 0
+    selected_files = len(files)
     if not set(CORE).issubset(files) or 'identity-manifest.json' not in files:
         raise ValueError('incomplete packet inventory')
     for name, raw in files.items():
@@ -135,7 +159,7 @@ def _validate_files(files):
                 count += len(data[kind])
         elif name == 'identity-manifest.json':
             state_identity.validate_manifest(data)
-            count += len(data['mappings'])
+            count += len(data['mappings']) + len(data.get('native', {}))
         elif name == 'identity-lineage.json':
             if set(data) != {'schema_version', 'origins'} or not isinstance(data['origins'], dict):
                 raise ValueError('invalid foreign lineage')
@@ -144,7 +168,7 @@ def _validate_files(files):
                 state_identity.validate_manifest(manifest)
                 if manifest['origin_uuid'] != origin:
                     raise ValueError('foreign lineage origin mismatch')
-                count += len(manifest['mappings'])
+                count += len(manifest['mappings']) + len(manifest.get('native', {}))
         elif name == 'realizations.json':
             from rshelper.realization import validate_intents
             validate_intents(data, name)
@@ -166,14 +190,45 @@ def _validate_files(files):
                 _validate_receipt(receipt)
                 if receipt['origin_uuid'] != origin:
                     raise ValueError('foreign receipt origin mismatch')
+        elif name == 'information.json':
+            count += _information(data)
+            selected_files += len(data['files'])
         else:
             raise ValueError('unapproved packet file')
         parsed[name] = data
-    if count > MAX_ROWS:
+    if count > MAX_ROWS or selected_files > MAX_FILES:
         raise ValueError('packet exceeds record budget')
     from rshelper.realization import verify_realization_snapshot
     verify_realization_snapshot(parsed['positions.json'], parsed['trades.json']['trades'],
                                 parsed.get('realizations.json', {'operations': {}}))
+    manifests = dict(parsed.get('identity-lineage.json', {}).get('origins', {}))
+    own = parsed['identity-manifest.json']
+    if own['origin_uuid'] in manifests:
+        own = _merge_manifest(manifests[own['origin_uuid']], own)
+    manifests[own['origin_uuid']] = own
+    operations = parsed.get('realizations.json', {}).get('operations', {})
+    for name, kind in CORE.items():
+        store = parsed[name]
+        rows = (list(store['items'].values()) + list(store.get('tombstones', {}).values())
+                if kind == 'watchlist' else store[kind])
+        for row in rows:
+            manifest = manifests.get(row['origin_uuid'])
+            if manifest is None:
+                raise ValueError('record origin lacks declared lineage')
+            intent = operations.get(row.get('operation_id')) if kind == 'trades' else None
+            if intent is not None and intent['trade']['record_uuid'] == row['record_uuid']:
+                continue
+            if kind == 'watchlist':
+                state_identity.migrate_watchlist({'items': {} if row['tombstone'] else {str(row['item_id']): row},
+                    'tombstones': {row['record_uuid']: row} if row['tombstone'] else {}}, manifest)
+            else:
+                state_identity.migrate_rows([row], kind, manifest)
+            if kind == 'positions' and row['record_uuid'] in manifest.get('native', {}):
+                created = manifest['native'][row['record_uuid']]['creation_qty']
+                consumed = sum(intent['request']['qty'] for intent in operations.values()
+                               if intent['request']['lot_uid'] == row['record_uuid'])
+                if consumed + (0 if row['tombstone'] else row['qty']) != created:
+                    raise ValueError('native lot creation and realized quantity conflict')
     return parsed
 
 
@@ -193,13 +248,23 @@ def capture_packet(profile, destination):
             elif name in CORE:
                 files[name] = _json(persistence.read_state(path, kind))
         files['replication-receipts.json'] = _json({'schema_version': 1, 'receipts': state['receipts']})
+        selected, _ = _backup_files(root)
+        information = {name: _decode(_read_file(path)) for name, path in selected.items()
+                       if name == 'tuning_log.json' or name.startswith('snapshots/')}
+        if information:
+            files['information.json'] = _json({'schema_version': 1, 'origin_uuid': activation['origin_uuid'],
+                                               'files': information})
         parsed = _validate_files(files)
         if parsed['identity-manifest.json']['origin_uuid'] != activation['origin_uuid']:
             raise ValueError('source identity manifest mismatch')
+        declared = {activation['origin_uuid'], *parsed.get('identity-lineage.json', {}).get('origins', {})}
+        if not declared.issubset(activation['replication_origins']):
+            raise ValueError('source contains undeclared foreign lineage')
         if len(files) > MAX_FILES or sum(map(len, files.values())) > MAX_BYTES:
             raise ValueError('packet exceeds transfer budget')
         entries = [{'path': name, 'kind': FILES[name],
-                    'owner': 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared',
+                    'owner': 'informational' if name == 'information.json' else
+                             'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared',
                     'bytes': len(files[name]), 'sha256': hashlib.sha256(files[name]).hexdigest()}
                    for name in sorted(files)]
         previous = state['outgoing']
@@ -224,6 +289,8 @@ def capture_packet(profile, destination):
             archive.writestr('manifest.json', _json(manifest))
             for name, raw in files.items():
                 archive.writestr(name, raw)
+        if len(buffer.getvalue()) > MAX_BYTES:
+            raise ValueError('encoded packet exceeds transfer budget')
         destination.parent.mkdir(parents=True, exist_ok=True)
         fd, temporary = tempfile.mkstemp(prefix='.state-packet-', dir=destination.parent)
         try:
@@ -243,6 +310,25 @@ def capture_packet(profile, destination):
         txn.stage('replication-state.json', state)
         txn.commit(str(uuid5(UUID(activation['origin_uuid']), manifest['packet_hash'])))
         return manifest
+
+
+def validate_profile(profile):
+    root = resolve_config_path('', profile)
+    with state_transaction.profile_transaction(profile, root):
+        activation = _activation(root)
+        files = {name: _read_file(root / name) for name in FILES
+                 if name != 'information.json' and ((root / name).exists() or (root / name).is_symlink())}
+        parsed = _validate_files(files)
+        origin = parsed['identity-manifest.json']['origin_uuid']
+        declared = {origin, *parsed.get('identity-lineage.json', {}).get('origins', {})}
+        if origin != activation['origin_uuid'] or not declared.issubset(activation['replication_origins']):
+            raise ValueError('initialized profile lineage mismatch')
+        metadata = _metadata(root)
+        if any(receipt['profile_uuid'] != activation['profile_uuid'] for receipt in metadata['receipts'].values()):
+            raise ValueError('initialized profile receipt mismatch')
+        return {'initialized': True, 'schema_version': 2,
+                'profile_uuid': activation['profile_uuid'], 'origin_uuid': origin,
+                'receipts': metadata['receipts']}
 
 
 def _read_packet(source):
@@ -288,14 +374,17 @@ def _read_packet(source):
         if type(name) is not str or name not in files or name in seen:
             raise ValueError('duplicate or unapproved packet path')
         seen.add(name)
-        expected_owner = 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared'
+        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared'
         if (entry['kind'] != FILES[name] or entry['owner'] != expected_owner
                 or type(entry['bytes']) is not int or entry['bytes'] != len(files[name])
                 or entry['sha256'] != hashlib.sha256(files[name]).hexdigest()):
             raise ValueError('packet descriptor or content hash mismatch')
     if _hash(manifest['packet_hash']) != packet_hash(manifest, files):
         raise ValueError('packet hash mismatch')
-    return manifest, _validate_files(files), raw
+    parsed = _validate_files(files)
+    if parsed.get('information.json', {}).get('origin_uuid', manifest['origin_uuid']) != manifest['origin_uuid']:
+        raise ValueError('informational source origin mismatch')
+    return manifest, parsed, raw
 
 
 def _union(left, right):
@@ -307,8 +396,31 @@ def _union(left, right):
     return result
 
 
+def _merge_manifest(left, right):
+    state_identity.validate_manifest(left)
+    state_identity.validate_manifest(right)
+    if left['origin_uuid'] != right['origin_uuid']:
+        raise ValueError('identity manifest origin conflict')
+    merged = {**right, 'mappings': _union(left['mappings'], right['mappings'])}
+    if 'native' in left or 'native' in right:
+        merged['native'] = _union(left.get('native', {}), right.get('native', {}))
+    return state_identity.validate_manifest(merged)
+
+
 def _merge(root, incoming):
     result = {}
+    if 'information.json' in incoming:
+        information = incoming['information.json']
+        peers = persistence.read_state(root / 'peer-information.json', 'generic') or {'schema_version': 1, 'origins': {}}
+        if (set(peers) != {'schema_version', 'origins'} or not isinstance(peers['origins'], dict)
+                or len(peers['origins']) > MAX_FILES):
+            raise ValueError('invalid peer informational store')
+        for origin, value in peers['origins'].items():
+            _information(value)
+            if value['origin_uuid'] != origin:
+                raise ValueError('peer informational origin mismatch')
+        peers['origins'][information['origin_uuid']] = information
+        result['peer-information.json'] = peers
     for name, kind in CORE.items():
         local = persistence.read_state(root / name, kind)
         peer = incoming[name]
@@ -331,11 +443,12 @@ def _merge(root, incoming):
     local_lineage = persistence.read_state(root / 'identity-lineage.json', 'generic').get('origins', {})
     peer_lineage = incoming.get('identity-lineage.json', {}).get('origins', {})
     manifest = incoming['identity-manifest.json']
-    lineage = _union(local_lineage, peer_lineage)
+    lineage = dict(local_lineage)
+    for declared, peer in peer_lineage.items():
+        lineage[declared] = _merge_manifest(lineage[declared], peer) if declared in lineage else peer
     origin = manifest['origin_uuid']
     if origin in lineage:
-        combined = _union(lineage[origin]['mappings'], manifest['mappings'])
-        manifest = {**manifest, 'mappings': combined}
+        manifest = _merge_manifest(lineage[origin], manifest)
     lineage[origin] = manifest
     result['identity-lineage.json'] = {'schema_version': 1, 'origins': lineage}
     for name, key in (('realizations.json', 'operations'), ('realization-batches.json', 'batches')):
@@ -345,7 +458,7 @@ def _merge(root, incoming):
     from rshelper.realization import validate_intents, verify_realization_snapshot
     validate_intents(result['realizations.json'], 'realizations.json')
     verify_realization_snapshot(result['positions.json'], result['trades.json']['trades'], result['realizations.json'])
-    _validate_files({**{name: _json(value) for name, value in result.items()},
+    _validate_files({**{name: _json(value) for name, value in result.items() if name in FILES},
                      'identity-manifest.json': _json(persistence.read_state(root / 'identity-manifest.json', 'generic'))})
     return result
 
@@ -364,10 +477,16 @@ def _apply_packet(root, profile, source):
                 or origin not in activation['replication_origins']
                 or incoming['identity-manifest.json']['origin_uuid'] != origin):
             raise ValueError('packet profile or declared lineage mismatch')
+        declared = {origin, *incoming.get('identity-lineage.json', {}).get('origins', {})}
+        if not declared.issubset(activation['replication_origins']):
+            raise ValueError('packet contains undeclared foreign lineage')
         state = _metadata(root)
         foreign_receipts = incoming.get('replication-receipts.json', {}).get('receipts', {})
-        if any(value['profile_uuid'] != manifest['profile_uuid'] for value in foreign_receipts.values()):
+        if (not set(foreign_receipts).issubset(activation['replication_origins'])
+                or any(value['profile_uuid'] != manifest['profile_uuid'] for value in foreign_receipts.values())):
             raise ValueError('foreign receipt profile mismatch')
+        if incoming.get('information.json', {}).get('origin_uuid', origin) != origin:
+            raise ValueError('informational packet origin mismatch')
         last = state['receipts'].get(origin)
         revision = last['applied_revision'] if last else 0
         digest = last['applied_hash'] if last else None

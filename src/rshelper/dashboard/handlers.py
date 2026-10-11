@@ -29,6 +29,7 @@ _GET_RESOURCES = {
     "/api/monitor": "private-state",
     "/api/signals": "private-state",
     "/api/trades": "private-state",
+    "/api/state/receipt": "private-state",
     "/api/pnl": "private-state",
     "/api/history": "private-state",
     "/api/meta": "private-state",
@@ -105,7 +106,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  event_hub=None,
                  allowed_hosts: list[str] | None = None,
                  mode: str = "owner", owner_token: str | None = None,
-                 control: bool = False) -> type:
+                 control: bool = False, state_receipt_fn: Callable[[str], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -169,6 +170,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_signals()
             elif path == "/api/trades":
                 self._serve_trades()
+            elif path == '/api/state/receipt':
+                try:
+                    origin = self._query()['origin'][0]
+                    self._serve_json(state_receipt_fn(origin) if state_receipt_fn else {})
+                except (OSError, ValueError):
+                    self.send_error(503, 'State receipt unavailable; pending publication must recover')
             elif path == "/api/pnl":
                 self._serve_pnl()
             elif path == "/api/history":

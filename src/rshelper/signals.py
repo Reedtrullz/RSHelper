@@ -146,7 +146,7 @@ def _save_baselines(data: dict, profile: str | None = None) -> None:
                 os.unlink(tmp)
             except OSError:
                 pass
-        raise
+            raise
 
 
 def _update_baseline(baselines: dict, item_id: int, current: int) -> float:

@@ -30,6 +30,48 @@ def dump_fixture(data):
     return json.dumps(data)
 
 
+def test_application_adapter_never_writes_read_only_staging():
+    from rshelper import persistence
+    with tempfile.TemporaryDirectory() as tmp:
+        stage = Path(tmp) / 'stage'
+        volume = Path(tmp) / 'volume'
+        stage.mkdir()
+        source = stage / 'positions.json'
+        source.write_text(dump_fixture({'positions': []}))
+        original_lock = persistence.locked_state
+        def destination_lock(path):
+            assert not Path(path).resolve().is_relative_to(stage.resolve()), 'read-only staging cannot contain lock writes'
+            return original_lock(path)
+        with mock.patch.object(persistence, 'locked_state', side_effect=destination_lock):
+            merge_state.merge_dir(str(stage), str(volume), None, immutable_stage=True)
+        assert list(stage.iterdir()) == [source]
+        assert json.loads((volume / 'positions.json').read_text()) == {'positions': []}
+
+
+def test_directory_budget_counts_previously_visited_empty_directories():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        for branch in range(65):
+            for child in range(64):
+                (root / str(branch) / str(child)).mkdir(parents=True)
+        try:
+            merge_state._entries(root)
+        except ValueError as exc:
+            assert 'entry budget' in str(exc)
+        else:
+            raise AssertionError('aggregate directory budget was not enforced')
+
+
+def test_application_cli_rejects_unapproved_file_before_destination_writes():
+    with tempfile.TemporaryDirectory() as tmp:
+        stage, volume = Path(tmp) / 'stage', Path(tmp) / 'volume'
+        stage.mkdir()
+        (stage / 'positions.json').write_text(dump_fixture({'positions': []}))
+        (stage / 'unknown.txt').write_text('unapproved input')
+        assert merge_state.main([str(stage), str(volume), '--application']) == 2
+        assert not volume.exists()
+
+
 def test_list_union_repo_wins_volume_only_kept():
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "stage"

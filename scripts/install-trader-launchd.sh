@@ -5,15 +5,16 @@
 # live site tracks the Mac trader.
 #
 # Usage:
-#   scripts/install-trader-launchd.sh install [--with-monitor]
+#   scripts/install-trader-launchd.sh install [--with-monitor] [--private-sync | --keep-sync]
 #   scripts/install-trader-launchd.sh uninstall
 #   scripts/install-trader-launchd.sh status
+#   scripts/install-trader-launchd.sh quiesce|resume
 set -euo pipefail
 umask 077
 ACTION="${1:-install}"
 case "$ACTION" in
-  install|uninstall|status) ;;
-  *) echo "usage: $0 [install [--with-monitor]|uninstall|status]" >&2; exit 1 ;;
+  install|uninstall|status|quiesce|resume) ;;
+  *) echo "usage: $0 [install [--with-monitor] [--private-sync | --keep-sync]|uninstall|status|quiesce|resume]" >&2; exit 1 ;;
 esac
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -27,6 +28,7 @@ MON_PLIST="$HOME/Library/LaunchAgents/$MON_LABEL.plist"
 LOG_DIR="$HOME/Library/Logs/rshelper"
 VENV_PY="$REPO_DIR/.venv/bin/python"
 SYNC_SCRIPT="$HOME/.config/rshelper/bin/sync-and-push-state.py"
+SYNC_SOURCE="sync-and-push-state.py"
 SYNC_INTERVAL="${SYNC_INTERVAL:-900}"  # 15 min default
 
 if ! [[ "$SYNC_INTERVAL" =~ ^[1-9][0-9]*$ ]]; then
@@ -46,7 +48,7 @@ fi
 # restage on explicit install so status/uninstall never update the helper.
 stage_sync() {
   mkdir -p "$LOG_DIR" "$HOME/Library/LaunchAgents" "$(dirname "$SYNC_SCRIPT")"
-  cp "$REPO_DIR/scripts/sync-and-push-state.py" "$SYNC_SCRIPT"
+  cp "$REPO_DIR/scripts/$SYNC_SOURCE" "$SYNC_SCRIPT"
   chmod 700 "$SYNC_SCRIPT"
 }
 
@@ -194,12 +196,29 @@ EOF
 }
 
 case "$ACTION" in
+  quiesce|resume)
+    exec "$VENV_PY" "$REPO_DIR/scripts/quiesce-daemons.py" "$ACTION"
+    ;;
   install)
-    WITH_MONITOR="${2:-no}"
-    if [[ "$WITH_MONITOR" != "no" && "$WITH_MONITOR" != "--with-monitor" ]]; then
-      echo "error: unknown install option" >&2; exit 1
+    WITH_MONITOR=no
+    KEEP_SYNC=no
+    for option in "${@:2}"; do
+      case "$option" in
+        --with-monitor) WITH_MONITOR=--with-monitor ;;
+        --keep-sync) KEEP_SYNC=yes ;;
+        --private-sync)
+          SYNC_SOURCE=sync-private-state.py
+          SYNC_SCRIPT="$HOME/.config/rshelper/bin/$SYNC_SOURCE"
+          ;;
+        *) echo "error: unknown install option" >&2; exit 1 ;;
+      esac
+    done
+    if [[ "$KEEP_SYNC" == yes && "$SYNC_SOURCE" == sync-private-state.py ]]; then
+      echo "error: --keep-sync and --private-sync cannot be combined" >&2
+      exit 1
     fi
-    stage_sync
+    mkdir -p "$LOG_DIR" "$HOME/Library/LaunchAgents"
+    if [[ "$KEEP_SYNC" == no ]]; then stage_sync; fi
     write_plist
     launchctl enable "$SERVICE_DOMAIN/$LABEL"
     launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
@@ -207,13 +226,15 @@ case "$ACTION" in
     echo "Installed and started $LABEL"
     echo "  plist: $PLIST"
     echo "  logs:  $LOG_DIR/trader.{out,err}.log"
-    write_sync_plist
-    launchctl enable "$SERVICE_DOMAIN/$SYNC_LABEL"
-    launchctl bootout "gui/$(id -u)" "$SYNC_PLIST" 2>/dev/null || true
-    launchctl bootstrap "gui/$(id -u)" "$SYNC_PLIST"
-    echo "Installed state sync $SYNC_LABEL (every ${SYNC_INTERVAL}s)"
-    echo "  plist: $SYNC_PLIST"
-    echo "  logs:  $LOG_DIR/sync.{out,err}.log"
+    if [[ "$KEEP_SYNC" == no ]]; then
+      write_sync_plist
+      launchctl enable "$SERVICE_DOMAIN/$SYNC_LABEL"
+      launchctl bootout "gui/$(id -u)" "$SYNC_PLIST" 2>/dev/null || true
+      launchctl bootstrap "gui/$(id -u)" "$SYNC_PLIST"
+      echo "Installed state sync $SYNC_LABEL (every ${SYNC_INTERVAL}s)"
+      echo "  plist: $SYNC_PLIST"
+      echo "  logs:  $LOG_DIR/sync.{out,err}.log"
+    fi
     if [[ "$WITH_MONITOR" == "--with-monitor" ]]; then
       write_monitor_plist
       launchctl enable "$SERVICE_DOMAIN/$MON_LABEL"
@@ -242,7 +263,7 @@ case "$ACTION" in
       && echo "monitor: loaded" || echo "monitor: not loaded"
     ;;
   *)
-    echo "usage: $0 [install [--with-monitor]|uninstall|status]" >&2
+    echo "usage: $0 [install [--with-monitor] [--private-sync | --keep-sync]|uninstall|status|quiesce|resume]" >&2
     exit 1
     ;;
 esac

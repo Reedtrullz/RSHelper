@@ -41,6 +41,9 @@ class Trade:
     quote_sell: int | None = None  # raw low quote before stop-loss slippage
     entry_spread_pct: float | None = None  # (offer - bid) / bid at entry
     fill_guard: bool = False  # exit filled at the 5m avg, not a thin print
+    record_uuid: str | None = None
+    origin_uuid: str | None = None
+    revision: int | None = None
 
 
 @dataclass
@@ -64,7 +67,8 @@ class PnLSummary:
 
 
 def _load(profile: str | None = None):
-    return read_state(_trades_path(profile), "trades")["trades"]
+    path = _trades_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'trades'), 'trades', path)['trades']
 
 
 def _save(trades: list[dict], profile: str | None = None) -> None:
@@ -106,15 +110,23 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
         path.with_name('identity-activation.json'))
     if manifest is not None:
         state_identity.require_financial_authority(manifest)
-        if operation_id is None:
-            raise ValueError('identified financial writes require operation_id')
+        from uuid import uuid4
+        operation_id = operation_id or str(uuid4())
+        request = dict(item_id=item_id, name=name, qty=qty, buy_price=buy_price,
+                       sell_price=sell_price, note=note, strategy=strategy,
+                       exit_reason=exit_reason, hold_minutes=hold_minutes,
+                       quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
+                       fill_guard=fill_guard)
         identity = state_identity.new_record_identity(
             manifest['origin_uuid'], 'trades', operation_id)
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
-            trades = _load(profile)
+            store = read_state(path, 'trades')
+            state_identity.validate_activated_store(store, 'trades', path)
+            trades = store['trades']
             for row in trades:
                 if row.get('record_uuid') == identity['record_uuid']:
+                    state_identity.validate_native_retry(path.parent, 'trades', row, request)
                     return Trade(**filter_fields(Trade, row))
             trade = {
                 "id": _next_id(trades), "item_id": item_id, "name": name,
@@ -127,7 +139,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
                 **identity,
             }
             trades.append(trade)
-            txn.stage('trades.json', {'trades': trades})
+            state_identity.attest_native(txn, path.parent, 'trades', trade, operation_id, request)
+            txn.stage('trades.json', store)
             txn.commit(operation_id=operation_id)
         return Trade(**filter_fields(Trade, trade))
     with _trade_lock(profile):
@@ -161,12 +174,17 @@ def delete_trade(trade_id: int, profile: str | None = None) -> bool:
             path.with_name('identity-activation.json')) is not None:
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
-            trades = _load(profile)
+            state_identity.require_financial_authority(state_identity.activation_manifest(
+                path.with_name('identity-activation.json')))
+            store = read_state(path, 'trades')
+            trades = store['trades']
             for i, t in enumerate(trades):
                 if t["id"] == trade_id:
+                    if t.get('tombstone'):
+                        return False
                     trades[i] = {**t, 'tombstone': True,
                                  'revision': t.get('revision', 0) + 1}
-                    txn.stage('trades.json', {'trades': trades})
+                    txn.stage('trades.json', store)
                     txn.commit(operation_id=t['record_uuid'])
                     return True
             return False

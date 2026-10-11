@@ -2,6 +2,7 @@
 from contextlib import ExitStack
 from datetime import datetime, timezone
 import hashlib
+from itertools import islice
 import json
 import os
 from pathlib import Path
@@ -21,7 +22,7 @@ FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.js
     'trader_state.json', 'recent_exits.json', 'monitor_state.json',
     'identity-manifest.json', 'identity-activation.json', 'identity-lineage.json',
     'realizations.json', 'realization-batches.json', 'replication-state.json',
-    'peer-receipts.json', 'backup-restores.json'})
+    'peer-receipts.json', 'peer-information.json', 'backup-restores.json', 'migration-receipts.json'})
 CORE_KINDS = {'trades.json': 'trades', 'positions.json': 'positions',
               'watchlist.json': 'watchlist', 'alerts.json': 'alerts'}
 
@@ -34,7 +35,10 @@ def _files(root):
     selected = {}
     excluded = []
     with os.scandir(root) as scan:
-        entries = sorted(scan, key=lambda entry: entry.name)
+        entries = list(islice(scan, 4097))
+    if len(entries) > 4096:
+        raise BackupError('backup source exceeds directory entry budget')
+    entries.sort(key=lambda entry: entry.name)
     for entry in entries:
         if entry.name in FILES:
             if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
@@ -44,7 +48,10 @@ def _files(root):
             if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
                 raise BackupError('snapshot directory must not be a symlink')
             with os.scandir(entry.path) as scan:
-                snapshots = sorted(scan, key=lambda child: child.name)
+                snapshots = list(islice(scan, 4097))
+            if len(snapshots) > 4096:
+                raise BackupError('snapshot directory exceeds entry budget')
+            snapshots.sort(key=lambda child: child.name)
             for snapshot in snapshots:
                 if not snapshot.name.endswith('.json'):
                     excluded.append('snapshots/' + snapshot.name)
@@ -54,6 +61,8 @@ def _files(root):
                 selected['snapshots/' + snapshot.name] = Path(snapshot.path)
         elif not entry.name.endswith('.lock'):
             excluded.append(entry.name)
+    if len(selected) > 512:
+        raise BackupError('backup source exceeds selected file budget')
     return selected, excluded
 
 
@@ -247,28 +256,46 @@ def inspect_backup(source: Path) -> dict:
     return _inspect(source)[0]
 
 
-def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, operation_id: str) -> dict:
+def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, operation_id: str,
+                    expected_source_revision: str | None = None) -> dict:
     from rshelper import identity_merge, state_transaction
     from rshelper.persistence import decode_json as _decode
     from rshelper.identity_merge import _json
     canonical_uuid(expected_profile_uuid)
     canonical_uuid(operation_id)
     manifest, content = _inspect(source)
-    if manifest['profile_uuid'] != expected_profile_uuid:
+    legacy = manifest['profile_uuid'] is None
+    if legacy:
+        if expected_source_revision != manifest['source_revision']:
+            raise BackupError('legacy restore requires its explicit inspected source revision')
+        if any(name.startswith('identity-') or name in ('realizations.json', 'realization-batches.json',
+                'replication-state.json', 'migration-receipts.json') for name in content):
+            raise BackupError('legacy restore source contains identity or operation metadata')
+        from rshelper.persistence import validate_writable_state
+        for name, kind in CORE_KINDS.items():
+            if name in content:
+                validate_writable_state(_decode(content[name]), kind, Path(name))
+    elif manifest['profile_uuid'] != expected_profile_uuid:
         raise BackupError('backup profile UUID does not match explicit restore target')
     root = resolve_config_path('', profile)
     with state_transaction.profile_transaction(profile, root) as txn:
         activation = read_state(root / 'identity-activation.json', 'generic')
-        incoming_activation = _decode(content['identity-activation.json'])
+        incoming_activation = _decode(content['identity-activation.json']) if not legacy else {}
+        if legacy and activation:
+            raise BackupError('legacy restore cannot replace an activated profile')
         if activation and (activation.get('profile_uuid') != expected_profile_uuid
                            or activation.get('origin_uuid') != incoming_activation.get('origin_uuid')):
             raise BackupError('existing profile identity differs from restore target')
         operations = read_state(root / 'backup-restores.json', 'generic').get('operations', {})
         if operation_id in operations:
             prior = operations[operation_id]
-            if prior['source_revision'] != manifest['source_revision']:
+            if (prior['source_revision'] != manifest['source_revision']
+                    or prior['profile_uuid'] != expected_profile_uuid):
                 raise BackupError('restore operation reused with another backup')
             return prior
+        if legacy and any((root / name).exists() or (root / name).is_symlink()
+                          for name in FILES if name != 'backup-restores.json'):
+            raise BackupError('legacy restore requires an empty inactive target')
         for name, kind in CORE_KINDS.items():
             local = read_state(root / name, kind)
             rows = local.get('items', {}) if kind == 'watchlist' else local[kind]

@@ -178,6 +178,9 @@ def validate_state(data, kind, path):
         _fail(path, f'{key} must be a {expected.__name__}')
     if kind == 'watchlist':
         _validate_watchlist(data, path)
+        if version == 2 and any(validate_record_identity(row, kind) is None
+                                for row in data['items'].values()):
+            _fail(path, 'identified schema requires identity on every watch')
         return data
     rows = data[key].values() if kind == 'watchlist' else data[key]
     for row in rows:
@@ -185,7 +188,9 @@ def validate_state(data, kind, path):
             _fail(path, 'state row must be an object')
         if kind in ('trades', 'positions', 'alerts'):
             try:
-                validate_record_identity(row, kind)
+                identity = validate_record_identity(row, kind)
+                if version == 2 and identity is None:
+                    _fail(path, 'identified schema requires identity on every record')
             except ValueError as exc:
                 _fail(path, str(exc))
         if kind in ('trades', 'positions'):
@@ -259,7 +264,7 @@ def read_state(path: Path, kind: str, *, _publication_check=True) -> dict:
     if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
         _fail(path, 'state path is not a regular file')
     try:
-        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | os.O_NONBLOCK
         fd = os.open(state_path, flags)
         try:
             stream = os.fdopen(fd, 'rb')

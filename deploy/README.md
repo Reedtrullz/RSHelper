@@ -181,7 +181,15 @@ First owner startup atomically provisions a random 256-bit credential in the sel
 
 To connect, obtain the credential through the owner's authenticated SSH/local file access and enter it in the dashboard's password field over HTTPS (loopback HTTP is acceptable locally). Do not paste it into an issue, command argument, shared screenshot or browser URL. The session keeps the token only in memory and sends Authorization headers, including for fetch-stream SSE. Disconnect clears private state and destroys the session; a page reload requires reconnection. No password identity service or implicit proxy trust is claimed. Public/private replication and historical Git-data disposition remain separate E08 acceptance gates.
 
-State-only sync verifies private record availability inside the owner container through `deploy/check_state.py`. The bearer credential stays in that container, and the CI log receives only boolean authentication/schema success; record values and counts are not printed. Public `/api/health` remains the sanitized deployment receipt.
+Before activation, state-only sync verifies record availability inside the owner container through `deploy/check_state.py`. Identified apply instead requires an exact profile/origin/revision/hash receipt from the authenticated owner endpoint. The bearer credential stays in that container; CI receives metadata without record values. Public `/api/health` remains the sanitized deployment receipt.
+
+Main deploy and legacy state sync share the non-cancelling `rshelper-production`
+GitHub group. Host mutations also take `/opt/apps/rshelper/production.lock`.
+The installed private receiver verifies the running immutable image and writable
+state volume before applying through that image as UID 1000, with network disabled
+and a read-only packet mount. Activated profiles skip public tracked-state seeding.
+Migration and private-job activation are explicit operator actions after E08's
+owner decision; see [the coordinated state runbook](../docs/execution/coordinated-state-runbook.md).
 
 ## Scheduled state commit isolation
 

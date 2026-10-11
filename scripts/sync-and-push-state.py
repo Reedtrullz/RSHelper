@@ -36,7 +36,8 @@ class SyncError(ValueError):
     pass
 
 
-def git(repo, *args, index=None, data=None, check=True):
+def run_command(command, *, index=None, data=None, timeout=MAX_GIT_SECONDS,
+                output_limit=MAX_GIT_OUTPUT):
     env = dict(os.environ)
     for key in ('GIT_DIR','GIT_COMMON_DIR','GIT_WORK_TREE','GIT_INDEX_FILE',
                 'GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_NAMESPACE'):
@@ -44,12 +45,11 @@ def git(repo, *args, index=None, data=None, check=True):
     env['GIT_TERMINAL_PROMPT']='0'
     env['GIT_OPTIONAL_LOCKS']='0'
     if index is not None: env['GIT_INDEX_FILE'] = str(index)
-    command = ['git','-C',str(repo),*args]
     proc = subprocess.Popen(command, stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, start_new_session=True)
     completed = False
     output = {'stdout':bytearray(),'stderr':bytearray()}
-    deadline = time.monotonic()+MAX_GIT_SECONDS
+    deadline = time.monotonic()+timeout
     pending = memoryview(data or b'')
     try:
         with selectors.DefaultSelector() as selector:
@@ -78,7 +78,7 @@ def git(repo, *args, index=None, data=None, check=True):
                         except BlockingIOError: continue
                         if not block:
                             selector.unregister(key.fileobj);key.fileobj.close();continue
-                        limit=MAX_GIT_OUTPUT if key.data=='stdout' else MAX_GIT_ERROR
+                        limit=output_limit if key.data=='stdout' else MAX_GIT_ERROR
                         if len(output[key.data])+len(block)>limit:
                             raise SyncError('Git command exceeded its output budget')
                         output[key.data].extend(block)
@@ -97,7 +97,14 @@ def git(repo, *args, index=None, data=None, check=True):
         for stream in (proc.stdin,proc.stdout,proc.stderr):
             if stream is not None and not stream.closed: stream.close()
         if not completed: proc.wait(timeout=2)
-    if check and result.returncode: raise SyncError('Git state operation failed: '+args[0])
+    return result
+
+
+def git(repo, *args, index=None, data=None, check=True):
+    result = run_command(['git', '-C', str(repo), *args], index=index, data=data,
+                         timeout=MAX_GIT_SECONDS, output_limit=MAX_GIT_OUTPUT)
+    if check and result.returncode:
+        raise SyncError('Git state operation failed: '+args[0])
     return result
 
 
@@ -151,7 +158,32 @@ def base_revision(repo, current):
     raise SyncError('State ref and source HEAD diverged; reconcile source without sweeping WIP')
 
 
+def _prepare_app():
+    app_src=REPO/'src'
+    package=(app_src/'rshelper').resolve()
+    required=('__init__.py','publication.py','backup.py','persistence.py','profile.py','config.py','state_transaction.py')
+    if any(not (package/name).is_file() for name in required):
+        raise SyncError('Configured validation source is missing; state selection refused')
+    for name,module in tuple(sys.modules.items()):
+        if name=='rshelper' or name.startswith('rshelper.'):
+            file=getattr(module,'__file__',None)
+            if not file or not Path(file).resolve().is_relative_to(package):
+                raise SyncError('Loaded validation source differs from configured repository')
+    sys.path.insert(0,str(app_src))
+
+
 def collect(source):
+    _prepare_app()
+    from rshelper.state_transaction import profile_transaction
+    if any(parent.is_symlink() for parent in (source, *source.parents)):
+        raise SyncError('State source parent must not be a symlink')
+    with profile_transaction('default', source):
+        if (source / 'identity-activation.json').exists():
+            raise SyncError('Identified private state requires authenticated SSH; raw Git publication refused')
+        return _collect(source)
+
+
+def _collect(source):
     # E08 owns these classifications. No new file/profile is selected merely
     # because it appeared on disk. Existing legacy replication is not a demo
     # approval; its private transport cutover remains a separate owner gate.
@@ -165,17 +197,6 @@ def collect(source):
             if len(candidates)>MAX_SYNC_FILES: raise SyncError('State selection exceeds file budget')
     if len(candidates)>MAX_SYNC_FILES: raise SyncError('State selection exceeds file budget')
     candidates.sort()
-    app_src=REPO/'src'
-    package=(app_src/'rshelper').resolve()
-    required=('__init__.py','publication.py','backup.py','persistence.py','profile.py','config.py')
-    if any(not (package/name).is_file() for name in required):
-        raise SyncError('Configured validation source is missing; state selection refused')
-    for name,module in tuple(sys.modules.items()):
-        if name=='rshelper' or name.startswith('rshelper.'):
-            file=getattr(module,'__file__',None)
-            if not file or not Path(file).resolve().is_relative_to(package):
-                raise SyncError('Loaded validation source differs from configured repository')
-    sys.path.insert(0,str(app_src))
     from rshelper.publication import PRIVATE_FILES, KNOWN_FIELDS
     from rshelper.backup import _read_file, _validate_file, CORE_KINDS
     selected={};total=0
@@ -300,10 +321,24 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run',action='store_true')
     parser.add_argument('--status',action='store_true')
+    parser.add_argument('--copy-only',action='store_true')
     parser.add_argument('--unsigned',action='store_true',help='Explicitly permit unsigned synthetic/operator state commits; never automatic')
     args=parser.parse_args(argv)
     try:
-        report=sync_status(REPO) if args.status else run_sync(REPO,SRC,unsigned=args.unsigned,dry_run=args.dry_run)
+        if args.copy_only:
+            selected = collect(Path(os.environ.get('RSHELPER_CONFIG_DIR', SRC)))
+            if args.dry_run:
+                report = {'copied_paths': [], 'selected_paths': sorted(selected), 'dry_run': True}
+            else:
+                from rshelper.state_transaction import profile_transaction
+                from uuid import uuid4
+                with profile_transaction('default', DEST) as txn:
+                    for name, raw in selected.items():
+                        txn.stage_bytes(name.removeprefix('data/state/'), raw)
+                    receipt = txn.commit(str(uuid4()))
+                report = {'copied_paths': sorted(selected), 'operation_id': receipt['operation_id']}
+        else:
+            report=sync_status(REPO) if args.status else run_sync(REPO,SRC,unsigned=args.unsigned,dry_run=args.dry_run)
         print(json.dumps(report,sort_keys=True));return 0
     except SyncError as exc:
         print('[sync] '+str(exc)+'; checkout/index preserved; inspect --status',file=sys.stderr)

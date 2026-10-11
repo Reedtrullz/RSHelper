@@ -15,6 +15,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin rshelper
 
 WORKDIR /app
 COPY src ./src
+COPY deploy/merge_state.py ./deploy/merge_state.py
 RUN python - <<'PY'
 import json, os, re
 from pathlib import Path

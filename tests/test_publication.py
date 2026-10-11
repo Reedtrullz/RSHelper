@@ -23,6 +23,13 @@ class TestPublication(unittest.TestCase):
         with self.assertRaises(PublicationError):
             export_demo(self.state, self.policy, profile='synthetic-demo')
 
+    def test_unknown_identified_fields_remain_default_deny(self):
+        self.state['trades.json']['trades'][0].update(
+            record_uuid='11111111-1111-4111-8111-111111111111',
+            origin_uuid='22222222-2222-4222-8222-222222222222', revision=0, tombstone=False)
+        with self.assertRaises(PublicationError):
+            preview_publication('synthetic-demo', self.policy, self.state)
+
     def test_preview_matches_public_bytes(self):
         preview = preview_publication('synthetic-demo', self.policy, self.state)
         output = export_demo(self.state, self.policy, profile='synthetic-demo')

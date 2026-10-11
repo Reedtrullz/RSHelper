@@ -103,6 +103,14 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
+    if route == '/api/state/receipt':
+        from rshelper.persistence import canonical_uuid
+        if set(values) != {'origin'}:
+            raise HttpInputError('Exactly one origin UUID is required')
+        try:
+            canonical_uuid(values['origin'][0])
+        except ValueError as exc:
+            raise HttpInputError('Invalid origin UUID') from exc
     if route in ('/api/prices', '/api/confidence'):
         parts = values.get('ids', [''])[0].split(',')
         if parts == ['']: parts = []

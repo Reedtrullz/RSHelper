@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, resolve_config_path
@@ -20,16 +20,26 @@ def _watchlist_path(profile: str | None = None) -> Path:
 
 
 def _watchlist_lock(profile: str | None = None):
+    path = _watchlist_path(profile)
+    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+        return state_transaction.profile_transaction(profile or 'default', path.parent)
     return locked_writable_state(_watchlist_path(profile), 'watchlist')
 
 
 def load(profile: str | None = None):
-    return read_state(_watchlist_path(profile), "watchlist")
+    path = _watchlist_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'watchlist'), 'watchlist', path)
 
 
 def _save(data: dict, profile: str | None = None) -> None:
     """Atomic write: temp file + rename."""
     validate_state(data, "watchlist", _watchlist_path(profile))
+    path = _watchlist_path(profile)
+    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+        with state_transaction.profile_transaction(profile or 'default', path.parent) as txn:
+            txn.stage('watchlist.json', data)
+            txn.commit(str(uuid4()))
+        return
     atomic_write_json(_watchlist_path(profile), data, indent=2)
 
 
@@ -51,25 +61,37 @@ def add(item_id: int, name: str,
     manifest = state_identity.activation_manifest(
         path.with_name('identity-activation.json'))
     if manifest is not None:
-        if operation_id is None:
-            raise ValueError('identified watch writes require operation_id')
+        operation_id = operation_id or str(uuid4())
         identity = state_identity.new_record_identity(
             manifest['origin_uuid'], 'watchlist', operation_id)
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
             data = load(profile)
             existing = data["items"].get(str(item_id))
-            added = existing.get("added") if existing else                 datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            if existing is not None:
+                identity = {key: existing[key] for key in ('record_uuid', 'origin_uuid', 'revision', 'tombstone')}
+            elif identity['record_uuid'] in data.get('tombstones', {}):
+                raise ValueError('creation retry cannot resurrect a removed watch')
+            added = existing.get("added") if existing else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             if alert_margin_above is None and existing is not None:
                 alert_margin_above = existing.get("alert_margin_above")
             if alert_margin_below is None and existing is not None:
                 alert_margin_below = existing.get("alert_margin_below")
-            data["items"][str(item_id)] = {
+            row = {
                 "name": name, "added": added, "item_id": int(item_id),
                 "alert_margin_above": alert_margin_above,
                 "alert_margin_below": alert_margin_below,
                 **identity,
             }
+            if existing == row:
+                return
+            if existing is not None:
+                row['revision'] += 1
+            else:
+                state_identity.attest_native(txn, path.parent, 'watchlist', row, operation_id,
+                    dict(item_id=item_id, name=name, alert_margin_above=alert_margin_above,
+                         alert_margin_below=alert_margin_below))
+            data['items'][str(item_id)] = row
             txn.stage('watchlist.json', data)
             txn.commit(operation_id=operation_id)
         return

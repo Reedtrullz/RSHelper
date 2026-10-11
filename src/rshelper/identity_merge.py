@@ -13,7 +13,8 @@ from rshelper.persistence import canonical_uuid, validate_state, validate_record
 
 MAX_ROWS = 100_000
 IMMUTABLE = {
-    'positions': ('record_uuid','origin_uuid','legacy_id','lot_uid','item_id','buy_price','direction','opened_at'),
+    'positions': ('record_uuid','origin_uuid','legacy_id','lot_uid','item_id','buy_price','direction','opened_at',
+                  'entry_sell', 'entry_offer'),
     'trades': ('record_uuid','origin_uuid','legacy_id','item_id','qty','buy_price','sell_price',
                'tax_paid','profit','timestamp','operation_id','closed_lot_uid'),
     'alerts': ('record_uuid','origin_uuid','legacy_id','ts','type','item_id'),

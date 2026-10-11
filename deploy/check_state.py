@@ -1,7 +1,9 @@
 """Run inside the owner container; emit a sanitized private-state receipt."""
 import json
+import argparse
 from pathlib import Path
 import urllib.request
+from urllib.parse import urlencode
 
 from rshelper.dashboard.owner_token import _read_token
 
@@ -9,7 +11,17 @@ MAX_RECEIPT_BYTES = 64 * 1024 * 1024
 
 
 def private_state_receipt(credential=Path('/home/rshelper/.config/rshelper/owner.token'),
-                          url='http://127.0.0.1:5555/api/trades', *, expected=None):
+                          url=None, *, expected=None):
+    fields = {'profile_uuid', 'origin_uuid', 'requested_revision', 'requested_hash'}
+    if expected is not None:
+        from rshelper.persistence import canonical_uuid
+        if not isinstance(expected, dict) or set(expected) != fields:
+            raise ValueError('invalid expected private state identity')
+        canonical_uuid(expected['origin_uuid'])
+        canonical_uuid(expected['profile_uuid'])
+    if url is None:
+        url = ('http://127.0.0.1:5555/api/state/receipt?' + urlencode({'origin': expected['origin_uuid']})
+               if expected is not None else 'http://127.0.0.1:5555/api/trades')
     token = _read_token(Path(credential))
     request = urllib.request.Request(url, headers={
         'Authorization': 'Bearer ' + token,
@@ -23,7 +35,6 @@ def private_state_receipt(credential=Path('/home/rshelper/.config/rshelper/owner
     if expected is not None:
         from rshelper.state_replication import _validate_receipt
         _validate_receipt(payload)
-        fields = {'profile_uuid', 'origin_uuid', 'requested_revision', 'requested_hash'}
         if (not isinstance(expected, dict) or set(expected) != fields
                 or payload['status'] not in ('applied', 'no_op')
                 or any(payload[key] != value for key, value in expected.items())
@@ -39,4 +50,8 @@ def private_state_receipt(credential=Path('/home/rshelper/.config/rshelper/owner
 
 
 if __name__ == '__main__':
-    print(json.dumps(private_state_receipt()))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--expected-file', type=Path)
+    args = parser.parse_args()
+    expected = json.loads(args.expected_file.read_text()) if args.expected_file else None
+    print(json.dumps(private_state_receipt(expected=expected)))

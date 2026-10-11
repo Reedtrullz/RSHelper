@@ -88,7 +88,73 @@ class NativeWriterTest(DisposableHomeTest):
                          state_identity.new_record_identity(
                              ORIGIN, 'trades', OPERATION)['record_uuid'])
         self.assertEqual(row['origin_uuid'], ORIGIN)
-        self.assertEqual(replay.id, first.id)
+
+    def test_normal_callers_create_durable_native_lineage(self):
+        self.activate()
+        lot = positions.open_position(2, 'Lot', 10, 100)
+        trade = journal.log_trade(**self.trade_payload())
+        alert = alerts.push_alert('system', 'INFO', None, '', 'Test', 'Synthetic')
+        watchlist.add(561, 'Nature rune')
+        root = profile.CONFIG_DIR
+        manifest = persistence.read_state(root / 'identity-manifest.json', 'generic')
+        self.assertEqual(len(manifest['native']), 4)
+        self.assertEqual(lot.origin_uuid, ORIGIN)
+        self.assertEqual(trade.origin_uuid, ORIGIN)
+        self.assertEqual(alert.origin_uuid, ORIGIN)
+        rows = persistence.read_state(root / 'positions.json', 'positions')['positions']
+        migrated, _ = state_identity.migrate_rows(rows, 'positions', manifest)
+        self.assertEqual(migrated, rows)
+
+    def test_creation_retry_cannot_change_economics(self):
+        self.activate()
+        journal.log_trade(operation_id=OPERATION, **self.trade_payload())
+        before = journal._trades_path().read_bytes()
+        with self.assertRaises(ValueError):
+            journal.log_trade(operation_id=OPERATION,
+                              **{**self.trade_payload(), 'qty': 11})
+        self.assertEqual(before, journal._trades_path().read_bytes())
+
+    def test_new_lot_preserves_completed_close_proof(self):
+        from rshelper import realization
+        self.activate()
+        first = positions.open_position(2, 'Lot', 10, 100, operation_id=OPERATION)
+        receipt = realization.close_and_realize('default', first.lot_uid, 10, 120,
+                                               OPERATION2, 'manual')
+        proof = persistence.read_state(positions._positions_path(), 'positions')['realizations']
+        positions.open_position(2, 'Lot', 3, 110)
+        self.assertEqual(proof, persistence.read_state(positions._positions_path(), 'positions')['realizations'])
+        realization.recover_pending('default')
+        self.assertEqual(receipt['trade_ids'], [journal.list_trades()[0].id])
+        self.assertEqual(journal.list_trades()[0].profit, 180)
+
+    def test_watch_update_preserves_generation_and_advances_revision(self):
+        self.activate()
+        watchlist.add(561, 'Nature rune', operation_id=OPERATION)
+        first = watchlist.load()['items']['561']
+        watchlist.add(561, 'Nature rune', alert_margin_above=10,
+                      operation_id=OPERATION2)
+        second = watchlist.load()['items']['561']
+        self.assertEqual(first['record_uuid'], second['record_uuid'])
+        self.assertEqual(second['revision'], 1)
+        watchlist.add(561, 'Nature rune', alert_margin_above=10,
+                      operation_id=OPERATION2)
+        self.assertEqual(watchlist.load()['items']['561'], second)
+
+    def test_identified_alert_replay_read_and_prune_retain_evidence(self):
+        from unittest import mock
+        self.activate()
+        with mock.patch.object(alerts.time, 'time', return_value=1.0):
+            first = alerts.push_alert('system', 'INFO', None, '', 'Test', 'Synthetic',
+                                      operation_id=OPERATION)
+        replay = alerts.push_alert('system', 'INFO', None, '', 'Test', 'Synthetic',
+                                   operation_id=OPERATION)
+        self.assertEqual(first.id, replay.id)
+        self.assertEqual(alerts.mark_read(ids=[first.id]), 1)
+        alerts.push_alert('system', 'INFO', None, '', 'New', 'Synthetic')
+        rows = persistence.read_state(alerts._alerts_path(), 'alerts')['alerts']
+        old = next(row for row in rows if row['id'] == first.id)
+        self.assertTrue(old['tombstone'])
+        self.assertEqual(old['revision'], 2)
 
     def test_auxiliary_writer_obeys_capture_lock(self):
         record = []
@@ -111,6 +177,47 @@ class NativeWriterTest(DisposableHomeTest):
             state_transaction._ProfileLock = original
         self.assertEqual(record[0][0], 'enter')
         self.assertEqual(record[-1][0], 'exit')
+
+    def test_real_baseline_save_completes_and_preserves_failure_handling(self):
+        import json
+        from unittest import mock
+        from rshelper import signals
+        path = profile.resolve_config_path('volume_baseline.json', 'synthetic')
+        signals._save_baselines({'561': 12.5}, 'synthetic')
+        self.assertEqual(json.loads(path.read_text()), {'561': 12.5})
+        before = path.read_bytes()
+        with mock.patch.object(signals.os, 'replace', side_effect=OSError('fixture failure')):
+            with self.assertRaises(OSError):
+                signals._save_baselines({'561': 99.0}, 'synthetic')
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(list(path.parent.glob('*.tmp')), [])
+
+    def test_threshold_update_and_dedupe_clear_recover_together(self):
+        from unittest import mock
+        self.activate()
+        watchlist.add(561, 'Nature rune')
+        alerts.set_watch_triggered(561)
+        def interrupt(step):
+            if step == 'data:watchlist.json':
+                raise OSError('fixture interrupted threshold update')
+        with mock.patch.object(state_transaction, '_checkpoint', side_effect=interrupt):
+            with self.assertRaises(OSError):
+                alerts.update_watch_alerts(561, 10, None)
+        state_transaction.recover_profile(profile.CONFIG_DIR)
+        self.assertEqual(watchlist.load()['items']['561']['alert_margin_above'], 10)
+        self.assertNotIn('561', alerts._load()['watch_triggered'])
+
+    def test_corrupt_activation_does_not_crash_alert_caller(self):
+        from contextlib import redirect_stderr
+        import io
+        profile.CONFIG_DIR.mkdir(parents=True)
+        (profile.CONFIG_DIR / 'identity-activation.json').write_text('{}')
+        warning = io.StringIO()
+        with redirect_stderr(warning):
+            fallback = alerts.push_alert('system', 'INFO', None, '', 'Fixture', 'Synthetic')
+        self.assertIsNone(fallback.record_uuid)
+        self.assertIn('could not persist', warning.getvalue())
+        self.assertFalse((profile.CONFIG_DIR / 'alerts.json').exists())
 
 
 class AuthorityUnitTest(unittest.TestCase):

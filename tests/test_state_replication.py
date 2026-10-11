@@ -56,6 +56,63 @@ class ReplicationTest(unittest.TestCase):
 
     def write_trades(self, name, rows):
         (self.root(name) / 'trades.json').write_text(json.dumps({'trades': rows}))
+        path = self.root(name) / 'identity-manifest.json'
+        manifest = json.loads(path.read_text())
+        for row in rows:
+            if row.get('origin_uuid') == manifest['origin_uuid'] and 'legacy_id' in row:
+                manifest['mappings'][state_identity._migration_key(row, 'trades')] = row['record_uuid']
+        path.write_text(json.dumps(manifest))
+
+    def test_native_creation_proof_reaches_replica_and_survives_return(self):
+        from rshelper import journal
+        journal.log_trade(2, 'Synthetic', 10, 100, 120, profile='a', operation_id=B)
+        self.api().apply_packet('b', self.packet())
+        self.api().apply_packet('a', self.packet('b'))
+        row = journal.list_trades(profile='a')[0]
+        self.assertEqual(row.profit, 180)
+        lineage = json.loads((self.root('b') / 'identity-lineage.json').read_text())
+        self.assertIn(row.record_uuid, lineage['origins'][A]['native'])
+
+    def test_growing_native_lineage_converges_over_three_round_trips(self):
+        from rshelper import journal
+        from uuid import uuid4
+        for index in range(3):
+            journal.log_trade(2, 'Synthetic', 10, 100, 120, profile='a', operation_id=str(uuid4()))
+            forward = self.api().apply_packet('b', self.packet('a', 'grow-' + str(index)))
+            reverse = self.api().apply_packet('a', self.packet('b', 'grow-' + str(index)))
+            self.assertEqual((forward['status'], reverse['status']), ('applied', 'applied'))
+        self.assertEqual(len(journal.list_trades(profile='a')), 3)
+        self.assertEqual(len(journal.list_trades(profile='b')), 3)
+
+    def test_unattested_native_row_cannot_leave_source(self):
+        from rshelper import journal
+        journal.log_trade(2, 'Synthetic', 10, 100, 120, profile='a', operation_id=B)
+        manifest = self.root('a') / 'identity-manifest.json'
+        manifest.write_text(json.dumps(state_identity.new_manifest(A)))
+        with self.assertRaises(ValueError):
+            self.packet()
+
+    def test_partial_native_close_reconciles_attested_creation_quantity(self):
+        from rshelper import positions, realization
+        lot = positions.open_position(2, 'Synthetic', 10, 100, profile='a')
+        realization.close_and_realize('a', lot.lot_uid, 4, 120, P, 'manual')
+        self.assertEqual(self.api().apply_packet('b', self.packet())['status'], 'applied')
+        path = self.root('a') / 'positions.json'
+        store = json.loads(path.read_text())
+        store['positions'][0]['qty'] += 1
+        path.write_text(json.dumps(store))
+        with self.assertRaises(ValueError):
+            self.packet(suffix='forged-quantity')
+
+    def test_undeclared_foreign_origin_cannot_enter_replica(self):
+        packet = self.packet()
+        self.api().apply_packet('b', packet)
+        activation_path = self.root('a') / 'identity-activation.json'
+        activation = json.loads(activation_path.read_text())
+        activation['replication_origins'] = [A]
+        activation_path.write_text(json.dumps(activation))
+        with self.assertRaises(ValueError):
+            self.api().apply_packet('a', self.packet('b'))
 
     def packet(self, name='a', suffix='one'):
         target = self.base / (name + '-' + suffix + '.zip')
@@ -111,10 +168,13 @@ class ReplicationTest(unittest.TestCase):
         with zipfile.ZipFile(first) as source:
             files = {name: source.read(name) for name in source.namelist()}
         manifest = json.loads(files.pop('manifest.json'))
-        files['trades.json'] = json.dumps({'trades': [self.row()]}).encode()
+        row = self.row()
+        identity = state_identity.new_manifest(A)
+        identity['mappings'][state_identity._migration_key(row, 'trades')] = row['record_uuid']
+        files['identity-manifest.json'] = json.dumps(identity).encode()
+        files['trades.json'] = json.dumps({'trades': [row]}).encode()
         for entry in manifest['files']:
-            if entry['path'] == 'trades.json':
-                entry.update(bytes=len(files['trades.json']), sha256=hashlib.sha256(files['trades.json']).hexdigest())
+            entry.update(bytes=len(files[entry['path']]), sha256=hashlib.sha256(files[entry['path']]).hexdigest())
         manifest['packet_hash'] = api.packet_hash(manifest, files)
         with zipfile.ZipFile(alternate, 'w') as output:
             output.writestr('manifest.json', json.dumps(manifest))
@@ -162,7 +222,9 @@ class ReplicationTest(unittest.TestCase):
         row = {'id': 1, 'ts': 100.0, 'type': 'watch', 'severity': 'INFO',
                'item_id': 2, 'item_name': 'Synthetic', 'title': 'Fixture',
                'message': 'Fixture', 'read': False}
-        row = state_identity.migrate_rows([row], 'alerts', state_identity.new_manifest(A))[0][0]
+        rows, manifest = state_identity.migrate_rows([row], 'alerts', state_identity.new_manifest(A))
+        row = rows[0]
+        (self.root('a') / 'identity-manifest.json').write_text(json.dumps(manifest))
         path = self.root('a') / 'alerts.json'
         path.write_text(json.dumps({'alerts': [row]}))
         self.api().apply_packet('b', self.packet())
