@@ -10,6 +10,21 @@ from unittest import mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
 
 class TestPrivateStateReceipt(unittest.TestCase):
+    def test_exact_receipt_requires_matching_durable_revision_hash_and_origin(self):
+        expected = {'profile_uuid': '11111111-1111-4111-8111-111111111111',
+                    'origin_uuid': '22222222-2222-4222-8222-222222222222',
+                    'requested_revision': 3, 'requested_hash': 'c' * 64}
+        receipt = {'schema_version': 1, 'status': 'applied', **expected,
+                   'applied_revision': 3, 'applied_hash': 'c' * 64}
+        with mock.patch.object(self.module.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(receipt).encode())):
+            self.assertEqual(self.module.private_state_receipt(self.token, expected=expected), receipt)
+        for field, bad in (('origin_uuid', expected['profile_uuid']), ('applied_revision', 2),
+                           ('applied_hash', 'd' * 64), ('status', 'conflict')):
+            wrong = {**receipt, field: bad}
+            with self.subTest(field=field), mock.patch.object(self.module.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(wrong).encode())):
+                with self.assertRaises(ValueError):
+                    self.module.private_state_receipt(self.token, expected=expected)
+
     def setUp(self):
         path=Path(__file__).resolve().parents[1]/'deploy/check_state.py'
         spec=importlib.util.spec_from_file_location('state_receipt',path)

@@ -177,6 +177,15 @@ def merge_dir(stage: str, volume: str, chown: str | None,
         raise ValueError(f"stage dir {stage} does not exist")
     if stage_root.is_symlink() or volume_root.is_symlink():
         raise ValueError("state roots cannot be symlinks")
+    packet = stage_root / 'state-packet.zip'
+    if packet.exists() or packet.is_symlink():
+        if validation_module is not None or set(path.name for path in stage_root.iterdir()) != {'state-packet.zip'}:
+            raise ValueError('revisioned packet requires the pinned application adapter and exact inventory')
+        from rshelper.state_replication import _apply_packet
+        receipt = _apply_packet(volume_root, 'default', packet)
+        if receipt['status'] not in ('applied', 'no_op'):
+            raise ValueError('revisioned state packet was not applied')
+        return receipt
     staged = _entries(stage_root)
     live_exists = volume_root.exists()
     live = _entries(volume_root) if live_exists else {}

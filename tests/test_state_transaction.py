@@ -50,7 +50,7 @@ class TransactionTest(unittest.TestCase):
             root = Path(folder)
             with self.assertRaises(ValueError):
                 self.transaction(root, {'notes.txt': {'anything': True}})
-            self.assertEqual(list(root.iterdir()), [])
+            self.assertEqual([path.name for path in root.iterdir()], ['.profile.lock'])
             self.assertFalse(state_transaction.receipt_path(root).exists())
 
     def test_read_snapshot_missing_files_are_defaults(self):
@@ -114,11 +114,42 @@ class TransactionTest(unittest.TestCase):
 
 
 class RecoveryTest(unittest.TestCase):
+    def test_recovery_finishes_original_generation_without_resubmission(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            original = {'positions': [POSITION]}
+            (root / 'positions.json').write_text(json.dumps(original))
+            def interrupt(step):
+                if step == 'data:trades.json':
+                    raise OSError('injected crash')
+            with mock.patch.object(state_transaction, '_checkpoint', interrupt):
+                with self.assertRaises(OSError):
+                    with state_transaction.profile_transaction('default', root) as txn:
+                        txn.stage('positions.json', {'positions': []})
+                        txn.stage('trades.json', {'trades': [TRADE]})
+                        txn.commit(OPERATION)
+            receipt = state_transaction.recover_profile(root)
+            self.assertEqual(receipt['operation_id'], OPERATION)
+            snapshot = state_transaction.read_profile_snapshot('default', root)
+            self.assertEqual(snapshot['positions']['positions'], [])
+            self.assertEqual(snapshot['trades']['trades'], [TRADE])
+            self.assertFalse((root / '.profile-pending.json').exists())
+
+    def test_transaction_holds_profile_lock_during_read_modify_write(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with state_transaction.profile_transaction('default', root):
+                self.assertTrue((root / '.profile.lock').exists())
+
     WORKER = '''
 import os, sys
 from pathlib import Path
 from rshelper import state_transaction
 root, mode = Path(sys.argv[1]), sys.argv[2]
+if mode == 'recover':
+    state_transaction.recover_profile(root)
+    sys.exit(0)
 def checkpoint(step):
     if step == mode:
         os._exit(9)
@@ -144,8 +175,8 @@ with state_transaction.profile_transaction('default', root) as txn:
     def test_kill_after_each_publish_step_recovers(self):
         kinds = {'positions.json': 'positions', 'trades.json': 'trades',
                  'alerts.json': 'alerts', 'watchlist.json': 'watchlist'}
-        for step in ('data:positions.json', 'data:trades.json', 'data:alerts.json',
-                     'data:watchlist.json', 'receipt'):
+        for step in ('intent', 'data:positions.json', 'data:trades.json', 'data:alerts.json',
+                     'data:watchlist.json', 'receipt', 'receipt-published', 'directory-fsync'):
             with self.subTest(step=step):
                 with tempfile.TemporaryDirectory() as folder:
                     root = Path(folder)
@@ -155,7 +186,7 @@ with state_transaction.profile_transaction('default', root) as txn:
                         name = step.split(':', 1)[1]
                         with self.assertRaises(persistence.StateCorruptionError):
                             persistence.read_state(root / name, kinds[name])
-                    completed = self.run_worker(root, 'none')
+                    completed = self.run_worker(root, 'recover')
                     self.assertEqual(completed.returncode, 0, completed.stderr)
                     self.assertFalse(any(root.glob('.*.publishing')))
                     self.assertTrue(state_transaction.receipt_path(root).exists())

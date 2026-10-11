@@ -9,7 +9,7 @@ MAX_RECEIPT_BYTES = 64 * 1024 * 1024
 
 
 def private_state_receipt(credential=Path('/home/rshelper/.config/rshelper/owner.token'),
-                          url='http://127.0.0.1:5555/api/trades'):
+                          url='http://127.0.0.1:5555/api/trades', *, expected=None):
     token = _read_token(Path(credential))
     request = urllib.request.Request(url, headers={
         'Authorization': 'Bearer ' + token,
@@ -20,6 +20,18 @@ def private_state_receipt(credential=Path('/home/rshelper/.config/rshelper/owner
     if len(raw) > MAX_RECEIPT_BYTES:
         raise ValueError('private state receipt exceeds response budget')
     payload = json.loads(raw)
+    if expected is not None:
+        from rshelper.state_replication import _validate_receipt
+        _validate_receipt(payload)
+        fields = {'profile_uuid', 'origin_uuid', 'requested_revision', 'requested_hash'}
+        if (not isinstance(expected, dict) or set(expected) != fields
+                or payload['status'] not in ('applied', 'no_op')
+                or any(payload[key] != value for key, value in expected.items())
+                or type(expected['requested_revision']) is not int
+                or payload['applied_revision'] != expected['requested_revision']
+                or payload['applied_hash'] != expected['requested_hash']):
+            raise ValueError('private state receipt does not match requested packet')
+        return payload
     if (not isinstance(payload, dict) or not isinstance(payload.get('trades'), list)
             or type(payload.get('count')) is not int or payload['count'] < 0):
         raise ValueError('private state receipt has an invalid shape')

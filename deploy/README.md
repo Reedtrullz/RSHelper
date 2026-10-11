@@ -59,6 +59,30 @@ git push                       # CI deploys; playbook seeds the volume
 The sync is additive and intentionally excludes `config.toml` and
 `active_profile`; see `data/state/README.md`.
 
+## Private backup and restore preparation
+
+The application can capture, inspect and restore an identified profile without
+extracting archive paths over live state. Capture holds the profile lease;
+restore validates the entire inventory and publishes through a durable redo
+transaction. Files containing tokens, locks and process IDs are excluded.
+
+```bash
+PYTHONPATH=src .venv/bin/python -m rshelper --profile rehearsal profile backup /private/path/profile.zip --json
+PYTHONPATH=src .venv/bin/python -m rshelper backup inspect --input /private/path/profile.zip --json
+PYTHONPATH=src .venv/bin/python -m rshelper --profile restored backup restore --input /private/path/profile.zip --expected-profile-uuid PROFILE_UUID --operation-id OPERATION_UUID --json
+```
+
+Restore requires the backup's explicit profile UUID. An existing destination
+must also match its source origin. Reusing an operation UUID returns the
+durable receipt; another backup under that UUID is refused. A normal restore
+cannot discard newer identified records, operation proof or acknowledged
+replication/publication revisions. Code rollback must use a compatible build
+with current state; an older backup requires separately assessed disaster
+recovery. Inspection accepts at most 512 selected files and 256MiB total;
+restoration also enforces the transaction's 64MiB encoded redo limit before
+publishing any data. No live migration or publication policy follows from
+these commands.
+
 ## OSRS Wiki access from the VPS
 
 The OSRS Wiki API (Cloudflare-fronted) returns HTTP 403 for the VPS datacenter

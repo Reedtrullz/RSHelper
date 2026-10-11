@@ -2076,6 +2076,24 @@ def _main() -> None:
     margin.add_argument("--save-snapshot", action="store_true",
                          help="Save results for later diff/trend comparison")
 
+    state_p = sub.add_parser('state', help='Capture, apply and verify private profile state')
+    state_sub = state_p.add_subparsers(dest='state_action', required=True)
+    for action, flag in (('capture', '--output'), ('apply', '--input'), ('receipt', '--origin')):
+        command = state_sub.add_parser(action)
+        command.add_argument(flag, required=True)
+        command.add_argument('--json', action='store_true')
+
+    backup_p = sub.add_parser('backup', help='Inspect and restore private profile backups')
+    backup_sub = backup_p.add_subparsers(dest='backup_action', required=True)
+    inspect_p = backup_sub.add_parser('inspect')
+    inspect_p.add_argument('--input', required=True)
+    inspect_p.add_argument('--json', action='store_true')
+    restore_p = backup_sub.add_parser('restore')
+    restore_p.add_argument('--input', required=True)
+    restore_p.add_argument('--expected-profile-uuid', required=True)
+    restore_p.add_argument('--operation-id', required=True)
+    restore_p.add_argument('--json', action='store_true')
+
     args, unknown = parser.parse_known_args(remaining)
     if unknown:
         print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
@@ -2098,7 +2116,28 @@ def _main() -> None:
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
-    if args.command == "item-info":
+    if args.command == 'backup':
+        from pathlib import Path
+        from rshelper import backup
+        if args.backup_action == 'inspect':
+            result = backup.inspect_backup(Path(args.input))
+        else:
+            result = backup.restore_profile(args.profile, Path(args.input),
+                                           expected_profile_uuid=args.expected_profile_uuid,
+                                           operation_id=args.operation_id)
+        print(json.dumps(result, sort_keys=True))
+    elif args.command == 'state':
+        from pathlib import Path
+        from rshelper import state_replication
+        if args.state_action == 'capture':
+            result = state_replication.capture_packet(args.profile, Path(args.output))
+            result = {key: value for key, value in result.items() if key != 'files'}
+        elif args.state_action == 'apply':
+            result = state_replication.apply_packet(args.profile, Path(args.input))
+        else:
+            result = state_replication.read_receipt(args.profile, args.origin)
+        print(json.dumps(result, sort_keys=True))
+    elif args.command == "item-info":
         item_info(args)
     elif args.command == "monitor":
         if args.stop:

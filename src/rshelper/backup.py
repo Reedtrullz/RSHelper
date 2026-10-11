@@ -1,4 +1,4 @@
-"""App-owned private backups; staged restore is a separate acceptance slice."""
+"""App-owned private backup inspection and recoverable restoration."""
 from contextlib import ExitStack
 from datetime import datetime, timezone
 import hashlib
@@ -12,13 +12,16 @@ import zipfile
 
 from rshelper import __version__
 from rshelper.config import _config_from_toml, validate_config
-from rshelper.persistence import MAX_STATE_BYTES, locked_state, validate_state
+from rshelper.persistence import MAX_STATE_BYTES, locked_state, validate_state, read_state, canonical_uuid
 from rshelper.profile import resolve_config_path, resolve_profile
 
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
     'alerts.json', 'tuning_log.json', 'volume_baseline.json', 'signal_cooldowns.json',
-    'trader_state.json', 'recent_exits.json', 'monitor_state.json'})
+    'trader_state.json', 'recent_exits.json', 'monitor_state.json',
+    'identity-manifest.json', 'identity-activation.json', 'identity-lineage.json',
+    'realizations.json', 'realization-batches.json', 'replication-state.json',
+    'peer-receipts.json', 'backup-restores.json'})
 CORE_KINDS = {'trades.json': 'trades', 'positions.json': 'positions',
               'watchlist.json': 'watchlist', 'alerts.json': 'alerts'}
 
@@ -54,7 +57,7 @@ def _files(root):
     return selected, excluded
 
 
-def _read_file(path):
+def _read_file(path, max_bytes=MAX_STATE_BYTES):
     descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     try:
         stream = os.fdopen(descriptor, 'rb')
@@ -64,8 +67,8 @@ def _read_file(path):
     with stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
             raise BackupError('backup source is not a regular file')
-        raw = stream.read(MAX_STATE_BYTES + 1)
-    if len(raw) > MAX_STATE_BYTES:
+        raw = stream.read(max_bytes + 1)
+    if len(raw) > max_bytes:
         raise BackupError('backup source exceeds file budget')
     return raw
 
@@ -75,7 +78,8 @@ def _validate_file(name, raw):
         if name == 'config.toml':
             validate_config(_config_from_toml(tomllib.loads(raw.decode('utf-8'))))
         else:
-            data = json.loads(raw)
+            from rshelper.persistence import decode_json
+            data = decode_json(raw)
             validate_state(data, CORE_KINDS.get(name, 'generic'), name)
             if name == 'tuning_log.json':
                 entries = data.get('entries')
@@ -88,14 +92,13 @@ def _validate_file(name, raw):
 
 
 def export_profile(profile: str, destination: Path, policy: str = 'backup') -> dict:
-    """Capture validated bytes into a private ZIP, refusing existing targets.
+    from rshelper.state_transaction import profile_transaction
+    root = _profile_root(profile)
+    with profile_transaction(profile, root):
+        return _export_profile(profile, destination, policy)
 
-    Core writers share these locks. A final byte/inventory recheck detects
-    concurrent changes by legacy writers; it does not claim cross-file
-    transaction coherence for writers that do not share the locks yet.
-    """
-    if policy not in ('backup', 'private', 'evidence'):
-        raise BackupError('profile backups are private; public publication requires its own policy')
+
+def _profile_root(profile):
     name = resolve_profile(profile)
     from rshelper import profile as profile_module
     base = profile_module.CONFIG_DIR
@@ -103,7 +106,14 @@ def export_profile(profile: str, destination: Path, policy: str = 'backup') -> d
     if (base.is_symlink() or lexical_root.is_symlink() or
             name != 'default' and (base / 'profiles').is_symlink()):
         raise BackupError('backup profile root must not be a symlink')
-    root = resolve_config_path('', name)
+    return resolve_config_path('', name)
+
+
+def _export_profile(profile: str, destination: Path, policy: str = 'backup') -> dict:
+    if policy not in ('backup', 'private', 'evidence'):
+        raise BackupError('profile backups are private; public publication requires its own policy')
+    name = resolve_profile(profile)
+    root = _profile_root(name)
     destination = Path(destination).absolute()
     if destination.resolve().is_relative_to(root):
         raise BackupError('backup destination must be outside the selected state root')
@@ -156,6 +166,151 @@ def export_profile(profile: str, destination: Path, policy: str = 'backup') -> d
             os.fsync(stream.fileno())
         # Atomic exclusive publication; a concurrent target/symlink is never replaced.
         os.link(temporary, destination)
+        directory = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
     finally:
         Path(temporary).unlink(missing_ok=True)
     return manifest
+
+
+def _inspect(source):
+    import io
+    from rshelper.persistence import decode_json as _decode
+    raw = _read_file(Path(source), MAX_BUNDLE_BYTES)
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        entries = archive.infolist()
+        names = [entry.filename for entry in entries]
+        if (len(entries) > 513 or len(set(names)) != len(names)
+                or sum(entry.file_size for entry in entries) > MAX_BUNDLE_BYTES
+                or 'manifest.json' not in names):
+            raise BackupError('invalid or excessive archive inventory')
+        for entry in entries:
+            name = entry.filename
+            parts = Path(name).parts
+            allowed = name in FILES or name == 'manifest.json' or (
+                len(parts) == 2 and parts[0] == 'snapshots' and parts[1].endswith('.json'))
+            if (not allowed or name != Path(name).as_posix() or '..' in parts
+                    or entry.is_dir() or entry.flag_bits & 1
+                    or stat.S_IFMT(entry.external_attr >> 16) not in (0, stat.S_IFREG)
+                    or entry.file_size > MAX_STATE_BYTES):
+                raise BackupError('archive contains unapproved or non-regular file')
+        manifest = _decode(archive.read('manifest.json'))
+        content = {name: archive.read(name) for name in names if name != 'manifest.json'}
+    if (not isinstance(manifest, dict) or type(manifest.get('schema_version')) is not int
+            or manifest['schema_version'] != 1 or manifest.get('validation') != 'validated'
+            or manifest.get('sensitivity') != 'private' or manifest.get('policy') not in ('backup', 'private')
+            or not isinstance(manifest.get('files'), dict) or set(manifest['files']) != set(content)):
+        raise BackupError('unsupported, unvalidated or incomplete backup')
+    for name, payload in content.items():
+        record = manifest['files'][name]
+        if (not isinstance(record, dict) or record.get('sensitivity') != 'private'
+                or record.get('validation') != 'validated' or type(record.get('bytes')) is not int
+                or record['bytes'] != len(payload)
+                or record.get('sha256') != hashlib.sha256(payload).hexdigest()):
+            raise BackupError('backup content hash mismatch')
+        if name.endswith('.json'):
+            _decode(payload)
+        _validate_file(name, payload)
+    revision = hashlib.sha256(json.dumps(manifest['files'], sort_keys=True).encode()).hexdigest()
+    if revision != manifest.get('source_revision'):
+        raise BackupError('backup source revision mismatch')
+    activation = _decode(content['identity-activation.json']) if 'identity-activation.json' in content else {}
+    profile_uuid = activation.get('profile_uuid')
+    if profile_uuid is not None:
+        canonical_uuid(profile_uuid)
+        from rshelper import state_identity, realization
+        canonical_uuid(activation.get('origin_uuid'))
+        if activation.get('mode') != 'identified' or type(activation.get('financial_authority')) is not bool:
+            raise BackupError('invalid backup activation')
+        if 'identity-manifest.json' not in content:
+            raise BackupError('backup activation lacks lineage manifest')
+        identity = _decode(content['identity-manifest.json'])
+        state_identity.validate_manifest(identity)
+        if identity['origin_uuid'] != activation['origin_uuid']:
+            raise BackupError('backup manifest origin differs from activation')
+        if 'realization-batches.json' in content:
+            realization.validate_batches(_decode(content['realization-batches.json']))
+        intents = _decode(content['realizations.json']) if 'realizations.json' in content else {'schema_version': 1, 'operations': {}}
+        realization.validate_intents(intents, 'realizations.json')
+        if any(not intent['done'] for intent in intents['operations'].values()):
+            raise BackupError('recover pending financial operations before restoring backup')
+        realization.verify_realization_snapshot(
+            _decode(content['positions.json']) if 'positions.json' in content else {'positions': []},
+            _decode(content['trades.json'])['trades'] if 'trades.json' in content else [], intents)
+    return {**manifest, 'profile_uuid': profile_uuid}, content
+
+
+def inspect_backup(source: Path) -> dict:
+    return _inspect(source)[0]
+
+
+def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, operation_id: str) -> dict:
+    from rshelper import identity_merge, state_transaction
+    from rshelper.persistence import decode_json as _decode
+    from rshelper.identity_merge import _json
+    canonical_uuid(expected_profile_uuid)
+    canonical_uuid(operation_id)
+    manifest, content = _inspect(source)
+    if manifest['profile_uuid'] != expected_profile_uuid:
+        raise BackupError('backup profile UUID does not match explicit restore target')
+    root = resolve_config_path('', profile)
+    with state_transaction.profile_transaction(profile, root) as txn:
+        activation = read_state(root / 'identity-activation.json', 'generic')
+        incoming_activation = _decode(content['identity-activation.json'])
+        if activation and (activation.get('profile_uuid') != expected_profile_uuid
+                           or activation.get('origin_uuid') != incoming_activation.get('origin_uuid')):
+            raise BackupError('existing profile identity differs from restore target')
+        operations = read_state(root / 'backup-restores.json', 'generic').get('operations', {})
+        if operation_id in operations:
+            prior = operations[operation_id]
+            if prior['source_revision'] != manifest['source_revision']:
+                raise BackupError('restore operation reused with another backup')
+            return prior
+        for name, kind in CORE_KINDS.items():
+            local = read_state(root / name, kind)
+            rows = local.get('items', {}) if kind == 'watchlist' else local[kind]
+            if not rows and not local.get('tombstones') and not local.get('realizations'):
+                continue
+            if name not in content:
+                raise BackupError('backup would discard acknowledged state')
+            peer = _decode(content[name])
+            if kind == 'watchlist':
+                merged = identity_merge.merge_watchlists(local, peer)
+                canonical = identity_merge.merge_watchlists(peer, peer)
+            else:
+                merged = identity_merge.merge_rows(local[kind], peer[kind], kind)
+                canonical = identity_merge.merge_rows(peer[kind], peer[kind], kind)
+            if _json(merged) != _json(canonical):
+                raise BackupError('backup is older than acknowledged state; assessed disaster recovery required')
+        for name, key in (('realizations.json', 'operations'), ('realization-batches.json', 'batches')):
+            live = read_state(root / name, 'generic').get(key, {})
+            incoming = _decode(content[name]).get(key, {}) if name in content else {}
+            if any(operation not in incoming or _json(value) != _json(incoming[operation]) for operation, value in live.items()):
+                raise BackupError('backup would discard acknowledged operation proof')
+        live_packets = read_state(root / 'replication-state.json', 'generic')
+        old_packets = _decode(content['replication-state.json']) if 'replication-state.json' in content else {}
+        for origin, receipt in live_packets.get('receipts', {}).items():
+            saved = old_packets.get('receipts', {}).get(origin, {})
+            if (saved.get('applied_revision', 0) < receipt['applied_revision']
+                    or saved.get('applied_revision') == receipt['applied_revision']
+                    and saved.get('applied_hash') != receipt['applied_hash']):
+                raise BackupError('backup would roll back an acknowledged replication receipt')
+        outgoing = live_packets.get('outgoing')
+        saved_outgoing = old_packets.get('outgoing')
+        if outgoing and (not saved_outgoing or saved_outgoing['source_revision'] < outgoing['source_revision']
+                         or saved_outgoing['source_revision'] == outgoing['source_revision']
+                         and saved_outgoing['packet_hash'] != outgoing['packet_hash']):
+            raise BackupError('backup would roll back the publication cursor')
+        result = {'schema_version': 1, 'operation_id': operation_id, 'status': 'restored',
+                  'source_revision': manifest['source_revision'], 'profile_uuid': expected_profile_uuid,
+                  'restored_files': sorted(content)}
+        operations[operation_id] = result
+        for name, payload in content.items():
+            if name != 'backup-restores.json':
+                txn.stage_bytes(name, payload)
+        txn.stage('backup-restores.json', {'schema_version': 1, 'operations': operations})
+        txn.commit(operation_id)
+        return result

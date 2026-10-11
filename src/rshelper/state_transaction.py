@@ -6,11 +6,11 @@ interrupted publication fail closed, and a durable receipt names the exact
 operation and per-file hashes that a publish made durable.
 """
 import copy
-import fcntl
 import hashlib
 import json
 import os
 import secrets
+import stat
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
@@ -23,6 +23,18 @@ STATE_FILES = {
     'trades.json': 'trades',
     'alerts.json': 'alerts',
     'watchlist.json': 'watchlist',
+    'replication-state.json': 'generic',
+    'peer-receipts.json': 'generic',
+    'identity-lineage.json': 'generic',
+    'realizations.json': 'generic',
+    'realization-batches.json': 'generic',
+    'identity-manifest.json': 'generic',
+    'identity-activation.json': 'generic',
+    'backup-restores.json': 'generic',
+    'tuning_log.json': 'generic', 'volume_baseline.json': 'generic',
+    'signal_cooldowns.json': 'generic', 'trader_state.json': 'generic',
+    'recent_exits.json': 'generic', 'monitor_state.json': 'generic',
+    'config.toml': 'config',
 }
 MAX_PROFILE_BYTES = 64 * 1024 * 1024
 
@@ -45,7 +57,7 @@ def _durable_write(path: Path, payload: bytes, mode: int) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     temporary = path.name + '.' + secrets.token_hex(12) + '.tmp'
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0)
-    dir_fd = os.open(directory, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+    dir_fd = os.open(directory, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0) | getattr(os, 'O_NOFOLLOW', 0))
     try:
         fd = os.open(temporary, flags, mode, dir_fd=dir_fd)
         try:
@@ -73,22 +85,17 @@ def _publish_file(path: Path, payload: bytes) -> None:
     _checkpoint('data:' + path.name)
     _durable_write(path, payload, 0o600)
     marker.unlink()
+    directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 def _publish_receipt(path: Path, receipt: dict) -> None:
     payload = json.dumps(receipt, sort_keys=True, separators=(',', ':'),
                          allow_nan=False).encode()
     _durable_write(Path(path), payload, 0o600)
-
-
-def _clear_stale_markers(root: Path) -> None:
-    """Clear markers left by an interrupted publish; callers hold the profile lock."""
-    for name in STATE_FILES:
-        marker = _marker_path(root / name)
-        try:
-            marker.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def _validate_payload(path: Path, data: dict, kind: str) -> bytes:
@@ -99,6 +106,31 @@ def _validate_payload(path: Path, data: dict, kind: str) -> bytes:
     return payload
 
 
+def _kind(filename):
+    if type(filename) is not str or filename != Path(filename).as_posix():
+        raise ValueError('noncanonical profile filename')
+    if filename in STATE_FILES:
+        return STATE_FILES[filename]
+    parts = Path(filename).parts
+    if (len(parts) == 2 and parts[0] == 'snapshots'
+            and parts[1].endswith('.json') and parts[1] not in ('.json', '..json')
+            and len(parts[1]) <= 255):
+        return 'generic'
+    raise ValueError('unknown profile state file')
+
+
+def _validate_bytes(filename, raw):
+    kind = _kind(filename)
+    if kind == 'config':
+        import tomllib
+        from rshelper.config import _config_from_toml, validate_config
+        validate_config(_config_from_toml(tomllib.loads(raw.decode('utf-8'))))
+    else:
+        persistence.validate_state(persistence.decode_json(raw), kind, filename)
+    if len(raw) > MAX_PROFILE_BYTES:
+        raise ValueError('profile state file exceeds byte budget')
+
+
 def _checkpoint(step: str) -> None:
     """Fault-injection boundary; tests may replace it."""
 
@@ -106,22 +138,17 @@ def _checkpoint(step: str) -> None:
 class _ProfileLock:
     def __init__(self, root: Path):
         self.root = Path(root)
-        self.fd = None
+        self.lease = ExitStack()
 
     def __enter__(self):
+        if self.root.is_symlink():
+            raise ValueError('profile state root cannot be a symlink')
         self.root.mkdir(parents=True, exist_ok=True)
-        sidecar = self.root / '.profile.lock'
-        flags = os.O_RDWR | os.O_CREAT | getattr(os, 'O_NOFOLLOW', 0)
-        self.fd = os.open(sidecar, flags, 0o600)
-        fcntl.flock(self.fd, fcntl.LOCK_EX)
+        self.lease.enter_context(persistence.locked_state(self.root / '.profile'))
         return self
 
     def __exit__(self, *exception):
-        try:
-            fcntl.flock(self.fd, fcntl.LOCK_UN)
-        finally:
-            os.close(self.fd)
-            self.fd = None
+        return self.lease.__exit__(*exception)
 
 
 @contextmanager
@@ -139,8 +166,10 @@ def read_profile_snapshot(profile: str, root: Path) -> dict:
     root = Path(root)
     paths = [root / name for name in STATE_FILES]
     with _ordered_locks(root, paths):
+        _recover_locked(root)
         return {kind: persistence.read_state(root / name, kind)
-                for name, kind in STATE_FILES.items()}
+                for name, kind in STATE_FILES.items()
+                if kind in ('positions', 'trades', 'alerts', 'watchlist')}
 
 
 class StateTransaction:
@@ -151,30 +180,111 @@ class StateTransaction:
         self._committed = False
 
     def stage(self, filename: str, data: dict) -> None:
-        if filename not in STATE_FILES:
-            raise ValueError(f'unknown profile state file: {filename}')
+        kind = _kind(filename)
         path = self.root / filename
-        persistence.validate_state(data, STATE_FILES[filename], path)
-        self.staged[filename] = copy.deepcopy(data)
+        staged = copy.deepcopy(data)
+        if kind in ('positions', 'trades', 'watchlist', 'alerts') and profile_is_active(self.root):
+            staged['schema_version'] = 2
+        self.stage_bytes(filename, _validate_payload(path, staged, kind))
+
+    def stage_bytes(self, filename, raw):
+        _validate_bytes(filename, raw)
+        parent = (self.root / filename).parent
+        if parent.is_symlink() or not parent.resolve().is_relative_to(self.root.resolve()):
+            raise ValueError('profile filename escapes transaction root')
+        self.staged[filename] = bytes(raw)
 
     def commit(self, operation_id: str) -> dict:
         if self._committed:
             raise ValueError('transaction already committed')
-        self._committed = True
         persistence.canonical_uuid(operation_id)
-        files = {name: _validate_payload(self.root / name, data, STATE_FILES[name])
-                 for name, data in self.staged.items()}
+        files = dict(self.staged)
+        for name, raw in files.items():
+            _validate_bytes(name, raw)
         hashes = {name: hashlib.sha256(files[name]).hexdigest() for name in files}
         receipt = {'schema_version': SCHEMA_VERSION, 'operation_id': operation_id,
                    'files': sorted(files), 'hashes': hashes}
         paths = [self.root / name for name in files]
         with _ordered_locks(self.root, paths):
-            _clear_stale_markers(self.root)
-            for name in sorted(files):
-                _publish_file(self.root / name, files[name])
-            _checkpoint('receipt')
-            _publish_receipt(receipt_path(self.root), receipt)
+            _recover_locked(self.root)
+            pending = {'schema_version': SCHEMA_VERSION, 'receipt': receipt,
+                       'files': {name: files[name].decode('utf-8') for name in files},
+                       'before': {name: _file_hash(self.root / name) for name in files}}
+            payload = json.dumps(pending, sort_keys=True, allow_nan=False).encode()
+            if len(payload) > MAX_PROFILE_BYTES:
+                raise ValueError('transaction redo intent exceeds byte budget')
+            _durable_write(self.root / '.profile-pending.json', payload, 0o600)
+            _checkpoint('intent')
+            _recover_locked(self.root)
+        self._committed = True
         return receipt
+
+
+def _file_hash(path):
+    try:
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return None
+    with os.fdopen(descriptor, 'rb') as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError('transaction target is not a regular file')
+        raw = stream.read(MAX_PROFILE_BYTES + 1)
+    if len(raw) > MAX_PROFILE_BYTES:
+        raise ValueError('transaction target exceeds byte budget')
+    relative = 'snapshots/' + path.name if path.parent.name == 'snapshots' else path.name
+    _validate_bytes(relative, raw)
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _recover_locked(root):
+    pending_path = root / '.profile-pending.json'
+    pending = persistence.read_state(pending_path, 'generic', _publication_check=False)
+    if not pending:
+        if any(_marker_path(root / name).exists() for name in STATE_FILES):
+            raise persistence.StateCorruptionError('publication marker lacks recoverable intent')
+        return
+    if (set(pending) != {'schema_version', 'receipt', 'files', 'before'}
+            or type(pending['schema_version']) is not int
+            or pending['schema_version'] != SCHEMA_VERSION
+            or not isinstance(pending['files'], dict)
+            or not isinstance(pending['before'], dict)):
+        raise persistence.StateCorruptionError('invalid transaction redo intent')
+    receipt = pending['receipt']
+    if (not isinstance(receipt, dict)
+            or set(receipt) != {'schema_version', 'operation_id', 'files', 'hashes'}
+            or type(receipt['schema_version']) is not int or receipt['schema_version'] != SCHEMA_VERSION
+            or receipt['files'] != sorted(pending['files'])
+            or set(receipt['hashes']) != set(pending['files'])
+            or set(pending['before']) != set(pending['files'])):
+        raise persistence.StateCorruptionError('invalid transaction redo receipt')
+    persistence.canonical_uuid(receipt['operation_id'])
+    files = {}
+    for name, text in pending['files'].items():
+        if type(name) is not str or type(text) is not str:
+            raise persistence.StateCorruptionError('invalid transaction redo filename')
+        payload = text.encode('utf-8')
+        _validate_bytes(name, payload)
+        parent = (root / name).parent
+        if parent.is_symlink() or not parent.resolve().is_relative_to(root.resolve()):
+            raise ValueError('redo filename escapes transaction root')
+        digest = hashlib.sha256(payload).hexdigest()
+        if digest != receipt['hashes'][name]:
+            raise persistence.StateCorruptionError('transaction redo hash mismatch')
+        if _file_hash(root / name) not in (pending['before'][name], digest):
+            raise persistence.StateCorruptionError('transaction target changed outside publication')
+        files[name] = payload
+    for name in sorted(files):
+        _publish_file(root / name, files[name])
+    _checkpoint('receipt')
+    _publish_receipt(receipt_path(root), receipt)
+    _checkpoint('receipt-published')
+    pending_path.unlink()
+    directory = os.open(root, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    _checkpoint('directory-fsync')
 
 
 def _publish_marker_only(path: Path) -> None:
@@ -205,9 +315,7 @@ def recover_profile(root: Path) -> dict:
     root = Path(root)
     paths = [root / name for name in STATE_FILES]
     with _ordered_locks(root, paths):
-        markers = [ _marker_path(root / name) for name in STATE_FILES ]
-        if any(marker.exists() for marker in markers):
-            raise persistence.StateCorruptionError('mixed profile state snapshot requires recovery')
+        _recover_locked(root)
         return persistence.read_state(receipt_path(root), 'generic')
 
 
@@ -215,7 +323,9 @@ def recover_profile(root: Path) -> dict:
 def profile_transaction(profile: str, root: Path):
     """Open one recoverable transaction for a profile state root."""
     root = Path(root)
-    yield _TransactionHandle(profile, root)
+    with _ProfileLock(root):
+        _recover_locked(root)
+        yield _TransactionHandle(profile, root)
 
 
 class _TransactionHandle:
@@ -228,6 +338,11 @@ class _TransactionHandle:
         if self._txn is None:
             self._txn = StateTransaction(self.profile, self.root)
         self._txn.stage(filename, data)
+
+    def stage_bytes(self, filename, raw):
+        if self._txn is None:
+            self._txn = StateTransaction(self.profile, self.root)
+        self._txn.stage_bytes(filename, raw)
 
     def commit(self, operation_id: str) -> dict:
         if self._txn is None or self._committed():

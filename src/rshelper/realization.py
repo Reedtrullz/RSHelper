@@ -101,7 +101,8 @@ def _checkpoint(step):
 
 
 def _payload(data):
-    validate_state(data, 'generic', 'realization-state.json')
+    kind = 'positions' if 'positions' in data else 'trades' if 'trades' in data else 'generic'
+    validate_state(data, kind, 'realization-state.json')
     payload = json.dumps(data, allow_nan=False).encode('utf-8')
     if len(payload) > MAX_STATE_BYTES:
         raise ValueError('realization state exceeds byte budget')
@@ -140,12 +141,19 @@ def _paths(profile):
 
 
 def _load_intents(path):
+    if Path(path).with_name('.profile-pending.json').exists():
+        from rshelper.state_transaction import recover_profile
+        recover_profile(Path(path).parent)
     store = read_state(path, 'generic')
     if not store:
         try:
             Path(path).lstat()
         except FileNotFoundError:
             store = {'schema_version': 1, 'operations': {}}
+    return validate_intents(store, path)
+
+
+def validate_intents(store, path):
     if set(store) != {'schema_version', 'operations'} or not isinstance(store['operations'], dict):
         raise ValueError('invalid realization intent store')
     if len(store['operations']) > MAX_OPERATIONS:
@@ -179,6 +187,7 @@ def _load_intents(path):
         quantity, sell = request['qty'], request['sell_price']
         tax = ge_tax(sell) * quantity
         if (before.get('record_uuid') != request['lot_uid'] or before['qty'] < quantity
+                or before.get('origin_uuid') != trade.get('origin_uuid')
                 or before.get('tombstone') is not False
                 or trade.get('revision') != 0 or trade.get('tombstone') is not False
                 or trade['qty'] != quantity or trade['buy_price'] != before['buy_price']
@@ -199,7 +208,11 @@ def _load_intents(path):
 def _validate_origin(paths, store):
     if store['operations']:
         manifest = validate_manifest(read_state(paths[3], 'generic'))
-        if any(intent['trade']['origin_uuid'] != manifest['origin_uuid']
+        lineage = read_state(paths[3].with_name('identity-lineage.json'), 'generic').get('origins', {})
+        for declared in lineage.values():
+            validate_manifest(declared)
+        allowed = {manifest['origin_uuid'], *lineage}
+        if any(intent['trade']['origin_uuid'] not in allowed
                for intent in store['operations'].values()):
             raise ValueError('realization origin manifest conflict')
 
@@ -298,14 +311,12 @@ def _apply(paths, store, operation, replayed):
     return _receipt(intent, applied_trade, replayed)
 
 
-def _recover(paths, store):
+def verify_realization_snapshot(positions_state, trades, store):
     # Audit completed evidence once before a restart or a new operation can
     # consume restored units. Reads are bounded; no per-operation file rewrite.
-    positions_state = read_state(paths[0], 'positions')
     applied = positions_state.get('realizations', {})
     if not isinstance(applied, dict) or set(applied) - set(store['operations']):
         raise ValueError('invalid or unowned position realization ledger')
-    trades = read_state(paths[1], 'trades')['trades']
     by_uuid = {}
     for row in trades:
         by_uuid.setdefault(row.get('record_uuid'), []).append(row)
@@ -318,6 +329,11 @@ def _recover(paths, store):
             chains.setdefault(intent['request']['lot_uid'], []).append(intent)
     for lot_uid, chain in chains.items():
         _verify_applied_lot(positions_state, store, lot_uid, chain)
+
+
+def _recover(paths, store):
+    verify_realization_snapshot(read_state(paths[0], 'positions'),
+                                read_state(paths[1], 'trades')['trades'], store)
     receipts = []
     for operation, intent in store['operations'].items():
         if not intent['done']:
@@ -364,6 +380,9 @@ def close_and_realize(profile, lot_uid, qty, sell_price, operation_id, reason, *
         if len(lots) != 1 or lots[0].get('tombstone') is not False:
             raise ValueError('exact identified lot not open; migration or ownership review required')
         lot = lots[0]
+        active = _financial_activation(profile)
+        if active is not None and lot['origin_uuid'] != active['origin_uuid']:
+            raise ValueError('financial close must run on the lot authority')
         if qty > lot['qty'] or lot['revision'] >= 2**63 - 1:
             raise ValueError('insufficient open quantity or exhausted lot revision')
         trade_state = read_state(paths[1], 'trades')
@@ -408,6 +427,9 @@ def _financial_activation(profile):
     if manifest is None:
         return None
     require_financial_authority(manifest)
+    lineage = validate_manifest(read_state(_manifest_path(profile), 'generic'))
+    if lineage['origin_uuid'] != manifest['origin_uuid']:
+        raise ValueError('activation origin differs from identity manifest')
     return manifest
 
 
@@ -430,7 +452,13 @@ def _load_batches(path):
         return {'schema_version': 1, 'batches': {}}
     if not data:
         data = {'schema_version': 1, 'batches': {}}
-    if set(data) != {'schema_version', 'batches'} or not isinstance(data['batches'], dict):
+    return validate_batches(data)
+
+
+def validate_batches(data):
+    if (not isinstance(data, dict) or set(data) != {'schema_version', 'batches'}
+            or type(data['schema_version']) is not int or data['schema_version'] != 1
+            or not isinstance(data['batches'], dict)):
         raise ValueError('invalid realization batch store')
     if len(data['batches']) > MAX_BATCHES:
         raise ValueError('realization batch budget exceeded')
@@ -443,35 +471,20 @@ def _load_batches(path):
                 or not isinstance(batch['operations'], list)
                 or not batch['operations']
                 or len(batch['operations']) > MAX_BATCH_CHILDREN
+                or len(set(batch['operations'])) != len(batch['operations'])
                 or not isinstance(batch['legs'], dict)):
             raise ValueError('invalid realization batch')
+        for operation in batch['operations']:
+            canonical_uuid(operation)
+        if (not batch['legs'] or set(batch['legs']) - {'traditional', 'arbitrage'}
+                or any(type(price) is not int or price <= 0 for price in batch['legs'].values())):
+            raise ValueError('invalid pinned batch quotes')
     return data
 
 
 def _persist_batches(path, data):
-    payload = json.dumps(data, sort_keys=True, allow_nan=False).encode('utf-8')
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    flags = os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0) | getattr(os, 'O_NOFOLLOW', 0)
-    directory = os.open(path.parent, flags)
-    temporary = '.batch-' + secrets.token_hex(12)
-    try:
-        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0),
-                     0o600, dir_fd=directory)
-        with os.fdopen(fd, 'wb') as stream:
-            stream.write(payload)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, path.name, src_dir_fd=directory, dst_dir_fd=directory)
-        os.fsync(directory)
-    finally:
-        try:
-            try:
-                os.unlink(temporary, dir_fd=directory)
-            except FileNotFoundError:
-                pass
-        finally:
-            os.close(directory)
+    validate_batches(data)
+    _persist(path, data)
 
 
 def _batch_lock(path):
@@ -561,6 +574,8 @@ def prepare_close_batch(profile, item_id, qty, operation_id, quotes, *,
                 break
             if lot['revision'] >= 2**63 - 1:
                 raise ValueError('exhausted lot revision')
+            if lot['origin_uuid'] != manifest['origin_uuid']:
+                raise ValueError('financial close must run on the lot authority')
             take = min(remaining, lot['qty'])
             direction = lot.get('direction', 'traditional')
             if direction not in legs:
@@ -657,6 +672,7 @@ def batch_summary(profile, operation_id):
             locks.enter_context(locked_state(path))
         store = _load_intents(paths[2])
         batches = _load_batches(batch_path)
+        _validate_origin(paths, store)
         pinned = batches['batches'].get(operation_id)
         if pinned is None:
             raise ValueError('unknown realization batch operation')
