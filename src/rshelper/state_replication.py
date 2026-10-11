@@ -207,10 +207,15 @@ def _validate_files(files):
         own = _merge_manifest(manifests[own['origin_uuid']], own)
     manifests[own['origin_uuid']] = own
     operations = parsed.get('realizations.json', {}).get('operations', {})
+    consumed_by_lot = {}
+    for intent in operations.values():
+        lot = intent['request']['lot_uid']
+        consumed_by_lot[lot] = consumed_by_lot.get(lot, 0) + intent['request']['qty']
     for name, kind in CORE.items():
         store = parsed[name]
         rows = (list(store['items'].values()) + list(store.get('tombstones', {}).values())
                 if kind == 'watchlist' else store[kind])
+        groups = {}
         for row in rows:
             manifest = manifests.get(row['origin_uuid'])
             if manifest is None:
@@ -218,17 +223,20 @@ def _validate_files(files):
             intent = operations.get(row.get('operation_id')) if kind == 'trades' else None
             if intent is not None and intent['trade']['record_uuid'] == row['record_uuid']:
                 continue
-            if kind == 'watchlist':
-                state_identity.migrate_watchlist({'items': {} if row['tombstone'] else {str(row['item_id']): row},
-                    'tombstones': {row['record_uuid']: row} if row['tombstone'] else {}}, manifest)
-            else:
-                state_identity.migrate_rows([row], kind, manifest)
+            groups.setdefault(row['origin_uuid'], []).append(row)
             if kind == 'positions' and row['record_uuid'] in manifest.get('native', {}):
                 created = manifest['native'][row['record_uuid']]['creation_qty']
-                consumed = sum(intent['request']['qty'] for intent in operations.values()
-                               if intent['request']['lot_uid'] == row['record_uuid'])
+                consumed = consumed_by_lot.get(row['record_uuid'], 0)
                 if consumed + (0 if row['tombstone'] else row['qty']) != created:
                     raise ValueError('native lot creation and realized quantity conflict')
+        for origin, source_rows in groups.items():
+            manifest = manifests[origin]
+            if kind == 'watchlist':
+                state_identity.migrate_watchlist({
+                    'items': {str(row['item_id']): row for row in source_rows if not row['tombstone']},
+                    'tombstones': {row['record_uuid']: row for row in source_rows if row['tombstone']}}, manifest)
+            else:
+                state_identity.migrate_rows(source_rows, kind, manifest)
     return parsed
 
 

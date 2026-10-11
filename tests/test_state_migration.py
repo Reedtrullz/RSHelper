@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from rshelper import profile, state_replication, state_transaction
+from rshelper import profile, state_identity, state_replication, state_transaction
 
 A = '11111111-1111-4111-8111-111111111111'
 B = '22222222-2222-4222-8222-222222222222'
@@ -54,6 +54,38 @@ class MigrationTest(unittest.TestCase):
             self.api().migrate_profile('a', plan=plan, operation_id=B)
         self.assertEqual(path.read_bytes(), before)
         self.assertFalse(path.with_name('identity-activation.json').exists())
+
+    def test_migration_and_packet_validate_manifest_per_origin_batch(self):
+        root = profile.resolve_config_path('', 'a')
+        rows = [{'id': index, 'item_id': 561, 'name': 'Synthetic', 'qty': 10,
+                 'buy_price': 100, 'sell_price': 120, 'tax_paid': 20, 'profit': 180,
+                 'timestamp': '2026-01-01T00:00:00Z'} for index in range(1, 101)]
+        (root / 'trades.json').write_text(json.dumps({'trades': rows}))
+        assignments = {kind: {} for kind in state_replication.CORE.values()}
+        assignments['positions'][state_identity._migration_key(
+            json.loads((root / 'positions.json').read_text())['positions'][0], 'positions')] = A
+        assignments['trades'] = {state_identity._migration_key(row, 'trades'):
+                                A if row['id'] % 2 else B for row in rows}
+        with mock.patch.object(state_identity, 'validate_manifest', wraps=state_identity.validate_manifest) as validate:
+            plan = self.api().plan_migration('a', origin_uuid=A, profile_uuid=P,
+                lineage={'mode': 'resolved', 'financial_authority': True,
+                         'replication_origins': [A, B], 'record_origins': assignments})
+            self.assertLess(validate.call_count, 30)
+        self.api().migrate_profile('a', plan=plan, operation_id=P)
+        migrated = json.loads((root / 'trades.json').read_text())['trades']
+        self.assertEqual([row['id'] for row in migrated], [row['id'] for row in rows])
+        self.assertEqual([row['origin_uuid'] for row in migrated],
+                         [A if row['id'] % 2 else B for row in rows])
+        files = {name: (root / name).read_bytes() for name in state_replication.FILES
+                 if (root / name).exists()}
+        with mock.patch.object(state_identity, 'validate_manifest', wraps=state_identity.validate_manifest) as validate:
+            state_replication._validate_files(files)
+            self.assertLess(validate.call_count, 20)
+        damaged = json.loads(files['identity-lineage.json'])
+        damaged['origins'][B]['mappings'].pop(state_identity._migration_key(rows[1], 'trades'))
+        files['identity-lineage.json'] = json.dumps(damaged).encode()
+        with self.assertRaisesRegex(ValueError, 'lineage'):
+            state_replication._validate_files(files)
 
     def test_malformed_lineage_is_rejected_without_mutation(self):
         root = profile.resolve_config_path('', 'a')
