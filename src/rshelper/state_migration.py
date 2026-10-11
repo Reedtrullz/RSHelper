@@ -61,7 +61,7 @@ def _upgrade(stores, origin_uuid, profile_uuid, lineage):
         if not isinstance(mappings, dict):
             raise ValueError('invalid record origin mapping')
         used[kind] = set()
-        upgraded = []
+        groups = {}
         for row in rows:
             key = state_identity._migration_key(row, kind)
             selected = (origin_uuid if mode == 'independent' else common if mode == 'common'
@@ -71,24 +71,28 @@ def _upgrade(stores, origin_uuid, profile_uuid, lineage):
             if key in used[kind]:
                 raise ValueError('ambiguous duplicate source record requires resolution')
             used[kind].add(key)
+            groups.setdefault(selected, []).append(row)
+        upgraded = {}
+        for selected, source_rows in groups.items():
             manifest = manifests.setdefault(selected, state_identity.new_manifest(selected))
             if kind == 'watchlist':
                 migrated, manifest = state_identity.migrate_watchlist(
-                    {'items': {str(row['item_id']): row}}, manifest)
-                upgraded.append(migrated['items'][str(row['item_id'])])
+                    {'items': {str(row['item_id']): row for row in source_rows}}, manifest)
+                migrated_rows = list(migrated['items'].values())
             else:
-                migrated, manifest = state_identity.migrate_rows([row], kind, manifest)
-                upgraded.extend(migrated)
+                migrated_rows, manifest = state_identity.migrate_rows(source_rows, kind, manifest)
+            upgraded.update({state_identity._migration_key(row, kind): row for row in migrated_rows})
             manifests[selected] = manifest
         if mode == 'resolved' and set(mappings) != used[kind]:
             raise ValueError('explicit lineage inventory differs from source')
         count += len(rows)
         if count > state_replication.MAX_ROWS:
             raise ValueError('migration record budget exceeded')
+        ordered = [upgraded[state_identity._migration_key(row, kind)] for row in rows]
         if kind == 'watchlist':
-            store['items'] = {str(row['item_id']): row for row in upgraded}
+            store['items'] = {str(row['item_id']): row for row in ordered}
         else:
-            store[kind] = upgraded
+            store[kind] = ordered
         store['schema_version'] = 2
     if lineage['financial_authority'] and any(row['origin_uuid'] != origin_uuid
             for row in output['positions.json']['positions']):
