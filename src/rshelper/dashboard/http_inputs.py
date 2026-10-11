@@ -78,6 +78,8 @@ def validate_operation(path, body):
         if path == '/api/positions':
             action(('close',))
             if body.get('qty') is not None: positive_int(body['qty'], 'qty')
+            if body.get('operation_id') is not None:
+                text(body['operation_id'], 'operation_id', limit=64)
     elif path in ('/api/trader', '/api/monitor'):
         action(('start', 'stop'))
     elif path == '/api/trades/delete':
@@ -101,6 +103,14 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
+    if route == '/api/state/receipt':
+        from rshelper.persistence import canonical_uuid
+        if set(values) != {'origin'}:
+            raise HttpInputError('Exactly one origin UUID is required')
+        try:
+            canonical_uuid(values['origin'][0])
+        except ValueError as exc:
+            raise HttpInputError('Invalid origin UUID') from exc
     if route in ('/api/prices', '/api/confidence'):
         parts = values.get('ids', [''])[0].split(',')
         if parts == ['']: parts = []

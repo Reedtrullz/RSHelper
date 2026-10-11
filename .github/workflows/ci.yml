@@ -21,7 +21,7 @@ env:
   IMAGE_NAME: ghcr.io/reedtrullz/rshelper
 
 concurrency:
-  group: rshelper-ci-${{ github.ref }}
+  group: ${{ github.event_name == 'pull_request' && format('rshelper-pr-{0}', github.ref) || 'rshelper-production' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -148,10 +148,11 @@ jobs:
         shell: bash
         env:
           VPS_SSH_HOST_KEY: ${{ vars.VPS_SSH_HOST_KEY || secrets.VPS_SSH_HOST_KEY }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_racknerd
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa_racknerd
           chmod 600 ~/.ssh/id_rsa_racknerd
 
           normalize_host_keys() {
@@ -176,7 +177,12 @@ jobs:
           fi
 
           printf '%s\n' "$expected_host_key" > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
+          ssh -i ~/.ssh/id_rsa_racknerd -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes deploy@198.23.137.16 'echo "SSH OK"'
+
+      - name: Refuse an obsolete code revision before deployment
+        run: |
+          git fetch --no-tags origin main
+          git diff --quiet "$GITHUB_SHA" origin/main -- . ':!data/state'
 
       - name: Deploy immutable image digest
         shell: bash

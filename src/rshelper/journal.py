@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rshelper.market import ge_tax
+from rshelper import state_identity, state_transaction
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
@@ -40,6 +41,9 @@ class Trade:
     quote_sell: int | None = None  # raw low quote before stop-loss slippage
     entry_spread_pct: float | None = None  # (offer - bid) / bid at entry
     fill_guard: bool = False  # exit filled at the 5m avg, not a thin print
+    record_uuid: str | None = None
+    origin_uuid: str | None = None
+    revision: int | None = None
 
 
 @dataclass
@@ -63,7 +67,8 @@ class PnLSummary:
 
 
 def _load(profile: str | None = None):
-    return read_state(_trades_path(profile), "trades")["trades"]
+    path = _trades_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'trades'), 'trades', path)['trades']
 
 
 def _save(trades: list[dict], profile: str | None = None) -> None:
@@ -85,7 +90,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
               hold_minutes: float | None = None,
               quote_sell: int | None = None,
               entry_spread_pct: float | None = None,
-              fill_guard: bool = False) -> Trade:
+              fill_guard: bool = False,
+              operation_id: str | None = None) -> Trade:
     """Log a completed trade. Returns the Trade object.
 
     Tax is per-item (OSRS GE tax is per item, capped at 5M per item).
@@ -99,6 +105,44 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
     per_item_tax = ge_tax(sell_price)
     tax_paid = per_item_tax * qty
     profit = (sell_price - buy_price) * qty - tax_paid
+    path = _trades_path(profile)
+    manifest = state_identity.activation_manifest(
+        path.with_name('identity-activation.json'))
+    if manifest is not None:
+        state_identity.require_financial_authority(manifest)
+        from uuid import uuid4
+        operation_id = operation_id or str(uuid4())
+        request = dict(item_id=item_id, name=name, qty=qty, buy_price=buy_price,
+                       sell_price=sell_price, note=note, strategy=strategy,
+                       exit_reason=exit_reason, hold_minutes=hold_minutes,
+                       quote_sell=quote_sell, entry_spread_pct=entry_spread_pct,
+                       fill_guard=fill_guard)
+        identity = state_identity.new_record_identity(
+            manifest['origin_uuid'], 'trades', operation_id)
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            store = read_state(path, 'trades')
+            state_identity.validate_activated_store(store, 'trades', path)
+            trades = store['trades']
+            for row in trades:
+                if row.get('record_uuid') == identity['record_uuid']:
+                    state_identity.validate_native_retry(path.parent, 'trades', row, request)
+                    return Trade(**filter_fields(Trade, row))
+            trade = {
+                "id": _next_id(trades), "item_id": item_id, "name": name,
+                "qty": qty, "buy_price": buy_price, "sell_price": sell_price,
+                "tax_paid": tax_paid, "profit": profit,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "note": note, "strategy": strategy, "exit_reason": exit_reason,
+                "hold_minutes": hold_minutes, "quote_sell": quote_sell,
+                "entry_spread_pct": entry_spread_pct, "fill_guard": fill_guard,
+                **identity,
+            }
+            trades.append(trade)
+            state_identity.attest_native(txn, path.parent, 'trades', trade, operation_id, request)
+            txn.stage('trades.json', store)
+            txn.commit(operation_id=operation_id)
+        return Trade(**filter_fields(Trade, trade))
     with _trade_lock(profile):
         trades = _load(profile)
         trade = {
@@ -120,7 +164,30 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
 
 
 def delete_trade(trade_id: int, profile: str | None = None) -> bool:
-    """Delete a trade by ID. Returns True if it existed."""
+    """Delete a trade by ID. Returns True if it existed.
+
+    Identified profiles retain a tombstone (revision +1) so deletions
+    survive replication; legacy profiles drop the row entirely.
+    """
+    path = _trades_path(profile)
+    if state_identity.activation_manifest(
+            path.with_name('identity-activation.json')) is not None:
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            state_identity.require_financial_authority(state_identity.activation_manifest(
+                path.with_name('identity-activation.json')))
+            store = read_state(path, 'trades')
+            trades = store['trades']
+            for i, t in enumerate(trades):
+                if t["id"] == trade_id:
+                    if t.get('tombstone'):
+                        return False
+                    trades[i] = {**t, 'tombstone': True,
+                                 'revision': t.get('revision', 0) + 1}
+                    txn.stage('trades.json', store)
+                    txn.commit(operation_id=t['record_uuid'])
+                    return True
+            return False
     with _trade_lock(profile):
         trades = _load(profile)
         for i, t in enumerate(trades):

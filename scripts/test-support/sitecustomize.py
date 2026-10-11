@@ -26,6 +26,11 @@ if os.environ.get("RSHELPER_OFFLINE") == "1":
         if executable == '/bin/bash':
             return (len(args) >= 2 and within(shell_root or '/', os.environ.get('RSHELPER_TEST_SCRATCH'))
                     and within(args[1], shell_root) and Path(args[1]).name == 'install-trader-launchd.sh')
+        if Path(executable).name == 'launchctl':
+            return (within(shell_root or '/', os.environ.get('RSHELPER_TEST_SCRATCH'))
+                    and within(resolved, shell_root) and len(args) in (3, 4)
+                    and args[1] in ('print', 'bootout', 'bootstrap')
+                    and args[2].startswith('gui/' + str(os.getuid())))
         if Path(executable).name == 'ps':
             return (resolved == approved_processes['ps'] and len(args) == 5 and args[1:4] == ['-o', 'lstart=', '-p']
                     and args[4].isascii() and args[4].isdigit() and int(args[4]) > 0)

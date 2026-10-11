@@ -1556,14 +1556,32 @@ async function renderPaper(){
     context.innerHTML='';
   }
 }
+// One UUID per logical close: a retry after a lost or ambiguous response
+// reuses the same operation id so the server replays the pinned close
+// instead of booking a second realization. Cleared only on success.
+const pendingCloseOps={};
+function newCloseOperationId(){
+  if(typeof crypto!=='undefined'&&crypto&&typeof crypto.randomUUID==='function'){
+    return crypto.randomUUID();
+  }
+  // RFC 4122 v4 format from Math.random: the server accepts UUID4/5 only.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+    const r=Math.random()*16|0;
+    return (c==='x'?r:(r&0x3|0x8)).toString(16);
+  });
+}
 async function closePosition(positionId,ev){
   if(ev)ev.stopPropagation();
   if(!confirm('Close this position at the current market price?'))return;
+  const opKey=String(positionId);
+  pendingCloseOps[opKey]??=newCloseOperationId();
+  const operationId=pendingCloseOps[opKey];
   try{
     const r=await apiFetch('/api/positions',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'close',position_id:positionId})});
+      body:JSON.stringify({action:'close',position_id:positionId,operation_id:operationId})});
     const d=await r.json();
     if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
+    delete pendingCloseOps[opKey];
     setStatus('Closed '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp',false);
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}

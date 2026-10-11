@@ -4,7 +4,6 @@ import os
 import re
 import shutil
 import json
-import tempfile
 from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "rshelper"
@@ -40,34 +39,18 @@ def set_active_profile(name: str) -> None:
 
 def atomic_write_text(path: Path, text: str) -> None:
     """Write text atomically with a unique temp file (safe under concurrency)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as f:
-            f.write(text)
-        os.replace(tmp, path)
-    except Exception:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+    from rshelper.state_transaction import profile_transaction, _durable_write, MAX_PROFILE_BYTES
+    payload = text.encode('utf-8')
+    if len(payload) > MAX_PROFILE_BYTES:
+        raise ValueError('profile write exceeds byte budget')
+    root = path.parent.parent if path.parent.name == 'snapshots' else path.parent
+    with profile_transaction('default', root):
+        _durable_write(path, payload, 0o600)
 
 
 def atomic_write_json(path: Path, data, indent: int | None = None) -> None:
     """Write JSON atomically with a unique temp file (safe under concurrency)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f, indent=indent)
-        os.replace(tmp, path)
-    except Exception:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+    atomic_write_text(path, json.dumps(data, indent=indent, allow_nan=False))
 
 
 def resolve_profile(requested: str | None = None) -> str:

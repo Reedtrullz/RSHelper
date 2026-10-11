@@ -58,6 +58,19 @@ def _bounded_json(data, path):
             _fail(path, 'state contains a non-finite or unsupported value')
 
 
+def decode_json(raw):
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError('duplicate JSON field')
+            value[key] = item
+        return value
+    value = json.loads(raw, object_pairs_hook=unique)
+    _bounded_json(value, 'state.json')
+    return value
+
+
 IDENTITY_FIELDS = frozenset({'record_uuid', 'origin_uuid', 'revision', 'tombstone'})
 
 
@@ -155,7 +168,7 @@ def validate_state(data, kind, path):
         _fail(path, 'state root must be an object')
     _bounded_json(data, path)
     version = data.get('schema_version', 1)
-    if not _integer(version) or version != 1:
+    if not _integer(version) or version not in (1, 2) or (kind == 'generic' and version != 1):
         _fail(path, 'unsupported schema version')
     if kind == 'generic':
         return data
@@ -165,6 +178,9 @@ def validate_state(data, kind, path):
         _fail(path, f'{key} must be a {expected.__name__}')
     if kind == 'watchlist':
         _validate_watchlist(data, path)
+        if version == 2 and any(validate_record_identity(row, kind) is None
+                                for row in data['items'].values()):
+            _fail(path, 'identified schema requires identity on every watch')
         return data
     rows = data[key].values() if kind == 'watchlist' else data[key]
     for row in rows:
@@ -172,7 +188,9 @@ def validate_state(data, kind, path):
             _fail(path, 'state row must be an object')
         if kind in ('trades', 'positions', 'alerts'):
             try:
-                validate_record_identity(row, kind)
+                identity = validate_record_identity(row, kind)
+                if version == 2 and identity is None:
+                    _fail(path, 'identified schema requires identity on every record')
             except ValueError as exc:
                 _fail(path, str(exc))
         if kind in ('trades', 'positions'):
@@ -226,11 +244,16 @@ def validate_state(data, kind, path):
     return data
 
 
-def read_state(path: Path, kind: str) -> dict:
+def read_state(path: Path, kind: str, *, _publication_check=True) -> dict:
     defaults = {'watchlist': {'items': {}}, 'alerts': {'alerts': [], 'watch_triggered': {}},
                 'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}}
     if kind not in defaults:
         _fail(path, 'unknown state kind')
+    marker = path.with_name('.' + path.name + '.publishing')
+    pending = path.parent / '.profile-pending.json'
+    if _publication_check and (marker.exists() or (
+            path.name != '.profile-pending.json' and pending.exists())):
+        _fail(path, 'publication in progress; retry after recovery')
     try:
         state_path = Path(path)
         info = state_path.lstat()
@@ -241,7 +264,7 @@ def read_state(path: Path, kind: str) -> dict:
     if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
         _fail(path, 'state path is not a regular file')
     try:
-        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | os.O_NONBLOCK
         fd = os.open(state_path, flags)
         try:
             stream = os.fdopen(fd, 'rb')
@@ -257,14 +280,7 @@ def read_state(path: Path, kind: str) -> dict:
     if len(raw) > MAX_STATE_BYTES:
         _fail(path, 'state exceeds 64 MiB limit')
     try:
-        def finite_float(value):
-            number = float(value)
-            if not math.isfinite(number):
-                raise ValueError('nonfinite JSON number')
-            return number
-        data = json.loads(raw,
-                          parse_constant=lambda _: (_ for _ in ()).throw(ValueError('nonfinite JSON')),
-                          parse_float=finite_float)
+        data = decode_json(raw)
     except (ValueError, UnicodeDecodeError, RecursionError):
         _fail(path, 'invalid JSON')
     return validate_state(data, kind, path)
@@ -274,6 +290,23 @@ def read_state(path: Path, kind: str) -> dict:
 def locked_state(path: Path):
     """An unavailable interprocess lock prevents mutation; never fall back."""
     canonical = Path(path).resolve()
+    if canonical.name in ('positions.json', 'trades.json', 'alerts.json',
+                          'watchlist.json', 'realizations.json', 'identity-manifest.json',
+                          'identity-activation.json', 'realization-intents.json',
+                          'realization-batches.json', 'tuning_log.json', 'trader_state.json',
+                          'monitor_state.json', 'recent_exits.json', 'config.toml',
+                          'signal_cooldowns.json', 'volume_baseline.json') or canonical.parent.name == 'snapshots':
+        root = canonical.parent.parent if canonical.parent.name == 'snapshots' else canonical.parent
+        with locked_state(root / '.profile'):
+            with _locked_file(canonical):
+                yield
+        return
+    with _locked_file(canonical):
+        yield
+
+
+@contextlib.contextmanager
+def _locked_file(canonical):
     with _registry_lock:
         lock = _locks.setdefault(str(canonical), threading.RLock())
     with lock:
@@ -306,6 +339,8 @@ def locked_state(path: Path):
 def validate_writable_state(store: dict, kind: str, path: Path):
     """A compatibility reader is not yet an identity-aware merge/writer."""
     validate_state(store, kind, path)
+    if store.get('schema_version', 1) != 1:
+        _fail(path, 'identified schema requires an identity-aware writer')
     if kind in ('positions', 'trades', 'alerts'):
         if any(IDENTITY_FIELDS.intersection(row) or 'lot_uid' in row for row in store[kind]):
             _fail(path, 'identified state requires an identity-aware writer; migration not activated')
@@ -319,5 +354,13 @@ def validate_writable_state(store: dict, kind: str, path: Path):
 def locked_writable_state(path: Path, kind: str):
     """Legacy writers refuse identified state during staged reader rollout."""
     with locked_state(path):
+        activation = path.with_name('identity-activation.json')
+        try:
+            activated = bool(read_state(activation, 'generic'))
+        except StateCorruptionError:
+            activated = True
+        if activated:
+            raise StateCorruptionError(
+                f'{path.name}: identified profile is active; legacy writer refused')
         validate_writable_state(read_state(path, kind), kind, path)
         yield

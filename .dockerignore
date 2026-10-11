@@ -1,4 +1,7 @@
 *
 !src/
 !src/**
+!deploy/
+deploy/**
+!deploy/merge_state.py
 !.gitignore

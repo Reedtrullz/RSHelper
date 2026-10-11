@@ -19,30 +19,30 @@
     app_dir: /opt/apps/rshelper
 
   tasks:
-    - name: Stage tracked state for merge
-      ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../data/state/"
-        dest: "{{ app_dir }}/state-stage/"
-        owner: '1000'
-        group: '1000'
-        mode: preserve
-        directory_mode: '0755'
+    - name: Allocate one staging identity for this invocation
+      ansible.builtin.set_fact:
+        rollout_id: >-
+          {{ lookup('pipe', 'python3 -c "import uuid; print(uuid.uuid4().hex)"') }}
 
-    - name: Install shared state validation module for merge
-      ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../src/rshelper/persistence.py"
-        dest: "{{ app_dir }}/state-validation.py"
-        owner: deploy
-        group: deploy
-        mode: '0644'
+    - name: Apply the legacy feed through the verified running application
+      block:
+        - name: Stage tracked state privately
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../data/state/"
+            dest: "{{ app_dir }}/state-stage-{{ rollout_id }}/"
+            owner: '1000'
+            group: '1000'
+            mode: '0600'
+            directory_mode: '0700'
 
-    - name: Merge staged state over the live volume (site writes win by id)
-      ansible.builtin.script: >-
-        merge_state.py {{ app_dir }}/state-stage
-        {{ app_dir }}/data/.config/rshelper --chown 1000:1000
-        --validation-module {{ app_dir }}/state-validation.py
+        - name: Apply with pinned image and shared host lease
+          ansible.builtin.command:
+            argv: [python3, "{{ app_dir }}/private-state.py", --action, legacy,
+                   --stage, "{{ app_dir }}/state-stage-{{ rollout_id }}"]
+          changed_when: true
 
-    - name: Remove state staging directory
-      ansible.builtin.file:
-        path: "{{ app_dir }}/state-stage"
-        state: absent
+      always:
+        - name: Remove only this invocation staging directory
+          ansible.builtin.file:
+            path: "{{ app_dir }}/state-stage-{{ rollout_id }}"
+            state: absent

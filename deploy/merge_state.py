@@ -4,6 +4,7 @@
 import argparse
 from contextlib import ExitStack
 import importlib.util
+from itertools import islice
 import json
 import os
 from pathlib import Path
@@ -51,10 +52,15 @@ def _entries(root: Path) -> dict[str, Path]:
         raise ValueError(f"state root is not a directory: {root}")
     found = {}
     pending = [(root, "")]
+    visited = 0
     while pending:
         directory, prefix = pending.pop()
         with os.scandir(directory) as scan:
-            children = sorted(scan, key=lambda entry: entry.name)
+            children = list(islice(scan, 4097))
+        visited += len(children)
+        if visited > 4096:
+            raise ValueError('state directory exceeds entry budget')
+        children.sort(key=lambda entry: entry.name)
         for entry in children:
             relative = f"{prefix}/{entry.name}" if prefix else entry.name
             candidate = Path(entry.path)
@@ -169,7 +175,7 @@ def _mode(path: Path) -> int | None:
 
 
 def merge_dir(stage: str, volume: str, chown: str | None,
-              validation_module=None) -> None:
+              validation_module=None, *, immutable_stage=False) -> None:
     validation = _validation_module(validation_module)
     stage_root = Path(stage)
     volume_root = Path(volume)
@@ -177,6 +183,15 @@ def merge_dir(stage: str, volume: str, chown: str | None,
         raise ValueError(f"stage dir {stage} does not exist")
     if stage_root.is_symlink() or volume_root.is_symlink():
         raise ValueError("state roots cannot be symlinks")
+    packet = stage_root / 'state-packet.zip'
+    if packet.exists() or packet.is_symlink():
+        if validation_module is not None or set(path.name for path in stage_root.iterdir()) != {'state-packet.zip'}:
+            raise ValueError('revisioned packet requires the pinned application adapter and exact inventory')
+        from rshelper.state_replication import _apply_packet
+        receipt = _apply_packet(volume_root, 'default', packet)
+        if receipt['status'] not in ('applied', 'no_op'):
+            raise ValueError('revisioned state packet was not applied')
+        return receipt
     staged = _entries(stage_root)
     live_exists = volume_root.exists()
     live = _entries(volume_root) if live_exists else {}
@@ -192,10 +207,9 @@ def merge_dir(stage: str, volume: str, chown: str | None,
         except ValueError as exc:
             raise ValueError("--chown must be UID:GID") from exc
 
-    # Lock every JSON state file from both trees in the same canonical order.
-    # Acquiring and validating completes before any destination write occurs.
+    # Application staging is an immutable read-only mount; lock only live files.
     lock_paths = set()
-    for entries in (staged, live):
+    for entries in ((live,) if immutable_stage else (staged, live)):
         for relative, path in entries.items():
             if _kind(relative) is not None:
                 lock_paths.add(path.resolve())
@@ -203,6 +217,12 @@ def merge_dir(stage: str, volume: str, chown: str | None,
         if _kind(relative) is not None:
             lock_paths.add((volume_root / relative).resolve())
     with ExitStack() as locks:
+        txn = None
+        if validation_module is None:
+            from rshelper.state_transaction import profile_transaction
+            txn = locks.enter_context(profile_transaction('default', volume_root))
+            if (volume_root / 'identity-activation.json').exists():
+                raise ValueError('identified private state refuses raw legacy publication')
         for path in sorted(lock_paths, key=str):
             locks.enter_context(validation.locked_state(path))
             if owner is not None:
@@ -236,8 +256,23 @@ def merge_dir(stage: str, volume: str, chown: str | None,
             planned.append((write_dst, payload, _mode(write_dst) or _mode(src)))
         for write_dst, _, _ in planned:
             write_dst.parent.mkdir(parents=True, exist_ok=True)
+        transactional = set()
+        if txn is not None:
+            from rshelper.state_transaction import _kind as transaction_kind
+            from uuid import uuid4
+            for write_dst, payload, _ in planned:
+                relative = write_dst.relative_to(volume_root.resolve()).as_posix()
+                try:
+                    transaction_kind(relative)
+                except ValueError:
+                    continue
+                txn.stage_bytes(relative, payload)
+                transactional.add(write_dst)
+            if transactional:
+                txn.commit(str(uuid4()))
         for write_dst, payload, mode in planned:
-            _atomic_bytes(write_dst, payload, mode, owner)
+            if write_dst not in transactional:
+                _atomic_bytes(write_dst, payload, mode, owner)
 
 
 def main(argv: list[str]) -> int:
@@ -245,13 +280,33 @@ def main(argv: list[str]) -> int:
     parser.add_argument("stage")
     parser.add_argument("volume")
     parser.add_argument("--chown", metavar="UID:GID")
-    parser.add_argument("--validation-module", required=True)
+    parser.add_argument("--validation-module")
+    parser.add_argument('--application', action='store_true')
     try:
         args = parser.parse_args(argv)
+        if bool(args.validation_module) == args.application:
+            parser.error('choose the pinned application or an explicit legacy validation module')
     except SystemExit as exc:
         return exc.code
     try:
-        merge_dir(args.stage, args.volume, args.chown, args.validation_module)
+        if args.application:
+            from rshelper.backup import FILES, MAX_STATE_BYTES
+            staged = _entries(Path(args.stage))
+            total = 0
+            if len(staged) > 512:
+                raise ValueError('application staging exceeds file budget')
+            for relative, path in staged.items():
+                parts = Path(relative).parts
+                allowed = (relative in FILES or relative in ('README.md', 'state-packet.zip')
+                           or len(parts) == 2 and parts[0] == 'snapshots' and parts[1].endswith('.json'))
+                size = path.stat().st_size
+                total += size
+                if not allowed or path.is_symlink() or size > MAX_STATE_BYTES or total > MAX_STATE_BYTES:
+                    raise ValueError('application staging contains unapproved or oversized input')
+        receipt = merge_dir(args.stage, args.volume, args.chown, args.validation_module,
+                            immutable_stage=args.application)
+        if args.application:
+            print(json.dumps(receipt or {'status': 'legacy-applied'}, sort_keys=True))
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

@@ -61,6 +61,88 @@ def _cap_open_qty(qty: int, buy_limit: int, name: str) -> int:
     return qty
 
 
+def _close_response(children, receipts, latest: dict, operation_id: str) -> dict:
+    """Shared identified-close response: authoritative trade UUIDs first,
+    numeric id/qty/price/profit aliases kept for the current dashboard UI."""
+    from rshelper.market import ge_tax
+    return {
+        "ok": True,
+        "operation_id": operation_id,
+        "name": children[0]["name"] if children else "",
+        "qty": sum(child["qty"] for child in children),
+        "sell_price": children[0]["sell_price"] if children else 0,
+        "profit": sum((child["sell_price"] - child["buy_price"]) * child["qty"]
+                      - ge_tax(child["sell_price"]) * child["qty"]
+                      for child in children),
+        "trade_uuids": [trade_uuid for receipt in receipts
+                        for trade_uuid in receipt.get("trade_uuids", [])],
+        "closed_at_entry": False,
+        "market_data": {"latest": provenance(latest)},
+    }
+
+
+def identified_position_close(profile, position_id: int, qty: int | None,
+                              latest: dict, operation_id: str | None = None) -> dict | None:
+    """Close one manual dashboard lot through a durable recoverable batch.
+
+    Returns None when the profile has no active identity activation, so the
+    caller keeps legacy profiles on the FIFO writers byte-identically. The
+    caller's own refresh provides latest quotes; this helper does no fetching.
+    """
+    from rshelper import realization
+    from rshelper.ge_offers import close_market_price
+    from rshelper.positions import list_positions
+    gate = realization._financial_activation(profile)
+    if gate is None:
+        return None
+    pinned = None
+    if operation_id is not None:
+        # A lost response replays the PINNED request; the position may
+        # already be consumed, so the live listing is not required. An id
+        # with no pinned batch means the first attempt never arrived; the
+        # fresh close below pins the same id so the retry stays one action.
+        try:
+            pinned = realization.batch_summary(profile, operation_id)
+        except ValueError as exc:
+            if "unknown realization batch operation" not in str(exc):
+                raise
+    if pinned is not None:
+        receipt = realization.realize_close_batch(profile, operation_id)
+        return _close_response(pinned["operations"], receipt["receipts"],
+                               latest, operation_id)
+    position = next((p for p in list_positions(profile)
+                     if p.id == position_id), None)
+    if position is None:
+        raise ValueError(f"unknown position id {position_id}")
+    if position.note == "auto":
+        raise ValueError("auto-trader positions close themselves")
+    close_qty = qty if qty and qty > 0 else position.qty
+    if close_qty > position.qty:
+        raise ValueError(f"only {position.qty} units open for {position.name}")
+    if position.lot_uid is None:
+        raise ValueError("identified profile position is missing its lot UUID; "
+                         "migration or ownership review required")
+    # Close at the direction-aware market leg when a usable price exists;
+    # otherwise fall back to the entry buy_price (like collect_offer) so a
+    # stale-data position is never stranded forever. Pinned retries replay
+    # the original quote; only the first attempt consumes the live cache.
+    sell_price = close_market_price(position, latest)
+    op_id = operation_id or realization.new_operation_id(
+        gate["origin_uuid"], "dash:close", str(position_id))
+    plan = realization.prepare_close_batch(
+        profile, position.item_id, close_qty, op_id,
+        {position.direction or "traditional": sell_price},
+        lot_uids=[position.lot_uid],
+        reason="manual",
+        metadata={"note": "paper", "strategy": "manual"})
+    receipt = realization.realize_close_batch(profile, op_id)
+    summary = realization.batch_summary(profile, op_id)
+    response = _close_response(summary["operations"], receipt["receipts"],
+                               latest, op_id)
+    response["closed_at_entry"] = sell_price == position.buy_price
+    return response
+
+
 def _open_daemon_log(path):
     descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
     try:
@@ -490,7 +572,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 "open_qty": sum(r["qty"] for r in rows),
                 "unrealized": sum(r.get("unrealized", 0) for r in rows)}
 
-    def close_position(position_id: int, qty: int | None = None) -> dict:
+    def close_position(position_id: int, qty: int | None = None,
+                       operation_id: str | None = None) -> dict:
         """Close a manual paper position at the market price.
 
         Auto-trader positions are refused (the trader owns those exits).
@@ -498,6 +581,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cannot be priced.
         """
         refresh()
+        identified = identified_position_close(
+            profile, position_id, qty, cache["latest"], operation_id)
+        if identified is not None:
+            return identified
         from rshelper.ge_offers import close_market_price
         from rshelper.positions import close_positions, list_positions
         from rshelper.journal import log_trade
@@ -865,6 +952,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                      os.environ.get("RSHELPER_ALLOWED_HOSTS", "").split(",")
                      if h.strip()] or None
 
+    from rshelper.state_replication import read_receipt
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -887,7 +975,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            pnl_fn=get_pnl, delete_trade_fn=delete_trade_fn,
                            log_trade_fn=log_trade_fn, event_hub=hub,
                            allowed_hosts=allowed_hosts, mode=access_mode,
-                           owner_token=owner_token, control=control)
+                           owner_token=owner_token, control=control,
+                           state_receipt_fn=lambda origin: read_receipt(profile, origin))
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

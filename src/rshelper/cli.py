@@ -630,10 +630,18 @@ def _trade_open(args: argparse.Namespace) -> None:
 
 def _trade_close(args: argparse.Namespace) -> None:
     """Close open paper positions for an item at the live price."""
-    from rshelper.positions import close_positions, list_positions, open_qty
-    from rshelper.journal import log_trade
+    from rshelper.positions import list_positions
+    from rshelper.market import ge_tax
     profile = getattr(args, "profile", None)
     entry = _resolve_item(args)
+    operation_id = getattr(args, "operation_id", None)
+    if operation_id is not None:
+        from rshelper.persistence import canonical_uuid
+        try:
+            canonical_uuid(operation_id)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
     open_positions = [p for p in list_positions(profile) if p.item_id == entry["id"]]
     if not open_positions:
         print(f"No open positions for {entry['name']}.", file=sys.stderr)
@@ -649,6 +657,45 @@ def _trade_close(args: argparse.Namespace) -> None:
     # arbitrage stack must not sell both at the oldest lot's leg (one would
     # book a guaranteed loss).
     qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
+    from rshelper import realization
+    gate = realization._financial_activation(profile)
+    if gate is not None:
+        # Identified profile: pin the exact lots and per-direction prices in
+        # one durable batch, then realize through recoverable operations.
+        legs = {}
+        quotes = set()
+        market_data = {}
+        for direction in sorted({p.direction for p in open_positions}):
+            _buy, sell_price, quote = _resolve_paper_prices(entry, profile, direction)
+            if sell_price <= 0:
+                print(f"No live price data for {entry['name']}.", file=sys.stderr)
+                sys.exit(1)
+            legs[direction] = sell_price
+            quotes.add(_quote_description(quote))
+            market_data[direction] = quote
+        if operation_id is None:
+            operation_id = realization.new_operation_id(
+                gate["origin_uuid"], "trade:close", str(entry["id"]))
+        try:
+            plan = realization.prepare_close_batch(
+                profile, entry["id"], qty, operation_id, legs, reason="manual",
+                metadata={"note": "paper", "strategy": "manual",
+                          "market_data": {"latest": market_data}})
+            receipts = realization.realize_close_batch(profile, operation_id)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        total_profit = sum((child["sell_price"] - child["buy_price"]) * child["qty"]
+                           - ge_tax(child["sell_price"]) * child["qty"]
+                           for child in plan["operations"])
+        total_tax = sum(ge_tax(child["sell_price"]) * child["qty"]
+                        for child in plan["operations"])
+        print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
+              f"(tax: {total_tax:,})")
+        print("Quote: " + "; ".join(sorted(quotes)))
+        return
+    from rshelper.positions import close_positions
+    from rshelper.journal import log_trade
     remaining = qty
     total_profit = 0
     total_tax = 0
@@ -1697,10 +1744,9 @@ def _main() -> None:
     # An invalid active marker must remain repairable through the app.
     repair = sys.argv[1:3] == ["profile", "switch"]
     launch_profile = resolve_profile("default" if repair and selected.profile is None else selected.profile)
-    # Evidence capture remains available when the config itself is corrupt.
-    # It runs no strategy work and labels its bytes as unvalidated.
-    evidence_capture = remaining[:2] == ["profile", "backup"] and "--evidence" in remaining
-    if evidence_capture:
+    # Maintenance validates its own inputs without initializing the target profile.
+    maintenance = remaining[:1] in (["state"], ["backup"]) or remaining[:2] == ["profile", "backup"]
+    if maintenance:
         from rshelper.config import Config
         cfg = Config()
     else:
@@ -1870,6 +1916,8 @@ def _main() -> None:
     trade_close.add_argument("item", help="Item name")
     trade_close.add_argument("qty", type=int, nargs="?", default=0,
                              help="Units to close (default: all open)")
+    trade_close.add_argument("--operation-id", type=str, default=None,
+                             help="Stable operation UUID; reuse it to replay a lost response")
     trade_pos = trade_sub.add_parser(
         "positions", help="List open paper positions with unrealized P&L")
     trade_pos.add_argument("--json", action="store_true")
@@ -2027,6 +2075,35 @@ def _main() -> None:
     margin.add_argument("--save-snapshot", action="store_true",
                          help="Save results for later diff/trend comparison")
 
+    state_p = sub.add_parser('state', help='Capture, apply and verify private profile state')
+    state_sub = state_p.add_subparsers(dest='state_action', required=True)
+    for action, flag in (('capture', '--output'), ('apply', '--input'), ('receipt', '--origin')):
+        command = state_sub.add_parser(action)
+        command.add_argument(flag, required=True)
+        command.add_argument('--json', action='store_true')
+    state_sub.add_parser('check').add_argument('--json', action='store_true')
+    migration_plan = state_sub.add_parser('migration-plan')
+    migration_plan.add_argument('--origin', required=True)
+    migration_plan.add_argument('--profile-uuid', required=True)
+    migration_plan.add_argument('--lineage', required=True)
+    migration_plan.add_argument('--json', action='store_true')
+    migration_apply = state_sub.add_parser('migrate')
+    migration_apply.add_argument('--plan', required=True)
+    migration_apply.add_argument('--operation-id', required=True)
+    migration_apply.add_argument('--json', action='store_true')
+
+    backup_p = sub.add_parser('backup', help='Inspect and restore private profile backups')
+    backup_sub = backup_p.add_subparsers(dest='backup_action', required=True)
+    inspect_p = backup_sub.add_parser('inspect')
+    inspect_p.add_argument('--input', required=True)
+    inspect_p.add_argument('--json', action='store_true')
+    restore_p = backup_sub.add_parser('restore')
+    restore_p.add_argument('--input', required=True)
+    restore_p.add_argument('--expected-profile-uuid', required=True)
+    restore_p.add_argument('--operation-id', required=True)
+    restore_p.add_argument('--expected-source-revision')
+    restore_p.add_argument('--json', action='store_true')
+
     args, unknown = parser.parse_known_args(remaining)
     if unknown:
         print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
@@ -2049,7 +2126,42 @@ def _main() -> None:
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
-    if args.command == "item-info":
+    if args.command == 'backup':
+        from pathlib import Path
+        from rshelper import backup
+        if args.backup_action == 'inspect':
+            result = backup.inspect_backup(Path(args.input))
+        else:
+            result = backup.restore_profile(args.profile, Path(args.input),
+                                           expected_profile_uuid=args.expected_profile_uuid,
+                                           operation_id=args.operation_id,
+                                           expected_source_revision=args.expected_source_revision)
+        print(json.dumps(result, sort_keys=True))
+    elif args.command == 'state':
+        from pathlib import Path
+        from rshelper import state_replication
+        if args.state_action == 'capture':
+            result = state_replication.capture_packet(args.profile, Path(args.output))
+            result = {key: value for key, value in result.items() if key != 'files'}
+        elif args.state_action == 'apply':
+            result = state_replication.apply_packet(args.profile, Path(args.input))
+        elif args.state_action == 'check':
+            result = state_replication.validate_profile(args.profile)
+        elif args.state_action in ('migration-plan', 'migrate'):
+            from rshelper import persistence, state_migration
+            from rshelper.backup import _read_file
+            source = Path(args.lineage if args.state_action == 'migration-plan' else args.plan)
+            document = persistence.decode_json(_read_file(source))
+            if args.state_action == 'migration-plan':
+                result = state_migration.plan_migration(args.profile, origin_uuid=args.origin,
+                    profile_uuid=args.profile_uuid, lineage=document)
+            else:
+                result = state_migration.migrate_profile(args.profile, plan=document,
+                                                        operation_id=args.operation_id)
+        else:
+            result = state_replication.read_receipt(args.profile, args.origin)
+        print(json.dumps(result, sort_keys=True))
+    elif args.command == "item-info":
         item_info(args)
     elif args.command == "monitor":
         if args.stop:

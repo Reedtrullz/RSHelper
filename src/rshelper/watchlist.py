@@ -2,9 +2,11 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import UUID, uuid4
 
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, resolve_config_path
+from rshelper import state_identity, state_transaction
 
 WATCHLIST_PATH = Path.home() / ".config" / "rshelper" / "watchlist.json"
 
@@ -18,35 +20,85 @@ def _watchlist_path(profile: str | None = None) -> Path:
 
 
 def _watchlist_lock(profile: str | None = None):
+    path = _watchlist_path(profile)
+    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+        return state_transaction.profile_transaction(profile or 'default', path.parent)
     return locked_writable_state(_watchlist_path(profile), 'watchlist')
 
 
 def load(profile: str | None = None):
-    return read_state(_watchlist_path(profile), "watchlist")
+    path = _watchlist_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'watchlist'), 'watchlist', path)
 
 
 def _save(data: dict, profile: str | None = None) -> None:
     """Atomic write: temp file + rename."""
     validate_state(data, "watchlist", _watchlist_path(profile))
+    path = _watchlist_path(profile)
+    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+        with state_transaction.profile_transaction(profile or 'default', path.parent) as txn:
+            txn.stage('watchlist.json', data)
+            txn.commit(str(uuid4()))
+        return
     atomic_write_json(_watchlist_path(profile), data, indent=2)
 
 
 def add(item_id: int, name: str,
         alert_margin_above: int | None = None,
         alert_margin_below: int | None = None,
-        profile: str | None = None) -> None:
+        profile: str | None = None,
+        operation_id: str | None = None) -> None:
     """Add or update a watched item.
 
-    Re-adding an existing item preserves its original `added` timestamp so
+    Re-adding an existing item preserves its original added timestamp so
     the UI doesn't claim a long-watched item was just added. Existing alert
     thresholds are preserved when the caller does not specify new ones
-    (e.g. `watch add` after `watch remove`) — only an explicit None clears.
+    (e.g. watch add after watch remove) — only an explicit None clears.
+    Identified profiles mint a fresh record identity per creation generation;
+    a re-add after remove is a new record and the old one stays tombstoned.
     """
+    path = _watchlist_path(profile)
+    manifest = state_identity.activation_manifest(
+        path.with_name('identity-activation.json'))
+    if manifest is not None:
+        operation_id = operation_id or str(uuid4())
+        identity = state_identity.new_record_identity(
+            manifest['origin_uuid'], 'watchlist', operation_id)
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            data = load(profile)
+            existing = data["items"].get(str(item_id))
+            if existing is not None:
+                identity = {key: existing[key] for key in ('record_uuid', 'origin_uuid', 'revision', 'tombstone')}
+            elif identity['record_uuid'] in data.get('tombstones', {}):
+                raise ValueError('creation retry cannot resurrect a removed watch')
+            added = existing.get("added") if existing else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            if alert_margin_above is None and existing is not None:
+                alert_margin_above = existing.get("alert_margin_above")
+            if alert_margin_below is None and existing is not None:
+                alert_margin_below = existing.get("alert_margin_below")
+            row = {
+                "name": name, "added": added, "item_id": int(item_id),
+                "alert_margin_above": alert_margin_above,
+                "alert_margin_below": alert_margin_below,
+                **identity,
+            }
+            if existing == row:
+                return
+            if existing is not None:
+                row['revision'] += 1
+            else:
+                state_identity.attest_native(txn, path.parent, 'watchlist', row, operation_id,
+                    dict(item_id=item_id, name=name, alert_margin_above=alert_margin_above,
+                         alert_margin_below=alert_margin_below))
+            data['items'][str(item_id)] = row
+            txn.stage('watchlist.json', data)
+            txn.commit(operation_id=operation_id)
+        return
     with _watchlist_lock(profile):
         data = load(profile)
         existing = data["items"].get(str(item_id))
-        added = existing.get("added") if existing else \
-            datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        added = existing.get("added") if existing else             datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         if alert_margin_above is None and existing is not None:
             alert_margin_above = existing.get("alert_margin_above")
         if alert_margin_below is None and existing is not None:
@@ -61,7 +113,36 @@ def add(item_id: int, name: str,
 
 
 def remove(item_id: int, profile: str | None = None) -> bool:
-    """Remove a watched item. Returns True if it existed."""
+    """Remove a watched item. Returns True if it existed.
+
+    Identified profiles retain a tombstone so deletions replicate; legacy
+    profiles drop the row entirely.
+    """
+    path = _watchlist_path(profile)
+    if state_identity.activation_manifest(
+            path.with_name('identity-activation.json')) is not None:
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            data = load(profile)
+            popped = data["items"].pop(str(item_id), None)
+            if popped is None:
+                return False
+            identity = popped.get('record_uuid')
+            if identity is not None:
+                tombstones = data.setdefault('tombstones', {})
+                tombstones[identity] = {
+                    **popped, 'tombstone': True,
+                    'revision': popped.get('revision', 0) + 1,
+                    'item_id': int(item_id),
+                }
+                operation = identity
+            else:
+                origin = state_identity.activation_manifest(
+                    path.with_name('identity-activation.json'))['origin_uuid']
+                operation = str(UUID(origin))
+            txn.stage('watchlist.json', data)
+            txn.commit(operation_id=operation)
+        return True
     with _watchlist_lock(profile):
         data = load(profile)
         popped = data["items"].pop(str(item_id), None)

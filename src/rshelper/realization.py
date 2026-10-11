@@ -1,4 +1,4 @@
-"""Durable paper-close intents; inactive until coordinated writer cutover.
+"""Durable paper-close intents with caller routing on identified profiles.
 
 Every operation pins one identified lot and one journal row before either
 financial file changes. Replay applies the same economics under ordered locks.
@@ -18,11 +18,14 @@ from rshelper import journal, positions
 from rshelper.market import ge_tax
 from rshelper.persistence import read_state, locked_state, validate_state, canonical_uuid, MAX_STATE_BYTES
 from rshelper.profile import resolve_config_path
-from rshelper.state_identity import validate_manifest
+from rshelper.state_identity import (validate_manifest, activation_manifest,
+                                     require_financial_authority)
 from rshelper.identity_merge import canonical_record
 
 MAX_OPERATIONS = 10_000
 MAX_METADATA_BYTES = 16 * 1024
+MAX_BATCHES = 1_000
+MAX_BATCH_CHILDREN = 100
 
 
 def _same_json(left, right):
@@ -98,7 +101,8 @@ def _checkpoint(step):
 
 
 def _payload(data):
-    validate_state(data, 'generic', 'realization-state.json')
+    kind = 'positions' if 'positions' in data else 'trades' if 'trades' in data else 'generic'
+    validate_state(data, kind, 'realization-state.json')
     payload = json.dumps(data, allow_nan=False).encode('utf-8')
     if len(payload) > MAX_STATE_BYTES:
         raise ValueError('realization state exceeds byte budget')
@@ -137,12 +141,19 @@ def _paths(profile):
 
 
 def _load_intents(path):
+    if Path(path).with_name('.profile-pending.json').exists():
+        from rshelper.state_transaction import recover_profile
+        recover_profile(Path(path).parent)
     store = read_state(path, 'generic')
     if not store:
         try:
             Path(path).lstat()
         except FileNotFoundError:
             store = {'schema_version': 1, 'operations': {}}
+    return validate_intents(store, path)
+
+
+def validate_intents(store, path):
     if set(store) != {'schema_version', 'operations'} or not isinstance(store['operations'], dict):
         raise ValueError('invalid realization intent store')
     if len(store['operations']) > MAX_OPERATIONS:
@@ -176,6 +187,7 @@ def _load_intents(path):
         quantity, sell = request['qty'], request['sell_price']
         tax = ge_tax(sell) * quantity
         if (before.get('record_uuid') != request['lot_uid'] or before['qty'] < quantity
+                or before.get('origin_uuid') != trade.get('origin_uuid')
                 or before.get('tombstone') is not False
                 or trade.get('revision') != 0 or trade.get('tombstone') is not False
                 or trade['qty'] != quantity or trade['buy_price'] != before['buy_price']
@@ -196,7 +208,11 @@ def _load_intents(path):
 def _validate_origin(paths, store):
     if store['operations']:
         manifest = validate_manifest(read_state(paths[3], 'generic'))
-        if any(intent['trade']['origin_uuid'] != manifest['origin_uuid']
+        lineage = read_state(paths[3].with_name('identity-lineage.json'), 'generic').get('origins', {})
+        for declared in lineage.values():
+            validate_manifest(declared)
+        allowed = {manifest['origin_uuid'], *lineage}
+        if any(intent['trade']['origin_uuid'] not in allowed
                for intent in store['operations'].values()):
             raise ValueError('realization origin manifest conflict')
 
@@ -295,14 +311,12 @@ def _apply(paths, store, operation, replayed):
     return _receipt(intent, applied_trade, replayed)
 
 
-def _recover(paths, store):
+def verify_realization_snapshot(positions_state, trades, store):
     # Audit completed evidence once before a restart or a new operation can
     # consume restored units. Reads are bounded; no per-operation file rewrite.
-    positions_state = read_state(paths[0], 'positions')
     applied = positions_state.get('realizations', {})
     if not isinstance(applied, dict) or set(applied) - set(store['operations']):
         raise ValueError('invalid or unowned position realization ledger')
-    trades = read_state(paths[1], 'trades')['trades']
     by_uuid = {}
     for row in trades:
         by_uuid.setdefault(row.get('record_uuid'), []).append(row)
@@ -315,6 +329,11 @@ def _recover(paths, store):
             chains.setdefault(intent['request']['lot_uid'], []).append(intent)
     for lot_uid, chain in chains.items():
         _verify_applied_lot(positions_state, store, lot_uid, chain)
+
+
+def _recover(paths, store):
+    verify_realization_snapshot(read_state(paths[0], 'positions'),
+                                read_state(paths[1], 'trades')['trades'], store)
     receipts = []
     for operation, intent in store['operations'].items():
         if not intent['done']:
@@ -361,6 +380,9 @@ def close_and_realize(profile, lot_uid, qty, sell_price, operation_id, reason, *
         if len(lots) != 1 or lots[0].get('tombstone') is not False:
             raise ValueError('exact identified lot not open; migration or ownership review required')
         lot = lots[0]
+        active = _financial_activation(profile)
+        if active is not None and lot['origin_uuid'] != active['origin_uuid']:
+            raise ValueError('financial close must run on the lot authority')
         if qty > lot['qty'] or lot['revision'] >= 2**63 - 1:
             raise ValueError('insufficient open quantity or exhausted lot revision')
         trade_state = read_state(paths[1], 'trades')
@@ -396,3 +418,276 @@ def close_and_realize(profile, lot_uid, qty, sell_price, operation_id, reason, *
         _persist(paths[2], store)
         _checkpoint('intent')
         return _apply(paths, store, operation_id, False)
+
+
+def _financial_activation(profile):
+    """Shared caller gate: legacy profiles keep the FIFO writers unchanged."""
+    path = _manifest_path(profile).with_name('identity-activation.json')
+    manifest = activation_manifest(path)
+    if manifest is None:
+        return None
+    require_financial_authority(manifest)
+    lineage = validate_manifest(read_state(_manifest_path(profile), 'generic'))
+    if lineage['origin_uuid'] != manifest['origin_uuid']:
+        raise ValueError('activation origin differs from identity manifest')
+    return manifest
+
+
+def new_operation_id(origin_uuid, kind, entity_id):
+    """Deterministic caller operation UUID; collision-checked before pinning."""
+    from uuid import UUID as _UUID
+    canonical_uuid(origin_uuid)
+    child = str(uuid5(_UUID(origin_uuid), kind + ':' + str(entity_id)))
+    return child
+
+
+def _batch_paths(profile):
+    return _manifest_path(profile).with_name('realization-batches.json')
+
+
+def _load_batches(path):
+    try:
+        data = read_state(path, 'generic')
+    except FileNotFoundError:
+        return {'schema_version': 1, 'batches': {}}
+    if not data:
+        data = {'schema_version': 1, 'batches': {}}
+    return validate_batches(data)
+
+
+def validate_batches(data):
+    if (not isinstance(data, dict) or set(data) != {'schema_version', 'batches'}
+            or type(data['schema_version']) is not int or data['schema_version'] != 1
+            or not isinstance(data['batches'], dict)):
+        raise ValueError('invalid realization batch store')
+    if len(data['batches']) > MAX_BATCHES:
+        raise ValueError('realization batch budget exceeded')
+    for key, batch in data['batches'].items():
+        canonical_uuid(key)
+        if (not isinstance(batch, dict)
+                or set(batch) != {'operations', 'legs', 'item_id', 'qty'}
+                or type(batch['item_id']) is not int or batch['item_id'] <= 0
+                or type(batch['qty']) is not int or batch['qty'] <= 0
+                or not isinstance(batch['operations'], list)
+                or not batch['operations']
+                or len(batch['operations']) > MAX_BATCH_CHILDREN
+                or len(set(batch['operations'])) != len(batch['operations'])
+                or not isinstance(batch['legs'], dict)):
+            raise ValueError('invalid realization batch')
+        for operation in batch['operations']:
+            canonical_uuid(operation)
+        if (not batch['legs'] or set(batch['legs']) - {'traditional', 'arbitrage'}
+                or any(type(price) is not int or price <= 0 for price in batch['legs'].values())):
+            raise ValueError('invalid pinned batch quotes')
+    return data
+
+
+def _persist_batches(path, data):
+    validate_batches(data)
+    _persist(path, data)
+
+
+def _batch_lock(path):
+    return locked_state(path)
+
+
+def _batch_operation_id(parent, lot_uid):
+    return str(uuid5(UUID(parent), 'close:' + lot_uid))
+
+
+def prepare_close_batch(profile, item_id, qty, operation_id, quotes, *,
+                        lot_uids=None, reason='manual', metadata=None):
+    """Pin exact lot children for one close before any financial file moves."""
+    canonical_uuid(operation_id)
+    manifest = _financial_activation(profile)
+    if manifest is None:
+        raise ValueError('prepare_close_batch requires an identified profile')
+    if type(item_id) is not int or item_id <= 0:
+        raise ValueError('item id must be a positive integer')
+    if type(qty) is not int or qty <= 0:
+        raise ValueError('quantity must be a positive integer')
+    if not isinstance(quotes, dict) or not quotes:
+        raise ValueError('quotes must map at least one direction to a price')
+    legs = {}
+    for direction, price in quotes.items():
+        if direction not in ('traditional', 'arbitrage'):
+            raise ValueError('unknown quote direction ' + str(direction))
+        if type(price) is not int or price <= 0:
+            raise ValueError('quote price must be a positive integer')
+        legs[direction] = price
+    normalized = _metadata(metadata)
+    if type(reason) is not str or not reason or len(reason) > 64:
+        raise ValueError('invalid realization reason')
+    paths = _paths(profile)
+    batch_path = _batch_paths(profile)
+    with ExitStack() as locks:
+        for path in sorted(paths + (batch_path,), key=lambda value: str(Path(value).resolve())):
+            locks.enter_context(locked_state(path))
+        store = _load_intents(paths[2])
+        _validate_origin(paths, store)
+        batches = _load_batches(batch_path)
+        if operation_id in batches['batches']:
+            pinned = batches['batches'][operation_id]
+            if (pinned['item_id'] != item_id or pinned['qty'] != qty
+                    or pinned['legs'] != legs):
+                raise ValueError('operation ID reused with different economics')
+            children = []
+            for child_id in pinned['operations']:
+                intent = store['operations'].get(child_id)
+                if intent is None:
+                    raise ValueError('pinned batch child missing; recovery required')
+                request = intent['request']
+                children.append({'operation_id': child_id,
+                                 'lot_uid': request['lot_uid'],
+                                 'qty': request['qty'],
+                                 'buy_price': intent['before']['buy_price'],
+                                 'sell_price': request['sell_price'],
+                                 'reason': request['reason']})
+            return {'operation_id': operation_id, 'operations': children,
+                    'item_id': item_id, 'qty': qty}
+        _recover(paths, store)
+        if len(store['operations']) >= MAX_OPERATIONS:
+            raise ValueError('realization operation budget exceeded; receipts retained')
+        if len(batches['batches']) >= MAX_BATCHES:
+            raise ValueError('realization batch budget exceeded')
+        state = read_state(paths[0], 'positions')
+        open_lots = [row for row in state['positions']
+                     if row.get('tombstone') is False and row.get('item_id') == item_id]
+        if lot_uids is not None:
+            if (not isinstance(lot_uids, list)
+                    or any(not isinstance(value, str) for value in lot_uids)
+                    or len(set(lot_uids)) != len(lot_uids)):
+                raise ValueError('lot_uids must be a list of distinct strings')
+            selected = set(lot_uids)
+            open_lots = [row for row in open_lots if row.get('lot_uid') in selected]
+            if len(open_lots) != len(selected):
+                raise ValueError('exact identified lot not open; migration or ownership review required')
+        open_lots.sort(key=lambda row: row['id'])
+        if sum(row['qty'] for row in open_lots) < qty:
+            raise ValueError('insufficient open quantity for batch close')
+        remaining = qty
+        children = []
+        trades_state = read_state(paths[1], 'trades')
+        next_trade_id = max((row['id'] for row in trades_state['trades']), default=0) + 1
+        for lot in open_lots:
+            if remaining <= 0:
+                break
+            if lot['revision'] >= 2**63 - 1:
+                raise ValueError('exhausted lot revision')
+            if lot['origin_uuid'] != manifest['origin_uuid']:
+                raise ValueError('financial close must run on the lot authority')
+            take = min(remaining, lot['qty'])
+            direction = lot.get('direction', 'traditional')
+            if direction not in legs:
+                raise ValueError('missing quote for lot direction ' + str(direction))
+            sell = legs[direction]
+            child = _batch_operation_id(operation_id, lot['lot_uid'])
+            if child in store['operations']:
+                raise ValueError('realization operation identity already pinned')
+            tax = ge_tax(sell) * take
+            trade = {'id': next_trade_id, 'item_id': lot['item_id'], 'name': lot['name'],
+                     'qty': take, 'buy_price': lot['buy_price'], 'sell_price': sell,
+                     'tax_paid': tax, 'profit': (sell - lot['buy_price']) * take - tax,
+                     'timestamp': datetime.now(timezone.utc).isoformat(),
+                     'note': normalized['note'], 'strategy': normalized['strategy'],
+                     'hold_minutes': normalized['hold_minutes'],
+                     'quote_sell': normalized['quote_sell'],
+                     'entry_spread_pct': normalized['entry_spread_pct'],
+                     'fill_guard': normalized['fill_guard'],
+                     'market_data': normalized['market_data'],
+                     'exit_reason': reason,
+                     'record_uuid': str(uuid5(UUID(manifest['origin_uuid']), child)),
+                     'origin_uuid': manifest['origin_uuid'], 'revision': 0,
+                     'tombstone': False, 'operation_id': child,
+                     'closed_lot_uid': lot['lot_uid']}
+            receipt = {'operation_id': child, 'trade_ids': [next_trade_id],
+                       'remaining_qty': lot['qty'] - take}
+            if any(row.get('record_uuid') == trade['record_uuid']
+                   for row in trades_state['trades']):
+                raise ValueError('unowned realization journal identity already exists')
+            request = {'lot_uid': lot['lot_uid'], 'qty': take, 'sell_price': sell,
+                       'operation_id': child, 'reason': reason, 'metadata': normalized}
+            store['operations'][child] = {'request': request, 'before': copy.deepcopy(lot),
+                                          'trade': trade, 'receipt': receipt, 'done': False}
+            projected = store['operations'][child]
+            trial_trades = copy.deepcopy(trades_state)
+            trial_trades['trades'].append(trade)
+            validate_state(trial_trades, 'trades', paths[1])
+            _payload(trial_trades)
+            trial_positions = copy.deepcopy(state)
+            trial_positions['positions'] = [row for row in state['positions']
+                                            if row.get('record_uuid') != lot['lot_uid']]
+            trial_positions['positions'].append(_remaining_lot(projected))
+            trial_positions.setdefault('realizations', {})[child] = _marker(projected)
+            validate_state(trial_positions, 'positions', paths[0])
+            _payload(trial_positions)
+            children.append({'operation_id': child, 'lot_uid': lot['lot_uid'],
+                             'qty': take, 'buy_price': lot['buy_price'],
+                             'sell_price': sell, 'reason': reason})
+            next_trade_id += 1
+            remaining -= take
+        batches['batches'][operation_id] = {
+            'operations': [child['operation_id'] for child in children],
+            'legs': legs, 'item_id': item_id, 'qty': qty}
+        _persist(paths[2], store)
+        _persist_batches(batch_path, batches)
+        return {'operation_id': operation_id, 'operations': children,
+                'item_id': item_id, 'qty': qty}
+
+
+def realize_close_batch(profile, operation_id):
+    """Apply one pinned batch once; retries replay the pinned economics."""
+    canonical_uuid(operation_id)
+    if _financial_activation(profile) is None:
+        raise ValueError('realize_close_batch requires an identified profile')
+    paths = _paths(profile)
+    batch_path = _batch_paths(profile)
+    with ExitStack() as locks:
+        for path in sorted(paths + (batch_path,), key=lambda value: str(Path(value).resolve())):
+            locks.enter_context(locked_state(path))
+        store = _load_intents(paths[2])
+        _validate_origin(paths, store)
+        batches = _load_batches(batch_path)
+        pinned = batches['batches'].get(operation_id)
+        if pinned is None:
+            raise ValueError('unknown realization batch operation')
+        if any(child not in store['operations'] for child in pinned['operations']):
+            raise ValueError('pinned batch children missing; recovery required')
+        receipts = []
+        for child in pinned['operations']:
+            intent = store['operations'][child]
+            receipts.append(_apply(paths, store, child, bool(intent['done'])))
+        return {'operation_id': operation_id, 'receipts': receipts}
+
+
+def batch_summary(profile, operation_id):
+    """Read one pinned batch's economics without requiring live lots."""
+    canonical_uuid(operation_id)
+    if _financial_activation(profile) is None:
+        raise ValueError('batch_summary requires an identified profile')
+    batch_path = _batch_paths(profile)
+    paths = _paths(profile)
+    with ExitStack() as locks:
+        for path in sorted(paths + (batch_path,), key=lambda value: str(Path(value).resolve())):
+            locks.enter_context(locked_state(path))
+        store = _load_intents(paths[2])
+        batches = _load_batches(batch_path)
+        _validate_origin(paths, store)
+        pinned = batches['batches'].get(operation_id)
+        if pinned is None:
+            raise ValueError('unknown realization batch operation')
+        children = []
+        for child_id in pinned['operations']:
+            intent = store['operations'].get(child_id)
+            if intent is None:
+                raise ValueError('pinned batch child missing; recovery required')
+            request = intent['request']
+            children.append({'operation_id': child_id,
+                             'lot_uid': request['lot_uid'],
+                             'name': intent['before']['name'],
+                             'qty': request['qty'],
+                             'buy_price': intent['before']['buy_price'],
+                             'sell_price': request['sell_price'],
+                             'reason': request['reason']})
+        return {'operation_id': operation_id, 'operations': children,
+                'item_id': pinned['item_id'], 'qty': pinned['qty']}

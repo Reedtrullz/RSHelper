@@ -26,13 +26,20 @@
     container_name: rshelper
     app_dir: /opt/apps/rshelper
     docker_image: ''
-    app_version: "{{ lookup('ansible.builtin.env', 'APP_VERSION') | default('latest', true) }}"
+    app_version: "{{ lookup('ansible.builtin.env', 'APP_VERSION') }}"
     health_url: "http://{{ app_bind_address }}:{{ app_host_port }}/api/health"
     public_health_url: "https://{{ app_domain }}/api/health"
     caddy_marker_name: RSHelper
     rollback_image: "{{ app_name }}:rollback"
+    state_stage: "{{ app_dir }}/state-stage-{{ rollout_id }}"
 
   pre_tasks:
+    - name: Allocate one staging identity for this invocation
+      ansible.builtin.set_fact:
+        rollout_id: >-
+          {{ lookup('pipe', 'python3 -c "import uuid; print(uuid.uuid4().hex)"') }}
+      tags: [always]
+
     - name: Validate deployment variables
       ansible.builtin.assert:
         that:
@@ -106,6 +113,7 @@
       loop:
         - {source: "{{ playbook_dir }}/../src/rshelper/release.py", destination: release-validation.py}
         - {source: "{{ playbook_dir }}/verify_artifact.py", destination: verify-artifact.py}
+        - {source: "{{ playbook_dir }}/private_state.py", destination: private-state.py}
       tags: [deploy, rollback]
 
     - name: Capture previous immutable digest and OCI revision
@@ -217,46 +225,80 @@
           become: false
           tags: [deploy]
 
+        - name: Inspect explicit private profile activation
+          ansible.builtin.stat:
+            path: "{{ app_dir }}/data/.config/rshelper/identity-activation.json"
+          register: private_activation
+          tags: [deploy]
+
         - name: Fail if tracked state is missing on a production deploy
           ansible.builtin.fail:
             msg: >-
               data/state is absent from the checkout — the live site would
               serve stale/empty journal/positions/watchlist. Run the
               state-sync agent (or scripts/sync-state.sh) before deploying.
-          when: not (tracked_state.stat.exists | bool)
+          when: not (tracked_state.stat.exists | bool) and not private_activation.stat.exists
+          tags: [deploy]
+
+        - name: Verify initialized private state with the running compatible artifact
+          ansible.builtin.command:
+            argv: [python3, "{{ app_dir }}/private-state.py", --action, contract,
+                   --destination, "{{ app_dir }}"]
+          when: private_activation.stat.exists
+          changed_when: false
+          tags: [deploy]
+
+        - name: Verify candidate accepts the current private state contract
+          ansible.builtin.command:
+            argv: [flock, --exclusive, "{{ app_dir }}/production.lock", docker, run,
+                   --rm, --name, "rshelper-state-check-{{ rollout_id }}", --network, none,
+                   --read-only, --user, '1000:1000', --mount,
+                   "type=bind,src={{ app_dir }}/data,dst=/home/rshelper", --entrypoint,
+                   python, "{{ candidate_image_id }}", -m, rshelper, state, check, --json]
+          when: private_activation.stat.exists
+          changed_when: false
           tags: [deploy]
 
         - name: Stage tracked state for merge
           ansible.builtin.copy:
             src: "{{ playbook_dir }}/../data/state/"
-            dest: "{{ app_dir }}/state-stage/"
+            dest: "{{ state_stage }}/"
             owner: '1000'
             group: '1000'
-            mode: preserve
-            directory_mode: '0755'
+            mode: '0600'
+            directory_mode: '0700'
+          when: not private_activation.stat.exists
           tags: [deploy]
 
-        - name: Install shared state validation module for merge
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../src/rshelper/persistence.py"
-            dest: "{{ app_dir }}/state-validation.py"
-            owner: deploy
-            group: deploy
-            mode: '0644'
-          tags: [deploy]
-
-        - name: Merge staged state over the live volume (site writes win by id)
-          ansible.builtin.script: >-
-            merge_state.py {{ app_dir }}/state-stage
-            {{ app_dir }}/data/.config/rshelper --chown 1000:1000
-            --validation-module {{ app_dir }}/state-validation.py
-          tags: [deploy]
-
-        - name: Remove state staging directory
-          ansible.builtin.file:
-            path: "{{ app_dir }}/state-stage"
-            state: absent
-          when: tracked_state.stat.exists | bool
+        - name: Merge legacy seed through the verified candidate image under host lease
+          ansible.builtin.command:
+            argv:
+              - flock
+              - --exclusive
+              - "{{ app_dir }}/production.lock"
+              - docker
+              - run
+              - --rm
+              - --name
+              - "rshelper-state-seed-{{ rollout_id }}"
+              - --network
+              - none
+              - --read-only
+              - --user
+              - '1000:1000'
+              - --mount
+              - "type=bind,src={{ app_dir }}/data,dst=/home/rshelper"
+              - --mount
+              - "type=bind,src={{ state_stage }},dst=/state-stage,readonly"
+              - --entrypoint
+              - python
+              - "{{ candidate_image_id }}"
+              - /app/deploy/merge_state.py
+              - /state-stage
+              - /home/rshelper/.config/rshelper
+              - --application
+          when: not private_activation.stat.exists
+          changed_when: true
           tags: [deploy]
 
         - name: Mark candidate replacement boundary
@@ -274,15 +316,11 @@
           tags: [deploy]
 
         - name: Start RSHelper with Docker Compose
-          community.docker.docker_compose_v2:
-            project_src: "{{ app_dir }}"
-            files:
-              - compose.production.yml
-            state: present
-            recreate: always
-            remove_orphans: true
-            wait: true
-            wait_timeout: 120
+          ansible.builtin.command:
+            argv: [flock, --exclusive, "{{ app_dir }}/production.lock", docker, compose,
+                   --project-directory, "{{ app_dir }}", -f, "{{ app_dir }}/compose.production.yml",
+                   up, --detach, --force-recreate, --remove-orphans, --wait, --wait-timeout, '120']
+          changed_when: true
           tags: [deploy]
 
         - name: Verify running container uses the inspected candidate image ID
@@ -437,16 +475,11 @@
           tags: [rollback]
 
         - name: Restore previous RSHelper container
-          community.docker.docker_compose_v2:
-            project_src: "{{ app_dir }}"
-            files:
-              - compose.production.yml
-            state: present
-            recreate: always
-            remove_orphans: true
-            wait: true
-            wait_timeout: 120
-            pull: never
+          ansible.builtin.command:
+            argv: [flock, --exclusive, "{{ app_dir }}/production.lock", docker, compose,
+                   --project-directory, "{{ app_dir }}", -f, "{{ app_dir }}/compose.production.yml",
+                   up, --detach, --force-recreate, --remove-orphans, --wait, --wait-timeout, '120', --pull, never]
+          changed_when: true
           tags: [rollback]
 
         - name: Verify restored image ID matches the recorded rollback artifact
@@ -551,6 +584,22 @@
               Candidate deployment failed and RSHelper was rolled back to
               previous digest {{ previous_immutable_image }} with version {{ previous_app_version }}.
           tags: [rollback]
+
+      always:
+        - name: Remove only owned interrupted state helper containers
+          ansible.builtin.command:
+            argv: [docker, rm, --force, "rshelper-state-seed-{{ rollout_id }}",
+                   "rshelper-state-check-{{ rollout_id }}"]
+          register: owned_container_cleanup
+          failed_when: owned_container_cleanup.rc not in [0, 1]
+          changed_when: owned_container_cleanup.rc == 0
+          tags: [deploy, rollback]
+
+        - name: Remove only this invocation staging directory
+          ansible.builtin.file:
+            path: "{{ state_stage }}"
+            state: absent
+          tags: [deploy, rollback]
 
   handlers:
     - name: Reload Caddy

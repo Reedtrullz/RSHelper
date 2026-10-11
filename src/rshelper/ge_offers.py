@@ -156,7 +156,8 @@ def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
     }
 
 
-def collect_offer(position_id: int, profile=None, latest=None) -> dict:
+def collect_offer(position_id: int, profile=None, latest=None,
+                  operation_id: str | None = None) -> dict:
     """Close a filled position at the live price.
 
     Calls close_positions(position's item/qty, sell_price) then
@@ -166,11 +167,56 @@ def collect_offer(position_id: int, profile=None, latest=None) -> dict:
     {"ok": True, "name", "qty", "sell_price", "profit"}. Raises
     ValueError when the position id is unknown.
     """
+    from rshelper import realization
+    gate = realization._financial_activation(profile)
+    if operation_id is not None and gate is not None:
+        # A lost response replays the PINNED request; the slot's position may
+        # already be consumed, so the live listing is not required.
+        summary = realization.batch_summary(profile, operation_id)
+        realization.realize_close_batch(profile, operation_id)
+        children = summary["operations"]
+        return {
+            "ok": True,
+            "name": next((child["name"] for child in children), ""),
+            "qty": sum(child["qty"] for child in children),
+            "sell_price": children[0]["sell_price"] if children else 0,
+            "profit": sum((child["sell_price"] - child["buy_price"]) * child["qty"]
+                          - ge_tax(child["sell_price"]) * child["qty"]
+                          for child in children),
+            "operation_id": operation_id,
+            "market_data": {"latest": provenance(latest)},
+        }
     position = next((p for p in list_positions(profile)
                      if p.id == position_id), None)
     if position is None:
         raise ValueError(f"unknown position id {position_id}")
     sell_price = close_market_price(position, latest)
+    if gate is not None:
+        # Identified profile: the clicked slot closes ITS OWN lot through a
+        # durable recoverable operation; retrying the same operation id
+        # replays the pinned economics instead of re-quoting.
+        if operation_id is None:
+            operation_id = realization.new_operation_id(
+                gate["origin_uuid"], "ge:collect", str(position_id))
+        direction = position.direction or "traditional"
+        plan = realization.prepare_close_batch(
+            profile, position.item_id, position.qty, operation_id,
+            {direction: sell_price}, lot_uids=[position.lot_uid],
+            reason="collect",
+            metadata={"note": "paper", "strategy": "ge_collect",
+                      "market_data": {"latest": provenance(latest)}})
+        realization.realize_close_batch(profile, operation_id)
+        return {
+            "ok": True,
+            "name": position.name,
+            "qty": position.qty,
+            "sell_price": sell_price,
+            "profit": sum((child["sell_price"] - child["buy_price"]) * child["qty"]
+                          - ge_tax(child["sell_price"]) * child["qty"]
+                          for child in plan["operations"]),
+            "operation_id": operation_id,
+            "market_data": {"latest": provenance(latest)},
+        }
     # Close the SPECIFIC lot (not FIFO): the GE Collect button maps to one
     # slot; with several lots of the same item open, FIFO would book the
     # oldest lot's cost basis instead of the clicked one.

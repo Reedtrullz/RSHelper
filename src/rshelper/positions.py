@@ -11,8 +11,10 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 from rshelper.market import ge_tax
+from rshelper import state_identity, state_transaction
 from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
@@ -36,6 +38,10 @@ class Position:
     note: str = ""
     entry_sell: int | None = None  # sell quote (low) when the position opened
     entry_offer: int | None = None  # offer quote (high) when the position opened
+    lot_uid: str | None = None  # identified lot UUID on migrated profiles
+    record_uuid: str | None = None
+    origin_uuid: str | None = None
+    revision: int | None = None
 
 
 def _positions_path(profile: str | None = None) -> Path:
@@ -45,7 +51,8 @@ def _positions_path(profile: str | None = None) -> Path:
 
 
 def _load(profile: str | None = None):
-    return read_state(_positions_path(profile), "positions")["positions"]
+    path = _positions_path(profile)
+    return state_identity.validate_activated_store(read_state(path, 'positions'), 'positions', path)['positions']
 
 
 def _save(positions: list[dict], profile: str | None = None) -> None:
@@ -66,7 +73,8 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   direction: str = "arbitrage", note: str = "",
                   entry_sell: int | None = None,
                   entry_offer: int | None = None,
-                  profile: str | None = None) -> Position:
+                  profile: str | None = None,
+                  operation_id: str | None = None) -> Position:
     """Open a hold position at buy_price. Returns the Position."""
     if qty <= 0:
         raise ValueError(f"qty must be positive, got {qty}")
@@ -74,6 +82,39 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         raise ValueError(f"buy_price must be positive, got {buy_price}")
     if direction not in ("arbitrage", "traditional"):
         raise ValueError(f"direction must be 'arbitrage' or 'traditional', got '{direction}'")
+    path = _positions_path(profile)
+    manifest = state_identity.activation_manifest(
+        path.with_name('identity-activation.json'))
+    if manifest is not None:
+        state_identity.require_financial_authority(manifest)
+        operation_id = operation_id or str(uuid4())
+        request = dict(item_id=item_id, name=name, qty=qty, buy_price=buy_price,
+                       direction=direction, note=note, entry_sell=entry_sell,
+                       entry_offer=entry_offer)
+        identity = state_identity.new_record_identity(
+            manifest['origin_uuid'], 'positions', operation_id)
+        with state_transaction.profile_transaction(profile or 'default',
+                                                   path.parent) as txn:
+            store = read_state(path, 'positions')
+            state_identity.validate_activated_store(store, 'positions', path)
+            positions_list = store['positions']
+            for row in positions_list:
+                if row.get('record_uuid') == identity['record_uuid']:
+                    state_identity.validate_native_retry(path.parent, 'positions', row, request)
+                    return Position(**filter_fields(Position, row))
+            position = {
+                "id": _next_id(positions_list), "item_id": item_id,
+                "name": name, "qty": qty, "buy_price": buy_price,
+                "direction": direction, "note": note,
+                "opened_at": datetime.now(timezone.utc).isoformat(),
+                "entry_sell": entry_sell, "entry_offer": entry_offer,
+                **identity,
+            }
+            positions_list.append(position)
+            state_identity.attest_native(txn, path.parent, 'positions', position, operation_id, request)
+            txn.stage('positions.json', store)
+            txn.commit(operation_id=operation_id)
+        return Position(**filter_fields(Position, position))
     with _positions_lock(profile):
         positions = _load(profile)
         position = {
