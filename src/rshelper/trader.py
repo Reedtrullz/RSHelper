@@ -195,6 +195,7 @@ def _status_base(state: dict) -> dict:
     age = _last_cycle_age(state)
     return {
         "profile": state.get("profile", "default"),
+        "configuration": state.get("configuration"),
         "started_iso": state.get("started_iso"),
         "last_cycle_iso": state.get("last_cycle_iso"),
         "last_cycle_age_sec": age,
