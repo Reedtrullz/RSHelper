@@ -16,6 +16,36 @@ import rshelper.api as api
 
 
 class TestOutputContract(unittest.TestCase):
+    def test_flip_formats_use_directional_capital_and_server_economics(self):
+        import csv
+        import rshelper.cli as cli
+        from rshelper.models import Item
+        for direction, high, low in (('arbitrage', 100, 110), ('traditional', 110, 100)):
+            item = Item(1, 'Synthetic', False, 100, 0, high, low, 20)
+            for output in ('--json', '--csv', '--html', None):
+                with self.subTest(direction=direction, output=output):
+                    out, err = io.StringIO(), io.StringIO()
+                    argv = ['rshelper', 'flip-scan', '--flip-direction', direction,
+                            '--capital', '1000', '--no-members-only']
+                    if output: argv.append(output)
+                    with mock.patch.object(cli, '_fetch_bootstrap', return_value=([], {}, {}, [item])), \
+                            mock.patch.object(sys, 'argv', argv), \
+                            contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                        cli.main()
+                    if output == '--json':
+                        row = json.loads(out.getvalue())[0]
+                        self.assertEqual(row['roi'], 8.0)
+                        self.assertEqual(row['capital_per_unit'], 100)
+                        self.assertEqual(row['explanation']['tax'], 2)
+                        self.assertEqual(row['explanation']['net_profit'], 8)
+                    elif output == '--csv':
+                        row = next(csv.DictReader(io.StringIO(out.getvalue())))
+                        self.assertEqual(float(row['roi']), 8.0)
+                        self.assertEqual(int(row['capital_per_unit']), 100)
+                    else:
+                        self.assertIn('8.0', out.getvalue())
+                        self.assertIn('10', out.getvalue())
+
     def test_retry_json_has_one_value(self):
         failures = [urllib.error.HTTPError('https://fixture.invalid', code, 'fixture', {}, None)
                     for code in (429, 503)]

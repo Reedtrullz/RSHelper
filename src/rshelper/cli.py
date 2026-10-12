@@ -94,12 +94,13 @@ def _process_roi(r) -> float:
     return (r.profit / cost * 100) if cost > 0 else 0.0
 
 
-def _roi_pct(item) -> float:
+def _roi_pct(item, direction='arbitrage') -> float:
     """Return flip ROI as a percentage of buy price."""
-    return item.profit / item.buy_price * 100 if item.buy_price > 0 else 0.0
+    buy = item.buy_price if direction == 'arbitrage' else item.sell_price
+    return item.profit / buy * 100 if buy > 0 else 0.0
 
 
-def _format_flip_table(results, top: int, capital: int = 0) -> str:
+def _format_flip_table(results, top: int, capital: int = 0, direction='arbitrage') -> str:
     """Render flip results as an aligned text table."""
     rows = results[:top]
     if not rows:
@@ -123,16 +124,16 @@ def _format_flip_table(results, top: int, capital: int = 0) -> str:
     for i, item in enumerate(rows, 1):
         name = item.name[:name_width]
         if has_qty:
-            qty = trade_size(item, capital)
+            qty = trade_size(item, capital, direction=direction)
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {_roi_pct(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.profit:>7,} {_roi_pct(item, direction):>5.1f} {item.rs_score:>4.0f} "
                 f"{item.gp_per_hour:>9,} {qty:>6,} {item.buy_limit:>6,}"
             )
         else:
             lines.append(
                 f"{i:<4} {name:<{name_width}} {item.buy_price:>9,} {item.sell_price:>9,} "
-                f"{item.profit:>7,} {_roi_pct(item):>5.1f} {item.rs_score:>4.0f} "
+                f"{item.profit:>7,} {_roi_pct(item, direction):>5.1f} {item.rs_score:>4.0f} "
                 f"{item.gp_per_hour:>9,} {item.buy_limit:>7,}"
             )
     return "\n".join(lines)
@@ -337,8 +338,8 @@ def flip_scan(args: argparse.Namespace) -> None:
             row = asdict(item)
             row.update(_csv_market(item.market_data))
             row["rank"] = i
-            row["roi"] = round(_process_roi(item), 2)
-            row["capital_per_unit"] = item.buy_price
+            row["roi"] = round(_roi_pct(item, direction), 2)
+            row["capital_per_unit"] = scanner.explain(item)['buy_leg_price']
             writer.writerow(row)
         print(out.getvalue())
     elif args.json:
@@ -350,8 +351,9 @@ def flip_scan(args: argparse.Namespace) -> None:
                 "buy_price": r.buy_price,
                 "sell_price": r.sell_price,
                 "margin": r.profit,
-                "roi": round(_process_roi(r), 2),
-                "capital_per_unit": r.buy_price,
+                "explanation": scanner.explain(r),
+                "roi": round(_roi_pct(r, direction), 2),
+                "capital_per_unit": scanner.explain(r)['buy_leg_price'],
                 "gp_per_hour": r.gp_per_hour,
                 "volume": r.volume,
                 "buy_limit": r.buy_limit,
@@ -363,16 +365,16 @@ def flip_scan(args: argparse.Namespace) -> None:
         cols = ["Rank", "Item", "Buy", "Sell", "Margin", "ROI%", "RS", "GP/hr", "Limit"]
         rows = [{"Rank": i + 1, "Item": r.name, "Buy": f"{r.buy_price:,}",
                  "Sell": f"{r.sell_price:,}", "Margin": f"{r.profit:,}",
-                 "ROI%": f"{_process_roi(r):.1f}",
+                 "ROI%": f"{_roi_pct(r, direction):.1f}",
                  "GP/hr": f"{r.gp_per_hour:,}", "RS": f"{r.rs_score:.0f}", "Limit": f"{r.buy_limit:,}"}
                 for i, r in enumerate(results[:args.top])]
         if capital:
             cols.insert(-1, "Qty")
             for i, row in enumerate(rows):
-                row["Qty"] = f"{trade_size(results[i], capital):,}"
+                row["Qty"] = f"{trade_size(results[i], capital, direction=direction):,}"
         print(_html_output(rows, cols, "Flip Scan", _market_description(mapping, latest, volume_5m)))
     else:
-        print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
+        print(_format_flip_table(results, args.top, getattr(args, 'capital', 0), direction))
 
     if getattr(args, 'save_snapshot', False):
         _save_flip_snapshot(snap_results, args.profile,

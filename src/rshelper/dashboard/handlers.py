@@ -329,8 +329,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
             try:
                 items = scan_items()
                 results = scanner.scan(items, **(scan_kwargs or {}))
+                from collections import Counter
+                exclusions=Counter(reason.split(':',1)[0] for item in items
+                    for reason in scanner.explain(item,**(scan_kwargs or {}))['exclusion_reasons'])
                 data = {
-                    "items": [_item_to_dict(r) for r in results],
+                    "items": [_item_to_dict(r)|{'explanation':scanner.explain(r,**(scan_kwargs or {}))} for r in results],
+                    "exclusions": dict(exclusions),
                     "market_data": getattr(items, 'snapshot_provenance', None) or (getattr(items[0],"market_data",{}) if items else market_snapshot(None, None, None)),
                     "market_revision": getattr(items, 'market_revision', None),
                     "count": len(results),

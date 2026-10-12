@@ -31,6 +31,8 @@ class MarginAnalysis:
     expected_gp_per_hour: int = 0  # confidence * current_profit * throughput
     market_data: dict = field(default_factory=dict)
     candle_coverage: dict = field(default_factory=dict)
+    recency_modifier: float = 1.0
+    trend_modifier: float = 1.0
 
 
 def analyze_timeseries(
@@ -202,6 +204,8 @@ def analyze_timeseries(
         confidence=confidence,
         reliability=reliability,
         profitability_score=profitability_score,
+        recency_modifier=recency_modifier,
+        trend_modifier=trend_modifier,
         datapoints=len(margins),
         window_hours=window_hours,
         candle_coverage={**coverage,'priced_samples':len(margins),'priced_coverage':priced_coverage},

@@ -18,7 +18,7 @@ from http.server import ThreadingHTTPServer
 from rshelper.cli import _fetch_bootstrap
 from rshelper.market_data import MarketList, MarketDict, market_payload, provenance, market_snapshot
 from rshelper.config import load_config
-from rshelper.market import price_issue, safe_int
+from rshelper.market import price_issue, safe_int, ge_tax
 from rshelper.scanner import FlipScanner
 from rshelper.signals import detect_signals
 from rshelper.dashboard.handlers import make_handler
@@ -631,6 +631,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_meta() -> dict:
         cache = refresh()
         signals = active_signals(cache)
+        from rshelper.profile import resolve_config_path
+        from rshelper.state_identity import activation_manifest
+        identity=activation_manifest(resolve_config_path('identity-activation.json',profile))
         from rshelper.journal import list_trades
         watched = watchlist.get_watched_ids(profile)  # single disk read
         return {
@@ -646,6 +649,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             "last_fetch": cache["last_fetch"],
             "control": control,
             "profile": profile or "default",
+            "profile_uuid":identity.get('profile_uuid') if identity else None,
             "unread_alerts": alerts.unread_count(profile),
         }
 
@@ -667,6 +671,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             if issue is None:
                 row["buy"] = safe_int(price.get("high", 0))
                 row["sell"] = safe_int(price.get("low", 0))
+                row['tax'] = ge_tax(row['sell'])
+                row['net_profit'] = row['sell'] - row['buy'] - row['tax']
+                row['margin_pct'] = (row['sell'] - row['buy']) / row['buy'] * 100
+                row['direction'] = 'arbitrage'
             else:
                 row["reason"] = issue
             rows.append(row)
@@ -702,7 +710,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_timeseries(item_id: int, step: str = "5m",
                        points: int = 96) -> dict:
         from rshelper.api import fetch_timeseries_result
-        from rshelper.market import safe_int
+        from rshelper.market import safe_int,ge_tax
         from rshelper.market_validation import normalize_candles
         ts = market_payload(fetch_timeseries_result(item_id, step, profile), sequence=True)
         normalized = normalize_candles(ts,step)
@@ -714,7 +722,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             h, l = safe_int(high), safe_int(low)
             if h <= 0 or l <= 0:
                 continue
-            points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
+            buy,sell=(h,l) if cfg.flip.direction=='arbitrage' else (l,h)
+            points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l,
+                'net_profit':sell-buy-ge_tax(sell),'direction':cfg.flip.direction})
         return {"points": points_out, "market_data":provenance(ts),
                 "candle_coverage":getattr(ts,'candle_coverage',normalized['coverage']),
                 "capability": {"available":bool(ts), "reason":None if ts else
@@ -909,6 +919,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "confidence": round(a.confidence, 4),
                         "reliability": round(a.reliability, 4),
                         "profitability_score": round(a.profitability_score, 4),
+                        "recency_modifier":a.recency_modifier,
+                        "trend_modifier":a.trend_modifier,
+                        "ranking_basis":"confidence times current net profit times throughput; history is not a forecast",
                         "avg_margin": round(a.avg_margin, 0),
                         "margin_volatility": round(a.margin_volatility, 4),
                         "avg_spread_pct": round(a.avg_spread_pct, 4),

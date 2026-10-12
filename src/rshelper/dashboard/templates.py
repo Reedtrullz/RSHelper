@@ -109,6 +109,7 @@ button{font-family:var(--font)}
 }
 .list-body th:first-child,.list-body td:first-child{text-align:left;padding-left:4px}
 .th-sort{cursor:pointer;user-select:none}
+.item-link{background:transparent;border:0;color:inherit;font:inherit;text-align:left;white-space:normal;cursor:pointer}
 .th-sort:hover{color:var(--gold)}
 .th-sort .srt{display:inline-block;width:12px;color:var(--gold);font-size:10px}
 .list-body td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -212,11 +213,12 @@ button:focus-visible{border-color:var(--gold)}
   opacity:0;transform:scale(.9)}
 .ge-collect-btn.visible{opacity:1;transform:scale(1)}
 .ge-collect-btn:hover{background:var(--gold)}
-.ge-history-overlay{position:fixed;top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,.7);z-index:100;display:flex;justify-content:center;
-  align-items:center}
+.ge-history-overlay{position:fixed;inset:0;margin:auto;border:0;padding:0;
+  background:transparent;width:fit-content;height:fit-content;max-width:100vw;max-height:100dvh}
+.ge-history-overlay:not([open]){display:none}
+.ge-history-overlay::backdrop{background:rgba(0,0,0,.7)}
 .ge-history-panel{background:#2a2215;border:2px solid #5c4a32;border-radius:6px;
-  width:600px;max-height:80vh;overflow-y:auto;padding:16px}
+  width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 48px);overflow:auto;padding:16px}
 .ge-history-panel table{width:100%;border-collapse:collapse;font-size:12px}
 .ge-history-panel th{color:var(--text-dim);text-align:right;padding:5px 6px;
   font-size:10px;text-transform:uppercase;letter-spacing:.5px;
@@ -248,6 +250,24 @@ button:focus-visible{border-color:var(--gold)}
   background:var(--surface);border-top:1px solid var(--border);font-size:12px;
   color:var(--text-dim)}
 .gold{color:var(--gold)}
+.workflow-help{line-height:1.5}.workflow-help ol{padding-left:20px}
+.chart-data{overflow:auto;max-height:300px}.chart-data table{border-collapse:collapse}
+.chart-data th,.chart-data td{padding:6px;text-align:left;border:1px solid var(--border)}
+.context-panel p{overflow-wrap:anywhere}
+.list-body{overflow-x:auto}
+@media(max-width:800px){
+  body{height:100dvh}.topbar{flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .topbar .search{flex:1 1 160px;max-width:none}.stats{margin-left:0;flex-wrap:wrap}
+  .navrow,.viewbar{padding:8px 12px}.main{display:block;overflow:auto;min-height:0}
+  .navrow{flex-wrap:nowrap;overflow-x:auto}.nav-btn{flex:0 0 auto}
+  .list-panel{overflow:visible}.list-body{flex:none;max-height:65dvh;padding:8px 12px;overflow:auto}
+  .context-panel{width:100%;border-left:0;border-top:1px solid var(--border);overflow:visible;padding:12px}
+  .context-panel .empty{margin-top:20px}.footer{flex-wrap:wrap;padding:6px 12px;gap:4px}
+  button,input,select,textarea{min-height:44px}button{min-width:44px}
+  .ge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ge-slot-name{white-space:normal}
+  .alert-dropdown{width:min(420px,calc(100vw - 24px));right:12px}
+  #accessBar{flex-wrap:wrap}.loading{flex-wrap:wrap;padding:16px}
+}
 """
 
 _NAV = r"""
@@ -277,7 +297,7 @@ _SHELL = r"""
 
 _FOOTER = r"""
 <div class="footer">
-  <span><span class="dot" id="statusDot"></span><span id="statusText">Connected</span><span class="source-badge none" id="sourceBadge">-</span></span>
+  <span><span class="dot" id="statusDot"></span><span id="statusText" role="status" aria-live="polite">Connected</span><span class="source-badge none" id="sourceBadge">-</span></span>
   <span><span class="kbd" id="kbdHint">&#8593;&#8595; move</span> <span id="lastUpdated">Last updated: --</span> <span id="footerBell"></span></span>
 </div>
 """
@@ -302,7 +322,7 @@ INDEX_HTML = f"""<!DOCTYPE html>
       <div class="loading"><span class="spinner"></span>Loading market data...</div>
     </div>
   </div>
-  <div class="context-panel" id="contextPanel">
+  <div class="context-panel" id="contextPanel" tabindex="-1" aria-label="Item details">
     <div class="empty">&#8592; Select an item to inspect</div>
   </div>
 </div>

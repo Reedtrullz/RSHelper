@@ -171,20 +171,25 @@ class FlipScanner:
         if item.buy_limit<=0:reasons.append('known positive buy limit unavailable')
         if profit<=0:reasons.append(f'net profit: {profit} is not positive after tax')
         return {'direction':self.direction,'buy_leg_price':buy,'sell_leg_price':sell,'margin':margin,
+            'margin_pct':margin/buy*100 if buy>0 else None,'roi_pct':profit/buy*100 if buy>0 else None,
+            'ranking_basis':'illustrative net profit times throughput; RS score is secondary',
             'tax':tax,'net_profit':profit,'gp_per_hour':int(profit*throughput),'throughput_per_hour':throughput,
             'throughput_constraint':'buy limit' if item.buy_limit/4<=item.volume*12 else '5m volume extrapolation',
             'exclusion_reasons':reasons}
 
-def trade_size(item: Item, capital: int) -> int:
+def trade_size(item: Item, capital: int, *, direction='arbitrage') -> int:
     """Suggested buy quantity given capital (gp).
 
     Capped by: buy_limit, available capital, and hourly trade volume.
     Returns 0 for zero-volume (illiquid) items.
     """
-    if item.buy_price <= 0 or capital <= 0:
+    if direction not in ('arbitrage', 'traditional'):
+        raise ValueError('unknown flip direction')
+    buy = item.buy_price if direction == 'arbitrage' else item.sell_price
+    if buy <= 0 or capital <= 0:
         return 0
     by_limit = item.buy_limit
-    by_capital = capital // item.buy_price
+    by_capital = capital // buy
     by_volume = item.volume * 12  # 5-min volume -> hourly
     if by_volume == 0:
         return 0

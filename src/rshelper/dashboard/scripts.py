@@ -15,6 +15,87 @@ let chip='all',density='normal',strategy='';
 let viewRows=[],activityCursor=null,activitySince='',activityUntil='';
 let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
+let scanExclusions={};
+let scanPresets=[],loadedPreferenceKey=null;
+const viewNames=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
+function parseViewUrl(raw){
+  const fallback={view:'market',item:null};
+  if(typeof raw!=='string'||raw.length>512)return fallback;
+  const params=new URLSearchParams(raw);
+  if([...params.keys()].some(key=>!['view','item'].includes(key)||params.getAll(key).length!==1))return fallback;
+  const name=params.get('view')||'market',item=params.get('item');
+  if(!viewNames.includes(name)||item!=null&&(!/^[1-9][0-9]*$/.test(item)||!Number.isSafeInteger(Number(item))))return fallback;
+  return {view:name,item:item==null?null:Number(item)};
+}
+function writeViewUrl(replace=false){
+  const params=new URLSearchParams({view});
+  if(Number.isSafeInteger(selectedId)&&selectedId>0)params.set('item',String(selectedId));
+  const hash='#'+params;
+  if(window.location.hash===hash)return;
+  window.history[replace?'replaceState':'pushState']({},'',window.location.pathname+hash);
+}
+function applyViewUrl(){
+  const state=parseViewUrl(window.location.hash.slice(1));
+  selectedId=null;setView(state.view,false);
+  if(state.item&&['market','signals','watchlist'].includes(view)&&(accessMode==='public-demo'||authenticated))selectId(state.item,false,false);
+  if(accessMode==='owner'&&!authenticated)return;
+  if(!privateViews.has(state.view)||authenticated)writeViewUrl(true);
+}
+window.addEventListener('popstate',applyViewUrl);
+function validScanState(state){
+  return Boolean(state&&Object.keys(state).sort().join(',')==='chip,density,marketMode,sortKeys'&&
+    ['all','m2','m10','v100'].includes(state.chip)&&['normal','dense'].includes(state.density)&&
+    ['flips','alch'].includes(state.marketMode)&&Array.isArray(state.sortKeys)&&state.sortKeys.length>=1&&state.sortKeys.length<=2&&
+    new Set(state.sortKeys.map(key=>key?.col)).size===state.sortKeys.length&&state.sortKeys.every(key=>key&&Object.keys(key).sort().join(',')==='col,dir'&&
+      ['name','buy_price','sell_price','margin','roi','gp_per_hour','volume','conf'].includes(key.col)&&['asc','desc'].includes(key.dir)));
+}
+function scanPreferenceKey(){
+  const id=meta.profile_uuid;
+  return authenticated&&accessMode==='owner'&&typeof id==='string'&&/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id)?'rshelper.scan.v1.'+id:null;
+}
+function currentScanState(){return {chip,density,marketMode,sortKeys:sortKeys.map(key=>({...key}))};}
+function loadScanPreferences(){
+  const key=scanPreferenceKey();if(key===loadedPreferenceKey)return;
+  loadedPreferenceKey=key;scanPresets=[];chip='all';density='normal';marketMode='flips';sortKeys=[{col:'gp_per_hour',dir:'desc'}];
+  if(!key)return;
+  try{
+    const raw=window.localStorage.getItem(key);if(!raw||raw.length>16384)return;
+    const saved=JSON.parse(raw);
+    if(Object.keys(saved).sort().join(',')!=='active,presets,version'||saved.version!==1||!validScanState(saved.active)||!Array.isArray(saved.presets)||saved.presets.length>10||
+      saved.presets.some(preset=>!preset||Object.keys(preset).sort().join(',')!=='name,state'||typeof preset.name!=='string'||!preset.name.trim()||preset.name.length>40||!validScanState(preset.state))||
+      new Set(saved.presets.map(preset=>preset.name)).size!==saved.presets.length)return;
+    ({chip,density,marketMode,sortKeys}=saved.active);scanPresets=saved.presets;
+  }catch(error){setStatus('Saved scan preferences unavailable; using defaults.',true);}
+}
+function persistScanPreferences(){
+  const key=scanPreferenceKey();if(!key)return;
+  try{window.localStorage.setItem(key,JSON.stringify({version:1,active:currentScanState(),presets:scanPresets}));}
+  catch(error){setStatus('Could not save scan preferences in this browser.',true);}
+}
+function saveScanPreset(){
+  if(!scanPreferenceKey()){setStatus('Named presets require an identified owner profile.',true);return;}
+  const name=document.getElementById('scanPresetName').value.trim();
+  if(!name){setStatus('Enter a preset name.',true);return;}
+  if(name.length>40){setStatus('Preset names are limited to 40 characters.',true);return;}
+  const index=scanPresets.findIndex(preset=>preset.name===name);
+  if(index<0&&scanPresets.length>=10){setStatus('At most 10 presets; reset or replace an existing name.',true);return;}
+  const preset={name,state:currentScanState()};if(index<0)scanPresets.push(preset);else scanPresets[index]=preset;
+  persistScanPreferences();renderMarket();
+}
+function loadScanPreset(value){
+  const index=Number(value);if(!Number.isInteger(index)||index<0||index>=scanPresets.length)return;
+  const state=scanPresets[index].state;if(!validScanState(state))return;
+  ({chip,density,marketMode,sortKeys}=JSON.parse(JSON.stringify(state)));persistScanPreferences();renderMarket();
+}
+function resetScanPreferences(){
+  const key=scanPreferenceKey();try{if(key)window.localStorage.removeItem(key);}catch(error){setStatus('Could not reset browser storage.',true);return;}
+  loadedPreferenceKey=null;loadScanPreferences();renderMarket();
+}
+function scanPresetControls(){
+  if(!scanPreferenceKey())return '<span>Named scan presets require an identified owner profile.</span>';
+  return '<input id="scanPresetName" aria-label="Preset name" maxlength="40" placeholder="Preset name"><button onclick="saveScanPreset()">Save preset</button><select aria-label="Saved scan preset" onchange="loadScanPreset(this.value)"><option value="-1">Choose preset</option>'+
+    scanPresets.map((preset,index)=>'<option value="'+index+'">'+escHtml(preset.name)+'</option>').join('')+'</select><button onclick="resetScanPreferences()">Reset scan preferences</button>';
+}
 let countdown=refreshSecs;
 let sseOk=false,sseLastEvent=Date.now(),sseController=null;
 let accessMode='owner',capabilities={mode:'owner',features:[]},ownerToken='',authenticated=false;
@@ -134,6 +215,20 @@ function applyAccessGates(){
     if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
   });
   if(!canPrivate&&privateViews.has(view)){view='market';}
+  updateTabState();
+}
+function updateTabState(){
+  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
+  names.forEach(name=>{
+    const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
+    if(!button)return;
+    button.classList.toggle('active',view===name);
+    button.setAttribute('aria-selected',String(view===name));button.setAttribute('tabindex',view===name?'0':'-1');
+    button.setAttribute('aria-controls','listBody');
+  });
+  const panel=document.getElementById('listBody');
+  panel.setAttribute('role','tabpanel');
+  panel.setAttribute('aria-labelledby','btn'+(view==='ge'?'GE':view.charAt(0).toUpperCase()+view.slice(1)));
 }
 async function initializeAccess(){
   accessMode='owner';authenticated=false;applyAccessGates();renderAccessUI();
@@ -144,6 +239,7 @@ async function initializeAccess(){
     accessMode=capabilities.mode==='public-demo'?'public-demo':'owner';
     accessReady=true;
     applyAccessGates();renderAccessUI();
+    applyViewUrl();
   }catch(e){
     accessMode='owner';capabilities={mode:'owner',features:['market']};accessReady=true;
     applyAccessGates();renderAccessUI('Dashboard access unavailable.');
@@ -161,6 +257,7 @@ async function connectOwner(candidate){
     authEpoch++;ownerToken=candidate;authenticated=true;
     applyAccessGates();renderAccessUI();
     await fetchData();subscribeSSE();
+    applyViewUrl();
   }catch(e){
     renderAccessUI('Could not connect. Check the token and try again.');
   }
@@ -172,6 +269,7 @@ function disconnectOwner(){
   if(sseController){sseController.abort();sseController=null;}
   ownerToken='';authenticated=false;signalsMap={};meta={};watchIds=new Set();alertsData={alerts:[],unread:0};
   geData=null;bankData=null;alchItems=[];confMap={};viewRows=[];selectedId=null;strategy='';view='market';sseOk=false;
+  scanPresets=[];loadedPreferenceKey=null;writeViewUrl(true);
   pendingPaperOps={};geOffset=0;
   settingsState=null;settingsPreviewCandidate=null;pendingSettingsOperation=null;
   reviewsState=null;reviewLotUid='';pendingReviewOperation=null;reviewTag='';reviewUnreviewed=false;
@@ -182,10 +280,12 @@ function disconnectOwner(){
 }
 
 function marginPct(item){
+  if(item?.explanation?.margin_pct!=null)return item.explanation.margin_pct;
   if(!item||item.buy_price<=0)return 0;
   return ((item.sell_price-item.buy_price)/item.buy_price*100);
 }
 function roiPct(item){
+  if(item?.explanation?.roi_pct!=null)return item.explanation.roi_pct;
   if(!item||item.buy_price<=0)return 0;
   return ((item.profit||0)/item.buy_price*100);
 }
@@ -206,6 +306,7 @@ function marginClass(v){
   return 'dim';
 }
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function itemLinkHtml(id,name){return '<button type="button" class="item-link" onclick="event.stopPropagation();selectId('+id+',false);document.getElementById(\'contextPanel\').focus()">'+escHtml(name)+'</button>';}
 function metric(label,val,valClass){
   const vc=valClass?' '+valClass:'';
   return '<div class="metric"><div class="lbl">'+label+'</div><div class="val'+vc+'">'+val+'</div></div>';
@@ -406,7 +507,9 @@ function sortBy(col,ev){
       sortKeys=[{col,dir:'desc'}];
     }
   }
-  renderMarket();
+  if(!sortKeys.length)sortKeys=[{col:'gp_per_hour',dir:'desc'}];
+  persistScanPreferences();renderMarket();
+  document.querySelector('[data-sort="'+col+'"]')?.focus({preventScroll:true});
 }
 function starHtml(id){
   if(!authenticated||accessMode!=='owner')return '';
@@ -444,16 +547,13 @@ function sigBadge(item){
   if(!best)return '<span class="dim">-</span>';
   return '<span class="sig-badge sig-'+escHtml(best.type)+'" title="'+escHtml(best.message)+'">'+escHtml(best.type)+'</span>';
 }
-function setView(v){
+function setView(v,track=true){
   viewEpoch++;renderEpoch++;
   if(privateViews.has(v)&&!(accessMode==='owner'&&authenticated&&hasFeature('private-state'))){v='market';}
   if(v!==view){document.getElementById('listBody').innerHTML='';document.getElementById('contextPanel').innerHTML='';}
   view=v;
-  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
-  names.forEach(n=>{
-    const btn=document.getElementById('btn'+n.charAt(0).toUpperCase()+n.slice(1));
-    if(btn)btn.classList.toggle('active',v===n);
-  });
+  if(track)writeViewUrl();
+  updateTabState();
   const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
                 ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews'};
   if(titles[v])document.title='RSHelper — '+titles[v];
@@ -469,17 +569,19 @@ function setView(v){
   else if(v==='settings')renderSettings();
   else if(v==='reviews')renderReviews();
   if(v==='market'&&selectedId==null)renderContextEmpty();
+  else if(v==='market')renderDetail(selectedId);
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
 function setChip(c){
   chip=c;
   document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active',b.dataset.chip===c));
-  renderMarket();
+  persistScanPreferences();renderMarket();
 }
 function setDensity(){
   density=density==='normal'?'dense':'normal';
   document.getElementById('listBody').classList.toggle('dense',density==='dense');
   document.getElementById('btnDensity').classList.toggle('active',density==='dense');
+  persistScanPreferences();
 }
 function setStrategy(v){
   strategy=v;
@@ -548,6 +650,7 @@ async function loadData(){
     const [scan,metadata,signalData]=await Promise.all([r.json(),m?m.json():null,s?s.json():null]);
     if(epoch!==authEpoch)return;
     allItems=scan.items||[];
+    scanExclusions=scan.exclusions||{};
     signalsMap={};
     if(privateReady){
       meta=metadata;
@@ -555,6 +658,7 @@ async function loadData(){
       watchIds=new Set(meta.watch_ids||[]);
       if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
     }else{meta={market_data:scan.market_data||{}};watchIds=new Set();alertsData={alerts:[],unread:0};}
+    loadScanPreferences();
     if(epoch!==authEpoch)return;
     setStatus('Connected',false);
     renderTopbar();
@@ -577,7 +681,20 @@ async function loadData(){
   }
 }
 document.addEventListener('keydown',e=>{
+  if(e.target.closest?.('dialog'))return;
+  const tab=e.target.closest?.('[role="tab"]');
+  if(tab){
+    const tabs=Array.from(document.querySelectorAll('[role="tab"]')).filter(button=>!button.hidden);
+    let index=tabs.indexOf(tab);
+    if(e.key==='ArrowRight')index=(index+1)%tabs.length;
+    else if(e.key==='ArrowLeft')index=(index+tabs.length-1)%tabs.length;
+    else if(e.key==='Home')index=0;
+    else if(e.key==='End')index=tabs.length-1;
+    else return;
+    e.preventDefault();const next=tabs[index];setView(next.id.slice(3).toLowerCase());next.focus();return;
+  }
   if(view!=='market'&&view!=='watchlist'&&view!=='signals')return;
+  if(e.target.closest?.('input,select,textarea,button,a,summary,[contenteditable="true"]'))return;
   if(!viewRows.length)return;
   let idx=viewRows.findIndex(r=>r.id===selectedId);
   if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(viewRows.length-1,Math.max(0,idx+1));selectId(viewRows[idx].id,true)}
@@ -601,7 +718,7 @@ function viewbarHtml(){
       '<button class="chip'+(chip==='v100'?' active':'')+'" data-chip="v100" onclick="setChip(\'v100\')">Vol &ge;100</button>'+
       '<button class="toggle-btn'+(marketMode==='flips'?' active':'')+'" onclick="setMarketMode(\'flips\')">Flips</button>'+
       '<button class="toggle-btn'+(marketMode==='alch'?' active':'')+'" onclick="setMarketMode(\'alch\')">Alchemy</button>'+
-      '<button class="toggle-btn" id="btnDensity" onclick="setDensity()">Compact</button></div>';
+      '<button class="toggle-btn" id="btnDensity" onclick="setDensity()">Compact</button>'+scanPresetControls()+'</div>';
   }
   if(view==='paper'){
     return '<div class="viewbar"><span class="title">Paper trading</span>'+
@@ -655,6 +772,16 @@ function viewbarHtml(){
 """
 
 SCRIPT_CHARTS = r"""
+function chartDataHtml(columns,rows){
+  return '<details class="chart-data"><summary>Chart data ('+rows.length+' rows)</summary><table><caption>Values used in the chart; missing marks remain unknown.</caption><thead><tr>'+
+    columns.map(column=>'<th scope="col">'+escHtml(column)+'</th>').join('')+'</tr></thead><tbody>'+
+    rows.map(row=>'<tr>'+row.map(value=>'<td>'+escHtml(value==null?'Unknown':value)+'</td>').join('')+'</tr>').join('')+'</tbody></table></details>';
+}
+function addChartData(cv,columns,rows){
+  if(!cv.parentNode)return;
+  const data=document.createElement('div');data.innerHTML=chartDataHtml(columns,rows);
+  cv.parentNode.appendChild(data);cv.setAttribute('aria-hidden','true');
+}
 function drawSpark(id){
   const cv=document.getElementById('spark');
   if(!cv)return;
@@ -675,6 +802,7 @@ function drawSpark(id){
       cv.parentNode.appendChild(note);
       return;
     }
+    if(current())addChartData(cv,['UTC','Instant buy high (gp)','Instant sell low (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.avgHigh,point.avgLow]));
     const draw=()=>{
       if(!current())return;
       const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
@@ -725,7 +853,9 @@ function drawMargin(id){
       cv.parentNode.appendChild(note);
       return;
     }
-    const margins=pts.map(p=>((p.avgLow||0)-(p.avgHigh||0))-taxOf(p.avgLow||0));
+    const margins=pts.map(p=>p.net_profit);
+    if(current())addChartData(cv,['UTC','Scan direction','Net margin after tax (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.direction,point.net_profit]));
+    if(margins.some(value=>!Number.isFinite(value))){if(current())cv.style.display='none';return;}
     const draw=()=>{
       if(!current())return;
       const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
@@ -754,6 +884,7 @@ function drawCumulative(cv,buckets,valueKey='cumulative_profit'){
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
   if(!w){requestAnimationFrame(()=>drawCumulative(cv,buckets,valueKey));return}
   const h=220;
+  addChartData(cv,['UTC',valueKey,'Gap before','Configuration changed'],buckets.map(row=>[row.date,row[valueKey],Boolean(row.gap_before),Boolean(row.config_changed)]));
   cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
   const pad={l:64,r:12,t:14,b:24};
@@ -799,6 +930,7 @@ function drawDaily(cv,buckets){
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
   if(!w){requestAnimationFrame(()=>drawDaily(cv,buckets));return}
   const h=220;
+  addChartData(cv,['UTC','Trade count','Win rate (%)'],buckets.map(row=>[row.date,row.trade_count,row.win_rate]));
   cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
   const pad={l:64,r:12,t:14,b:24};
@@ -962,7 +1094,17 @@ async function settingsAction(action){
 }
 function renderContextEmpty(){
   ++detailGeneration;++catalogGeneration;
-  document.getElementById('contextPanel').innerHTML='<div class="empty">Select an item to inspect or <button onclick="showCatalogSearch()">search the full catalog</button></div>';
+  document.getElementById('contextPanel').innerHTML=workflowHelpHtml()+'<div class="empty">Select an item to inspect or <button onclick="showCatalogSearch()">search the full catalog</button></div>';
+}
+function workflowHelpHtml(){
+  const owner=accessMode==='owner'&&authenticated;
+  return '<details class="workflow-help"><summary>How to use these results</summary><ol>'+
+    '<li>Scan: inspect the buy/sell legs, tax and source time. Hourly rates assume volume and buy-limit throughput; they are not promised returns. RS score is secondary.</li>'+
+    '<li>Watch: follow an item even when it is excluded; set explicit alert thresholds. '+(owner?'<button onclick="setView(\'watchlist\')">Open Watchlist</button>':'Owner connection required.')+'</li>'+
+    '<li>Paper: initialize the shared budget and account capacity explicitly. Orders reserve cash; simulated purchases, sales and collection are separate. '+(owner?'<button onclick="setView(\'ge\')">Inspect paper offers</button>':'Owner connection required.')+'</li>'+
+    '<li>Review: record the entry hypothesis and later outcome; paper history never proves a real account return. '+(owner?'<button onclick="setView(\'reviews\')">Open Reviews</button>':'Owner connection required.')+'</li></ol>'+
+    '<p>Wiki completed candles can support illustrative paper fills. Tracker standing orders are proxy volume and cannot certify execution. Missing or stale history means confidence is unavailable, not zero. Check source status or try an item with usable Wiki history.</p>'+
+    '<p>Current scan exclusions (an item can meet several): '+Object.entries(scanExclusions).map(([reason,count])=>escHtml(reason)+': '+format(count)).join('; ')+'</p></details>';
 }
 function catalogDetailHtml(item){
   const quote=item.quote||{},source=(item.market_data||{}).latest||{};
@@ -1004,6 +1146,7 @@ async function renderDetail(id){
     const item=await response.json();
     if(request!==detailGeneration||epoch!==authEpoch||tab!==viewEpoch||selectedId!==id)return;
     panel.innerHTML=catalogDetailHtml(item);
+    panel.scrollIntoView?.({block:'nearest'});
     if(item.quote?.usable){drawSpark(id);drawMargin(id);loadConfidence(id);}
   }catch(error){if(request===detailGeneration&&epoch===authEpoch&&tab===viewEpoch&&selectedId===id&&error.name!=='AbortError')
     panel.innerHTML='<p role="status">'+escHtml(error.message)+'</p><button onclick="showCatalogSearch()">Find another item</button>';}
@@ -1045,19 +1188,16 @@ function loadConfidence(id){
     const pct=(row.confidence*100).toFixed(0);
     const cls=pct>=70?'green':pct>=40?'gold':'red';
     tile.innerHTML='<div class="lbl">Margin Confidence</div><div class="val '+cls+'">'+pct+'%</div>'+
-      '<div class="lbl" style="margin-top:4px">'+(row.datapoints||0)+' windows, '+(row.window_hours||0).toFixed(1)+'h</div>';
+      '<div class="lbl" style="margin-top:4px">'+(row.datapoints||0)+' windows, '+(row.window_hours||0).toFixed(1)+'h</div>'+
+      '<p>'+[['Reliability','reliability'],['profitability','profitability_score'],['recency','recency_modifier'],['trend','trend_modifier']].map(([name,key])=>name+' '+(row[key]==null?'Unknown':format(row[key]))).join(' × ')+
+      ', clamped to 0–1. Historical model; not a predicted success probability.</p>'+
+      '<p>'+escHtml(row.ranking_basis||'')+'; model '+format(row.expected_gp_per_hour)+' GP/hr.</p>';
     tile.style.display='';
   }).catch(()=>{});
 }
-function watchDetail(id){
-  const w=viewRows.find(r=>r.id===id);
-  if(!w)return null;
-  if(!w.usable)return {id:w.id,name:w.name,unusable:true,reason:w.reason};
-  return {id:w.id,name:w.name,buy_price:w.buy,sell_price:w.sell,volume:0,
-          buy_limit:0,alch_value:0,members:false,profit:w.sell-w.buy-taxOf(w.sell),gp_per_hour:0,rs_score:0};
-}
-function selectId(id,scroll){
+function selectId(id,scroll,track=true){
   selectedId=id;
+  if(track)writeViewUrl();
   if(view==='market')renderMarket();
   else if(view==='watchlist'||view==='signals'){
     document.querySelectorAll('tr.selected').forEach(r=>r.classList.remove('selected'));
@@ -1073,12 +1213,12 @@ function selectId(id,scroll){
 let marketMode='flips';
 function setMarketMode(m){
   marketMode=m;
-  renderMarket();
+  persistScanPreferences();renderMarket();
 }
 function renderMarket(){
   const bar=document.getElementById('viewbar');
   renderViewbar(bar);
-  if(density==='dense')document.getElementById('listBody').classList.add('dense');
+  document.getElementById('listBody').classList.toggle('dense',density==='dense');
   const body=document.getElementById('listBody');
   if(marketMode==='alch'){
     renderAlch();
@@ -1088,7 +1228,8 @@ function renderMarket(){
   const rows=marketRows();
   viewRows=rows;
   if(!rows.length){
-    body.innerHTML='<div class="loading">No items match the current filters</div>';
+    body.innerHTML='<div class="loading" role="status">No eligible items match these filters. <button onclick="showCatalogSearch()">Inspect any mapped item and its exclusion reasons</button></div>';
+    renderContextEmpty();
     return;
   }
   let h='<table><thead><tr>';
@@ -1101,8 +1242,7 @@ function renderMarket(){
       if(i===0)arrow=sortKeys[0].dir==='desc'?'&#9660;':'&#9650;';
       else if(i===1)arrow='&#9679;';
     }
-    h+='<th'+(isSort?' class="th-sort" onclick="sortBy(\''+c[0]+'\',event)"':'')+'>'+
-      (c[1]?c[1]+' <span class="srt">'+arrow+'</span>':'')+'</th>';
+    h+='<th scope="col">'+(isSort?'<button type="button" class="item-link th-sort" data-sort="'+c[0]+'" onclick="sortBy(\''+c[0]+'\',event)">'+c[1]+' <span class="srt">'+arrow+'</span></button>':escHtml(c[1]))+'</th>';
   });
   h+='</tr></thead><tbody>';
   rows.forEach((item,i)=>{
@@ -1114,7 +1254,7 @@ function renderMarket(){
       ?'<span class="'+(conf.confidence>=0.7?'pos':conf.confidence>=0.4?'gold':'neg')+'" title="'+conf.datapoints+' windows, '+(conf.window_hours||0).toFixed(1)+'h">'+(conf.confidence*100).toFixed(0)+'%</span>'
       :'<span class="dim" title="'+escHtml(conf&&conf.reason||'Confidence not yet available')+'">-</span>';
     h+='<tr class="'+sel+'" data-id="'+item.id+'" onclick="selectId('+item.id+',false)">'+
-      '<td class="name" title="'+escHtml(item.name)+'">'+escHtml(item.name)+'</td>'+
+      '<td class="name" title="'+escHtml(item.name)+'">'+itemLinkHtml(item.id,item.name)+'</td>'+
       '<td>'+gp(item.buy_price)+'</td><td>'+gp(item.sell_price)+'</td>'+
       '<td class="margin '+cls+'">'+mp.toFixed(1)+'%</td>'+
       '<td class="'+marginClass(rp)+'">'+rp.toFixed(1)+'%</td>'+
@@ -1167,7 +1307,7 @@ async function renderAlch(){
   items.forEach(it=>{
     const sel=it.id===selectedId?' selected':'';
     h+='<tr class="'+sel+'" data-id="'+it.id+'" onclick="selectId('+it.id+',false)">'+
-      '<td class="name">'+escHtml(it.name)+'</td>'+
+      '<td class="name">'+itemLinkHtml(it.id,it.name)+'</td>'+
       '<td>'+format(it.buy_price)+'</td><td>'+format(it.alch_value)+'</td>'+
       '<td class="margin pos">'+format(it.profit)+'</td>'+
       '<td>'+format(it.gp_per_hour)+'</td>'+
@@ -1216,7 +1356,7 @@ async function renderSignals(){
     h+='<tr class="'+sel+'" data-id="'+s.item_id+'" onclick="selectId('+s.item_id+',false)">'+
       '<td><span class="sig-badge sig-'+escHtml(s.type)+'">'+escHtml(s.type)+'</span></td>'+
       '<td class="sev-'+escHtml(s.severity)+'">'+escHtml(s.severity)+'</td>'+
-      '<td class="name">'+escHtml(s.name)+'</td>'+
+      '<td class="name">'+itemLinkHtml(s.item_id,s.name)+'</td>'+
       '<td>'+format(s.current_price)+'</td>'+
       '<td class="'+(dev>0?'pos':'neg')+'">'+devTxt+'</td>'+
       '<td class="name">'+escHtml(s.message)+'</td></tr>';
@@ -1262,19 +1402,19 @@ async function renderWatchlist(){
   let h='<table><thead><tr><th></th><th>Item</th><th>Buy</th><th>Sell</th><th>Margin</th><th>Profit</th><th>Alerts</th><th></th></tr></thead><tbody>';
   shown.forEach(i=>{
     const sel=i.id===selectedId?' selected':'';
-    const mp=i.usable?((i.sell-i.buy)/i.buy*100):null;
-    const profit=i.usable?(i.sell-i.buy-taxOf(i.sell)):null;
+    const mp=i.margin_pct??null;
+    const profit=i.net_profit??null;
     const alert=(i.alert_above!=null?'above '+gp(i.alert_above)+' ':'')+(i.alert_below!=null?'below '+gp(i.alert_below):'')||'-';
     h+='<tr class="'+sel+'" data-id="'+i.id+'" onclick="selectId('+i.id+',false)">'+
       '<td>'+starHtml(i.id)+'</td>'+
-      '<td class="name">'+escHtml(i.name)+'</td>'+
+      '<td class="name">'+itemLinkHtml(i.id,i.name)+'</td>'+
       (i.usable
         ?'<td>'+gp(i.buy)+'</td><td>'+gp(i.sell)+'</td>'+
-         '<td class="margin '+marginClass(mp)+'">'+mp.toFixed(1)+'%</td>'+
-         '<td class="'+(profit>0?'pos':profit<0?'neg':'dim')+'">'+gp(profit)+'</td>'
+         '<td class="margin '+marginClass(mp)+'">'+(mp==null?'Unknown':mp.toFixed(1)+'%')+'</td>'+
+         '<td class="'+(profit>0?'pos':profit<0?'neg':'dim')+'">'+(profit==null?'Unknown':gp(profit))+'</td>'
         :'<td class="dim" colspan="4">'+escHtml(i.reason||'no data')+'</td>')+
       '<td class="dim">'+escHtml(alert)+'</td>'+
-      '<td><button class="alert-edit" onclick="editWatchAlerts('+i.id+',event)" title="Set alert thresholds">&#9998;</button></td></tr>';
+      '<td><button class="alert-edit" onclick="editWatchAlerts('+i.id+',event)" aria-label="Set alert thresholds for '+escHtml(i.name)+'" title="Set alert thresholds">&#9998;</button></td></tr>';
   });
   h+='</tbody></table>';
   body.innerHTML=h;
@@ -1289,8 +1429,11 @@ function editWatchAlerts(id,ev){
   const above=item.alert_above!=null?item.alert_above:'';
   const below=item.alert_below!=null?item.alert_below:'';
   const policy=item.alert_policy||{mode:'crossing',cooldown_sec:900,hysteresis_gp:0};
-  const overlay=document.createElement('div');
+  const opener=document.activeElement;
+  const overlay=document.createElement('dialog');
   overlay.className='ge-history-overlay';
+  overlay.setAttribute('aria-label','Alert thresholds for '+item.name);
+  overlay.addEventListener('close',()=>{overlay.remove();(opener?.isConnected?opener:document.getElementById('btnWatchlist'))?.focus({preventScroll:true});});
   overlay.innerHTML='<div class="ge-history-panel"><div class="item-name" style="margin-bottom:12px">Alert thresholds — '+escHtml(item.name)+'</div>'+
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
     '<label style="font-size:12px;color:var(--text-dim)">Above (gp): <input id="wlAbove" type="number" min="0" style="width:110px" value="'+above+'"></label>'+
@@ -1298,33 +1441,36 @@ function editWatchAlerts(id,ev){
     '<label>Mode <select id="wlMode"><option value="crossing"'+(policy.mode==='crossing'?' selected':'')+'>Once per crossing</option><option value="reminder"'+(policy.mode==='reminder'?' selected':'')+'>Recurring reminder</option></select></label>'+
     '<label>Cooldown (seconds) <input id="wlCooldown" type="number" min="0" value="'+policy.cooldown_sec+'"></label>'+
     '<label>Recovery hysteresis (gp) <input id="wlHysteresis" type="number" min="0" value="'+policy.hysteresis_gp+'"></label>'+
-    '<span>Last notification: '+escHtml(item.notification_status||'not-requested')+'</span>'+
+    '<span>Last notification: '+escHtml(item.notification_status||'not-requested')+'</span><p role="status" aria-live="polite"></p>'+
     '</div>'+
     '<div style="text-align:right;margin-top:14px">'+
     '<button class="act-btn" style="margin-right:8px" onclick="saveWatchAlerts('+id+')">Save</button>'+
     '<button class="act-btn" onclick="closeGEHistory(this)">Cancel</button></div></div>';
   document.body.appendChild(overlay);
+  overlay.showModal();
 }
 function closeGEHistory(){
   // Cancel the alert-threshold editor: close the overlay, leave values alone.
-  document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
+  document.querySelectorAll('.ge-history-overlay').forEach(o=>o.close());
 }
 async function saveWatchAlerts(id){
   const aboveRaw=document.getElementById('wlAbove').value;
   const belowRaw=document.getElementById('wlBelow').value;
-  const alert_above=aboveRaw===''?null:parseInt(aboveRaw,10);
-  const alert_below=belowRaw===''?null:parseInt(belowRaw,10);
+  const alert_above=aboveRaw===''?null:Number(aboveRaw);
+  const alert_below=belowRaw===''?null:Number(belowRaw);
   const alert_policy={mode:document.getElementById('wlMode').value,
     cooldown_sec:Number(document.getElementById('wlCooldown').value),
     hysteresis_gp:Number(document.getElementById('wlHysteresis').value)};
   try{
+    if([alert_above,alert_below,alert_policy.cooldown_sec,alert_policy.hysteresis_gp].some(value=>value!=null&&(!Number.isSafeInteger(value)||value<0)))throw new Error('Use nonnegative whole numbers for alert thresholds and policy.');
     const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below,alert_policy})});
     if(!r.ok)await rejectApiError(r);
-    document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
+    closeGEHistory();
     if(view==='watchlist')renderWatchlist();
     setStatus('Alert thresholds saved',false);
   }catch(e){
+    const status=document.querySelector('.ge-history-overlay [role="status"]');if(status)status.textContent=e.message;
     setStatus('Error: '+e.message,true);
   }
 }
@@ -1509,13 +1655,13 @@ function bankSlotHtml(it){
   const qtyTxt=it.total_qty>=10000?gp(it.total_qty):format(it.total_qty);
   const pnl=it.unrealized_pnl;
   const pnlTxt=pnl!=null&&pnl!==0?'<span class="'+(pnl>0?'pos':'neg')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="dim">-</span>';
-  return '<div class="bank-slot" onclick="bankSlotClick('+it.item_id+')">'+
+  return '<button type="button" class="bank-slot" aria-label="Inspect '+escHtml(it.name)+'" onclick="bankSlotClick('+it.item_id+')">'+
     '<img class="bank-slot-icon" src="'+escHtml(it.icon_url||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
     '<div class="bank-slot-qty">'+qtyTxt+'</div>'+
     '<div class="bank-tooltip"><b>'+escHtml(it.name)+'</b><br>Qty: '+format(it.total_qty)+
     '<br>Avg buy: '+format(it.avg_buy_price)+' gp'+
     '<br>Current: '+(it.current_price!=null?format(it.current_price)+' gp':'<span class="dim">-</span>')+
-    '<br>P&amp;L: '+pnlTxt+'</div></div>';
+    '<br>P&amp;L: '+pnlTxt+'</div></button>';
 }
 function bankSlotClick(itemId){
   const it=(bankData&&bankData.items||[]).find(x=>x.item_id===itemId);
@@ -1535,6 +1681,8 @@ function bankSlotClick(itemId){
     metric('Unrealized %',pctHtml,pnl!=null&&pnl>0?'green':pnl!=null&&pnl<0?'red':'')+
     metric('Positions',format(it.position_count),'')+
     '</div>';
+  document.getElementById('contextPanel').scrollIntoView?.({block:'nearest'});
+  document.getElementById('contextPanel').focus({preventScroll:true});
 }
 async function renderProcess(){
   const current=beginViewRequest();

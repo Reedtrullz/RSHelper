@@ -32,6 +32,8 @@ never open the owner journal. See [shared runtime/replay](docs/shared-runtime-re
 for commands, historical parameter selection and candle-model limitations.
 Use [full-catalog discovery](docs/catalog-discovery.md) to inspect or watch mapped
 items even when scan rules exclude them, with source/time and exact reasons.
+The [dashboard workflow guide](docs/dashboard-workflows.md) explains scan
+economics, keyboard controls, chart tables and profile-scoped saved views.
 
 Use [replay datasets](docs/replay-datasets.md) to pin market-only snapshots,
 freeze chronological parameter selection and reproduce held-out reports.
