@@ -238,3 +238,16 @@ test('Activity strategy changes reset the cursor and retain unapplied date draft
   assert.equal(vm.runInContext('activityCursor',context),null);
   assert.equal(date.value,'2026-10-11');
 });
+test('watch alert editor submits explicit crossing policy and keeps draft on failure',async()=>{
+  let sent;
+  const {context}=ownerContext(async(url,options)=>{
+    sent=JSON.parse(options.body);
+    return new Response(JSON.stringify({error:'fixture rejected'}),{status:400});
+  });
+  for(const [id,value] of Object.entries({wlAbove:'100',wlBelow:'',wlMode:'reminder',wlCooldown:'900',wlHysteresis:'10'}))
+    context.document.getElementById(id).value=value;
+  await vm.runInContext('saveWatchAlerts(561)',context);
+  assert.deepEqual(sent.alert_policy,{mode:'reminder',cooldown_sec:900,hysteresis_gp:10});
+  assert.equal(context.document.getElementById('wlAbove').value,'100');
+  assert.match(context.document.getElementById('statusText').textContent,/fixture rejected/);
+});
