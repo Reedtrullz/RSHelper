@@ -89,7 +89,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  close_position_fn: Callable[[int, int | None], dict] | None = None,
                  paper_trade_fn: Callable[[str, str, int], dict] | None = None,
                  trader_fn: Callable[[], dict] | None = None,
-                 trader_control_fn: Callable[[str], dict] | None = None,
+                 trader_control_fn: Callable[..., dict] | None = None,
                  monitor_fn: Callable[[], dict] | None = None,
                  monitor_control_fn: Callable[[str], dict] | None = None,
                  ge_fn: Callable[[], dict] | None = None,
@@ -657,8 +657,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 return
             try:
                 if action == "alerts":
-                    self._serve_json(watchlist_update_fn(action, item_id,
-                                                         above, below))
+                    if 'alert_policy' in body:
+                        from rshelper.persistence import validate_watch_policy
+                        policy = validate_watch_policy(body['alert_policy'])
+                        self._serve_json(watchlist_update_fn(action, item_id, above, below, policy))
+                    else:
+                        self._serve_json(watchlist_update_fn(action, item_id, above, below))
                 else:
                     self._serve_json(watchlist_update_fn(action, item_id))
             except (ValueError, TypeError) as e:
@@ -700,7 +704,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(404)
                 return
             try:
-                self._serve_json(trader_control_fn(action))
+                self._serve_json(trader_control_fn(action,body) if action == 'mode' else trader_control_fn(action))
             except PermissionError as e:
                 print(f"[dashboard] trader control denied: {e}", file=sys.stderr)
                 self.send_error(403, str(e))

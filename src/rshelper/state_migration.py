@@ -16,6 +16,10 @@ def _source(root):
         hashes[name] = hashlib.sha256(_read_file(path)).hexdigest() if path.exists() else None
         stores[name] = persistence.read_state(path, kind)
         persistence.validate_writable_state(stores[name], kind, path)
+    mode_path = root/'trading_mode.json'
+    hashes['trading_mode.json'] = hashlib.sha256(_read_file(mode_path)).hexdigest() if mode_path.exists() else None
+    if hashes['trading_mode.json'] is not None:
+        stores['trading_mode.json'] = persistence.read_state(mode_path,'trading_mode')
     return hashes, stores
 
 
@@ -99,6 +103,11 @@ def _upgrade(stores, origin_uuid, profile_uuid, lineage):
         raise ValueError('authority cannot adopt foreign open lots; resolve ownership explicitly')
     output['identity-manifest.json'] = manifests.pop(origin_uuid)
     output['identity-lineage.json'] = {'schema_version': 1, 'origins': manifests}
+    if 'trading_mode.json' in output:
+        authority = origin_uuid if lineage['financial_authority'] else common
+        if authority is None or (not lineage['financial_authority'] and authority == origin_uuid):
+            raise ValueError('legacy stance requires explicit financial authority lineage')
+        output['trading_mode.json']['authority_origin'] = authority
     state_replication._validate_files({name: state_replication._json(value) for name, value in output.items()})
     output['identity-activation.json'] = {
         'schema_version': 1, 'mode': 'identified', 'profile_uuid': profile_uuid,

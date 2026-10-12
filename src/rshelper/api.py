@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 from rshelper.profile import resolve_cache_path, resolve_profile
-from rshelper.market_validation import validate_payload, MarketDataError
-from rshelper.market_data import MarketDataResult
+from rshelper.market_validation import validate_payload, normalize_candles, TIMESTEPS, MarketDataError
+from rshelper.market_data import MarketDataResult, MarketList
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
@@ -716,6 +716,14 @@ def _validated(name: str, payload: object) -> Any | None:
     if payload is None:
         return None
     try:
+        if endpoint == 'timeseries':
+            data = payload.get('data',payload) if isinstance(payload,dict) else payload
+            normalized = normalize_candles(data,name.rsplit('_',1)[1])
+            if normalized['coverage']['rejected']:
+                print(f"  Warning: rejected {normalized['coverage']['rejected']} invalid or conflicting timeseries rows",file=sys.stderr)
+            result = MarketList(normalized['data'])
+            result.candle_coverage = normalized['coverage']
+            return result or None
         result = validate_payload(endpoint, payload, time.time())
     except MarketDataError as exc:
         print(f"  Warning: rejected market data ({exc})", file=sys.stderr)
@@ -958,6 +966,8 @@ def fetch_timeseries_result(item_id: int, timestep: str = "5m",
                             profile: str | None = None) -> MarketDataResult | None:
     """Return one Wiki history series with explicit provenance."""
     profile = resolve_profile(profile)
+    if timestep not in TIMESTEPS or type(item_id) is not int or item_id <= 0:
+        raise ValueError('history requires a positive item ID and supported timestep')
     cache_name = f"ts_{item_id}_{timestep}"
     key = (str(_cache_path(cache_name,profile).resolve()),item_id,timestep)
     end = min(getattr(_ACQUISITION,'end',float('inf')),time.monotonic()+ACQUISITION_TIMEOUT)

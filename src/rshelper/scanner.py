@@ -207,6 +207,7 @@ class MarginScanner:
         *,
         members_only: bool = False,
         direction: str = "arbitrage",
+        timestep: str = '5m',
     ) -> list[MarginAnalysis]:
         """Analyze timeseries data for each item and return results sorted by expected GP/hr."""
         results: list[MarginAnalysis] = []
@@ -221,6 +222,7 @@ class MarginScanner:
                 direction=direction,
                 current_buy=item.buy_price,
                 current_sell=item.sell_price,
+                timestep=timestep,
             )
             if analysis is None:
                 continue

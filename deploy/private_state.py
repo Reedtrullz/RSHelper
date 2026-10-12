@@ -47,6 +47,8 @@ def _running(root, verifier, release):
 def _run_image(verifier, image_id, root, stage, arguments):
     name = 'rshelper-state-' + uuid4().hex
     command = ['run', '--name', name, '--network', 'none', '--read-only',
+               '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true',
+               '--memory', '2g', '--memory-swap', '2g', '--pids-limit', '128',
                '--user', '1000:1000', '--mount',
                'type=bind,src=' + str(root / 'data') + ',dst=/home/rshelper',
                '--entrypoint', 'python']

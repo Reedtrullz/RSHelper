@@ -15,7 +15,7 @@ from rshelper.models import Item
 from rshelper.market_data import MarketDataResult,market_payload
 
 def history():
-    return MarketDataResult([{'timestamp':1700000000+i*300,'avgHighPrice':100,
+    return MarketDataResult([{'timestamp':1700000100+i*300,'avgHighPrice':100,
                 'avgLowPrice':120,'highPriceVolume':100,'lowPriceVolume':100} for i in range(8)],
                 'wiki','network',100,100,100,False,'executed-trades',{'wiki':8})
 
@@ -122,7 +122,7 @@ class HistoryCoalescingTest(unittest.TestCase):
 
 class QuoteConfidenceTest(unittest.TestCase):
     def exercise(self,scenario):
-        now = [1000.0]
+        now = [1700002500.0]
         callbacks = {}
         cfg = Config()
         callbacks['config'] = cfg
@@ -154,9 +154,11 @@ class QuoteConfidenceTest(unittest.TestCase):
         def scenario(callbacks,now,rows):
             with mock.patch.object(api,'fetch_timeseries_batch_results',return_value={1:rows}):
                 first = callbacks['confidence_fn']([1])['1']
-                now[0] = 1121.0
+                now[0] += 121.0
                 callbacks['scan_items']()
                 second = callbacks['confidence_fn']([1])['1']
+            self.assertEqual(first['candle_coverage']['samples'],8)
+            self.assertEqual(second['candle_coverage']['samples'],8)
             self.assertLess(second['profitability_score'],first['profitability_score'])
             self.assertGreater(second['market_revision'],first['market_revision'])
         self.exercise(scenario)
@@ -187,7 +189,7 @@ class QuoteConfidenceTest(unittest.TestCase):
             with mock.patch.object(api,'fetch_timeseries_batch_results',side_effect=fetch),ThreadPoolExecutor(max_workers=1) as pool:
                 old = pool.submit(callbacks['confidence_fn'],[1])
                 self.assertTrue(entered.wait(3))
-                now[0] = 1121.0
+                now[0] += 121.0
                 callbacks['scan_items']()
                 current = callbacks['confidence_fn']([1])
                 release.set()

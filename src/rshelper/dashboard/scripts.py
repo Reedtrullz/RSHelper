@@ -1111,12 +1111,17 @@ function editWatchAlerts(id,ev){
   if(!item)return;
   const above=item.alert_above!=null?item.alert_above:'';
   const below=item.alert_below!=null?item.alert_below:'';
+  const policy=item.alert_policy||{mode:'crossing',cooldown_sec:900,hysteresis_gp:0};
   const overlay=document.createElement('div');
   overlay.className='ge-history-overlay';
   overlay.innerHTML='<div class="ge-history-panel"><div class="item-name" style="margin-bottom:12px">Alert thresholds — '+escHtml(item.name)+'</div>'+
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
     '<label style="font-size:12px;color:var(--text-dim)">Above (gp): <input id="wlAbove" type="number" min="0" style="width:110px" value="'+above+'"></label>'+
     '<label style="font-size:12px;color:var(--text-dim)">Below (gp): <input id="wlBelow" type="number" min="0" style="width:110px" value="'+below+'"></label>'+
+    '<label>Mode <select id="wlMode"><option value="crossing"'+(policy.mode==='crossing'?' selected':'')+'>Once per crossing</option><option value="reminder"'+(policy.mode==='reminder'?' selected':'')+'>Recurring reminder</option></select></label>'+
+    '<label>Cooldown (seconds) <input id="wlCooldown" type="number" min="0" value="'+policy.cooldown_sec+'"></label>'+
+    '<label>Recovery hysteresis (gp) <input id="wlHysteresis" type="number" min="0" value="'+policy.hysteresis_gp+'"></label>'+
+    '<span>Last notification: '+escHtml(item.notification_status||'not-requested')+'</span>'+
     '</div>'+
     '<div style="text-align:right;margin-top:14px">'+
     '<button class="act-btn" style="margin-right:8px" onclick="saveWatchAlerts('+id+')">Save</button>'+
@@ -1132,9 +1137,12 @@ async function saveWatchAlerts(id){
   const belowRaw=document.getElementById('wlBelow').value;
   const alert_above=aboveRaw===''?null:parseInt(aboveRaw,10);
   const alert_below=belowRaw===''?null:parseInt(belowRaw,10);
+  const alert_policy={mode:document.getElementById('wlMode').value,
+    cooldown_sec:Number(document.getElementById('wlCooldown').value),
+    hysteresis_gp:Number(document.getElementById('wlHysteresis').value)};
   try{
     const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below})});
+      body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below,alert_policy})});
     if(!r.ok)await rejectApiError(r);
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
     if(view==='watchlist')renderWatchlist();
@@ -1397,10 +1405,15 @@ async function renderProcess(){
   }
 }
 function traderNoticeHtml(trader){
+  const mode=trader.trading_mode||{mode:'unknown'};
+  const labels={running:'New entries enabled','entries-paused':'New entries paused',draining:'Draining positions',unknown:'Entry stance unknown'};
+  const stance='<div class="notice">'+escHtml(labels[mode.mode]||labels.unknown)+
+    (mode.reason?' — '+escHtml(mode.reason):'')+
+    (mode.drain_completed_at?' — drain complete; explicit resume required':'')+'</div>';
   if(!trader.running){
     const last=trader.last_cycle_iso;
     const stale=last?'<div class="dim" style="margin-top:4px">Last known cycle: '+escHtml(String(last).slice(0,16))+' (state may be stale)</div>':'';
-    return '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
+    return stance+'<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
       'Auto-trader not running'+(trader.local===false?' on this machine (synced state)':'')+
       ' — start it with <code>rshelper auto-trade</code>.'+stale+'</div>';
   }
@@ -1412,7 +1425,7 @@ function traderNoticeHtml(trader){
   const age=trader.last_cycle_age_sec;
   const ageTxt=age!=null?fmtAge(age):'unknown';
   const stale=trader.stale?' <span class="neg">(stale — '+ageTxt+' old; sync may be behind)</span>':'';
-  let html='<div class="notice">Auto-trader running on '+where;
+  let html=stance+'<div class="notice">Auto-trader running on '+where;
   html+='<div class="dim" style="margin-top:4px">Last cycle: '+escHtml(String(trader.last_cycle_iso||'-').slice(0,16))+
     ' ('+ageTxt+' ago)'+stale+
     ' — cycles '+format(cycles)+', errors '+format(errors)+
@@ -1483,11 +1496,31 @@ function traderPerfHtml(trader,trades){
 function traderControlHtml(trader){
   if(!meta.control||!hasFeature('daemon-control'))return '';
   const running=!!trader.running;
+  const mode=trader.trading_mode;
+  const stance=mode?'<button class="act-btn" onclick="tradingModeControl(\'entries-paused\','+mode.revision+')">Pause new entries</button>'+
+    '<button class="act-btn" onclick="tradingModeControl(\'draining\','+mode.revision+')">Drain positions</button>'+
+    (mode.mode!=='running'?'<button class="act-btn" onclick="tradingModeControl(\'running\','+mode.revision+')">Resume entries</button>':''):'';
   return '<div style="display:flex;gap:8px;margin-top:8px">'+
     (running
       ?'<button class="act-btn" onclick="traderControl(\'stop\')" style="background:#7f1d1d;border-color:#f87171;color:#f87171">Stop auto-trader</button>'
       :'<button class="act-btn" onclick="traderControl(\'start\')">Start auto-trader</button>')+
-    '</div>';
+    stance+'</div>';
+}
+let pendingModeOperation=null;
+async function tradingModeControl(mode,revision){
+  if(!authenticated||!hasFeature('daemon-control'))return;
+  const reason=window.prompt('Reason for changing paper entry stance (managed exits continue):');
+  if(reason===null)return;
+  if(!reason.trim()){setStatus('Enter a reason for the stance change',true);return;}
+  const key=JSON.stringify([authEpoch,mode,revision,reason]);
+  if(!pendingModeOperation||pendingModeOperation.key!==key)pendingModeOperation={key,id:newCloseOperationId()};
+  try{
+    const response=await apiFetch('/api/trader',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'mode',mode,expected_revision:revision,reason,operation_id:pendingModeOperation.id})});
+    if(!response.ok)await rejectApiError(response);
+    await response.json();pendingModeOperation=null;
+    setStatus('Paper entry stance updated',false);fetchData();
+  }catch(error){setStatus('Stance change failed: '+error.message,true);}
 }
 function monitorControlHtml(mon){
   if(!meta.control||!hasFeature('daemon-control'))return '';

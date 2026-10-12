@@ -400,21 +400,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 else:
                     profit = (sell - buy) - ge_tax(sell)
                 item_id = int(id_str)
-                above = entry.get("alert_margin_above")
-                below = entry.get("alert_margin_below")
-                hit = None
-                if above is not None and profit > above:
-                    hit = f"margin {profit:,} gp above {above:,}"
-                elif below is not None and profit < below:
-                    hit = f"margin {profit:,} gp below {below:,}"
-                # Check-then-set must be atomic per item (this runs inside the
-                # single-flight refresh lock, so no other thread can race it).
-                if hit and not alerts.watch_triggered(item_id, profile):
-                    alert = alerts.push_alert(
-                        "watch", "HIGH", item_id, entry.get("name", str(item_id)),
-                        "Watchlist alert", f"{entry.get('name', '')}: {hit}",
-                        profile=profile)
-                    alerts.set_watch_triggered(item_id, profile)
+                alert = alerts.emit_watch_if_due(profile, item_id, profit,
+                    source_revision=str(provenance(latest).get('last_success_at') or ''))
+                if alert is not None:
                     hub.broadcast("alert", {"alert": _alert_to_dict(alert)})
         except Exception as e:
             print(f"[dashboard] watch alert check failed: {e}", file=sys.stderr)
@@ -560,6 +548,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = refresh()
         latest = cache["latest"] or {}
         rows = []
+        crossings = alerts._load(profile).get('watch_crossings', {})
         for id_str, entry in watchlist.load(profile).get("items", {}).items():
             price = latest.get(id_str)
             issue = price_issue(price) if isinstance(price, dict) else "no data"
@@ -567,6 +556,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "added": entry.get("added", ""),
                    "alert_above": entry.get("alert_margin_above"),
                    "alert_below": entry.get("alert_margin_below"),
+                   "alert_policy": alerts._watch_policy(entry.get('alert_policy')),
+                   "notification_status": crossings.get(id_str, {}).get('notification_status', 'not-requested'),
                    "usable": issue is None, "market_data":{"latest":provenance(latest)}}
             if issue is None:
                 row["buy"] = safe_int(price.get("high", 0))
@@ -579,7 +570,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def update_watchlist(action: str, item_id: int,
                          alert_above: int | None = None,
-                         alert_below: int | None = None) -> dict:
+                         alert_below: int | None = None, policy=None) -> dict:
         cache = refresh()
         if action == "add":
             item = next((i for i in cache["items"] if i.id == item_id), None)
@@ -600,7 +591,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
             alerts.update_watch_alerts(item_id, alert_above, alert_below,
-                                       profile)
+                                       profile, policy=policy)
         else:
             raise ValueError(f"unknown watchlist action '{action}'")
         return get_watchlist()
@@ -609,9 +600,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                        points: int = 96) -> dict:
         from rshelper.api import fetch_timeseries_result
         from rshelper.market import safe_int
+        from rshelper.market_validation import normalize_candles
         ts = market_payload(fetch_timeseries_result(item_id, step, profile), sequence=True)
+        normalized = normalize_candles(ts,step)
         points_out = []
-        for dp in (ts or [])[-points:]:
+        for dp in normalized['data'][-points:]:
             high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
             if high is None or low is None:
                 continue
@@ -620,6 +613,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 continue
             points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
         return {"points": points_out, "market_data":provenance(ts),
+                "candle_coverage":getattr(ts,'candle_coverage',normalized['coverage']),
                 "capability": {"available":bool(ts), "reason":None if ts else
                                "Wiki-only historical data unavailable; Tracker has no candle history"}}
 
@@ -775,13 +769,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_trader_status() -> dict:
         from rshelper.trader import trader_status
+        from rshelper.trading_mode import read_mode
         status = trader_status(profile)
-        return status if status else {"running": False}
+        return status if status else {"running": False, 'trading_mode':read_mode(profile)}
 
-    def trader_control(action: str) -> dict:
+    def trader_control(action: str, request=None) -> dict:
         """Start or stop the auto-trader daemon. 403-guarded by control flag."""
         if not control:
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
+        if action == 'mode':
+            from rshelper.trading_mode import set_mode
+            return set_mode(profile,request['mode'],expected_revision=request['expected_revision'],
+                            reason=request['reason'],operation_id=request['operation_id'],source='dashboard')
         if action == "start":
             from rshelper.trader import trader_status
             status = trader_status(profile)
@@ -909,7 +908,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             ts_data = fetch_timeseries_batch_results(
                 want, timestep="5m", workers=2, profile=profile)
             results = MarginScanner().scan(
-                lookup, ts_data, direction=cfg.flip.direction)
+                lookup, ts_data, direction=cfg.flip.direction,timestep='5m')
             scored = {str(a.item_id) for a in results}
             with conf_lock:
                 if confidence_cache['key'] != key or read_market()['revision'] != cache['revision']:
@@ -928,6 +927,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "market_revision":cache['revision'],
                         "current_profit":a.current_profit,
                         "expected_gp_per_hour":a.expected_gp_per_hour,
+                        "candle_coverage":a.candle_coverage,
                     }
                 # Cache negative results (no timeseries / too few windows) so
                 # repeated polls don't re-fetch the same items every 10 min.

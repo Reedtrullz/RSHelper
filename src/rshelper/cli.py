@@ -913,10 +913,13 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     if args.status:
         status = trader_status(profile)
         if not status:
+            from rshelper.trading_mode import read_mode
+            mode = read_mode(profile)
             if args.json:
-                print(json.dumps({"running": False, "local": False, "pid": None}))
+                print(json.dumps({"running": False, "local": False, "pid": None, 'trading_mode':mode}))
             else:
                 print("Trader: not running (no state yet)")
+                print(f"  Paper stance: {mode['mode']}")
             return
         if args.json:
             print(json.dumps(status, indent=2))
@@ -924,6 +927,8 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         running = "running" if status.get("running") else "not running"
         where = "this machine" if status.get("local") else "synced state (runs on Mac)"
         print(f"Trader: {running} ({where}, profile {status['profile']})")
+        mode = status.get('trading_mode', {})
+        print(f"  Paper stance: {mode.get('mode', 'unknown')}")
         if status.get("pid"):
             print(f"  PID: {status['pid']}")
         print(f"  Started: {status.get('started_iso', '-')}")
@@ -1012,7 +1017,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     # Analyze
     margin_scanner = MarginScanner()
-    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction)
+    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction,timestep='5m')
     print(f"  {len(results)} items analyzed\n", file=sys.stderr)
 
     if args.csv:
@@ -1023,12 +1028,15 @@ def margin_check(args: argparse.Namespace) -> None:
             "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
             "avg_volume", "spread_score", "volume_score", "volatility_score",
             "datapoints", "window_hours", "margin_trend",
+            "candle_timestep", "candle_samples", "candle_missing_windows", "candle_rejected", "candle_coverage_ratio",
             *("history_" + field for field in _EVIDENCE_FIELDS),
             *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, a in enumerate(results[:args.top], 1):
             row = asdict(a)
+            row.update({'candle_'+key:a.candle_coverage.get(key) for key in
+                        ('timestep','samples','missing_windows','rejected','coverage_ratio')})
             row.update(_csv_market(a.market_data.get("current", {})))
             history = a.market_data.get("history", {})
             row.update({"history_" + field: history.get(field, provenance(None)[field])
@@ -1053,6 +1061,7 @@ def margin_check(args: argparse.Namespace) -> None:
                 "name": item.name if item else str(a.item_id),
                 "item_id": a.item_id,
                 "market_data": a.market_data,
+                "candle_coverage": a.candle_coverage,
                 "current_profit": a.current_profit,
                 "expected_gp_per_hour": a.expected_gp_per_hour,
                 "confidence": round(a.confidence, 3),
@@ -1198,10 +1207,11 @@ def item_info(args: argparse.Namespace) -> None:
         if (args.timeseries or getattr(args, "predict", False)) and buy_price > 0:
             ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
             out["historical"] = {"market_data":provenance(ts),"available":bool(ts),
+                                 "candle_coverage":getattr(ts,'candle_coverage',{}),
                                  "reason":None if ts else "Wiki-only historical data unavailable; Tracker has no candle history"}
             if ts:
                 from rshelper.analysis import analyze_timeseries
-                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
                 if analysis:
                     out["timeseries_analysis"] = {
                         "confidence": round(analysis.confidence, 3),
@@ -1213,6 +1223,7 @@ def item_info(args: argparse.Namespace) -> None:
                         "avg_spread_pct": round(analysis.avg_spread_pct, 2),
                         "datapoints": analysis.datapoints,
                         "window_hours": round(analysis.window_hours, 1),
+                        "candle_coverage":analysis.candle_coverage,
                     }
                     if getattr(args, "predict", False):
                         try:
@@ -1292,7 +1303,7 @@ def item_info(args: argparse.Namespace) -> None:
         ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
         if ts:
             from rshelper.analysis import analyze_timeseries
-            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
             if analysis:
                 print(f"\n  Historical ({analysis.datapoints} windows, {analysis.window_hours:.0f}h):")
                 print(f"  Confidence: {analysis.confidence:.2f} (reliability: {analysis.reliability:.2f}, profitability: {analysis.profitability_score:.2f})")
@@ -1360,10 +1371,16 @@ def watch_add(args: argparse.Namespace) -> None:
 
     item_id = matched["id"]
     name = matched["name"]
+    policy = None
+    if any(getattr(args, key, None) is not None for key in ('alert_mode', 'alert_cooldown_sec', 'alert_hysteresis_gp')):
+        from rshelper.persistence import validate_watch_policy
+        policy = validate_watch_policy({'mode': args.alert_mode or 'crossing',
+            'cooldown_sec': 900 if args.alert_cooldown_sec is None else args.alert_cooldown_sec,
+            'hysteresis_gp': 0 if args.alert_hysteresis_gp is None else args.alert_hysteresis_gp})
     watchlist.add(item_id, name,
                   alert_margin_above=args.alert_above,
                   alert_margin_below=args.alert_below,
-                  profile=args.profile)
+                  profile=args.profile, alert_policy=policy)
     print(f"Added '{name}' (id={item_id}) to watchlist.")
 
 
@@ -1747,6 +1764,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
+    maintenance = maintenance or remaining[:1] == ['trading-mode']
     if maintenance:
         from rshelper.config import Config
         cfg = Config()
@@ -1761,6 +1779,12 @@ def _main() -> None:
     parser.add_argument("--quiet", action="store_true", help="Suppress status output (cron-friendly)")
     parser.add_argument("--version", action="version", version=f"rshelper {__version__}")
     sub = parser.add_subparsers(dest="command")
+    mode_p = sub.add_parser('trading-mode', help='Read or change durable paper entry stance')
+    mode_p.add_argument('--mode', choices=('running','entries-paused','draining'))
+    mode_p.add_argument('--expected-revision', type=int)
+    mode_p.add_argument('--reason')
+    mode_p.add_argument('--operation-id')
+    mode_p.add_argument('--json', action='store_true')
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
     alch.add_argument("--nature-rune-cost", type=int, default=cfg.alch.nature_rune_cost,
@@ -1971,6 +1995,9 @@ def _main() -> None:
                              help="Alert when margin exceeds this (gp)")
     watch_add_p.add_argument("--alert-below", type=int, default=None,
                              help="Alert when margin falls below this (gp)")
+    watch_add_p.add_argument('--alert-mode', choices=('crossing', 'reminder'), default=None)
+    watch_add_p.add_argument('--alert-cooldown-sec', type=int, default=None)
+    watch_add_p.add_argument('--alert-hysteresis-gp', type=int, default=None)
     watch_rm = watch_sub.add_parser("remove", help="Remove item from watchlist")
     watch_rm.add_argument("item_id", type=int, help="Item ID to remove")
     watch_sub.add_parser("list", help="List all watched items")
@@ -2156,6 +2183,19 @@ def _main() -> None:
                                            operation_id=args.operation_id,
                                            expected_source_revision=args.expected_source_revision)
         print(json.dumps(result, sort_keys=True))
+    elif args.command == 'trading-mode':
+        from rshelper.trading_mode import read_mode, set_mode
+        result = (read_mode(args.profile) if args.mode is None else
+                  set_mode(args.profile,args.mode,expected_revision=args.expected_revision,
+                           reason=args.reason,operation_id=args.operation_id))
+        if args.json:
+            print(json.dumps(result,sort_keys=True))
+        else:
+            print(f"Paper stance: {result['mode']} (revision {result['revision']})")
+            if result['reason']:
+                print(f"  Reason: {result['reason']}")
+            if result['drain_completed_at']:
+                print(f"  Drain completed: {result['drain_completed_at']}; explicit resume required")
     elif args.command == 'state':
         from pathlib import Path
         from rshelper import state_replication
