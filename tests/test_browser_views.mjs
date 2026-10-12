@@ -89,6 +89,47 @@ test('entry stance is separate from daemon liveness and mutation retries retain 
 });
 
 const calls = [];
+test('catalog inspector uses server economics and escapes mapped metadata',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  const html=vm.runInContext("catalogDetailHtml({id:9,name:'<Synthetic>',buy_limit:null,members:null,quote:{usable:true,buy_price:100,sell_price:110,tax:7,net_profit:999,margin_pct:10,roi_pct:999},market_data:{latest:{source:'wiki',delivery:'network'}},exclusion_reasons:['<Excluded>'],scan_eligible:false})",context);
+  assert.match(html,/&lt;Synthetic&gt;/);assert.doesNotMatch(html,/<Synthetic>/);
+  assert.match(html,/999 gp/);assert.match(html,/7 gp/);assert.match(html,/Membership unknown/);
+  assert.match(html,/&lt;Excluded&gt;/);
+  const explanation=vm.runInContext("catalogDetailHtml({id:9,name:'Synthetic',quote:{usable:true,buy_price:100,sell_price:110,tax:2,net_profit:8},scan_economics:{direction:'traditional',buy_leg_price:110,sell_leg_price:100,tax:2,net_profit:-12,gp_per_hour:-300,throughput_constraint:'<Buy limit>'}})",context);
+  assert.match(explanation,/traditional/);assert.match(explanation,/net -12 gp/);
+  assert.match(explanation,/-300 GP\/hr/);assert.match(explanation,/&lt;Buy limit&gt;/);
+  assert.match(explanation,/not a promised return/);
+  const missing=vm.runInContext("catalogDetailHtml({id:9,name:'<Synthetic>',quote:{usable:false,reason:'<No quote>'}})",context);
+  assert.match(missing,/&lt;No quote&gt;/);assert.match(missing,/Watching remains available/);
+  assert.doesNotMatch(missing,/Instant net profit/);
+});
+
+test('catalog detail responses cannot overwrite a newer selection',async()=>{
+  const first=deferred();
+  const {context,elements}=harness(async url=>url.endsWith('=1')?first.promise:
+    new Response(JSON.stringify({id:2,name:'New selection',quote:{usable:false,reason:'no quote'}})));
+  vm.runInContext("accessMode='public-demo';accessReady=true;capabilities={features:['market']}",context);
+  const stale=vm.runInContext('selectedId=1;renderDetail(1)',context);
+  await vm.runInContext('selectedId=2;renderDetail(2)',context);
+  first.resolve(new Response(JSON.stringify({id:1,name:'Old selection',quote:{usable:false,reason:'no quote'}})));
+  await stale;
+  assert.match(elements.get('contextPanel').innerHTML,/New selection/);
+  assert.doesNotMatch(elements.get('contextPanel').innerHTML,/Old selection/);
+});
+
+test('catalog search caps requests and fences results after navigation',async()=>{
+  const pending=deferred();let url;
+  const {context,elements}=harness(async request=>{url=request;return pending.promise;});
+  vm.runInContext("accessMode='public-demo';accessReady=true;capabilities={features:['market']}",context);
+  vm.runInContext('showCatalogSearch()',context);elements.get('catalogQuery').value='Rune & sword';
+  const request=vm.runInContext('searchCatalog()',context);
+  vm.runInContext('viewEpoch++',context);
+  pending.resolve(new Response(JSON.stringify({items:[{id:1,name:'<Stale>'}]})));await request;
+  assert.equal(url,'/api/catalog?q=Rune%20%26%20sword&limit=50');
+  assert.equal(elements.get('catalogResults').textContent,'Searching catalog...');
+  assert.doesNotMatch(elements.get('catalogResults').innerHTML,/<Stale>/);
+});
+
 let failed = true;
 const { context, elements } = harness(async (url, options = {}) => {
   calls.push({ url, options });

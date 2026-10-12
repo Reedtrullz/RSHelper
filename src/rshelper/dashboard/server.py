@@ -23,6 +23,7 @@ from rshelper.scanner import FlipScanner
 from rshelper.signals import detect_signals
 from rshelper.dashboard.handlers import make_handler
 from rshelper import alerts, watchlist
+from rshelper.catalog import resolve_item,search_catalog,item_details
 
 
 def paper_request(profile, body, refresh, direction):
@@ -53,10 +54,7 @@ def paper_request(profile, body, refresh, direction):
             direction=pinned['direction']
         else:
             cache=refresh()
-            matches=[entry for entry in cache['mapping'] if query.strip().lower() in entry['name'].lower()]
-            exact=[entry for entry in matches if query.strip().lower()==entry['name'].lower()]
-            if len(exact or matches)!=1:raise ValueError('item match must be unique')
-            entry=(exact or matches)[0]
+            entry=resolve_item(query,cache['mapping'])
             latest=cache['latest']
             price=latest.get(str(entry['id']))
             meta=provenance(latest)
@@ -559,6 +557,24 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     scanner = FlipScanner(direction=cfg.flip.direction)
 
+    def get_catalog(query,limit=50):
+        current=refresh()
+        rows=search_catalog(query,current['mapping'],limit=limit)
+        return {'items':rows,'limit':limit,'limit_reached':len(rows)==limit,
+                'market_revision':current['revision'],'mapping':provenance(current['mapping'])}
+
+    def get_item_details(item_id):
+        current=refresh()
+        detail=item_details(str(item_id),current['mapping'],current['latest'])
+        item=next((row for row in current['items'] if row.id==item_id),None)
+        explanation=scanner.explain(item,**scan_kwargs) if item is not None else None
+        eligible=bool(explanation is not None and not explanation['exclusion_reasons'])
+        detail.update({'market_revision':current['revision'],'scan_eligible':eligible,
+            'exclusion_reasons':explanation['exclusion_reasons'] if explanation is not None else [detail['quote']['reason'] or 'usable scan price unavailable'],
+            'scan_economics':explanation,
+            'volume':None if item is None else item.volume,'volume_data':provenance(current['vol'])})
+        return detail
+
     sig_cache = {"list": [], "flips": 0, "ts": 0.0, "active": set()}
     sig_lock = __import__("threading").Lock()
 
@@ -662,20 +678,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                          alert_below: int | None = None, policy=None) -> dict:
         cache = refresh()
         if action == "add":
-            item = next((i for i in cache["items"] if i.id == item_id), None)
-            if item is None:
-                raise ValueError(f"item {item_id} not in the current scan")
+            item = resolve_item(str(item_id),cache['mapping'])
             # Re-adding a watched item must preserve its alert thresholds
             # (un-star + re-star shouldn't wipe them).
             wl = watchlist.load(profile)
             existing = wl.get("items", {}).get(str(item_id))
             if existing:
-                watchlist.add(item_id, item.name,
+                watchlist.add(item_id, item['name'],
                               alert_margin_above=existing.get("alert_margin_above"),
                               alert_margin_below=existing.get("alert_margin_below"),
                               profile=profile)
             else:
-                watchlist.add(item_id, item.name, profile=profile)
+                watchlist.add(item_id, item['name'], profile=profile)
         elif action == "remove":
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
@@ -1108,7 +1122,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews)
+                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews,
+                           catalog_fn=get_catalog,item_details_fn=get_item_details)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

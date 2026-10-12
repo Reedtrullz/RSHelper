@@ -140,33 +140,9 @@ class FlipScanner:
         """
         results: list[Item] = []
         for item in items:
-            if members_only and not item.members:
-                continue
-            if item.volume < min_volume:
-                continue
-            if item.sell_price <= 0 or item.buy_price <= 0:
-                continue
-
-            # Arbitrage: buy at instant-buy(high), sell at instant-sell(low) — only finds low>high windows
-            # Traditional: buy at bid(low), sell at offer(high) — standard GE flipping
-            if self.direction == "arbitrage":
-                margin = item.sell_price - item.buy_price
-            else:  # traditional
-                margin = item.buy_price - item.sell_price
-
-            if margin < min_margin:
-                continue
-            if item.buy_limit <= 0:
-                continue
-            tax = ge_tax(item.sell_price if self.direction == "arbitrage" else item.buy_price)
-            profit = margin - tax
-            if profit <= 0:
-                continue
-            trades_per_hour = min(
-                item.buy_limit / 4,
-                item.volume * 12,
-            )
-            gp_per_hour = int(profit * trades_per_hour)
+            explanation=self.explain(item,members_only=members_only,min_volume=min_volume,min_margin=min_margin)
+            if explanation['exclusion_reasons']:continue
+            profit=explanation['net_profit'];gp_per_hour=explanation['gp_per_hour']
             result = Item(
                 id=item.id, name=item.name, members=item.members,
                 buy_limit=item.buy_limit, alch_value=item.alch_value,
@@ -181,6 +157,23 @@ class FlipScanner:
         for r in results:
             r.rs_score = compute_rs_score_flip(r, max_vol)
         return results
+
+    def explain(self,item,*,members_only=False,min_volume=0,min_margin=0):
+        buy=item.buy_price if self.direction=='arbitrage' else item.sell_price
+        sell=item.sell_price if self.direction=='arbitrage' else item.buy_price
+        margin=sell-buy;tax=ge_tax(sell);profit=margin-tax
+        throughput=min(item.buy_limit/4,item.volume*12)
+        reasons=[]
+        if members_only and not item.members:reasons.append('membership: members-only scan filter')
+        if item.volume<min_volume:reasons.append(f'volume: {item.volume} below minimum {min_volume}')
+        if item.sell_price<=0 or item.buy_price<=0:reasons.append('usable positive buy/sell prices unavailable')
+        if margin<min_margin:reasons.append(f'margin: {margin} below minimum {min_margin}')
+        if item.buy_limit<=0:reasons.append('known positive buy limit unavailable')
+        if profit<=0:reasons.append(f'net profit: {profit} is not positive after tax')
+        return {'direction':self.direction,'buy_leg_price':buy,'sell_leg_price':sell,'margin':margin,
+            'tax':tax,'net_profit':profit,'gp_per_hour':int(profit*throughput),'throughput_per_hour':throughput,
+            'throughput_constraint':'buy limit' if item.buy_limit/4<=item.volume*12 else '5m volume extrapolation',
+            'exclusion_reasons':reasons}
 
 def trade_size(item: Item, capital: int) -> int:
     """Suggested buy quantity given capital (gp).

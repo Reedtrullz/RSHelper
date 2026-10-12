@@ -9,6 +9,7 @@ SCRIPT_CORE = r"""
 const refreshSecs=60;
 let allItems=[],signalsMap={},meta={},watchIds=new Set();
 let selectedId=null,view='market';
+let detailGeneration=0,catalogGeneration=0;
 let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
 let chip='all',density='normal',strategy='';
 let viewRows=[],activityCursor=null,activitySince='',activityUntil='';
@@ -56,7 +57,7 @@ function renderViewbar(bar){
 }
 const pendingRequests=new Set();
 const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews']);
-const publicMarketPaths=new Set(['/api/scan','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
+const publicMarketPaths=new Set(['/api/scan','/api/catalog','/api/item','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
 
 function apiFetch(url,options={}){
   const path=String(url).split('?',1)[0];
@@ -960,50 +961,73 @@ async function settingsAction(action){
   }catch(error){if(epoch===authEpoch&&tab===viewEpoch&&error.name!=='AbortError')setStatus(error.message,true);}
 }
 function renderContextEmpty(){
-  document.getElementById('contextPanel').innerHTML='<div class="empty">&#8592; Select an item to inspect</div>';
+  ++detailGeneration;++catalogGeneration;
+  document.getElementById('contextPanel').innerHTML='<div class="empty">Select an item to inspect or <button onclick="showCatalogSearch()">search the full catalog</button></div>';
 }
-function renderDetail(id){
-  const item=allItems.find(i=>i.id===id)||watchDetail(id);
-  if(!item){
-    renderContextEmpty();
-    return;
-  }
-  if(item.unusable){
-    document.getElementById('contextPanel').innerHTML=
-      '<div class="item-name">'+escHtml(item.name)+'</div>'+
-      '<div class="notice warn-red">No usable price data ('+escHtml(item.reason||'unknown')+').</div>';
-    return;
-  }
-  const mp=marginPct(item),rp=roiPct(item);
-  const tax=taxOf(item.sell_price);
-  const net=(item.profit!=null)?item.profit:(item.sell_price-item.buy_price-tax);
-  let notice='';
-  if(item.buy_price>0&&mp>500)notice='<div class="notice warn-red">Extreme spread ('+mp.toFixed(0)+'%). Confirm real trade volume before acting.</div>';
-  else if(item.buy_price>0&&mp>50&&(item.volume||0)<50)notice='<div class="notice">Wide spread with low volume — treat with caution.</div>';
-  document.getElementById('contextPanel').innerHTML=
-    '<div class="item-name">'+escHtml(item.name)+starHtml(item.id)+'</div>'+
-    '<div class="metric-grid">'+
-    metric('Buy',format(item.buy_price)+' gp','')+
-    metric('Sell',format(item.sell_price)+' gp','')+
-    metric('Margin','<span class="val '+marginClass(mp)+'">'+mp.toFixed(1)+'%</span>','')+
-    metric('Net Profit',format(net)+' gp',net>0?'green':net<0?'red':'')+
-    metric('Tax','<span class="val dim">'+format(tax)+' gp</span>','')+
-    metric('ROI',rp.toFixed(1)+'%',rp>0?'green':'')+
-    metric('GP / Hour',format(item.gp_per_hour||0)+' gp','gold')+
-    metric('RS Score',(item.rs_score||0).toFixed(0),'gold')+
-    metric('Volume (5m)',format(item.volume||0),'')+
-    metric('Buy Limit',format(item.buy_limit||0),'')+
-    metric('Alch Value',format(item.alch_value||0)+' gp','')+
-    metric('Members','<span class="val '+(item.members?'gold':'dim')+'">'+(item.members?'Yes':'No')+'</span>','')+
-    '<div class="metric" id="confTile" style="display:none"></div>'+
-    '</div>'+notice+
+function catalogDetailHtml(item){
+  const quote=item.quote||{},source=(item.market_data||{}).latest||{};
+  let html='<div class="item-name">'+escHtml(item.name)+' '+starHtml(item.id)+'</div>'+
+    '<p>Item ID '+item.id+' · '+(item.members===true?'Members':item.members===false?'Free-to-play':'Membership unknown')+'</p>'+
+    '<p>Buy limit: '+(item.buy_limit>0?format(item.buy_limit):'Unknown')+' per 4 hours</p>'+
+    '<p>Quote source: '+escHtml(source.source||'unknown')+' · '+escHtml(source.delivery||'unknown')+'</p>';
+  if(!quote.usable)return html+'<div class="notice warn-red">No usable quote: '+escHtml(quote.reason||'unknown')+'. Watching remains available; priced actions require fresh usable data.</div>';
+  html+='<div class="metric-grid">'+
+    metric('Instant buy (high)',format(quote.buy_price)+' gp','')+
+    metric('Instant sell (low)',format(quote.sell_price)+' gp','')+
+    metric('Tax on instant sell',format(quote.tax)+' gp','')+
+    metric('Instant net profit',format(quote.net_profit)+' gp',quote.net_profit>0?'green':'red')+
+    metric('Instant margin',quote.margin_pct==null?'Unknown':quote.margin_pct.toFixed(1)+'%','')+
+    metric('Instant ROI',quote.roi_pct==null?'Unknown':quote.roi_pct.toFixed(1)+'%','')+
+    metric('Alch value',item.alch_value==null?'Unknown':format(item.alch_value)+' gp','')+
+    metric('5m volume',item.volume==null?'Unknown':format(item.volume),'')+
+    '<div class="metric" id="confTile" style="display:none"></div></div>'+
+    '<p>Quote times: buy '+escHtml(quote.buy_time?new Date(quote.buy_time*1000).toISOString():'unknown')+
+    ', sell '+escHtml(quote.sell_time?new Date(quote.sell_time*1000).toISOString():'unknown')+'</p>'+
+    '<p>Scan: '+(item.scan_eligible?'Eligible':escHtml((item.exclusion_reasons||[]).join('; ')||'Excluded'))+'</p>'+
+    (item.scan_economics?'<p>Scan direction: '+escHtml(item.scan_economics.direction)+
+      ' · buy '+format(item.scan_economics.buy_leg_price)+' gp · sell '+format(item.scan_economics.sell_leg_price)+
+      ' gp · tax '+format(item.scan_economics.tax)+' gp · net '+format(item.scan_economics.net_profit)+
+      ' gp · illustrative '+format(item.scan_economics.gp_per_hour)+' GP/hr ('+
+      escHtml(item.scan_economics.throughput_constraint)+'). This is not a promised return.</p>':'')+
+    '<p>Volume: '+escHtml((item.volume_data||{}).volume_kind||'unknown')+'; paper fills require fresh executed-trade volume.</p>'+
     '<div class="chart-title">Price history (8h, 5m)</div><canvas id="spark" height="84"></canvas>'+
     '<div class="chart-title">Margin history (24h, 1h)</div><canvas id="marginChart" height="120"></canvas>';
-  drawSpark(id);
-  // Only draw the margin chart when the item came from the flip scan
-  // (it carries volume/rs_score); watch-detail rows are price-only.
-  if(typeof item.volume==='number')drawMargin(id);
-  loadConfidence(id);
+  return html;
+}
+async function renderDetail(id){
+  const request=++detailGeneration,epoch=authEpoch,tab=viewEpoch;
+  ++catalogGeneration;
+  const panel=document.getElementById('contextPanel');
+  panel.innerHTML='<p role="status">Loading item '+id+'...</p>';
+  try{
+    const response=await apiFetch('/api/item?id='+id);if(!response.ok)await rejectApiError(response);
+    const item=await response.json();
+    if(request!==detailGeneration||epoch!==authEpoch||tab!==viewEpoch||selectedId!==id)return;
+    panel.innerHTML=catalogDetailHtml(item);
+    if(item.quote?.usable){drawSpark(id);drawMargin(id);loadConfidence(id);}
+  }catch(error){if(request===detailGeneration&&epoch===authEpoch&&tab===viewEpoch&&selectedId===id&&error.name!=='AbortError')
+    panel.innerHTML='<p role="status">'+escHtml(error.message)+'</p><button onclick="showCatalogSearch()">Find another item</button>';}
+}
+function showCatalogSearch(){
+  ++detailGeneration;++catalogGeneration;selectedId=null;
+  document.getElementById('contextPanel').innerHTML='<form onsubmit="searchCatalog();return false">'+
+    '<label for="catalogQuery">Find any mapped item by name or ID</label>'+
+    '<input id="catalogQuery" maxlength="200" autocomplete="off">'+
+    '<button type="submit">Search catalog</button></form><div id="catalogResults" role="status"></div>';
+  document.getElementById('catalogQuery').focus?.();
+}
+async function searchCatalog(){
+  const query=document.getElementById('catalogQuery').value||'';
+  const request=++catalogGeneration,epoch=authEpoch,tab=viewEpoch;
+  const target=document.getElementById('catalogResults');target.textContent='Searching catalog...';
+  try{
+    const response=await apiFetch('/api/catalog?q='+encodeURIComponent(query)+'&limit=50');
+    if(!response.ok)await rejectApiError(response);const result=await response.json();
+    if(request!==catalogGeneration||epoch!==authEpoch||tab!==viewEpoch)return;
+    target.innerHTML=(result.limit_reached?'<p>Showing the first 50 matches; narrow the query.</p>':'')+
+      ((result.items||[]).map(item=>'<p><button type="button" onclick="selectId('+item.id+',false)">'+
+        escHtml(item.name)+' [ID '+item.id+']</button></p>').join('')||'<p>No mapped items matched. Try an exact ID or refresh the mapping.</p>');
+  }catch(error){if(request===catalogGeneration&&epoch===authEpoch&&tab===viewEpoch&&error.name!=='AbortError')target.textContent=error.message;}
 }
 function loadConfidence(id){
   const ctx=document.getElementById('contextPanel');

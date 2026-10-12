@@ -532,22 +532,22 @@ def _format_margin_table(results, top: int, lookup: dict, capital: int = 0,
     return "\n".join(lines)
 
 
-def _resolve_item(args: argparse.Namespace) -> dict:
+def _resolve_item(args: argparse.Namespace, mapping=None) -> dict:
     """Look up an item by exact name or unique substring; exits on failure."""
     from rshelper.api import fetch_mapping_result
     profile = getattr(args, "profile", None)
-    mapping = market_payload(fetch_mapping_result(profile), sequence=True)
-    q = args.item.lower()
-    entry = next((e for e in mapping if (e.get("name") or "").lower() == q), None)
-    if entry is not None:
-        return entry
-    matches = [e for e in mapping if q in (e.get("name") or "").lower()]
-    if len(matches) == 1:
-        return matches[0]
+    if mapping is None:mapping = market_payload(fetch_mapping_result(profile), sequence=True)
+    from rshelper.catalog import resolve_item,search_catalog
+    try:return resolve_item(str(args.item),mapping)
+    except ValueError as error:
+        if not str(args.item).strip() or len(str(args.item))>200:
+            print(str(error),file=sys.stderr);sys.exit(1)
+        matches=search_catalog(str(args.item),mapping,limit=20)
     if len(matches) > 1:
-        print(f"Multiple matches for '{args.item}':", file=sys.stderr)
-        for e in matches[:20]:
-            print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
+        if getattr(args,'json',False):print(json.dumps([{'id':e['id'],'name':e['name']} for e in matches]))
+        else:
+            print(f"Multiple matches for '{args.item}':", file=sys.stderr)
+            for e in matches:print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
     else:
         print(f"Item not found: {args.item}", file=sys.stderr)
     sys.exit(1)
@@ -1195,35 +1195,8 @@ def item_info(args: argparse.Namespace) -> None:
         sys.exit(1)
     latest = market_payload(fetch_latest_result(args.profile if hasattr(args, "profile") else None))
     if not latest:
-        print("Error: could not fetch latest prices.", file=sys.stderr)
-        sys.exit(1)
-
-    # Find item — try exact ID first, then name match
-    query = args.item.lower()
-    matched: dict | None = None
-    for entry in mapping:
-        if str(entry.get("id")) == query:
-            matched = entry
-            break
-    if matched is None:
-        candidates = [e for e in mapping if query in (e.get("name") or "").lower()]
-        if len(candidates) == 1:
-            matched = candidates[0]
-        elif len(candidates) > 1:
-            if args.json:
-                print(json.dumps([{"id": e["id"], "name": e["name"]} for e in candidates[:20]], indent=2))
-            else:
-                print(f"Multiple matches for '{args.item}':")
-                for e in candidates[:20]:
-                    print(f"  {e['id']:>6}  {e['name']}")
-                if len(candidates) > 20:
-                    print(f"  ... and {len(candidates) - 20} more")
-            # Ambiguous is an error: scripts must distinguish "resolved" from
-            # "multiple matches" (matches every other resolver's exit-1).
-            sys.exit(1)
-        else:
-            print(f"No item found matching '{args.item}'", file=sys.stderr)
-            sys.exit(1)
+        print("Warning: latest prices unavailable; metadata remains inspectable.",file=sys.stderr)
+    matched=_resolve_item(args,mapping)
 
     item_id = matched["id"]
     name = matched.get("name", "")
@@ -1238,6 +1211,13 @@ def item_info(args: argparse.Namespace) -> None:
     if issue:
         print(f"  Warning: price data for {name} is unusable ({issue}); "
               f"values may be stale or manipulated.", file=sys.stderr)
+        if args.json:
+            print(json.dumps({'id':item_id,'name':name,'members':members,'buy_limit':buy_limit,
+                'alch_value':alch_value,'buy_price':None,'sell_price':None,'price_warning':issue,
+                'alch_profit':None,'flip_margin':None,'flip_tax':None,'flip_profit':None,
+                'market_data':{'mapping':provenance(mapping),'latest':provenance(latest)}}))
+        else:print(f'{name} [id={item_id}] — no usable quote ({issue}); buy limit {buy_limit}, alch value {alch_value}')
+        return
 
     if args.json:
         out = {
@@ -1416,24 +1396,7 @@ def watch_add(args: argparse.Namespace) -> None:
         print("Error: could not fetch item mapping.", file=sys.stderr)
         sys.exit(1)
 
-    query = str(args.item).lower()
-    matched = None
-    for entry in mapping:
-        if str(entry.get("id")) == query:
-            matched = entry
-            break
-    if matched is None:
-        candidates = [e for e in mapping if query in (e.get("name") or "").lower()]
-        if len(candidates) == 1:
-            matched = candidates[0]
-        elif len(candidates) > 1:
-            print(f"Multiple matches for '{args.item}':", file=sys.stderr)
-            for e in candidates[:10]:
-                print(f"  {e['id']:>6}  {e['name']}", file=sys.stderr)
-            sys.exit(1)
-        else:
-            print(f"No item found matching '{args.item}'", file=sys.stderr)
-            sys.exit(1)
+    matched=_resolve_item(args,mapping)
 
     item_id = matched["id"]
     name = matched["name"]

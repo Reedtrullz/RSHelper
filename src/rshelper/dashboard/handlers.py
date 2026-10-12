@@ -22,6 +22,8 @@ _GET_RESOURCES = {
     "/api/health": "sanitized-health",
     '/api/readiness': 'private-state',
     "/api/scan": "public-market",
+    '/api/catalog': 'public-market',
+    '/api/item': 'public-market',
     "/api/prices": "public-market",
     "/api/timeseries": "public-market",
     "/api/process": "public-market",
@@ -116,7 +118,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  readiness_fn: Callable[[], dict] | None = None,
                  activity_fn: Callable[..., dict] | None = None,
                  settings_fn: Callable[..., dict] | None = None,
-                 reviews_fn: Callable[..., dict] | None = None) -> type:
+                 reviews_fn: Callable[..., dict] | None = None,
+                 catalog_fn: Callable[..., dict] | None = None,
+                 item_details_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -176,6 +180,15 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_capabilities()
             elif path == "/api/scan":
                 self._serve_scan()
+            elif path in ('/api/catalog','/api/item'):
+                query=self._query()
+                try:
+                    if path=='/api/catalog':
+                        self._serve_json(catalog_fn(query.get('q',[''])[0],int(query.get('limit',['50'])[0])) if catalog_fn else {'items':[]})
+                    elif item_details_fn:self._serve_json(item_details_fn(int(query['id'][0])))
+                    else:self.send_error(404)
+                except ValueError as error:self.send_error(400,str(error))
+                except OSError:self.send_error(503,'Catalog unavailable')
             elif path == "/api/health":
                 self._serve_health()
             elif path == '/api/readiness':
