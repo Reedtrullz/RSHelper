@@ -453,8 +453,8 @@ def _merge(root, incoming):
     for name, kind in CORE.items():
         local = persistence.read_state(root / name, kind)
         peer = incoming[name]
-        metadata_a = {key: value for key, value in local.items() if key not in (kind, 'items', 'tombstones', 'schema_version', 'realizations', 'watch_triggered')}
-        metadata_b = {key: value for key, value in peer.items() if key not in (kind, 'items', 'tombstones', 'schema_version', 'realizations', 'watch_triggered')}
+        metadata_a = {key: value for key, value in local.items() if key not in (kind, 'items', 'tombstones', 'schema_version', 'realizations', 'watch_triggered', 'watch_crossings')}
+        metadata_b = {key: value for key, value in peer.items() if key not in (kind, 'items', 'tombstones', 'schema_version', 'realizations', 'watch_triggered', 'watch_crossings')}
         if metadata_a and metadata_b and _json(metadata_a) != _json(metadata_b):
             raise ValueError('state root metadata conflict')
         if kind == 'watchlist':
@@ -468,6 +468,13 @@ def _merge(root, incoming):
                 for key, value in peer.get('watch_triggered', {}).items():
                     triggered[key] = max(value, triggered.get(key, value))
                 output['watch_triggered'] = triggered
+                crossings = dict(local.get('watch_crossings', {}))
+                for key, value in peer.get('watch_crossings', {}).items():
+                    current = crossings.get(key)
+                    if current is None or (value['observed_at'], value['revision'], _json(value)) > (current['observed_at'], current['revision'], _json(current)):
+                        crossings[key] = value
+                if crossings:
+                    output['watch_crossings'] = crossings
             result[name] = output
     local_lineage = persistence.read_state(root / 'identity-lineage.json', 'generic').get('origins', {})
     peer_lineage = incoming.get('identity-lineage.json', {}).get('origins', {})

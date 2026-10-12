@@ -100,6 +100,43 @@ class ReplicationTest(unittest.TestCase):
         self.assertEqual(receipt['status'],'conflict')
         self.assertEqual(trading_mode.read_mode('a')['mode'],'draining')
 
+    def test_watch_crossings_merge_without_duplicate_connected_events(self):
+        from rshelper import watchlist, alerts
+        import time
+        now = time.time()
+        watchlist.add(561, 'Synthetic', alert_margin_above=100, profile='a')
+        alerts.emit_watch_if_due('a', 561, 101, now=now, source_revision='fixture')
+        self.api().apply_packet('b', self.packet())
+        self.assertIsNone(alerts.emit_watch_if_due('b', 561, 102, now=now+1000,
+                                                 source_revision='replica'))
+        self.api().apply_packet('a', self.packet('b'))
+        self.assertEqual(len(alerts.list_alerts(profile='a')), 1)
+        self.assertEqual(alerts._load('a')['watch_crossings']['561']['source_revision'], 'replica')
+
+    def test_watch_notification_failure_survives_return_packet(self):
+        from rshelper import watchlist, alerts
+        watchlist.add(561, 'Synthetic', alert_margin_above=100, profile='a')
+        alerts.emit_watch_if_due('a', 561, 101, source_revision='fixture',
+                                notify_fn=lambda *args: False)
+        self.api().apply_packet('b', self.packet())
+        self.api().apply_packet('a', self.packet('b'))
+        self.assertEqual(alerts._load('a')['watch_crossings']['561']['notification_status'], 'failed')
+
+    def test_newer_crossing_observation_beats_stale_replica_counter(self):
+        from rshelper import watchlist, alerts
+        import time
+        now = time.time()
+        watchlist.add(561, 'Synthetic', alert_margin_above=100, profile='a')
+        alerts.emit_watch_if_due('a', 561, 101, now=now)
+        self.api().apply_packet('b', self.packet())
+        alerts.emit_watch_if_due('b', 561, 90, now=now+1)
+        path = self.root('a') / 'alerts.json'
+        store = json.loads(path.read_text())
+        store['watch_crossings']['561']['revision'] = 100
+        path.write_text(json.dumps(store))
+        self.api().apply_packet('a', self.packet('b'))
+        self.assertEqual(alerts._load('a')['watch_crossings']['561']['side'], '')
+
     def test_growing_native_lineage_converges_over_three_round_trips(self):
         from rshelper import journal
         from uuid import uuid4

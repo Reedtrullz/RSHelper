@@ -6,6 +6,7 @@ import fcntl
 import json
 import math
 import os
+import re
 from pathlib import Path
 import stat
 import threading
@@ -114,6 +115,15 @@ def validate_record_identity(row, kind):
     return record
 
 
+def validate_watch_policy(policy):
+    if (not isinstance(policy, dict) or set(policy) != {'mode', 'cooldown_sec', 'hysteresis_gp'}
+            or policy['mode'] not in ('crossing', 'reminder')
+            or any(not _integer(policy[key], 0) or policy[key] > 10**9
+                   for key in ('cooldown_sec', 'hysteresis_gp'))):
+        raise ValueError('invalid watch alert policy')
+    return policy
+
+
 def _watch_row(row, path):
     if not isinstance(row, dict):
         _fail(path, 'state row must be an object')
@@ -126,6 +136,13 @@ def _watch_row(row, path):
     for field in ('alert_margin_above', 'alert_margin_below'):
         if row.get(field) is not None and not _integer(row[field]):
             _fail(path, f'invalid {field}')
+    if 'alert_policy' in row:
+        try:
+            validate_watch_policy(row['alert_policy'])
+        except ValueError as error:
+            _fail(path, str(error))
+    if 'alert_rule_revision' in row and not _integer(row['alert_rule_revision'], 0):
+        _fail(path, 'invalid watch rule revision')
     if identity is not None:
         if not _integer(row.get('item_id'), 1):
             _fail(path, 'invalid watched item id')
@@ -247,6 +264,25 @@ def validate_state(data, kind, path):
         triggered = data.get('watch_triggered', {})
         if not isinstance(triggered, dict) or any(not _finite(value) or value < 0 for value in triggered.values()):
             _fail(path, 'invalid watch dedupe timestamps')
+        crossings = data.get('watch_crossings', {})
+        if not isinstance(crossings, dict):
+            _fail(path, 'invalid watch crossings')
+        for key, row in crossings.items():
+            if (not isinstance(key, str) or not key.isascii() or not key.isdigit()
+                    or not isinstance(row, dict)
+                    or set(row) != {'rule', 'side', 'fired', 'observed_at', 'source_revision', 'notification_status', 'event_id', 'revision'}
+                    or not isinstance(row['rule'], str) or not re.fullmatch('[0-9a-f]{64}', row['rule'])
+                    or row['side'] not in ('', 'above', 'below') or type(row['fired']) is not bool
+                    or not _finite(row['observed_at']) or row['observed_at'] < 0
+                    or not _integer(row['revision'], 1)
+                    or not isinstance(row['source_revision'], str) or len(row['source_revision']) > 128
+                    or row['notification_status'] not in ('not-requested', 'pending', 'sent', 'failed')):
+                _fail(path, 'invalid watch crossing observation')
+            if row['event_id'] is not None:
+                try:
+                    canonical_uuid(row['event_id'])
+                except ValueError:
+                    _fail(path, 'invalid watch crossing event identity')
     return data
 
 

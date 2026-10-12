@@ -1108,12 +1108,17 @@ function editWatchAlerts(id,ev){
   if(!item)return;
   const above=item.alert_above!=null?item.alert_above:'';
   const below=item.alert_below!=null?item.alert_below:'';
+  const policy=item.alert_policy||{mode:'crossing',cooldown_sec:900,hysteresis_gp:0};
   const overlay=document.createElement('div');
   overlay.className='ge-history-overlay';
   overlay.innerHTML='<div class="ge-history-panel"><div class="item-name" style="margin-bottom:12px">Alert thresholds — '+escHtml(item.name)+'</div>'+
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
     '<label style="font-size:12px;color:var(--text-dim)">Above (gp): <input id="wlAbove" type="number" min="0" style="width:110px" value="'+above+'"></label>'+
     '<label style="font-size:12px;color:var(--text-dim)">Below (gp): <input id="wlBelow" type="number" min="0" style="width:110px" value="'+below+'"></label>'+
+    '<label>Mode <select id="wlMode"><option value="crossing"'+(policy.mode==='crossing'?' selected':'')+'>Once per crossing</option><option value="reminder"'+(policy.mode==='reminder'?' selected':'')+'>Recurring reminder</option></select></label>'+
+    '<label>Cooldown (seconds) <input id="wlCooldown" type="number" min="0" value="'+policy.cooldown_sec+'"></label>'+
+    '<label>Recovery hysteresis (gp) <input id="wlHysteresis" type="number" min="0" value="'+policy.hysteresis_gp+'"></label>'+
+    '<span>Last notification: '+escHtml(item.notification_status||'not-requested')+'</span>'+
     '</div>'+
     '<div style="text-align:right;margin-top:14px">'+
     '<button class="act-btn" style="margin-right:8px" onclick="saveWatchAlerts('+id+')">Save</button>'+
@@ -1129,9 +1134,12 @@ async function saveWatchAlerts(id){
   const belowRaw=document.getElementById('wlBelow').value;
   const alert_above=aboveRaw===''?null:parseInt(aboveRaw,10);
   const alert_below=belowRaw===''?null:parseInt(belowRaw,10);
+  const alert_policy={mode:document.getElementById('wlMode').value,
+    cooldown_sec:Number(document.getElementById('wlCooldown').value),
+    hysteresis_gp:Number(document.getElementById('wlHysteresis').value)};
   try{
     const r=await apiFetch('/api/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below})});
+      body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below,alert_policy})});
     if(!r.ok)await rejectApiError(r);
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
     if(view==='watchlist')renderWatchlist();

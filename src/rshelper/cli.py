@@ -1365,10 +1365,16 @@ def watch_add(args: argparse.Namespace) -> None:
 
     item_id = matched["id"]
     name = matched["name"]
+    policy = None
+    if any(getattr(args, key, None) is not None for key in ('alert_mode', 'alert_cooldown_sec', 'alert_hysteresis_gp')):
+        from rshelper.persistence import validate_watch_policy
+        policy = validate_watch_policy({'mode': args.alert_mode or 'crossing',
+            'cooldown_sec': 900 if args.alert_cooldown_sec is None else args.alert_cooldown_sec,
+            'hysteresis_gp': 0 if args.alert_hysteresis_gp is None else args.alert_hysteresis_gp})
     watchlist.add(item_id, name,
                   alert_margin_above=args.alert_above,
                   alert_margin_below=args.alert_below,
-                  profile=args.profile)
+                  profile=args.profile, alert_policy=policy)
     print(f"Added '{name}' (id={item_id}) to watchlist.")
 
 
@@ -1983,6 +1989,9 @@ def _main() -> None:
                              help="Alert when margin exceeds this (gp)")
     watch_add_p.add_argument("--alert-below", type=int, default=None,
                              help="Alert when margin falls below this (gp)")
+    watch_add_p.add_argument('--alert-mode', choices=('crossing', 'reminder'), default=None)
+    watch_add_p.add_argument('--alert-cooldown-sec', type=int, default=None)
+    watch_add_p.add_argument('--alert-hysteresis-gp', type=int, default=None)
     watch_rm = watch_sub.add_parser("remove", help="Remove item from watchlist")
     watch_rm.add_argument("item_id", type=int, help="Item ID to remove")
     watch_sub.add_parser("list", help="List all watched items")

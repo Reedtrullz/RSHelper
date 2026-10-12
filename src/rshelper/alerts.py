@@ -1,14 +1,18 @@
 """Persistent alert feed: signals, watchlist triggers, trader exits, system."""
 
 import json
+import hashlib
+import math
 import os
 import threading
 import time
 from uuid import uuid4
 from dataclasses import dataclass
+from contextlib import contextmanager, ExitStack
 from datetime import datetime, timezone
 
-from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
+from rshelper.persistence import (read_state, locked_writable_state, locked_state,
+    StateCorruptionError, validate_state, validate_writable_state, validate_watch_policy)
 from rshelper import state_identity, state_transaction
 from rshelper.profile import atomic_write_json, filter_fields, resolve_config_path
 
@@ -21,11 +25,15 @@ _ALERT_LOCK = threading.Lock()
 _fallback_id = 0  # per-process monotonic ids when persistence fails
 
 
+@contextmanager
 def _file_lock(profile: str | None = None):
     path = _alerts_path(profile)
-    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
-        return state_transaction.profile_transaction(profile or 'default', path.parent)
-    return locked_writable_state(_alerts_path(profile), "alerts")
+    with state_transaction.profile_transaction(profile or 'default', path.parent):
+        if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+            yield
+        else:
+            with locked_writable_state(path, 'alerts'):
+                yield
 
 
 @dataclass
@@ -244,30 +252,20 @@ def set_watch_triggered(item_id: int, profile: str | None = None) -> None:
 
 
 def update_watch_alerts(item_id: int, above: int | None, below: int | None,
-                        profile: str | None = None) -> None:
+                        profile: str | None = None, *, policy=None) -> None:
     """Update (or clear) a watched item's margin alert thresholds.
 
     A clean add/update: preserves the existing name + added timestamp,
     and clears a previous dedupe so a newly-set threshold can fire.
     """
     from rshelper import watchlist
-    root = watchlist._watchlist_path(profile).parent
-    if state_identity.activation_manifest(root / 'identity-activation.json') is not None:
-        with state_transaction.profile_transaction(profile or 'default', root) as txn:
-            data = watchlist.load(profile)
-            store = _load(profile)
-            entry = data.get('items', {}).get(str(item_id))
-            if entry is None:
-                raise ValueError(f'item {item_id} is not on the watchlist')
-            entry.update(alert_margin_above=above, alert_margin_below=below,
-                         revision=entry['revision'] + 1)
-            store.setdefault('watch_triggered', {}).pop(str(item_id), None)
-            txn.stage('watchlist.json', data)
-            txn.stage('alerts.json', store)
-            txn.commit(str(uuid4()))
-        return
-    with watchlist._watchlist_lock(profile):
+    if policy is not None:
+        policy = _watch_policy(policy)
+    if any(value is not None and type(value) is not int for value in (above, below)):
+        raise ValueError('watch thresholds must be integers')
+    with _watch_transaction(profile) as txn:
         data = watchlist.load(profile)
+        store = _load(profile)
         entry = data.get("items", {}).get(str(item_id))
         if entry is None:
             raise ValueError(f"item {item_id} is not on the watchlist")
@@ -275,8 +273,109 @@ def update_watch_alerts(item_id: int, above: int | None, below: int | None,
         entry["alert_margin_below"] = below
         if 'record_uuid' in entry:
             entry['revision'] += 1
-        watchlist._save(data, profile)
-    with _file_lock(profile):
-        store = _load(profile)
+        entry['alert_rule_revision'] = entry.get('alert_rule_revision', 0) + 1
+        if policy is not None:
+            entry['alert_policy'] = policy
         store.setdefault("watch_triggered", {}).pop(str(item_id), None)
-        _save(store, profile)
+        store.setdefault('watch_crossings', {}).pop(str(item_id), None)
+        txn.stage('watchlist.json', data)
+        txn.stage('alerts.json', store)
+        txn.commit(str(uuid4()))
+
+
+def _watch_policy(policy):
+    policy = dict({'mode': 'crossing', 'cooldown_sec': WATCH_DEDUPE_SEC, 'hysteresis_gp': 0}
+                  if policy is None else policy)
+    return validate_watch_policy(policy)
+
+
+@contextmanager
+def _watch_transaction(profile):
+    from rshelper import watchlist
+    paths = tuple(path.resolve() for path in (_alerts_path(profile), watchlist._watchlist_path(profile)))
+    if paths[0].parent != paths[1].parent:
+        raise ValueError('watch and alert profile roots differ')
+    with state_transaction.profile_transaction(profile or 'default', paths[0].parent) as txn:
+        with ExitStack() as locks:
+            for path, kind in sorted(zip(paths, ('alerts', 'watchlist'))):
+                locks.enter_context(locked_state(path))
+                if state_identity.activation_manifest(path.with_name('identity-activation.json')) is None:
+                    validate_writable_state(read_state(path, kind), kind, path)
+            yield txn
+
+
+def emit_watch_if_due(profile, item_id, margin, *, now=None, source_revision='', notify_fn=None):
+    """Commit the rule observation and event together; delivery follows commit."""
+    from rshelper import watchlist
+    from rshelper.identity_merge import canonical_record
+    now = time.time() if now is None else now
+    if (type(item_id) is not int or item_id <= 0 or type(margin) is not int
+            or type(now) not in (int, float) or not math.isfinite(now) or now < 0
+            or not isinstance(source_revision, (str, int)) or len(str(source_revision)) > 128):
+        raise ValueError('invalid watch observation')
+    key, event = str(item_id), None
+    with _watch_transaction(profile) as txn:
+        entry = watchlist.load(profile)['items'].get(key)
+        if entry is None:
+            return None
+        policy = _watch_policy(entry.get('alert_policy'))
+        above, below = entry.get('alert_margin_above'), entry.get('alert_margin_below')
+        if above is None and below is None:
+            return None
+        rule = hashlib.sha256(json.dumps([entry.get('record_uuid'), canonical_record(entry, 'watchlist').get('added'), entry.get('alert_rule_revision', 0),
+            above, below, policy], sort_keys=True).encode()).hexdigest()
+        store = _load(profile)
+        previous = store.setdefault('watch_crossings', {}).get(key, {})
+        same_rule = previous.get('rule') == rule
+        side = ('above' if above is not None and margin > above else
+                'below' if below is not None and margin < below else '')
+        breached = bool(side)
+        hysteresis = policy['hysteresis_gp']
+        if not side and same_rule:
+            if previous.get('side') == 'above' and above is not None and margin > above-hysteresis:
+                side = 'above'
+            elif previous.get('side') == 'below' and below is not None and margin < below+hysteresis:
+                side = 'below'
+        fired = same_rule and previous.get('side') == side and previous.get('fired', False)
+        last = store.get('watch_triggered', {}).get(key)
+        due = last is None or now-last >= policy['cooldown_sec']
+        observation = {'rule': rule, 'side': side, 'fired': bool(fired), 'observed_at': now,
+                       'revision': previous.get('revision', 0) + 1,
+                       'source_revision': str(source_revision),
+                       'notification_status': previous.get('notification_status', 'not-requested'),
+                       'event_id': previous.get('event_id')}
+        if breached and due and (policy['mode'] == 'reminder' or not fired):
+            operation = str(uuid4())
+            request = dict(type='watch', severity='HIGH', item_id=item_id,
+                item_name=entry.get('name', key), title='Watchlist alert',
+                message=f"{entry.get('name', key)}: margin {margin:,} gp {side} {above if side == 'above' else below:,}",
+                data={'margin': margin, 'mode': policy['mode'], 'source_revision': str(source_revision)})
+            row = dict(request, id=_next_alert_id(store), ts=now, read=False)
+            root = _alerts_path(profile).parent
+            manifest = state_identity.activation_manifest(root/'identity-activation.json')
+            if manifest is not None:
+                row.update(state_identity.new_record_identity(manifest['origin_uuid'], 'alerts', operation))
+                state_identity.attest_native(txn, root, 'alerts', row, operation, request)
+            store['alerts'].append(row)
+            store.setdefault('watch_triggered', {})[key] = now
+            observation.update(fired=True, event_id=operation,
+                               notification_status='pending' if notify_fn else 'not-requested')
+            event = Alert(**filter_fields(Alert, row))
+            _prune(store)
+        store['watch_crossings'][key] = observation
+        txn.stage('alerts.json', store)
+        txn.commit(str(uuid4()))
+    if event is not None and notify_fn is not None:
+        try:
+            delivered = notify_fn(event.title, event.message) is not False
+        except Exception:
+            delivered = False
+        with _watch_transaction(profile) as txn:
+            store = _load(profile)
+            current = store.get('watch_crossings', {}).get(key)
+            if current and current['event_id'] == observation['event_id']:
+                current['notification_status'] = 'sent' if delivered else 'failed'
+                current['revision'] += 1
+                txn.stage('alerts.json', store)
+                txn.commit(str(uuid4()))
+    return event

@@ -35,7 +35,7 @@ CASES = {
     'trade delete': '1',
     'trade status': '--json',
     'signals': '--members-only --no-members-only --flip-direction traditional --cooldown 1 --json --monitor 1',
-    'watch add': '2 --alert-above 1 --alert-below -1',
+    'watch add': '2 --alert-above 1 --alert-below -1 --alert-mode crossing --alert-cooldown-sec 900 --alert-hysteresis-gp 10',
     'watch remove': '2',
     'watch list': '',
     'watch check': '--flip-direction traditional --ge-slots 2 -v --verbose --json',

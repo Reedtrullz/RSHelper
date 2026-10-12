@@ -657,8 +657,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 return
             try:
                 if action == "alerts":
-                    self._serve_json(watchlist_update_fn(action, item_id,
-                                                         above, below))
+                    if 'alert_policy' in body:
+                        from rshelper.persistence import validate_watch_policy
+                        policy = validate_watch_policy(body['alert_policy'])
+                        self._serve_json(watchlist_update_fn(action, item_id, above, below, policy))
+                    else:
+                        self._serve_json(watchlist_update_fn(action, item_id, above, below))
                 else:
                     self._serve_json(watchlist_update_fn(action, item_id))
             except (ValueError, TypeError) as e:
