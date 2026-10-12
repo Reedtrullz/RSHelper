@@ -44,6 +44,7 @@ _GET_RESOURCES = {
     "/api/trader": "private-state",
     "/api/ge": "private-state",
     "/api/bank": "private-state",
+    "/api/scenario": "private-state",
     "/api/alerts": "private-state",
     "/api/events": "private-state",
     "/api/settings": "private-state",
@@ -51,6 +52,7 @@ _GET_RESOURCES = {
 }
 
 _POST_RESOURCES = {
+    '/api/scenario':'private-state',
     '/api/observed':'private-state',
     "/api/reviews": "private-state",
     "/api/settings": "private-state",
@@ -122,6 +124,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  settings_fn: Callable[..., dict] | None = None,
                  reviews_fn: Callable[..., dict] | None = None,
                  observed_fn: Callable[..., dict] | None = None,
+                 scenario_fn: Callable[..., dict] | None = None,
                  catalog_fn: Callable[..., dict] | None = None,
                  item_details_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
@@ -173,7 +176,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except HttpInputError as exc:
                 self.send_error(exc.status, str(exc))
                 return
-            if path=='/api/observed':
+            if path=='/api/scenario':
+                self._serve_scenario()
+            elif path=='/api/observed':
                 self._serve_observed()
             elif path=='/api/reviews':
                 self._serve_reviews(lot_uid=self._query().get('lot_uid',[''])[0])
@@ -271,7 +276,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 except HttpInputError as exc:
                     self.send_error(exc.status, str(exc))
                     return
-            if path=='/api/observed':
+            if path=='/api/scenario':
+                self._serve_scenario(self._json_body)
+            elif path=='/api/observed':
                 self._serve_observed(self._json_body)
             elif path=='/api/reviews':
                 self._serve_reviews(self._json_body)
@@ -309,6 +316,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except PermissionError as error:self.send_error(403,str(error))
             except (ValueError,TypeError) as error:self.send_error(400,str(error))
             except OSError:self.send_error(503,'Review state unavailable')
+
+        def _serve_scenario(self,body=None):
+            if scenario_fn is None:self.send_error(404);return
+            try:self._serve_json(scenario_fn(body))
+            except (ValueError,TypeError) as error:self.send_error(400,str(error))
+            except OSError:self.send_error(503,'Scenario inputs unavailable')
 
         def _serve_observed(self,body=None):
             if observed_fn is None:self.send_error(404);return

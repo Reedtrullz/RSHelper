@@ -6,6 +6,29 @@ from rshelper.ge_offers import resolve_icon_url
 from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.positions import list_positions
 
+def build_scenario_input(profile=None,latest=None,now=None):
+    from rshelper import paper_book,positions,state_transaction
+    from rshelper.market_data import provenance
+    from rshelper.state_identity import request_hash
+    from rshelper.scenarios import DEFAULT_SPEC
+    root=positions._positions_path(profile).parent;now=time.time() if now is None else now
+    with state_transaction.profile_transaction(profile or 'default',root):
+        rows=[]
+        for lot in list_positions(profile):
+            quote=(latest or {}).get(str(lot.item_id))
+            usable=isinstance(quote,dict) and price_issue(quote,now=now) is None
+            rows.append({'item_id':lot.item_id,'qty':lot.qty,'buy_price':lot.buy_price,'direction':lot.direction,
+                         'high':safe_int(quote.get('high')) if usable else None,
+                         'low':safe_int(quote.get('low')) if usable else None,'group':''})
+        cash={'available':None,'reserved':None}
+        if (root/'paper-offers.json').exists():
+            budget=paper_book.budget_snapshot(profile,now=now)['budget']
+            cash={'available':budget['available_cash'] if not budget['cash_deficit'] and not budget['unknown'] else None,
+                  'reserved':budget['reserved_cash']}
+        return {'holdings':rows,'cash':cash,
+                'market_revision':request_hash({'holdings':rows,'market_data':provenance(latest)}),
+                'specification':{**DEFAULT_SPEC,'item_bps':{},'group_bps':{}}}
+
 
 def build_bank_items(profile=None,latest=None,now=None):
     from rshelper import state_transaction,paper_book,positions
