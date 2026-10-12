@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest import mock
 import urllib.error
@@ -48,11 +49,15 @@ class TestOutputContract(unittest.TestCase):
         spec.loader.exec_module(sweep)
         out, err = io.StringIO(), io.StringIO()
         fixture = {"trades": 1, "roi_pct": 1, "win_rate": 100, "profit_factor": 1, "max_drawdown": 0}
-        with mock.patch.object(sweep, 'load_data', return_value={2: []}), \
-                mock.patch.object(sweep, 'simulate', return_value=fixture), \
-                mock.patch.object(sys, 'argv', ['sweep.py', '--json', '--top', '1']), \
-                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            self.assertEqual(sweep.main(), 0)
+        with tempfile.TemporaryDirectory() as folder:
+            mapping=Path(folder)/'mapping.json'
+            mapping.write_text(json.dumps({'2':{'name':'Synthetic','members':False,'limit':10000}}))
+            with mock.patch.object(sweep, 'load_data', return_value={2: []}), \
+                    mock.patch.object(sweep, 'simulate', side_effect=lambda *a,**k:dict(fixture)), \
+                    mock.patch.object(sys, 'argv', ['sweep.py','--data',str(Path(folder)/'data.json'),
+                        '--mapping',str(mapping),'--config','runtime-defaults','--slots','8','--json','--top','1']), \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                self.assertEqual(sweep.main(), 0)
         self.assertEqual(len(json.loads(out.getvalue())), 1)
 
     def test_exhausted_fallback_stdout_empty(self):

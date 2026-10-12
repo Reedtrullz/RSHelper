@@ -26,6 +26,11 @@ The current trader dip default is 2.5%; the historical 3.0% replay comparison
 is separate evidence. This validation update does not retune the strategy.
 Exit history is retained for the longest configured reentry cooldown.
 
+Replay and sweep require explicit candle data, public item metadata, account
+slots and configuration selection. They reuse the staged paper decisions and
+never open the owner journal. See [shared runtime/replay](docs/shared-runtime-replay.md)
+for commands, historical parameter selection and candle-model limitations.
+
 ```bash
 rshelper alch-scan          # profitable high-alchemy items by GP/hr
 rshelper flip-scan          # flip margins (arbitrage or traditional)

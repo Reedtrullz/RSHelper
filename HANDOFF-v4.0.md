@@ -147,7 +147,9 @@ Configuration validation runs before provider/state work. Generated TOML,
 dataclass defaults and effective settings have a consistency regression.
 Processing settings appear in tuning snapshots. The current dip default is
 2.5%; older 3.0% replay results and the replay harness's 2.0%/1.5%/10-minute
-baseline remain explicit historical comparisons. Longer configured cooldowns
+baseline require explicit historical selection in the shared staged replay.
+Replay/sweep now require explicit data/mapping/configuration/slot inputs; see
+`docs/shared-runtime-replay.md`. Longer configured cooldowns
 retain the exit records needed to enforce them; previously pruned records
 cannot be reconstructed by this change.
 

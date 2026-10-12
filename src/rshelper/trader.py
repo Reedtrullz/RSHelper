@@ -210,7 +210,8 @@ def _status_base(state: dict) -> dict:
 
 def select_candidates(items, latest: dict, vol_5m: dict, cfg,
                       now: float | None = None,
-                      confidence: dict[int, float] | None = None) -> list:
+                      confidence: dict[int, float] | None = None,
+                      recent_exits: dict | None = None) -> list:
     """Filter items to liquid, sane, freshly-dipped buy-the-bid candidates.
 
     confidence: optional {item_id: 0..1} map (e.g. from MarginAnalysis) used
@@ -219,6 +220,7 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
     """
     now = now if now is not None else time.time()
     confidence = confidence or {}
+    recent_exits = _RECENT_EXITS if recent_exits is None else recent_exits
     out = []
     ranked = []
     for item in items:
@@ -255,7 +257,7 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
             continue  # not dipped enough below the 5m average
         if dip_pct > cfg.max_dip_pct:
             continue  # falling too hard; not a dip, a freefall
-        last_ts, last_reason = _RECENT_EXITS.get(item.id, (0, ""))
+        last_ts, last_reason = recent_exits.get(item.id, (0, ""))
         cooldown = (cfg.stop_reentry_minutes if last_reason == "stop_loss"
                     else cfg.reentry_minutes) * 60
         if now - last_ts < cooldown:
@@ -270,7 +272,7 @@ def select_candidates(items, latest: dict, vol_5m: dict, cfg,
         edge = dip_pct * max(0.0, net_capture)
         conf = confidence.get(item.id, 0.0)
         ranked.append((edge, conf, item.volume, item))
-    ranked.sort(key=lambda r: (r[0], r[1], r[2]), reverse=True)
+    ranked.sort(key=lambda r: (-r[0], -r[1], -r[2], r[3].id))
     out = [r[3] for r in ranked]
     return out
 
@@ -282,6 +284,20 @@ def unrealized_pct(buy: int, sell: int, qty: int) -> float:
     tax = ge_tax(sell)
     unreal = (sell - buy) * qty - tax * qty
     return unreal / (buy * qty) * 100
+
+
+def paper_sale_price(position, price, volume, cfg, reason):
+    from rshelper.market_data import executed_volume_supported
+    high,low=safe_int(price.get('high')),safe_int(price.get('low'))
+    if reason in ('take_profit','roundtrip') and position.direction=='traditional':sell=high
+    elif reason=='spread_collapse':sell=max(high,low)
+    else:sell=low
+    if reason in ('stop_loss','max_hold') and executed_volume_supported(volume):
+        guarded=_artifact_exit_fill(sell,volume.get(str(position.item_id)),position.buy_price,cfg)
+        if guarded is not None:sell=guarded
+        elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
+    elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
+    return sell
 
 
 def _stop_mark(entry_bid: int, avg_low: float | None, cfg) -> float:
@@ -324,7 +340,7 @@ def exit_reason(position, latest: dict, cfg, now: float | None = None,
     if age_min is not None and age_min >= cfg.max_hold_minutes:
         return "max_hold"
     price = latest.get(str(position.item_id))
-    if not isinstance(price, dict) or price_issue(price):
+    if not isinstance(price, dict) or price_issue(price,now=now):
         return None  # no usable price this cycle; hold
     # TP/SL/collapse must never fire on stale data — a stale quote can book
     # a profit/loss at a price that no longer exists. Only max_hold may fire
@@ -427,7 +443,7 @@ def _run_paper_cycle(cfg,profile):
     from uuid import UUID,uuid4,uuid5
     from rshelper import paper_book,positions
     from rshelper.cli import _fetch_bootstrap
-    from rshelper.ge_offers import advance_paper_offer
+    from rshelper.ge_offers import advance_paper_offer, paper_profit
     from rshelper.market_data import provenance,executed_volume_supported
     root=paper_book._root(profile)
     paper_book._authority(root)
@@ -486,15 +502,7 @@ def _run_paper_cycle(cfg,profile):
             avg_low=candle.get('avgLowPrice') if isinstance(candle,dict) and executed_volume_supported(volume) else None
             reason='roundtrip' if record['mode']=='manual-roundtrip' else exit_reason(position,latest,cfg,now=now,avg_low=avg_low)
             if reason is None:continue
-            high,low=safe_int(price.get('high')),safe_int(price.get('low'))
-            if reason in ('take_profit','roundtrip') and position.direction=='traditional':sell=high
-            elif reason=='spread_collapse':sell=max(high,low)
-            else:sell=low
-            if reason in ('stop_loss','max_hold') and executed_volume_supported(volume):
-                guarded=_artifact_exit_fill(sell,candle,position.buy_price,cfg)
-                if guarded is not None:sell=guarded
-                elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
-            elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
+            sell=paper_sale_price(position,price,volume,cfg,reason)
             if sell<=0:continue
             state=paper_book.start_sale(profile,offer_id,qty=position.qty,sell_price=sell,reason=reason,
                 trader_config=cfg,
@@ -506,7 +514,7 @@ def _run_paper_cycle(cfg,profile):
             operation=state['pending_collections'].get(offer_id) or str(uuid5(UUID(offer_id),'paper-auto-collection'))
             state=paper_book.collect_offer(profile,offer_id,expected_revision=state['revision'],operation_id=operation,now=now)
             if record['mode']=='auto':
-                profit=(offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']
+                profit=paper_profit(offer)
                 reason=record['sale_reason']
                 closed.append({'item_id':offer['item_id'],'name':record['name'],'qty':offer['sold_qty'],
                                'reason':reason,'sell_price':offer['sell_price'],'profit':profit})
