@@ -34,6 +34,7 @@ CASES = {
     'item-info': '2 --timeseries --json --tax-curve --wiki --wiki-open --predict',
     'monitor': '--interval 1 --no-notify --stop --status --json',
     'auto-trade': '--once --interval 1 --stop --status --json',
+    'trade plan': '--top 20 --json',
     'trade log': 'Synthetic 2 100 150 --note fixture',
     'trade paper': '2 2 --capital 10000 --flip-direction traditional --note fixture --expected-revision 1 --operation-id 11111111-1111-4111-8111-111111111111 --json',
     'trade open': '2 2 --capital 10000 --flip-direction traditional --note fixture --expected-revision 1 --operation-id 11111111-1111-4111-8111-111111111111 --json',

@@ -700,6 +700,31 @@ def _trade_budget(args):
     print(json.dumps(result,indent=None if args.json else 2,allow_nan=False))
 
 
+
+def _trade_plan(args):
+    import time
+    from rshelper import paper_book
+    from rshelper.config import load_config
+    from rshelper.portfolio_planner import build_plan
+    now = time.time()
+    paper_state = paper_book.budget_snapshot(args.profile, now=now)
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+    cfg = load_config(args.profile).trader
+    result = build_plan(items, latest, cfg, paper_state, now=now, top=args.top)
+    if args.json:
+        print(json.dumps(result, indent=None, allow_nan=False))
+    else:
+        print(f"Proposal only: {len(result['allocations'])} modeled allocations, "
+              f"{len(result['abstentions'])} abstentions", file=sys.stderr)
+        for row in result['allocations']:
+            print(f"{row['item_id']} {row['name']} qty={row['qty']} buy={row['buy_price']} cost={row['cost']}")
+        for row in result['abstentions']:
+            print(f"{row['item_id']} skipped: {row['reason']}")
+        budget = result['simulated_budget']
+        print(f"Simulated budget: available_cash={budget['available_cash']} "
+              f"invested={budget['invested_cash']} slots={budget['available_slots']}")
+
+
 def _trade_offers(args):
     import time
     from rshelper import paper_book
@@ -2065,6 +2090,9 @@ def _main() -> None:
     offers_p.add_argument('--expected-revision',type=int,default=None)
     offers_p.add_argument('--operation-id',default=None)
     offers_p.add_argument('--json',action='store_true')
+    plan_p=trade_sub.add_parser('plan',help='Proposal-only allocation preview from the current paper budget')
+    plan_p.add_argument('--top',type=int,default=20)
+    plan_p.add_argument('--json',action='store_true')
     trade_log = trade_sub.add_parser("log", help="Log a completed trade")
     trade_log.add_argument("item", help="Item name")
     trade_log.add_argument("qty", type=int, help="Quantity traded")
@@ -2503,6 +2531,8 @@ def _main() -> None:
     elif args.command == "trade":
         if args.trade_action == 'budget':
             _trade_budget(args)
+        elif args.trade_action == 'plan':
+            _trade_plan(args)
         elif args.trade_action == 'offers':
             _trade_offers(args)
         elif args.trade_action == "log":

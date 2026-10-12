@@ -81,7 +81,7 @@ CLI/dashboard feature-parity gaps both directions.
 `alch-scan` · `flip-scan` · `process-scan` · `margin-check` · `item-info` ·
 `signals` (--monitor N) · `monitor` · `watch` (check --json) · `auto-trade` ·
 `trade` (log / paper / open / close / positions / **status** / list / pnl /
-delete) · **`history`** · `profile` · `diff` · `snapshots` · `config` ·
+delete / **`plan`**) · **`history`** · `profile` · `diff` · `snapshots` · `config` ·
 `dashboard` (--open / --control / --profile) · **`chain-plan`**. Global: `--profile`,
 `--quiet`, `--version`.
 
