@@ -7,7 +7,7 @@ This matrix records observed acceptance; pending rows are not implementation cla
 | Wave | Issues | Implementation / PR | Release evidence | Residual acceptance |
 | --- | --- | --- | --- | --- |
 | A | #31, #32 | PR #78 merged as `4c7e08a08b86d3581616436733023c3e73f55381`; issues closed, Project Done | PR CI38197004334 and main38197171322 passed; public/OCI revision matches; 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; deployed-image recovery passed | Accepted |
-| B | #22, #23, #40 | #22 accepted in PR79/main ea239519; #23 implemented locally | #22 CI38199873605/main38200094363 passed; live HTTP/SSE revision2, ready/access verified; Mac upgraded/private ack17; #23 local checks/review pass | #23 release; #40 implementation/release |
+| B | #22, #23, #40 | #22 accepted PR79/main ea239519; #23 accepted PR80/main4332985a; #40 local implementation | #22 exact release/private ack17; #23 CI38201543317/main38201818300, public/OCI/Mac identity, ready/access and exact private ack19 | #40 full checks/review/release |
 | C | #15, #45, #50 | Pending | Pending | Atomic alerts, entry modes, measured container constraints |
 | D | #18, #21, #39, #30 | Pending | Pending | Candle normalization, confidence, scan comparability, verified recipes |
 | E | #16, #17 | Pending | Pending | Paper fill lifecycle and shared resource accounting |
@@ -99,4 +99,43 @@ trade/filter drafts and focus/selection, restores scroll and keeps good data on
 refresh failure. Both charts use current canvas identity. Eleven Node scenarios
 and original auth/mutation suites pass; offline892/64 files/four explicit skips/
 zero failures/errors. Native and one Anti review completed; confirmed Alchemy
-scroll omission and native Watchlist omission fixed. CI/deployment pending.
+scroll omission and native Watchlist omission fixed.
+
+## Wave B2 deployed acceptance
+
+PR80 head d56e5f00710adaf0a1babe64c284ae9702d94119 passed CI38201543317;
+main4332985a813e1a3d9b2ca83279c872b0fc840b03 passed38201818300.
+Public health/OCI revision and installed Mac match. Declared digest
+sha256:39b3b9c438855746f2ed8dfada60bb6b25db7d8cdb1dfa796e35beee3be12d2a;
+physical image sha256:9aed7cbc86a9135b80444aff2936491c85ab1f7b7d5c5daa472ea7bd3d1ec24e.
+Served HTML includes the request fences/coalesced refresh. Private401,
+owner disabled-controls403, live readiness ready. Mac trader resumed healthy;
+retained private packet recovered, sync ready/no pending, exact HTTP ack19.
+#23 closed/Project Done. Reader/touch trials remain separately in24/25.
+
+## Wave B3 local measurements
+
+One history call now loads the journal once (previously3). Activity requests one
+revision-bound API response with at most100 rows (default50), UTC dates and
+strategy filters; revision/filter changes require explicit restart. Stable UUID
+ties and revision-bound offsets preserve duplicate legacy keys. Full CLI/export
+paths remain available. Maximum date filtering has no datetime overflow.
+
+Synthetic measurements on this Mac (not a production latency guarantee):
+
+| Rows | Previous full trade JSON bytes | 100-row page bytes | Full serialization sec | Summary plus page sec |
+| --- | ---: | ---: | ---: | ---: |
+| 1,000 | 367,020 | 37,568 | .0049 | .0037 |
+| 25,000 | 9,216,422 | 37,672 | .1238 | .0671 |
+| 100,000 | 36,898,924 | 37,775 | .5384 | .2844 |
+
+Byte/time fixture covers trade rows and pure summary/page work; history item/day
+aggregates, disk IO, HTTP and browser work are excluded. Full suite/review/release
+remain pending. No database or retention change. Native and scoped Anti review
+confirmed and fixed structured disk failures, preloaded-filter handling and
+legacy equal-time drawdown ordering. Broad synthesis was incomplete; separate
+backend and UI/test reviews completed. Fourteen backend tests and15 Node view
+scenarios pass, including actual callback one-load/revision agreement. Disposable
+HOME live CLI and dashboard HTTP produced two3-row pages with identical revision
+and126GP summary, with live Wiki mapping/latest/5m provenance. UTC page timestamp
+serialization was then covered directly; final suite/release pending.

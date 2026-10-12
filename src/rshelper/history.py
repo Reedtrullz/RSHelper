@@ -2,24 +2,25 @@
 import json
 import re
 from collections import defaultdict
-from datetime import date
+from datetime import datetime, timezone
 
 from rshelper import snapshot, tuning
-from rshelper.journal import compute_pnl, compute_pnl_by_item, list_trades
+from rshelper.journal import compute_pnl, compute_pnl_by_item, list_trades, _utc
 
 
 def build_history(profile: str | None = None, paper_only: bool = True,
-                  strategy: str = "") -> dict:
+                  strategy: str = "", *, trades=None) -> dict:
     """Join trades, snapshots, and tuning entries into daily buckets and eras."""
     note = "paper" if paper_only else ""
-    trades = list_trades(note=note, profile=profile, strategy=strategy)
-    pnl = compute_pnl(note=note, profile=profile, strategy=strategy)
-    items = compute_pnl_by_item(note=note, profile=profile, strategy=strategy)
+    if trades is None:
+        trades = list_trades(note=note, profile=profile, strategy=strategy)
+    pnl = compute_pnl(trades=trades)
+    items = compute_pnl_by_item(trades=trades)
     entries = tuning.load_entries(profile)
 
     daily: dict[str, list] = defaultdict(list)
     for t in trades:
-        daily[t.timestamp[:10]].append(t)
+        daily[_utc(t.timestamp).date().isoformat()].append(t)
 
     snaps_by_day: dict[str, list] = defaultdict(list)
     for path in snapshot.list_snapshots(profile=profile):
@@ -61,7 +62,7 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "config_changed": any(e["ts"][:10] == day for e in entries),
         })
 
-    today = date.today().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()
     last_day = days[-1] if days else today
     eras = []
     for i, e in enumerate(entries):
@@ -73,7 +74,7 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             # a strict '<' would silently drop today's trades from all
             # performance summaries whenever the config did not change today.
             era_trades = [t for t in trades
-                          if start <= t.timestamp[:10] <= last_day]
+                          if start <= _utc(t.timestamp).date().isoformat() <= last_day]
         else:
             end = entries[i + 1]["ts"][:10]
             if end <= start:
@@ -84,14 +85,14 @@ def build_history(profile: str | None = None, paper_only: bool = True,
                 era_trades = []
             else:
                 era_trades = [t for t in trades
-                              if start <= t.timestamp[:10] < end]
+                              if start <= _utc(t.timestamp).date().isoformat() < end]
         cost = sum(t.buy_price * t.qty for t in era_trades)
         profit = sum(t.profit for t in era_trades)
         wins = sum(1 for t in era_trades if t.profit > 0)
         losses = sum(1 for t in era_trades if t.profit < 0)
         gross_profit = sum(t.profit for t in era_trades if t.profit > 0)
         gross_loss = abs(sum(t.profit for t in era_trades if t.profit < 0))
-        active_days = len({t.timestamp[:10] for t in era_trades})
+        active_days = len({_utc(t.timestamp).date() for t in era_trades})
         eras.append({
             "start": start,
             "end": end,
@@ -115,7 +116,7 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "roi_pct": round(pnl.roi_pct, 2),
             "trade_count": pnl.trade_count,
             "items_traded": pnl.items_traded,
-            "active_days": len({t.timestamp[:10] for t in trades}),
+            "active_days": len({_utc(t.timestamp).date() for t in trades}),
         },
         "buckets": buckets,
         "eras": eras,

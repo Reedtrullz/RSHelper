@@ -29,6 +29,7 @@ _GET_RESOURCES = {
     "/api/confidence": "public-market",
     "/api/monitor": "private-state",
     "/api/signals": "private-state",
+    "/api/activity": "private-state",
     "/api/trades": "private-state",
     "/api/state/receipt": "private-state",
     "/api/pnl": "private-state",
@@ -108,7 +109,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  allowed_hosts: list[str] | None = None,
                  mode: str = "owner", owner_token: str | None = None,
                  control: bool = False, state_receipt_fn: Callable[[str], dict] | None = None,
-                 readiness_fn: Callable[[], dict] | None = None) -> type:
+                 readiness_fn: Callable[[], dict] | None = None,
+                 activity_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -175,6 +177,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_monitor()
             elif path == "/api/signals":
                 self._serve_signals()
+            elif path == "/api/activity":
+                self._serve_activity()
             elif path == "/api/trades":
                 self._serve_trades()
             elif path == '/api/state/receipt':
@@ -353,6 +357,26 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except Exception as e:
                 print(f"[dashboard] trades error: {e}", file=sys.stderr)
                 self.send_error(500, "Trades failed")
+
+        def _serve_activity(self):
+            if activity_fn is None:
+                self.send_error(404, 'Activity unavailable')
+                return
+            query = self._query()
+            if set(query) - {'cursor', 'limit', 'since', 'until', 'strategy', 'note'}:
+                self.send_error(400, 'Unknown Activity filter')
+                return
+            filters = {key: values[0] for key, values in query.items()
+                       if key not in ('cursor', 'limit')}
+            try:
+                self._serve_json(activity_fn(filters, query.get('cursor', [None])[0],
+                                             int(query.get('limit', ['50'])[0])))
+            except ValueError as error:
+                self.send_error(400, str(error))
+
+            except Exception as error:
+                print(f'[dashboard] activity error: {error}', file=sys.stderr)
+                self.send_error(500, 'Activity unavailable')
 
         def _serve_pnl(self):
             q = self._query()

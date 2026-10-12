@@ -184,3 +184,57 @@ test('public market refresh parses only the scan response',async()=>{
   assert.deepEqual(urls,['/api/scan']);
   assert.equal(context.document.getElementById('statusText').textContent,'Connected');
 });
+test('Activity retrieves one bounded snapshot and preserves its page on refresh',async()=>{
+  const urls=[];
+  const {context}=ownerContext(async url=>{
+    urls.push(url);
+    return new Response(JSON.stringify({revision:'same',total_count:123,filtered_count:123,
+      trades:[{id:1,name:'Synthetic page row',qty:1,buy_price:100,sell_price:120,profit:18}],
+      next_cursor:'next-cursor',pnl:{},history:{buckets:[],eras:[],items:[]}}));
+  });
+  vm.runInContext("view='activity';activityCursor='current-cursor'",context);
+  await vm.runInContext('renderActivity()',context);
+  assert.equal(urls.length,1);
+  assert.match(urls[0],/^\/api\/activity\?/);
+  assert.match(urls[0],/cursor=current-cursor/);
+  assert.match(context.document.getElementById('listBody').innerHTML,/Synthetic page row/);
+  assert.match(context.document.getElementById('listBody').innerHTML,/next-cursor/);
+  assert.equal(vm.runInContext('activityCursor',context),'current-cursor');
+});
+test('Activity changed-revision response asks for explicit restart',async()=>{
+  const {context}=ownerContext(async()=>new Response(JSON.stringify({restart:true,revision:'changed',trades:[]})));
+  vm.runInContext("view='activity';activityCursor='old-cursor'",context);
+  context.document.getElementById('listBody').innerHTML='previous page';
+  await vm.runInContext('renderActivity()',context);
+  assert.match(context.document.getElementById('listBody').innerHTML,/Restart Activity/);
+  assert.match(context.document.getElementById('listBody').innerHTML,/previous page/);
+  assert.equal(vm.runInContext('activityCursor',context),'old-cursor');
+});
+test('Activity applying UTC dates resets continuation and preserves filters',async()=>{
+  const urls=[];
+  const {context}=ownerContext(async url=>{
+    urls.push(url);
+    return new Response(JSON.stringify({trades:[],pnl:{},history:{buckets:[],items:[],eras:[]}}));
+  });
+  vm.runInContext("view='activity';activityCursor='old'",context);
+  context.document.getElementById('activitySince').value='2026-10-11';
+  context.document.getElementById('activityUntil').value='2026-10-12';
+  vm.runInContext('applyActivityFilters()',context);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.match(urls[0],/since=2026-10-11/);
+  assert.match(urls[0],/until=2026-10-12/);
+  assert.doesNotMatch(urls[0],/cursor=/);
+});
+test('Activity strategy changes reset the cursor and retain unapplied date drafts',async()=>{
+  const {context}=ownerContext(async()=>new Response('{}'));
+  vm.runInContext("view='activity';activityCursor='old'",context);
+  const bar=context.document.getElementById('viewbar');
+  const date=context.document.getElementById('activitySince');date.value='2026-10-11';
+  bar.querySelectorAll=()=>[date];
+  let content='';
+  Object.defineProperty(bar,'innerHTML',{get(){return content;},set(value){content=value;date.value='';}});
+  vm.runInContext("setStrategy('auto')",context);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(vm.runInContext('activityCursor',context),null);
+  assert.equal(date.value,'2026-10-11');
+});
