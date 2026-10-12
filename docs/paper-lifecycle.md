@@ -2,8 +2,8 @@
 
 The isolated branch integrates a durable financial core with CLI, owner HTTP,
 dashboard and daemon callers. It is not activated. The complete integrated suite
-passed954 tests across68 files with four explicit offline provider skips and zero
-failures/errors. Seven live provider checks and16 Node scenarios passed.
+passed1,027 tests across74 files with four explicit offline provider skips and zero
+failures/errors. Seven prior live provider checks and19 combined Node scenarios passed.
 The owner confirmed member capability (eight slots); synthetic free/member/unknown
 fixtures remain separate. No owner book or bankroll was initialized.
 
