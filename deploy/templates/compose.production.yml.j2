@@ -3,6 +3,22 @@ services:
     image: "{{ compose_image | default(docker_image) }}"
     container_name: "{{ container_name }}"
     restart: unless-stopped
+    read_only: {{ compose_read_only | default(true) | to_json }}
+    cap_drop: {{ compose_cap_drop | default(['ALL']) | to_json }}
+    cap_add: {{ compose_cap_add | default([]) | to_json }}
+    security_opt: {{ compose_security_opt | default(['no-new-privileges:true']) | to_json }}
+    mem_limit: {{ compose_memory | default(2147483648) }}
+    memswap_limit: {{ compose_memory_swap | default(2147483648) }}
+    pids_limit: {{ compose_pids | default(128) }}
+{% set runtime_tmpfs = compose_tmpfs | default({'/tmp': 'rw,noexec,nosuid,nodev,size=32m,mode=1777'}) %}
+{% if runtime_tmpfs %}
+    tmpfs:
+{% for mount, options in runtime_tmpfs.items() %}
+      - "{{ mount }}:{{ options }}"
+{% endfor %}
+{% else %}
+    tmpfs: []
+{% endif %}
     command: ["python", "-m", "rshelper", "dashboard", "--bind", "0.0.0.0", "--port", "5555", "--access-mode", "owner"]
     ports:
       - "{{ app_bind_address }}:{{ app_host_port }}:5555"

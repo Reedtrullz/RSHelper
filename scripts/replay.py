@@ -37,6 +37,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from rshelper.market import ge_tax, safe_int
+from rshelper.market_validation import normalize_candles
 
 REPLAY_DATA = os.environ.get("REPLAY_DATA", "/tmp/replay_ts.json")
 
@@ -126,8 +127,15 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
     """
     # Group candles by item, each sorted by timestamp
     items = {}
+    coverage = {}
     for iid, candles in timeseries.items():
-        items[int(iid)] = sorted(candles, key=lambda c: c.get("timestamp", 0))
+        normalized = normalize_candles(candles,'5m')
+        coverage[str(iid)] = normalized['coverage']
+        if normalized['coverage']['irregular_intervals']:
+            raise ValueError('replay data does not use five-minute candle intervals')
+        if not normalized['data']:
+            raise ValueError(f'replay item {iid} has no usable five-minute candles')
+        items[int(iid)] = normalized['data']
     if not items:
         return {"error": "no timeseries data"}
 
@@ -248,7 +256,7 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
                 capital_used += lo * qty
 
     if not trades:
-        return {"error": "no trades generated"}
+        return {"error": "no trades generated", "candle_coverage":coverage}
 
     total_profit = sum(t["profit"] for t in trades)
     wins = [t for t in trades if t["profit"] > 0]
@@ -265,6 +273,7 @@ def simulate(timeseries: dict[int, list[dict]], cfg: ReplayConfig,
     gross_loss = abs(sum(t["profit"] for t in losses))
     return {
         "trades": len(trades),
+        "candle_coverage": coverage,
         "trade_list": trades,
         "total_profit": total_profit,
         "roi_pct": round(total_profit / cost_basis * 100, 2) if cost_basis else 0,

@@ -3,6 +3,7 @@ fallback for datacenter IPs that the wiki's Cloudflare blocks (403)."""
 
 import calendar
 import concurrent.futures
+import copy
 from contextlib import contextmanager
 import datetime
 import email.utils
@@ -19,11 +20,11 @@ import time
 import urllib.request
 import urllib.error
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
-from rshelper.profile import resolve_cache_path
-from rshelper.market_validation import validate_payload, MarketDataError
-from rshelper.market_data import MarketDataResult
+from rshelper.profile import resolve_cache_path, resolve_profile
+from rshelper.market_validation import validate_payload, normalize_candles, TIMESTEPS, MarketDataError
+from rshelper.market_data import MarketDataResult, MarketList
 
 BASE_URL = "https://prices.runescape.wiki/api/v1/osrs"
 GE_TRACKER_URL = "https://www.ge-tracker.com/api/items"
@@ -50,6 +51,16 @@ PROVIDER_TIMEOUT = 30.0
 ACQUISITION_TIMEOUT = 60.0
 _ACQUISITION = threading.local()
 _PROVIDER_SLOTS = threading.BoundedSemaphore(4)
+class _HistoryAcquisition(TypedDict):
+    done: threading.Event
+    end: float
+    result: MarketDataResult | None
+    error: BaseException | None
+
+
+_HISTORY_LOCK = threading.Lock()
+_HISTORY_INFLIGHT: dict[tuple[str,int,str],_HistoryAcquisition] = {}
+MAX_HISTORY_INFLIGHT = 32
 
 
 class ProviderDeadline(TimeoutError):
@@ -705,6 +716,14 @@ def _validated(name: str, payload: object) -> Any | None:
     if payload is None:
         return None
     try:
+        if endpoint == 'timeseries':
+            data = payload.get('data',payload) if isinstance(payload,dict) else payload
+            normalized = normalize_candles(data,name.rsplit('_',1)[1])
+            if normalized['coverage']['rejected']:
+                print(f"  Warning: rejected {normalized['coverage']['rejected']} invalid or conflicting timeseries rows",file=sys.stderr)
+            result = MarketList(normalized['data'])
+            result.candle_coverage = normalized['coverage']
+            return result or None
         result = validate_payload(endpoint, payload, time.time())
     except MarketDataError as exc:
         print(f"  Warning: rejected market data ({exc})", file=sys.stderr)
@@ -863,6 +882,9 @@ def _fetch_result(name: str, profile: str | None, *, path: str,
     try:
         return _fetch_result_within_deadline(name, profile, path=path,
                     tracker_convert=tracker_convert, volume_kind=volume_kind)
+    except ProviderDeadline:
+        print('  Warning: acquisition expired before publication',file=sys.stderr)
+        return _cache_result(name,profile,stale=True,now=time.time())
     finally:
         if previous is None:
             del _ACQUISITION.end
@@ -878,6 +900,7 @@ def _fetch_result_within_deadline(name, profile, *, path, tracker_convert, volum
 
     wiki_data = _validated(name, _get(path))
     if wiki_data:
+        _remaining()
         now = time.time()
         metadata = {"source": "wiki", "fetched_at": now, "last_attempt_at": attempted_at,
                     "last_success_at": now, "volume_kind": volume_kind,
@@ -942,10 +965,46 @@ def fetch_5m_result(profile: str | None = None) -> MarketDataResult | None:
 def fetch_timeseries_result(item_id: int, timestep: str = "5m",
                             profile: str | None = None) -> MarketDataResult | None:
     """Return one Wiki history series with explicit provenance."""
+    profile = resolve_profile(profile)
+    if timestep not in TIMESTEPS or type(item_id) is not int or item_id <= 0:
+        raise ValueError('history requires a positive item ID and supported timestep')
     cache_name = f"ts_{item_id}_{timestep}"
-    return _fetch_result(cache_name, profile,
-                         path=f"timeseries?id={item_id}&timestep={timestep}",
-                         volume_kind="executed-trades")
+    key = (str(_cache_path(cache_name,profile).resolve()),item_id,timestep)
+    end = min(getattr(_ACQUISITION,'end',float('inf')),time.monotonic()+ACQUISITION_TIMEOUT)
+    with _HISTORY_LOCK:
+        entry = _HISTORY_INFLIGHT.get(key)
+        owner = entry is None
+        if entry is None:
+            if len(_HISTORY_INFLIGHT) >= MAX_HISTORY_INFLIGHT:
+                print('  Warning: history acquisition capacity exhausted',file=sys.stderr)
+                return None
+            entry = {'done':threading.Event(),'end':end,'result':None,'error':None}
+            _HISTORY_INFLIGHT[key] = entry
+    if not owner:
+        if not entry['done'].wait(max(0,min(end,entry['end'])-time.monotonic())):
+            print('  Warning: shared history acquisition deadline exceeded',file=sys.stderr)
+            return None
+        if entry['error'] is not None:
+            raise RuntimeError('shared history acquisition failed') from entry['error']
+        return copy.deepcopy(entry['result'])
+    previous = getattr(_ACQUISITION,'end',None)
+    _ACQUISITION.end = end
+    try:
+        result = _fetch_result(cache_name,profile,path=f"timeseries?id={item_id}&timestep={timestep}",
+                               volume_kind='executed-trades')
+        entry['result'] = result if time.monotonic() < end else None
+    except BaseException as error:
+        entry['error'] = error
+        raise
+    finally:
+        if previous is None:
+            del _ACQUISITION.end
+        else:
+            _ACQUISITION.end = previous
+        with _HISTORY_LOCK:
+            _HISTORY_INFLIGHT.pop(key,None)
+            entry['done'].set()
+    return copy.deepcopy(entry['result'])
 
 
 def fetch_mapping(profile: str | None = None) -> list[dict] | None:
@@ -984,6 +1043,10 @@ def fetch_timeseries_batch(
     workers: max concurrent fetches (default 4).
     """
     results: dict[int, list[dict]] = {}
+    item_ids = list(dict.fromkeys(item_ids))
+    if len(item_ids) > 30:
+        print('  History batch limited to the first 30 unique items',file=sys.stderr)
+    item_ids = item_ids[:30]
     completed = 0
     total = len(item_ids)
     lock = threading.Lock()
@@ -1010,6 +1073,10 @@ def fetch_timeseries_batch_results(item_ids, timestep='5m', on_progress=None,
                                   workers=4, profile=None):
     """Internal historical acquisition retaining evidence for each item."""
     from rshelper.market_data import market_payload
+    item_ids = list(dict.fromkeys(item_ids))
+    if len(item_ids) > 30:
+        print('  History batch limited to the first 30 unique items',file=sys.stderr)
+    item_ids = item_ids[:30]
     results = {}
     completed = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
