@@ -30,10 +30,10 @@ Calls that omit the new optional settings retain a manifest with null settings:
 null explicitly means provenance unknown. History summary consumers receive the
 manifest and comparison qualification. Daily filenames/retention stay unchanged.
 
-Local acceptance on 12 October 2026: all 913 offline tests passed across
-66 files with four explicit provider skips. Seven focused manifest cases include
+Local acceptance on 12 October 2026: all combined975 offline tests passed across
+71 files with four explicit provider skips. Seven focused manifest cases include
 actual CLI JSON qualification, model changes and byte-preserving rejection.
-Browser authentication and 15 view scenarios passed. Actual Wiki CLI runs saved
+Browser authentication and 19 view scenarios passed. Actual Wiki CLI runs saved
 and parsed three results each for alch, flip, process and margin snapshots.
 An actual owned CLI invocation parsed the incompatible changed-capital comparison.
 
