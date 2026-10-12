@@ -42,6 +42,7 @@ class Position:
     record_uuid: str | None = None
     origin_uuid: str | None = None
     revision: int | None = None
+    entry_config: dict | None = None
 
 
 def _positions_path(profile: str | None = None) -> Path:
@@ -69,7 +70,7 @@ def _next_id(positions: list[dict]) -> int:
     return max(p["id"] for p in positions) + 1
 
 
-def _stage_open_position(txn, profile, request, operation_id, *, opened_at=None):
+def _stage_open_position(txn, profile, request, operation_id, *, opened_at=None,entry_config=...):
     path = _positions_path(profile)
     if path.parent != txn.root:
         raise ValueError('position and transaction profiles differ')
@@ -83,7 +84,10 @@ def _stage_open_position(txn, profile, request, operation_id, *, opened_at=None)
         if row.get('record_uuid')==identity['record_uuid']:
             state_identity.validate_native_retry(path.parent,'positions',row,request)
             return Position(**filter_fields(Position,row)),False
-    row = {'id':_next_id(rows),**request,
+    from rshelper.tuning import config_evidence,validate_config_evidence
+    if entry_config is ...:entry_config=config_evidence(profile)
+    validate_config_evidence(entry_config)
+    row = {'id':_next_id(rows),**request,'entry_config':entry_config,
            'opened_at':opened_at or datetime.now(timezone.utc).isoformat(),**identity}
     rows.append(row)
     state_identity.attest_native(txn,path.parent,'positions',row,operation_id,request)
@@ -122,6 +126,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
                 txn.commit(operation_id=operation_id)
         return position
     with _positions_lock(profile):
+        from rshelper.tuning import config_evidence
         require_entries_running(path.parent)
         positions = _load(profile)
         position = {
@@ -129,6 +134,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
             "qty": qty, "buy_price": buy_price, "direction": direction,
             "opened_at": datetime.now(timezone.utc).isoformat(), "note": note,
             "entry_sell": entry_sell, "entry_offer": entry_offer,
+            "entry_config":config_evidence(profile),
         }
         positions.append(position)
         _save(positions, profile)

@@ -100,8 +100,11 @@ def validate_book(book):
     window_caps={}
     for offer_id,record in book['offers'].items():
         persistence.canonical_uuid(offer_id)
-        if not isinstance(record,dict) or set(record)!={'offer','name','note','lots','fills','mode','purchase_basis','sale_reason'}:
+        required={'offer','name','note','lots','fills','mode','purchase_basis','sale_reason'}
+        if not isinstance(record,dict) or not required<=set(record) or set(record)-required-{'entry_config','exit_config'}:
             raise ValueError('invalid paper offer record')
+        from rshelper.tuning import validate_config_evidence
+        for field in ('entry_config','exit_config'):validate_config_evidence(record.get(field))
         if record['mode'] not in ('manual-hold','manual-roundtrip','auto') or record['purchase_basis'] not in ('paper-fills','legacy-recorded-holding','confirmed-held-remainder'):
             raise ValueError('invalid paper execution intent/evidence basis')
         if record['sale_reason'] not in (None,'manual','roundtrip','take_profit','stop_loss','spread_collapse','max_hold'):
@@ -262,6 +265,10 @@ def require_book_successor(current,incoming):
         if peer['fills'][:len(record['fills'])]!=record['fills']:raise ValueError('paper fill evidence changed')
         if record['offer']['sold_qty'] and peer['sale_reason']!=record['sale_reason']:
             raise ValueError('paper sale reason changed after a confirmed fill')
+        if peer.get('entry_config')!=record.get('entry_config'):
+            raise ValueError('paper entry configuration changed')
+        if record['offer']['sold_qty'] and peer.get('exit_config')!=record.get('exit_config'):
+            raise ValueError('paper exit configuration changed after fill')
         if record['lots'] and peer['lots']!=record['lots']:raise ValueError('paper financial lot changed')
         for key in ('bought_qty','sold_qty','canceled_buy_qty'):
             if peer['offer'][key]<record['offer'][key]:raise ValueError('paper quantity rewound')
@@ -316,6 +323,7 @@ def _summary(root,book,now,extra_limit=None):
             bankroll=max(0,book['bankroll']+book['realized_profit']),slot_limit=book['slot_limit'],
             history_complete_after=book['history_complete_after'],now=now,buy_limits=limits)
     result['realized_profit']=book['realized_profit']
+    result['initial_bankroll']=book['bankroll']
     result['cash_deficit']+=max(0,-book['bankroll']-book['realized_profit'])
     known_lots=set(book['baseline_lots'])|{lot for record in book['offers'].values() for lot in record['lots']}
     trades=persistence.read_state(root/'trades.json','trades')['trades']
@@ -414,7 +422,7 @@ def _mutation_book(root,expected_revision,operation_id,request):
     return book,None
 
 
-def reserve_budget(profile,*,item_id,name,qty,buy_price,buy_limit,direction,note,expected_revision,operation_id,now,mode='manual-hold',client_ref='',members=None):
+def reserve_budget(profile,*,item_id,name,qty,buy_price,buy_limit,direction,note,expected_revision,operation_id,now,mode='manual-hold',client_ref='',members=None,trader_config=None):
     now=_clock(now)
     for value in (item_id,qty,buy_price,buy_limit):
         if type(value) is not int or not 0<value<2**63:raise ValueError('positive bounded item/quantity/price/buy limit required')
@@ -445,7 +453,9 @@ def reserve_budget(profile,*,item_id,name,qty,buy_price,buy_limit,direction,note
         if available is None or available<qty:raise ValueError('shared paper purchase limit unknown or exhausted')
         instant=datetime.fromtimestamp(now,timezone.utc).isoformat()
         if (note=='auto')!=(mode=='auto'):raise ValueError('paper auto policy must preserve auto ownership')
+        from rshelper.tuning import config_evidence
         book['offers'][operation_id]={'name':name,'note':note,'lots':[],'fills':[],'mode':mode,'purchase_basis':'paper-fills','sale_reason':None,
+            'entry_config':config_evidence(profile,now=now,trader_config=trader_config),'exit_config':None,
             'offer':{'schema_version':1,'stage':'buying','item_id':item_id,'direction':direction,
                      'qty':qty,'bought_qty':0,'sold_qty':0,'canceled_buy_qty':0,'canceled_sell_qty':0,
                      'buy_price':buy_price,'sell_price':None,'created_at':instant,
@@ -462,6 +472,7 @@ def _publish_lot(txn,profile,record,offer_id,now):
                  'buy_price':offer['buy_price'],'direction':offer['direction'],'note':record['note'],
                  'entry_sell':None,'entry_offer':None}
         position,_=positions._stage_open_position(txn,profile,request,offer_id,
+                             entry_config=record.get('entry_config'),
                              opened_at=datetime.fromtimestamp(now,timezone.utc).isoformat())
         record['lots']=[position.lot_uid]
 
@@ -533,7 +544,7 @@ def advance_offer(profile,offer_id,market_snapshot,*,expected_revision,operation
         return {**_response(root,book,now,receipt),'reason':result['reason']}
 
 
-def start_sale(profile,offer_id,*,qty,sell_price,expected_revision,operation_id,now,reason='manual'):
+def start_sale(profile,offer_id,*,qty,sell_price,expected_revision,operation_id,now,reason='manual',trader_config=None):
     now=_clock(now)
     persistence.canonical_uuid(offer_id)
     if type(qty) is not int or not 0<qty<2**63 or type(sell_price) is not int or not 0<sell_price<2**63:
@@ -550,12 +561,13 @@ def start_sale(profile,offer_id,*,qty,sell_price,expected_revision,operation_id,
             raise ValueError('sale requires a confirmed bought financial lot')
         rows=positions._load(profile)
         lot=next((row for row in rows if row.get('lot_uid')==record['lots'][0] and not row.get('tombstone',False)),None)
-        _stage_sale(record,lot,qty,sell_price,now,reason)
+        from rshelper.tuning import config_evidence
+        _stage_sale(record,lot,qty,sell_price,now,reason,config_evidence(profile,now=now,trader_config=trader_config))
         receipt=_write(txn,book,operation_id,request,offer_id,now)
         return _response(root,book,now,receipt)
 
 
-def _stage_sale(record,lot,qty,sell_price,now,reason='manual'):
+def _stage_sale(record,lot,qty,sell_price,now,reason='manual',exit_config=None):
     offer=record['offer']
     if offer['stage']!='bought':raise ValueError('sale requires a bought holding')
     if qty>offer['bought_qty']:raise ValueError('sale quantity exceeds confirmed purchase')
@@ -567,6 +579,7 @@ def _stage_sale(record,lot,qty,sell_price,now,reason='manual'):
     offer['canceled_sell_qty']=offer['bought_qty']-qty
     offer['stage']='selling'
     record['sale_reason']=reason
+    record['exit_config']=exit_config
     offer['stage_started_at']=datetime.fromtimestamp(now,timezone.utc).isoformat()
 
 
@@ -604,7 +617,8 @@ def queue_sales(profile,item_id,qty,quotes,*,expected_revision,operation_id,now,
                 book['offers'][offer_id]=_holding_record(book,row,now,'manual-hold')
             record=book['offers'][offer_id]
             if record['mode']=='auto':raise ValueError('offer belongs to auto-trader')
-            _stage_sale(record,row,take,sell,now)
+            from rshelper.tuning import config_evidence
+            _stage_sale(record,row,take,sell,now,exit_config=config_evidence(profile,now=now))
             remaining-=take
         receipt=_write(txn,book,operation_id,request,None,now)
         return _response(root,book,now,receipt)
@@ -633,7 +647,8 @@ def collect_offer(profile,offer_id,*,expected_revision,operation_id,now):
         offer=record['offer']
         realization.prepare_close_batch(profile,offer['item_id'],offer['sold_qty'],operation_id,
                 {offer['direction']:offer['sell_price']},lot_uids=record['lots'],reason=record['sale_reason'],
-                metadata={'note':'paper','strategy':'auto' if record['mode']=='auto' else 'manual'})
+                metadata={'note':'paper','strategy':'auto' if record['mode']=='auto' else 'manual',
+                          'exit_config':record.get('exit_config')})
         if not receipt:
             profit=(offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']
             book['collections'][offer_id]={'operation_id':operation_id,'status':'pending','profit':profit,'trade_uuids':[]}
@@ -704,6 +719,7 @@ def _holding_record(book,row,now,mode):
     if row['origin_uuid']!=book['origin_uuid']:raise ValueError('holding belongs to another financial authority')
     instant=datetime.fromtimestamp(now,timezone.utc).isoformat()
     return {'name':row['name'],'note':row.get('note',''),
+        'entry_config':row.get('entry_config'),'exit_config':None,
         'lots':[lot_uid],'fills':[],'mode':mode,'sale_reason':None,'purchase_basis':'confirmed-held-remainder' if confirmed else 'legacy-recorded-holding',
         'offer':{'schema_version':1,'stage':'bought','item_id':row['item_id'],'direction':row['direction'],
                  'qty':row['qty'],'bought_qty':row['qty'],'sold_qty':0,'canceled_buy_qty':0,'canceled_sell_qty':0,
@@ -727,6 +743,7 @@ def cancel_sale(profile,offer_id,*,expected_revision,operation_id,now):
         if not offer['sold_qty']:
             offer['sell_price']=None
             record['sale_reason']=None
+            record['exit_config']=None
         offer['stage_started_at']=datetime.fromtimestamp(now,timezone.utc).isoformat()
         receipt=_write(txn,book,operation_id,request,offer_id,now)
         return _response(root,book,now,receipt)

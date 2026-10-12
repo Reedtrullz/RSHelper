@@ -733,9 +733,10 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 row["reason"] = issue
             rows.append(row)
         rows.sort(key=lambda r: r["opened_at"])
+        complete=all('unrealized' in row for row in rows)
         return {"positions": rows,
                 "open_qty": sum(r["qty"] for r in rows),
-                "unrealized": sum(r.get("unrealized", 0) for r in rows)}
+                "unrealized": sum(r['unrealized'] for r in rows) if complete else None}
 
     def close_position(position_id: int, qty: int | None = None,
                        operation_id: str | None = None) -> dict:
@@ -939,8 +940,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_history(paper_only: bool = True, strategy: str = "") -> dict:
         from rshelper.history import build_history
-        return build_history(profile=profile, paper_only=paper_only,
-                             strategy=strategy)
+        result=build_history(profile=profile, paper_only=paper_only,strategy=strategy)
+        result['current_equity']=get_bank()['equity']
+        return result
 
     def get_trades(note: str = "", strategy: str = "") -> dict:
         from rshelper.journal import list_trades
@@ -959,6 +961,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         selected = journal._filtered_trades(trades, filters)
         page['pnl'] = get_pnl(trades=selected)
         page['history'] = build_history(profile, paper_only=False, trades=selected)
+        page['history']['current_equity']=get_bank()['equity']
         return page
 
     def get_pnl(note: str = "", strategy: str = "", *, trades=None) -> dict:

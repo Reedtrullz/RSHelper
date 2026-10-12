@@ -162,6 +162,8 @@ def validate_native_retry(root, kind, row, request):
 def _native_hash(row, kind):
     normalized = _migration_key({**row, 'id': 0, 'legacy_id': 0}, kind)
     return request_hash({'lineage': normalized,
+                         **({'configuration':{field:row[field] for field in ('entry_config','exit_config') if field in row}}
+                            if any(field in row for field in ('entry_config','exit_config')) else {}),
                          **({field: row.get(field) for field in ('entry_sell', 'entry_offer')}
                             if kind == 'positions' else {})})
 

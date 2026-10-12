@@ -48,6 +48,8 @@ class Trade:
     record_uuid: str | None = None
     origin_uuid: str | None = None
     revision: int | None = None
+    entry_config: dict | None = None
+    exit_config: dict | None = None
 
 
 @dataclass
@@ -142,6 +144,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
                 "entry_spread_pct": entry_spread_pct, "fill_guard": fill_guard,
                 **identity,
             }
+            from rshelper.tuning import config_evidence
+            trade['exit_config']=config_evidence(profile)
             trades.append(trade)
             state_identity.attest_native(txn, path.parent, 'trades', trade, operation_id, request)
             txn.stage('trades.json', store)
@@ -162,6 +166,8 @@ def log_trade(item_id: int, name: str, qty: int, buy_price: int,
             "entry_spread_pct": entry_spread_pct,
             "fill_guard": fill_guard,
         }
+        from rshelper.tuning import config_evidence
+        trade['exit_config']=config_evidence(profile)
         trades.append(trade)
         _save(trades, profile)
     return Trade(**trade)

@@ -496,6 +496,7 @@ def _run_paper_cycle(cfg,profile):
             elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
             if sell<=0:continue
             state=paper_book.start_sale(profile,offer_id,qty=position.qty,sell_price=sell,reason=reason,
+                trader_config=cfg,
                 expected_revision=state['revision'],operation_id=str(uuid5(UUID(offer_id),'paper-sale:'+str(state['revision']))),now=now)
             record=state['offers'][offer_id]
             offer=record['offer']
@@ -530,7 +531,7 @@ def _run_paper_cycle(cfg,profile):
         try:
             state=paper_book.reserve_budget(profile,item_id=candidate.id,name=candidate.name,qty=qty,
                 buy_price=buy,buy_limit=candidate.buy_limit,members=candidate.members,direction='traditional',
-                note='auto',mode='auto',expected_revision=state['revision'],operation_id=str(uuid4()),now=now)
+                note='auto',mode='auto',expected_revision=state['revision'],operation_id=str(uuid4()),now=now,trader_config=cfg)
         except ValueError as exc:
             held.append({'item_id':candidate.id,'reason':str(exc)})
             state=paper_book.budget_snapshot(profile,now=now)

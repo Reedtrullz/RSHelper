@@ -1,8 +1,11 @@
 """Tuning log: record config.toml parameter changes over time."""
 import json
+import hashlib
+import math
+import time
 from datetime import datetime, timezone
 
-from rshelper.config import effective_config_dict, load_config
+from rshelper.config import effective_config_dict, load_config, validate_config
 from rshelper.profile import atomic_write_json, resolve_config_path
 from rshelper.persistence import read_state, locked_state, StateCorruptionError
 
@@ -10,6 +13,54 @@ from rshelper.persistence import read_state, locked_state, StateCorruptionError
 def params(profile: str | None = None) -> dict:
     """Effective tuning parameters as a JSON-safe dict."""
     return effective_config_dict(load_config(profile))
+
+
+def config_id(values):
+    return hashlib.sha256(json.dumps(values,sort_keys=True,separators=(',',':'),
+                                    allow_nan=False).encode()).hexdigest()
+
+
+def _instant(value):
+    parsed=datetime.fromisoformat(value.replace('Z','+00:00'))
+    if parsed.utcoffset() is None:raise ValueError('configuration instant requires a timezone')
+    return parsed.astimezone(timezone.utc)
+
+
+def config_at_timestamp(timestamp,entries):
+    try:target=_instant(timestamp)
+    except (ValueError,TypeError,AttributeError):return None
+    candidates=[]
+    for entry in entries:
+        try:instant=_instant(entry['ts'])
+        except (ValueError,TypeError,AttributeError,KeyError):continue
+        if instant<=target:candidates.append((instant,entry['params']))
+    if not candidates:return None
+    latest=max(instant for instant,_ in candidates)
+    active=[value for instant,value in candidates if instant==latest]
+    if len({config_id(value) for value in active})!=1:return None
+    return active[0]
+
+
+def config_evidence(profile,*,now=None,trader_config=None):
+    now=time.time() if now is None else now
+    if type(now) not in (int,float) or not math.isfinite(now) or now<0:
+        raise ValueError('invalid configuration evidence time')
+    current=load_config(profile)
+    if trader_config is not None:current.trader=trader_config
+    validate_config(current)
+    values=effective_config_dict(current)
+    return {'config_id':config_id(values),'params':values,
+            'effective_at':datetime.fromtimestamp(now,timezone.utc).isoformat()}
+
+
+def validate_config_evidence(evidence):
+    if evidence is None:return None
+    if (not isinstance(evidence,dict) or set(evidence)!={'config_id','params','effective_at'}
+            or not isinstance(evidence['params'],dict)
+            or evidence['config_id']!=config_id(evidence['params'])
+            or _instant(evidence['effective_at']).isoformat()!=evidence['effective_at']):
+        raise ValueError('invalid configuration evidence')
+    return evidence
 
 
 def log_path(profile: str | None = None):
@@ -36,6 +87,13 @@ def _load_log(profile: str | None = None) -> dict:
             datetime.fromisoformat(entry["ts"].replace("Z", "+00:00"))
         except ValueError:
             raise StateCorruptionError("tuning_log.json: invalid tuning timestamp; original bytes preserved") from None
+        if 'config_id' in entry:
+            try:
+                if entry['config_id'] != config_id(entry['params']):
+                    raise ValueError('configuration fingerprint mismatch')
+                _instant(entry['ts'])
+            except (ValueError,TypeError,AttributeError):
+                raise StateCorruptionError('tuning_log.json: invalid configuration evidence; original bytes preserved') from None
     return data
 
 
@@ -52,7 +110,7 @@ def record_if_changed(profile: str | None = None, note: str = "auto") -> dict | 
         if entries and entries[-1]["params"] == current:
             return None
         entry = {"ts": datetime.now(timezone.utc).isoformat(),
-                 "params": current, "note": note}
+                 "params": current, "note": note,"config_id":config_id(current)}
         entries.append(entry)
         atomic_write_json(log_path(profile), data)
         return entry

@@ -65,9 +65,12 @@ def _metadata(supplied):
                 'market_data': {}}
     if supplied is None:
         supplied = {}
-    if not isinstance(supplied, dict) or set(supplied) - set(defaults):
+    if not isinstance(supplied, dict) or set(supplied) - set(defaults) - {'exit_config'}:
         raise ValueError('invalid realization metadata fields')
     result = {**defaults, **copy.deepcopy(supplied)}
+    if 'exit_config' in result:
+        from rshelper.tuning import validate_config_evidence
+        validate_config_evidence(result['exit_config'])
     for field, limit in (('note', 512), ('strategy', 64)):
         if type(result[field]) is not str or len(result[field]) > limit:
             raise ValueError('invalid realization metadata text')
@@ -179,6 +182,8 @@ def validate_intents(store, path):
             raise ValueError('realization metadata must be normalized')
         validate_state({'positions': [before]}, 'positions', path)
         validate_state({'trades': [trade]}, 'trades', path)
+        if 'entry_config' in trade and trade['entry_config']!=before.get('entry_config'):
+            raise ValueError('realization entry configuration differs from lot')
         canonical_uuid(trade.get('origin_uuid'))
         if (type(receipt.get('remaining_qty')) is not int
                 or not isinstance(receipt.get('trade_ids'), list)
@@ -397,6 +402,9 @@ def close_and_realize(profile, lot_uid, qty, sell_price, operation_id, reason, *
                  'record_uuid': str(uuid5(UUID(manifest['origin_uuid']), operation_id)),
                  'origin_uuid': manifest['origin_uuid'], 'revision': 0, 'tombstone': False,
                  'operation_id': operation_id, 'closed_lot_uid': lot_uid}
+        from rshelper.tuning import config_evidence
+        trade['entry_config']=copy.deepcopy(lot.get('entry_config'))
+        trade['exit_config']=copy.deepcopy(request['metadata']['exit_config']) if 'exit_config' in request['metadata'] else config_evidence(profile)
         receipt = {'operation_id': operation_id, 'trade_ids': [trade_id],
                    'remaining_qty': lot['qty'] - qty}
         if any(row.get('record_uuid') == trade['record_uuid'] for row in trades):
@@ -600,6 +608,9 @@ def prepare_close_batch(profile, item_id, qty, operation_id, quotes, *,
                      'origin_uuid': manifest['origin_uuid'], 'revision': 0,
                      'tombstone': False, 'operation_id': child,
                      'closed_lot_uid': lot['lot_uid']}
+            from rshelper.tuning import config_evidence
+            trade['entry_config']=copy.deepcopy(lot.get('entry_config'))
+            trade['exit_config']=copy.deepcopy(normalized['exit_config']) if 'exit_config' in normalized else config_evidence(profile)
             receipt = {'operation_id': child, 'trade_ids': [next_trade_id],
                        'remaining_qty': lot['qty'] - take}
             if any(row.get('record_uuid') == trade['record_uuid']

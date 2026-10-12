@@ -469,7 +469,7 @@ def _format_process_table(results, top: int) -> str:
 
 
 def _save_process_snapshot(results, profile: str | None = None,
-                           *, scan_spec=None, market_metadata=None) -> None:
+                           *, scan_spec=None, market_metadata=None,intraday=False) -> None:
     """Persist a process scan snapshot for diffing across days."""
     from rshelper import snapshot
     data = [{
@@ -481,7 +481,7 @@ def _save_process_snapshot(results, profile: str | None = None,
         "recipe_economics": r.recipe_economics,
         "volume": r.volume, "buy_limit": r.buy_limit,
     } for r in results]
-    snapshot.save("process", data, profile,scan_spec=scan_spec,market_metadata=market_metadata)
+    snapshot.save("process", data, profile,scan_spec=scan_spec,market_metadata=market_metadata,intraday=intraday)
     from rshelper import tuning
     tuning.record_if_changed(profile)
 
@@ -861,12 +861,21 @@ def trade_status(args: argparse.Namespace) -> None:
             "market_data": {"latest":provenance(latest)},
         })
     pnl = compute_pnl(profile=profile, strategy="auto")
+    from rshelper.bank import build_bank_items
+    holdings = build_bank_items(profile=profile, latest=latest)
+    unreal = holdings['unrealized_pnl']
+    if getattr(args, 'save_equity_snapshot', False):
+        from rshelper import snapshot
+        snapshot.save('equity', [], profile, intraday=True,
+                      equity=holdings['equity'], market_metadata={'latest':provenance(latest)})
     trader = trader_status(profile) or {"running": False}
     if args.json:
         print(json.dumps({
             "positions": rows,
             "market_data": {"latest":provenance(latest)},
             "unrealized": unreal,
+            'mark_coverage':holdings['mark_coverage'],
+            'equity':holdings['equity'],
             "realized_pnl": pnl.total_profit,
             "auto_trades": pnl.trade_count,
             "trader_running": bool(trader.get("running")),
@@ -877,7 +886,8 @@ def trade_status(args: argparse.Namespace) -> None:
           f" (profile {profile or 'default'})")
     print(f"  Realized P&L (auto): {pnl.total_profit:+,} gp "
           f"({pnl.trade_count} trades)")
-    print(f"  Unrealized: {unreal:+,} gp "
+    unreal_text = f'{unreal:+,} gp' if unreal is not None else 'Unknown: missing marks'
+    print(f"  Unrealized: {unreal_text} "
           f"({len(rows)} open position{'s' if len(rows) != 1 else ''})")
     if not rows:
         print("\n  No open positions.")
@@ -1558,35 +1568,36 @@ def _snapshot_context(args,scan_type,mapping,latest,volume,**effective):
         spec.update(units='illustrative-gp-per-output-after-tax',
                     recipe_model_sha256=snapshot._specification_hash({str(iid):asdict(recipe) for iid,recipe in RECIPES.items()}),
                     account_sha256=snapshot._specification_hash(asdict(load_config(args.profile)).get('account')))
-    return {'scan_spec':spec,'market_metadata':market_snapshot(mapping,latest,volume)}
+    return {'scan_spec':spec,'market_metadata':market_snapshot(mapping,latest,volume),
+            'intraday':getattr(args,'intraday_snapshots',False)}
 
 
 def _save_alch_snapshot(results, profile: str | None = None,
-                        *, scan_spec=None, market_metadata=None):
+                        *, scan_spec=None, market_metadata=None,intraday=False):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "alch_value": r.alch_value, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("alch", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
+    path = snapshot.save("alch", items, profile,scan_spec=scan_spec,market_metadata=market_metadata,intraday=intraday)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
 def _save_flip_snapshot(results, profile: str | None = None,
-                        *, scan_spec=None, market_metadata=None):
+                        *, scan_spec=None, market_metadata=None,intraday=False):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "sell_price": r.sell_price, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("flip", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
+    path = snapshot.save("flip", items, profile,scan_spec=scan_spec,market_metadata=market_metadata,intraday=intraday)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
 def _save_margin_snapshot(results, lookup, profile: str | None = None,
-                          *, scan_spec=None, market_metadata=None):
+                          *, scan_spec=None, market_metadata=None,intraday=False):
     items = []
     for a in results:
         item = lookup.get(a.item_id)
@@ -1600,7 +1611,7 @@ def _save_margin_snapshot(results, lookup, profile: str | None = None,
             "avg_margin": round(a.avg_margin, 0),
             "margin_volatility": round(a.margin_volatility, 4),
         })
-    path = snapshot.save("margin", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
+    path = snapshot.save("margin", items, profile,scan_spec=scan_spec,market_metadata=market_metadata,intraday=intraday)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
@@ -2074,6 +2085,8 @@ def _main() -> None:
     trade_status_p = trade_sub.add_parser(
         "status", help="Positions + unrealized + realized P&L + trader in one view")
     trade_status_p.add_argument("--json", action="store_true")
+    trade_status_p.add_argument('--save-equity-snapshot', action='store_true',
+                               help='Save a bounded UTC equity observation')
 
 
     # Signals subcommand
@@ -2254,7 +2267,12 @@ def _main() -> None:
     restore_p.add_argument('--expected-source-revision')
     restore_p.add_argument('--json', action='store_true')
 
+    for scan_parser in (alch, flip, margin, process):
+        scan_parser.add_argument('--intraday-snapshots', action='store_true',
+                                 help='Save UTC observations (latest 96 per scan type)')
     args, unknown = parser.parse_known_args(remaining)
+    if getattr(args, 'intraday_snapshots', False):
+        args.save_snapshot = True
     if unknown:
         print(f"  Warning: ignored unknown arguments: {' '.join(unknown)}",
               file=sys.stderr)
