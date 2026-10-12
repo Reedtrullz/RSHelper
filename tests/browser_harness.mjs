@@ -15,21 +15,27 @@ const bundle = scripts.join('\n').replace(
 
 export function harness(fetchImpl) {
   const elements = new Map();
+  const listeners = new Map();
   const document = {
     getElementById(id) {
       if (!elements.has(id)) elements.set(id, { id, textContent: '', className: '', innerHTML: '', style: {},
+        attributes:{},setAttribute(name,value){this.attributes[name]=String(value);},getAttribute(name){return this.attributes[name]??null;},focus(){document.activeElement=this;},
         classList: { toggle() {} }, remove() {}, appendChild() {}, addEventListener() {}, querySelectorAll(){return [];} });
       return elements.get(id);
     },
     createElement(tag) { return { tag, style: {}, classList: { add() {}, remove() {} }, appendChild() {} }; },
     body: { appendChild() {}, insertBefore() {}, replaceChildren() {}, firstChild: null },
-    addEventListener() {},
+    addEventListener(name,listener) { listeners.set(name,listener); },
     querySelectorAll() { return []; },
+    querySelector() { return null; },
   };
-  const window = { location: { reload() {} } };
+  const storage=new Map();
+  const window = { location: { pathname:'/',search:'',hash:'',reload() {} },addEventListener(){},
+    localStorage:{getItem(key){return storage.get(key)??null;},setItem(key,value){storage.set(key,value);},removeItem(key){storage.delete(key);}},
+    history:{pushState(state,title,url){window.location.hash=url.includes('#')?'#'+url.split('#')[1]:'';},replaceState(state,title,url){this.pushState(state,title,url);}} };
   const context = vm.createContext({ document, window, fetch: fetchImpl, AbortController, AbortSignal,
     Date, URLSearchParams, setTimeout, clearTimeout, setInterval() {}, console, JSON, Math, String, Object,
     Promise, Error, TypeError, DOMException, Headers, Response, crypto: webcrypto });
   vm.runInContext(bundle, context, { filename: 'dashboard.js' });
-  return { context, elements };
+  return { context, elements, listeners };
 }

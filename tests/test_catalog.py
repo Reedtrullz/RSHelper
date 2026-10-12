@@ -25,6 +25,9 @@ class CatalogTest(unittest.TestCase):
         traditional=FlipScanner(direction='traditional').explain(item)
         self.assertEqual(traditional['buy_leg_price'],110);self.assertEqual(traditional['sell_leg_price'],100)
         self.assertEqual(traditional['tax'],2)
+        self.assertAlmostEqual(traditional['margin_pct'],-10/110*100)
+        self.assertAlmostEqual(traditional['roi_pct'],-12/110*100)
+        self.assertEqual(explanation['ranking_basis'],'illustrative net profit times throughput; RS score is secondary')
         self.assertTrue(any('net profit' in reason for reason in traditional['exclusion_reasons']))
 
     def test_http_catalog_policy_and_bounded_queries(self):
@@ -33,11 +36,12 @@ class CatalogTest(unittest.TestCase):
         from urllib.request import Request,urlopen
         from urllib.error import HTTPError
         from rshelper.dashboard.handlers import make_handler
+        from rshelper.models import Item
         from rshelper.scanner import FlipScanner
         for mode in ('owner','public-demo'):
             calls=[]
             def catalog(query,limit):calls.append(query);return {'items':[{'id':1,'name':'Synthetic'}]}
-            handler=make_handler(FlipScanner(),lambda:[],mode=mode,owner_token='synthetic-token',
+            handler=make_handler(FlipScanner(),lambda:[Item(2,'Synthetic priced',False,100,0,100,110,20),Item(3,'Excluded',False,100,0,110,100,20)],mode=mode,owner_token='synthetic-token',
                 catalog_fn=catalog,item_details_fn=lambda iid:{'id':iid,'quote':{'usable':False}})
             server=ThreadingHTTPServer(('127.0.0.1',0),handler)
             thread=Thread(target=server.serve_forever,daemon=True);thread.start()
@@ -62,6 +66,12 @@ class CatalogTest(unittest.TestCase):
                         urlopen(Request(base+'/api/item?'+query,headers=headers))
                     self.assertEqual(rejected.exception.code,400)
                 self.assertEqual(len(calls),count)
+                with urlopen(Request(base+'/api/scan',headers=headers)) as response:
+                    scan=json.load(response)
+                explanation=scan['items'][0]['explanation']
+                self.assertEqual(scan['items'][0]['profit'],explanation['net_profit'])
+                self.assertEqual(explanation['tax'],2)
+                self.assertEqual(scan['exclusions']['net profit'],1)
             finally:server.shutdown();thread.join(timeout=2);server.server_close()
 
     def test_cli_resolvers_and_missing_quote_metadata(self):
@@ -105,6 +115,45 @@ class CatalogTest(unittest.TestCase):
              mock.patch('rshelper.tuning.record_if_changed'):
             server.run(port=0,profile='default',owner_token='a'*64)
         add.assert_called_once_with(1,'Synthetic',profile='default')
+
+    def test_runtime_history_and_watch_economics_are_explicit_and_directional(self):
+        import time
+        from unittest import mock
+        from rshelper.config import Config
+        from rshelper.dashboard import server
+        from rshelper.market_data import MarketDataResult
+        now=int(time.time()); stamp=now//300*300
+        config=Config();config.flip.direction='traditional'
+        callbacks={};case=self
+        def capture(*args,**kwargs):callbacks.update(kwargs);return object
+        class FakeServer:
+            def __init__(self,*args):pass
+            def server_close(self):pass
+            def serve_forever(self):
+                rows={row['id']:row for row in callbacks['watchlist_fn']()['items']}
+                row=rows[1]
+                case.assertEqual((row['buy'],row['sell'],row['tax'],row['net_profit']), (110,100,2,-12))
+                case.assertAlmostEqual(row['margin_pct'],-10/110*100)
+                for item_id,reason in ((2,'no data'),(3,'stale')):
+                    case.assertFalse(rows[item_id]['usable']);case.assertEqual(rows[item_id]['reason'],reason)
+                    case.assertFalse({'tax','net_profit','margin_pct'} & rows[item_id].keys())
+                history=callbacks['timeseries_fn'](1)
+                case.assertEqual(history['points'][0]['net_profit'],8)
+                case.assertEqual(history['points'][0]['direction'],'traditional')
+        candles=[{'timestamp':stamp-300,'avgHighPrice':110,'avgLowPrice':100,
+                  'highPriceVolume':10,'lowPriceVolume':10}]
+        result=MarketDataResult(candles,'wiki','network',now,now,now,False,'executed-trades',{'wiki':1})
+        latest={'1':{'high':110,'low':100,'highTime':now,'lowTime':now},
+                '2':{'high':0,'low':100,'highTime':now,'lowTime':now},
+                '3':{'high':110,'low':100,'highTime':now-90000,'lowTime':now-90000}}
+        with mock.patch.object(server,'load_config',return_value=config), \
+             mock.patch.object(server,'_fetch_bootstrap',return_value=([{'id':1,'name':'Synthetic'}],latest,{},[])), \
+             mock.patch.object(server,'make_handler',side_effect=capture), \
+             mock.patch.object(server,'ThreadingHTTPServer',FakeServer), \
+             mock.patch.object(server.watchlist,'load',return_value={'items':{str(key):{'name':'Synthetic '+str(key)} for key in (1,2,3)}}), \
+             mock.patch('rshelper.api.fetch_timeseries_result',return_value=result), \
+             mock.patch('rshelper.tuning.record_if_changed'):
+            server.run(port=0,profile='default',owner_token='a'*64)
 
     def test_id_exact_numeric_name_ambiguity_and_bounded_stable_search(self):
         from rshelper.catalog import resolve_item,search_catalog

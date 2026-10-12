@@ -89,6 +89,111 @@ test('entry stance is separate from daemon liveness and mutation retries retain 
 });
 
 const calls = [];
+test('owner reconnect preserves an item bookmark',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  context.window.location.hash='#view=market&item=4151';
+  vm.runInContext('applyViewUrl()',context);
+  assert.equal(context.window.location.hash,'#view=market&item=4151');
+});
+test('keyboard controls retain native activation',()=>{
+  const {context,listeners}=harness(async()=>new Response('{}'));
+  vm.runInContext("view='watchlist';viewRows=[{id:4151}];selectedId=4151",context);
+  let prevented=false,rendered=false;
+  context.renderDetail=()=>{rendered=true;};
+  for(const tag of ['button','input','select','textarea','a','summary']){
+    listeners.get('keydown')({key:'Enter',target:{closest(selector){return selector.includes(tag)&&selector!=='dialog'&&selector!=='[role="tab"]'?{}:null;}},preventDefault(){prevented=true;}});
+    assert.equal(prevented,false);assert.equal(rendered,false);
+  }
+});
+test('URL state rejects private content and invalid values while preserving owner gates',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  context.renderMarket=()=>{};context.renderContextEmpty=()=>{};
+  assert.equal(vm.runInContext("parseViewUrl('view=market&item=4151').item",context),4151);
+  for(const query of ['view=unknown','view=market&item=-1','view=bank&token=secret','view=market&view=ge','item=9007199254740992']){
+    assert.equal(vm.runInContext('parseViewUrl('+JSON.stringify(query)+').view',context),'market');
+    assert.equal(vm.runInContext('parseViewUrl('+JSON.stringify(query)+').item',context),null);
+  }
+  context.window.location.hash='#view=bank';vm.runInContext('applyViewUrl()',context);
+  assert.equal(vm.runInContext('view',context),'market');
+  vm.runInContext("selectedId=4151;writeViewUrl()",context);
+  assert.equal(context.window.location.hash,'#view=market&item=4151');
+});
+test('saved scan preferences are bounded and isolated by authenticated profile UUID',()=>{
+  const {context}=ownerContext(async()=>new Response('{}'));
+  context.renderMarket=()=>{};
+  context.document.getElementById('scanPresetName').value='<Synthetic preset>';
+  vm.runInContext("meta={profile_uuid:'11111111-1111-4111-8111-111111111111'};loadScanPreferences();chip='m10';saveScanPreset()",context);
+  assert.equal(vm.runInContext('scanPresets.length',context),1);
+  vm.runInContext("meta={profile_uuid:'22222222-2222-4222-8222-222222222222'};loadScanPreferences()",context);
+  assert.equal(vm.runInContext('chip',context),'all');assert.equal(vm.runInContext('scanPresets.length',context),0);
+  vm.runInContext("meta={profile_uuid:'11111111-1111-4111-8111-111111111111'};loadScanPreferences()",context);
+  assert.equal(vm.runInContext('chip',context),'m10');
+  assert.match(vm.runInContext('scanPresetControls()',context),/&lt;Synthetic preset&gt;/);
+  assert.equal(vm.runInContext('validScanState({chip:"all",density:"normal",marketMode:"flips",sortKeys:[{col:"name",dir:"asc"}],note:"private"})',context),false);
+  vm.runInContext('resetScanPreferences()',context);
+  assert.equal(vm.runInContext('scanPresets.length',context),0);
+});
+test('oversized, corrupt and unsupported saved preferences fail closed',()=>{
+  const {context}=ownerContext(async()=>new Response('{}'));
+  vm.runInContext("meta={profile_uuid:'11111111-1111-4111-8111-111111111111'}",context);
+  const state={chip:'m10',density:'dense',marketMode:'flips',sortKeys:[{col:'volume',dir:'desc'}]};
+  const valid={version:1,active:state,presets:[]};
+  const bad=[null,[],{...valid,version:2},{...valid,active:{...state,chip:'unknown'}},
+    {...valid,presets:Array.from({length:11},(_,i)=>({name:'Preset '+i,state}))},
+    {...valid,presets:[{name:'x'.repeat(41),state}]},
+    {...valid,presets:[{name:'same',state},{name:'same',state}]},
+    {...valid,active:{...state,sortKeys:[]}},
+    {...valid,active:{...state,sortKeys:[{col:'note',dir:'desc'}]}}];
+  for(const raw of [...bad.map(value=>JSON.stringify(value)),'broken',' '.repeat(16385)]){
+    context.window.localStorage.setItem('rshelper.scan.v1.11111111-1111-4111-8111-111111111111',raw);
+    vm.runInContext('loadedPreferenceKey=null;loadScanPreferences()',context);
+    assert.equal(vm.runInContext('chip',context),'all');
+    assert.equal(vm.runInContext('scanPresets.length',context),0);
+  }
+});
+test('returning to market restores its selected item inspector',()=>{
+  const {context}=ownerContext(async()=>new Response('{}'));
+  context.renderMarket=()=>{};let inspected=null;
+  context.renderDetail=id=>{inspected=id;};
+  vm.runInContext("view='watchlist';selectedId=4151;setView('market')",context);
+  assert.equal(inspected,4151);
+});
+test('selected tab and panel relationships agree, including Grand Exchange',()=>{
+  const {context}=ownerContext(async()=>new Response('{}'));
+  context.renderGE=()=>{};context.renderMarket=()=>{};
+  vm.runInContext("setView('ge')",context);
+  assert.equal(context.document.getElementById('btnGE').getAttribute('aria-selected'),'true');
+  assert.equal(context.document.getElementById('btnMarket').getAttribute('aria-selected'),'false');
+  assert.equal(context.document.getElementById('listBody').getAttribute('aria-labelledby'),'btnGE');
+  vm.runInContext("setView('market')",context);
+  assert.equal(context.document.getElementById('btnMarket').getAttribute('tabindex'),'0');
+  assert.equal(context.document.getElementById('btnGE').getAttribute('tabindex'),'-1');
+});
+test('bank item is a native action and chart data preserve unknown and escaped values',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  const bank=vm.runInContext("bankSlotHtml({item_id:1,name:'<Synthetic>',total_qty:1})",context);
+  assert.match(bank,/<button type="button"/);assert.match(bank,/aria-label="Inspect &lt;Synthetic&gt;"/);
+  const table=vm.runInContext("chartDataHtml(['UTC','Value'],[['<date>',null],['later',0]])",context);
+  assert.match(table,/&lt;date&gt;/);assert.match(table,/Unknown/);assert.match(table,/<td>0<\/td>/);
+  assert.match(table,/scope="col"/);
+});
+test('fractional alert threshold is rejected without truncation or network writes',async()=>{
+  let calls=0;const {context}=ownerContext(async()=>{calls++;return new Response('{}');});
+  for(const [id,value] of Object.entries({wlBelow:'',wlMode:'crossing',wlCooldown:'900',wlHysteresis:'0'}))context.document.getElementById(id).value=value;
+  for(const value of ['1.5','-1','not a number']){
+    context.document.getElementById('wlAbove').value=value;
+    await vm.runInContext('saveWatchAlerts(1)',context);
+    assert.equal(calls,0);assert.equal(context.document.getElementById('wlAbove').value,value);
+  }
+  assert.match(context.document.getElementById('statusText').textContent,/whole/);
+});
+test('scan displays use authoritative direction metrics and offer a first-use path',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  assert.equal(vm.runInContext('marginPct({buy_price:100,sell_price:110,explanation:{margin_pct:37}})',context),37);
+  assert.equal(vm.runInContext('roiPct({buy_price:100,profit:8,explanation:{roi_pct:29}})',context),29);
+  const guidance=vm.runInContext('workflowHelpHtml()',context);
+  for(const text of ['Scan','Watch','Paper','Review','standing orders','Wiki','shared budget','collection'])assert.ok(guidance.includes(text),text);
+});
 test('catalog inspector uses server economics and escapes mapped metadata',()=>{
   const {context}=harness(async()=>new Response('{}'));
   const html=vm.runInContext("catalogDetailHtml({id:9,name:'<Synthetic>',buy_limit:null,members:null,quote:{usable:true,buy_price:100,sell_price:110,tax:7,net_profit:999,margin_pct:10,roi_pct:999},market_data:{latest:{source:'wiki',delivery:'network'}},exclusion_reasons:['<Excluded>'],scan_eligible:false})",context);
