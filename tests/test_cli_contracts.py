@@ -30,6 +30,7 @@ CASES = {
     'alch-scan': '--nature-rune-cost 1 --members-only --no-members-only --min-volume 1 --top 3 --name Synthetic --json --csv --html --save-snapshot --intraday-snapshots',
     'flip-scan': '--members-only --no-members-only --min-volume 1 --min-margin 1 --top 3 --capital 10000 --flip-direction traditional --name Synthetic --json --csv --html --save-snapshot --intraday-snapshots --ge-slots 2',
     'process-scan': '--members-only --no-members-only --skill smithing --min-volume 1 --min-profit 1 --top 3 --capital 10000 --name Synthetic --json --csv --html --save-snapshot --intraday-snapshots',
+    'chain-plan': '--inventory 1761 --max-depth 2 --top 1 --json',
     'item-info': '2 --timeseries --json --tax-curve --wiki --wiki-open --predict',
     'monitor': '--interval 1 --no-notify --stop --status --json',
     'auto-trade': '--once --interval 1 --stop --status --json',

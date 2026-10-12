@@ -76,13 +76,13 @@ CLI/dashboard feature-parity gaps both directions.
   leg, buy-price fallback) shared by `collect_offer` and the new dashboard
   position-close closure.
 
-## Current CLI surface (17 top-level commands)
+## Current CLI surface (18 top-level commands)
 
 `alch-scan` · `flip-scan` · `process-scan` · `margin-check` · `item-info` ·
 `signals` (--monitor N) · `monitor` · `watch` (check --json) · `auto-trade` ·
 `trade` (log / paper / open / close / positions / **status** / list / pnl /
 delete) · **`history`** · `profile` · `diff` · `snapshots` · `config` ·
-`dashboard` (--open / --control / --profile). Global: `--profile`,
+`dashboard` (--open / --control / --profile) · **`chain-plan`**. Global: `--profile`,
 `--quiet`, `--version`.
 
 ## Dashboard routes (full)

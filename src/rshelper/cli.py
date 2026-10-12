@@ -448,6 +448,28 @@ def process_scan(args: argparse.Namespace) -> None:
             **_snapshot_context(args,'process',mapping,latest,volume_5m))
 
 
+def chain_plan(args: argparse.Namespace) -> None:
+    from rshelper.recipes import RECIPES
+    from rshelper.chain_planner import plan_chains
+    mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
+    lookup = {item.id: item for item in items}
+    plans = plan_chains(RECIPES, lookup, args.inventory, max_depth=args.max_depth)
+    plans.sort(key=lambda p: (p['model_gp_per_hour'], p['output_id']), reverse=True)
+    print(f"  {len(plans)} bounded chain plans; depth<=2; xp/time evidence unavailable", file=sys.stderr)
+    if args.json:
+        print(json.dumps(plans[:args.top], indent=2))
+    else:
+        rows = plans[:args.top]
+        if not rows:
+            print("No bounded chain plans from the supplied inventory.")
+        for rank, plan in enumerate(rows, 1):
+            steps = ' -> '.join(str(step) for step in plan['steps'])
+            print(f"{rank}. steps={steps} profit/run={plan['profit_per_run']:,} "
+                  f"owned_value={plan['owned_input_value']:,} gp/hr={plan['model_gp_per_hour']:,}")
+            if plan['shortfalls']:
+                print("   shortfalls: "+', '.join(f"{k}:{v}" for k,v in plan['shortfalls'].items()))
+
+
 def _format_process_table(results, top: int) -> str:
     """Render process-scan results as an aligned text table."""
     rows = results[:top]
@@ -1973,6 +1995,17 @@ def _main() -> None:
     process.add_argument("--save-snapshot", action="store_true",
                          help="Save results for later diff/trend comparison")
 
+    chain = sub.add_parser("chain-plan",
+                           help="Plan bounded processing chains from explicit inventory")
+    chain.add_argument("--inventory", type=str, required=True,
+                       help='Explicit inventory JSON object like {"1761": 100}')
+    chain.add_argument("--max-depth", type=int, default=2,
+                       help="Maximum chain depth, capped at 2")
+    chain.add_argument("--top", type=int, default=20,
+                       help="Number of plans to show")
+    chain.add_argument("--json", action="store_true",
+                       help="Output JSON instead of text")
+
     info = sub.add_parser("item-info", help="Look up a single item by name or ID")
     info.add_argument("item", help="Item name or ID")
     info.add_argument("--timeseries", action="store_true",
@@ -2453,6 +2486,8 @@ def _main() -> None:
         flip_scan(args)
     elif args.command == "process-scan":
         process_scan(args)
+    elif args.command == "chain-plan":
+        chain_plan(args)
     elif args.command == "watch":
         if args.watch_action == "add":
             watch_add(args)
