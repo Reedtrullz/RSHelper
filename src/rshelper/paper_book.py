@@ -21,6 +21,7 @@ class PaperMutation(TypedDict):
     now: float
 
 class PaperState(TypedDict):
+    observed_budget: dict
     revision: int
     budget: dict
     offers: dict
@@ -341,7 +342,9 @@ def _summary(root,book,now,extra_limit=None):
 
 
 def _response(root,book,now,receipt=None,retry=False) -> PaperState:
+    from rshelper.observed_offers import _read_root,summary
     return {'revision':book['revision'],'budget':_summary(root,book,now),
+            'observed_budget':summary(_read_root(root),slot_limit=book['slot_limit']),
             'offers':copy.deepcopy(book['offers']),'offer_id':receipt['offer_id'] if receipt else None,
             'operation_revision':receipt['revision'] if receipt else None,'retry':retry,
             'pending_collections':{key:value['operation_id'] for key,value in book['collections'].items() if value['status']=='pending'}}

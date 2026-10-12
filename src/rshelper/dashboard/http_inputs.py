@@ -66,7 +66,14 @@ def validate_operation(path, body):
     def action(choices):
         if not isinstance(body.get('action'), str) or body['action'] not in choices:
             raise HttpInputError('Unknown action')
-    if path=='/api/reviews':
+    if path=='/api/observed':
+        from rshelper.persistence import canonical_uuid
+        from rshelper.observed_offers import validate_event
+        if set(body)!={'offer_uuid','event','operation_id','expected_revision'}:raise HttpInputError('Observed action fields differ')
+        try:canonical_uuid(body['offer_uuid']);canonical_uuid(body['operation_id']);validate_event(body['event'])
+        except (ValueError,TypeError) as error:raise HttpInputError('Invalid observed receipt') from error
+        positive_int(body['expected_revision'],'expected_revision',minimum=0)
+    elif path=='/api/reviews':
         from rshelper.persistence import canonical_uuid
         fields={'queue':{'tag','unreviewed','note','strategy','limit'},'append':{'lot_uid','entry','expected_revision','operation_id'}}
         action(fields)
@@ -160,6 +167,7 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
+    if route=='/api/observed' and values:raise HttpInputError('Observed query fields are not supported')
     if route=='/api/catalog':
         if set(values)-{'q','limit'}:raise HttpInputError('Unknown catalog query field')
         text(values.get('q',[''])[0],'q',required=False,limit=200)

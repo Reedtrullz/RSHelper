@@ -21,6 +21,7 @@ MAX_ROWS = 100_000
 CORE = {'positions.json': 'positions', 'trades.json': 'trades',
         'alerts.json': 'alerts', 'watchlist.json': 'watchlist'}
 FILES = {**CORE, 'paper-offers.json':'paper-book', 'identity-manifest.json': 'identity',
+         'observed-offers.json':'observed-offers',
          'trading_mode.json':'trading_mode',
          'identity-lineage.json': 'lineage', 'realizations.json': 'realizations',
          'realization-batches.json': 'batches', 'replication-receipts.json': 'receipts',
@@ -206,6 +207,9 @@ def _validate_files(files):
         elif name == 'information.json':
             count += _information(data)
             selected_files += len(data['files'])
+        elif name=='observed-offers.json':
+            from rshelper.observed_offers import validate_store
+            validate_store(data);count+=len(data['entries'])
         elif name=='paper-offers.json':
             from rshelper.paper_book import validate_book
             validate_book(data)
@@ -272,6 +276,8 @@ def capture_packet(profile, destination):
         activation = _activation(root)
         if activation.get('paper_budget_origin') is not None and not (root/'paper-offers.json').exists():
             raise ValueError('acknowledged paper budget missing; recover before capture')
+        if activation.get('observed_offer_origin') is not None and not (root/'observed-offers.json').exists():
+            raise ValueError('acknowledged observed ledger missing; recover before capture')
         state = _metadata(root)
         files = {}
         for name, kind in FILES.items():
@@ -291,6 +297,9 @@ def capture_packet(profile, destination):
             files['information.json'] = _json({'schema_version': 1, 'origin_uuid': activation['origin_uuid'],
                                                'files': information})
         parsed = _validate_files(files)
+        if 'observed-offers.json' in parsed:
+            from rshelper.trade_reviews import authority_origin
+            if parsed['observed-offers.json']['authority_origin']!=authority_origin(activation):raise ValueError('observed authority differs from activation')
         if 'trading_mode.json' in parsed:
             from rshelper.trading_mode import validate_authority
             validate_authority(parsed['trading_mode.json'],activation)
@@ -303,7 +312,7 @@ def capture_packet(profile, destination):
             raise ValueError('packet exceeds transfer budget')
         entries = [{'path': name, 'kind': FILES[name],
                     'owner': 'informational' if name == 'information.json' else
-                             'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared',
+                             'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json','observed-offers.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared',
                     'bytes': len(files[name]), 'sha256': hashlib.sha256(files[name]).hexdigest()}
                    for name in sorted(files)]
         previous = state['outgoing']
@@ -358,6 +367,8 @@ def validate_profile(profile):
         files = {name: _read_file(root / name) for name in FILES
                  if name != 'information.json' and ((root / name).exists() or (root / name).is_symlink())}
         parsed = _validate_files(files)
+        from rshelper.observed_offers import _read_root
+        _read_root(root)
         origin = parsed['identity-manifest.json']['origin_uuid']
         declared = {origin, *parsed.get('identity-lineage.json', {}).get('origins', {})}
         if origin != activation['origin_uuid'] or not declared.issubset(activation['replication_origins']):
@@ -413,7 +424,7 @@ def _read_packet(source):
         if type(name) is not str or name not in files or name in seen:
             raise ValueError('duplicate or unapproved packet path')
         seen.add(name)
-        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared'
+        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json','observed-offers.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared'
         if (entry['kind'] != FILES[name] or entry['owner'] != expected_owner
                 or type(entry['bytes']) is not int or entry['bytes'] != len(files[name])
                 or entry['sha256'] != hashlib.sha256(files[name]).hexdigest()):
@@ -451,6 +462,20 @@ def _merge(root, incoming, source_origin):
     from rshelper.paper_book import require_book_successor,verify_book_financial
     local_book=persistence.read_state(root/'paper-offers.json','paper-book')
     activation=_activation(root)
+    from rshelper.observed_offers import _read_root,require_successor
+    from rshelper.trade_reviews import authority_origin
+    local_observed=_read_root(root)
+    peer_observed=incoming.get('observed-offers.json')
+    if peer_observed is not None:
+        approved=authority_origin(activation)
+        if peer_observed['authority_origin']!=approved:raise ValueError('observed authority differs')
+        if source_origin==approved:
+            require_successor(local_observed,peer_observed)
+            result['observed-offers.json']=copy.deepcopy(peer_observed)
+            result['identity-activation.json']={**activation,'observed_offer_origin':approved}
+        else:
+            require_successor(peer_observed,local_observed)
+    elif local_observed['revision'] and source_origin==authority_origin(activation):raise ValueError('authority packet omitted acknowledged observed ledger')
     if not local_book and activation.get('paper_budget_origin') is not None:
         raise ValueError('acknowledged paper book missing; backup recovery required')
     peer_book=incoming.get('paper-offers.json')
@@ -464,7 +489,7 @@ def _merge(root, incoming, source_origin):
         if local_book:require_book_successor(local_book,peer_book)
         result['paper-offers.json']=copy.deepcopy(peer_book)
         if activation.get('paper_budget_origin')!=approved:
-            result['identity-activation.json']={**activation,'paper_budget_origin':approved}
+            result['identity-activation.json']={**result.get('identity-activation.json',activation),'paper_budget_origin':approved}
     elif local_book and source_origin==local_book['origin_uuid']:
         raise ValueError('financial authority packet omitted acknowledged paper book')
     if 'trading_mode.json' in incoming:

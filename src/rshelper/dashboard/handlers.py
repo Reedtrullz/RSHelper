@@ -17,6 +17,7 @@ from rshelper.dashboard.http_inputs import (
 
 
 _GET_RESOURCES = {
+    '/api/observed':'private-state',
     "/": "static",
     "/api/capabilities": "capabilities",
     "/api/health": "sanitized-health",
@@ -50,6 +51,7 @@ _GET_RESOURCES = {
 }
 
 _POST_RESOURCES = {
+    '/api/observed':'private-state',
     "/api/reviews": "private-state",
     "/api/settings": "private-state",
     "/api/trades": "private-state",
@@ -119,6 +121,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  activity_fn: Callable[..., dict] | None = None,
                  settings_fn: Callable[..., dict] | None = None,
                  reviews_fn: Callable[..., dict] | None = None,
+                 observed_fn: Callable[..., dict] | None = None,
                  catalog_fn: Callable[..., dict] | None = None,
                  item_details_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
@@ -170,7 +173,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except HttpInputError as exc:
                 self.send_error(exc.status, str(exc))
                 return
-            if path=='/api/reviews':
+            if path=='/api/observed':
+                self._serve_observed()
+            elif path=='/api/reviews':
                 self._serve_reviews(lot_uid=self._query().get('lot_uid',[''])[0])
             elif path == '/api/settings':
                 self._serve_settings()
@@ -266,7 +271,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 except HttpInputError as exc:
                     self.send_error(exc.status, str(exc))
                     return
-            if path=='/api/reviews':
+            if path=='/api/observed':
+                self._serve_observed(self._json_body)
+            elif path=='/api/reviews':
                 self._serve_reviews(self._json_body)
             elif path == '/api/settings':
                 if self._json_body['action']!='preview' and not control:
@@ -302,6 +309,13 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except PermissionError as error:self.send_error(403,str(error))
             except (ValueError,TypeError) as error:self.send_error(400,str(error))
             except OSError:self.send_error(503,'Review state unavailable')
+
+        def _serve_observed(self,body=None):
+            if observed_fn is None:self.send_error(404);return
+            try:self._serve_json(observed_fn(body))
+            except PermissionError as error:self.send_error(403,str(error))
+            except (ValueError,TypeError) as error:self.send_error(400,str(error))
+            except OSError:self.send_error(503,'Observed state unavailable')
 
         def _serve_settings(self,body=None):
             if settings_fn is None:

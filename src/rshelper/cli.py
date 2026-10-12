@@ -1715,6 +1715,27 @@ def trade_review_cmd(args: argparse.Namespace) -> None:
     else:result=trade_reviews.review_queue(args.profile,note=args.note,strategy=args.strategy,tag=args.tag,unreviewed=args.unreviewed,limit=args.limit)
     print(json.dumps(result,indent=2))
 
+def observed_cmd(args: argparse.Namespace) -> None:
+    from pathlib import Path
+    from rshelper import observed_offers,backup,persistence
+    if args.observed_action=='record':
+        event=persistence.decode_json(backup._read_file(Path(args.input),65536))
+        result=observed_offers.record_observation(args.profile,args.offer_uuid,event,operation_id=args.operation_id,expected_revision=args.expected_revision)
+    elif args.observed_action in ('preview-csv','apply-csv'):
+        mapping=market_payload(fetch_mapping_result(args.profile),sequence=True)
+        if not mapping:raise ValueError('item mapping unavailable; CSV cannot verify item IDs')
+        result=observed_offers.import_csv(args.profile,backup._read_file(Path(args.input),65536),known_items={row['id'] for row in mapping},
+              apply=args.observed_action=='apply-csv',expected_import_hash=getattr(args,'expected_import_hash',None),backup_path=getattr(args,'backup',None))
+    else:
+        store=observed_offers.read_store(args.profile)
+        result=observed_offers.summary(store,slot_limit=getattr(args,'slots',None))
+        if args.observed_action=='history':
+            persistence.canonical_uuid(args.offer_uuid)
+            if args.offset<0:raise ValueError('nonnegative history offset required')
+            rows=[{**row,'operation_id':operation} for operation,row in sorted(store['entries'].items(),key=lambda pair:pair[1]['revision']) if row['offer_uuid']==args.offer_uuid]
+            result={'revision':store['revision'],'sensitivity':'private','history':rows[args.offset:args.offset+100],'total':len(rows),'offset':args.offset}
+    print(json.dumps(result,indent=2))
+
 def signals_cmd(args: argparse.Namespace) -> None:
     """Fetch data, detect market signals, print results grouped by type."""
     monitor_interval = getattr(args, "monitor", 0) or 0
@@ -1853,7 +1874,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
-    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews']) or remaining[:2] in (
+    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews'],['observed']) or remaining[:2] in (
         ['config','preview'],['config','apply'],['config','rollback'])
     if maintenance:
         from rshelper.config import Config
@@ -2177,6 +2198,17 @@ def _main() -> None:
     config_sub.add_parser("show", help="Print current config as JSON")
     config_sub.add_parser("path", help="Print config file path")
     review_parser=sub.add_parser('reviews',help='Private stable-lot hypotheses and append-only reviews')
+    observed=sub.add_parser('observed',help='Private manual GE offer receipts, separate from paper simulation')
+    observed_sub=observed.add_subparsers(dest='observed_action',required=True)
+    observed_list=observed_sub.add_parser('list');observed_list.add_argument('--slots',type=int,choices=[3,8])
+    observed_history=observed_sub.add_parser('history');observed_history.add_argument('offer_uuid');observed_history.add_argument('--offset',type=int,default=0)
+    observed_record=observed_sub.add_parser('record');observed_record.add_argument('offer_uuid')
+    observed_record.add_argument('--input',required=True);observed_record.add_argument('--expected-revision',type=int,required=True);observed_record.add_argument('--operation-id',required=True)
+    for action in ('preview-csv','apply-csv'):
+        command=observed_sub.add_parser(action);command.add_argument('--input',required=True)
+        if action=='apply-csv':command.add_argument('--expected-import-hash',required=True);command.add_argument('--backup',required=True)
+        command.add_argument('--json',action='store_true')
+    for command in (observed_list,observed_history,observed_record):command.add_argument('--json',action='store_true')
     review_sub=review_parser.add_subparsers(dest='review_action',required=True)
     queue=review_sub.add_parser('queue')
     queue.add_argument('--tag',default='');queue.add_argument('--unreviewed',action='store_true')
@@ -2636,6 +2668,8 @@ def _main() -> None:
         snapshot_list(args)
     elif args.command=='reviews':
         trade_review_cmd(args)
+    elif args.command=='observed':
+        observed_cmd(args)
     elif args.command == "config":
         if args.config_action in ('preview','apply','rollback'):
             config_edit_cmd(args)

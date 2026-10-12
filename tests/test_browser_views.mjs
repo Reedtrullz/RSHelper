@@ -3,6 +3,38 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('observed receipt drafts and retry identity stay private and profile scoped',async()=>{
+  const calls=[];const {context,elements}=harness(async(url,options={})=>{
+    calls.push({url,body:options.body?JSON.parse(options.body):null});return new Response(JSON.stringify({error:'Synthetic failure'}),{status:500});
+  });
+  vm.runInContext("authenticated=true;accessReady=true;accessMode='owner';capabilities={features:['private-state']};view='observed';observedState={can_write:true,revision:0,offers:[]};observedOfferUuid='11111111-1111-4111-8111-111111111111'",context);
+  for(const [id,value] of Object.entries({obsState:'planned',obsItem:'2',obsSide:'buy',obsQty:'10',obsPrice:'100',obsFilled:'0',obsCollected:'0',obsGp:'0',obsFees:'0',obsTime:'2026-10-12T10:00:00+00:00',obsEvidence:'<private manual receipt>'}))elements.set(id,{value});
+  elements.set('obsCorrect',{checked:false});
+  await vm.runInContext('appendObserved()',context);await vm.runInContext('appendObserved()',context);
+  assert.equal(calls.length,2);assert.equal(calls[0].url,'/api/observed');assert.equal(calls[0].body.operation_id,calls[1].body.operation_id);
+  assert.equal(calls[0].body.event.source,'manual');assert.equal(calls[0].body.event.evidence,'<private manual receipt>');
+  vm.runInContext('disconnectOwner()',context);
+  assert.equal(vm.runInContext('observedState',context),null);assert.equal(vm.runInContext('pendingObserved',context),null);
+});
+
+test('observed asynchronous reads cannot replace a different view and paper profit is never shown as observed',async()=>{
+  let resolve;const {context}=harness(()=>new Promise(r=>{resolve=r}));
+  vm.runInContext("authenticated=true;accessReady=true;accessMode='owner';capabilities={features:['private-state']};view='observed'",context);
+  const loading=vm.runInContext('renderObserved()',context);
+  vm.runInContext("view='market';viewEpoch++;document.getElementById('listBody').innerHTML='New view'",context);
+  resolve(new Response(JSON.stringify({offers:[],revision:0,can_write:false,actual_cash_flow:123,realized_profit:null})));await loading;
+  assert.equal(context.document.getElementById('listBody').innerHTML,'New view');
+});
+
+test('new observed form supplies canonical UTC fractional seconds and native labels',()=>{
+  const {context}=harness();
+  vm.runInContext('observedState={can_write:true,revision:0,offers:[]};editObserved("")',context);
+  const html=context.document.getElementById('contextPanel').innerHTML;
+  const time=html.match(/id="obsTime" required value="([^"]+)"/)[1];
+  assert.match(time,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+00:00$/);
+  assert.ok(Number.isFinite(Date.parse(time)));assert.match(html,/label for="obsItem"/);assert.match(html,/type="submit"/);
+});
+
 test('private review retries retain operation identity and free text stays out of URLs',async()=>{
   const calls=[];const {context,elements}=harness(async(url,options={})=>{
     calls.push({url,body:JSON.parse(options.body)});
