@@ -11,7 +11,7 @@ let allItems=[],signalsMap={},meta={},watchIds=new Set();
 let selectedId=null,view='market';
 let sortKeys=[{col:'gp_per_hour',dir:'desc'}];
 let chip='all',density='normal',strategy='';
-let viewRows=[];
+let viewRows=[],activityCursor=null,activitySince='',activityUntil='';
 let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
 let countdown=refreshSecs;
@@ -475,6 +475,7 @@ function setDensity(){
 }
 function setStrategy(v){
   strategy=v;
+  activityCursor=null;
   document.querySelectorAll('[data-strategy]').forEach(b=>b.classList.toggle('active',b.dataset.strategy===strategy));
   setView(view);
 }
@@ -625,7 +626,10 @@ function viewbarHtml(){
     return '<div class="viewbar"><span class="title">Activity</span>'+
       '<button class="toggle-btn'+(strategy===''?' active':'')+'" data-strategy="" onclick="setStrategy(\'\')">All</button>'+
       '<button class="toggle-btn'+(strategy==='auto'?' active':'')+'" data-strategy="auto" onclick="setStrategy(\'auto\')">Auto</button>'+
-      '<button class="toggle-btn'+(strategy==='manual'?' active':'')+'" data-strategy="manual" onclick="setStrategy(\'manual\')">Manual</button></div>';
+      '<button class="toggle-btn'+(strategy==='manual'?' active':'')+'" data-strategy="manual" onclick="setStrategy(\'manual\')">Manual</button>'+
+      '<label for="activitySince">From (UTC)</label><input id="activitySince" type="date" value="'+escHtml(activitySince)+'">'+
+      '<label for="activityUntil">Through (UTC)</label><input id="activityUntil" type="date" value="'+escHtml(activityUntil)+'">'+
+      '<button type="button" class="act-btn" onclick="applyActivityFilters()">Apply dates</button></div>';
   }
   return '<div class="viewbar"><span class="title">'+view.charAt(0).toUpperCase()+view.slice(1)+'</span></div>';
 }
@@ -1776,6 +1780,12 @@ async function renderOverview(){
     current.fail(e);
   }
 }
+function activityPage(cursor){activityCursor=cursor;renderActivity();}
+function applyActivityFilters(){
+  activitySince=document.getElementById('activitySince').value;
+  activityUntil=document.getElementById('activityUntil').value;
+  activityCursor=null;renderActivity();
+}
 async function renderActivity(){
   const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
@@ -1784,16 +1794,22 @@ async function renderActivity(){
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading activity...</div>';
   context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
-  const stratParam=strategy?'?strategy='+strategy:'';
+  const params=new URLSearchParams({limit:'50'});
+  if(strategy)params.set('strategy',strategy);
+  if(activitySince)params.set('since',activitySince);
+  if(activityUntil)params.set('until',activityUntil);
+  if(activityCursor)params.set('cursor',activityCursor);
   try{
-    const [pr,tr,hr]=await Promise.all([
-      apiFetch('/api/pnl'+stratParam),apiFetch('/api/trades'+stratParam),
-      apiFetch('/api/history?paper=1'+(strategy?'&strategy='+strategy:''))]);
-    if(!pr.ok||!tr.ok||!hr.ok)throw new Error('activity API failed');
-    const pnl=await pr.json();
-    const trades=(await tr.json()).trades||[];
-    const h=await hr.json();
+    const response=await apiFetch('/api/activity?'+params);
+    if(!response.ok)await rejectApiError(response);
+    const page=await response.json();
     if(!current())return;
+    if(page.restart){
+      current.fail(new Error('Journal changed. Restart Activity to load its current revision.'));
+      body.innerHTML='<div class="notice">Journal changed. <button type="button" class="act-btn" onclick="activityPage(null)">Restart Activity</button></div>'+body.innerHTML;
+      return;
+    }
+    const pnl=page.pnl,trades=page.trades||[],h=page.history;
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Activity</div>'+
       '<div class="metric-grid">'+
       metric('Total P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
@@ -1805,7 +1821,7 @@ async function renderActivity(){
       metric('Max Drawdown',format(pnl.max_drawdown||0)+' gp',(pnl.max_drawdown||0)>0?'red':'')+
       metric('Tax Paid',format(pnl.total_tax_paid||0)+' gp','')+
       '</div>';
-    let html='';
+    let html='<div class="notice">'+format(page.filtered_count)+' filtered / '+format(page.total_count)+' total · UTC</div>';
     const buckets=h.buckets||[];
     if(buckets.length>=2){
       html+='<h3 class="chart-title">Cumulative P&L</h3><canvas id="actCum" height="200"></canvas>';
@@ -1816,7 +1832,7 @@ async function renderActivity(){
       html+='<div class="loading">No trades yet — open one with <code>trade open &lt;item&gt;</code> or <code>trade paper &lt;item&gt;</code>.</div>';
     }else{
       html+='<table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Profit</th><th></th></tr></thead><tbody>';
-      trades.slice(0,20).forEach(t=>{
+      trades.forEach(t=>{
         const p=t.profit||0;
         html+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
           '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+
@@ -1826,6 +1842,8 @@ async function renderActivity(){
       html+='</tbody></table>';
     }
     html+=historyTablesHtml(h);
+    html+='<div class="viewbar"><button type="button" class="act-btn" onclick="activityPage(null)">First page</button>'+
+      (page.next_cursor?'<button type="button" class="act-btn" data-cursor="'+escHtml(page.next_cursor)+'" onclick="activityPage(this.dataset.cursor)">Older</button>':'')+'</div>';
     body.innerHTML=html;
     if(buckets.length>=2){
       drawCumulative(document.getElementById('actCum'),buckets);

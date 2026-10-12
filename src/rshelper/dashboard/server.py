@@ -957,9 +957,22 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         trades = list_trades(note=note, profile=profile, strategy=strategy)
         return {"trades": [asdict(t) for t in trades], "count": len(trades)}
 
-    def get_pnl(note: str = "", strategy: str = "") -> dict:
+    def get_activity(filters, cursor, limit):
+        from rshelper import journal
+        from rshelper.history import build_history
+        revision, trades = journal.read_trade_snapshot(profile)
+        page = journal.page_trades(trades, revision=revision, cursor=cursor,
+                                   limit=limit, filters=filters)
+        if page['restart']:
+            return page
+        selected = journal._filtered_trades(trades, filters)
+        page['pnl'] = get_pnl(trades=selected)
+        page['history'] = build_history(profile, paper_only=False, trades=selected)
+        return page
+
+    def get_pnl(note: str = "", strategy: str = "", *, trades=None) -> dict:
         from rshelper.journal import compute_pnl
-        pnl = compute_pnl(note=note, profile=profile, strategy=strategy)
+        pnl = compute_pnl(note=note, profile=profile, strategy=strategy, trades=trades)
         d = {"total_profit": pnl.total_profit, "total_tax_paid": pnl.total_tax_paid,
              "total_cost_basis": pnl.total_cost_basis,
              "roi_pct": round(pnl.roi_pct, 2),
@@ -1064,7 +1077,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness)
+                           readiness_fn=get_readiness, activity_fn=get_activity)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

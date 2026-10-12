@@ -1,6 +1,10 @@
 """Trade journal: log trades, compute P&L."""
 import threading
-from dataclasses import dataclass
+import base64
+import hashlib
+import json
+import re
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -227,10 +231,18 @@ def list_trades(item_name: str = "", since: str = "", top: int = 0,
 
 
 def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
-                strategy: str = "") -> PnLSummary:
+                strategy: str = "", *, trades=None) -> PnLSummary:
     """Compute profit and loss summary, optionally since a date."""
-    trades_list = list_trades(since=since, profile=profile, note=note,
-                              strategy=strategy)
+    if trades is None:
+        trades = list_trades(since=since, profile=profile, note=note, strategy=strategy)
+        return summarize_trades(trades, {})
+    return summarize_trades(trades, {'since': since, 'note': note, 'strategy': strategy})
+
+
+def summarize_trades(trades, filters=None) -> PnLSummary:
+    """Compute the existing economics from one caller-owned snapshot."""
+    trades_list = sorted(_filtered_trades(trades, filters),
+                         key=lambda trade: _utc(trade.timestamp), reverse=True)
     if not trades_list:
         return PnLSummary()
 
@@ -255,19 +267,12 @@ def compute_pnl(since: str = "", profile: str | None = None, note: str = "",
         peak = max(peak, cumulative)
         max_drawdown = max(max_drawdown, peak - cumulative)
 
-    timestamps = sorted(t.timestamp for t in trades_list)
+    timestamps = sorted(_utc(t.timestamp) for t in trades_list)
     active_gp_per_hour = 0.0
     if len(timestamps) >= 2:
         try:
-            # Normalize timestamps so a mix of naive (legacy) and tz-aware
-            # entries doesn't make fromisoformat raise on the comparison.
-            def _parse(ts: str):
-                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt
-            first = _parse(timestamps[0])
-            last = _parse(timestamps[-1])
+            first = timestamps[0]
+            last = timestamps[-1]
             hours = (last - first).total_seconds() / 3600
             if hours > 0:
                 active_gp_per_hour = total_profit / hours
@@ -305,10 +310,11 @@ class ItemPnL:
 
 def compute_pnl_by_item(since: str = "",
                         profile: str | None = None, note: str = "",
-                        strategy: str = "") -> list[ItemPnL]:
+                        strategy: str = "", *, trades=None) -> list[ItemPnL]:
     """Per-item P&L breakdown, sorted by profit descending."""
-    trades_list = list_trades(since=since, profile=profile, note=note,
-                              strategy=strategy)
+    trades_list = (_filtered_trades(trades, {'since': since, 'note': note, 'strategy': strategy})
+                   if trades is not None else list_trades(
+                       since=since, profile=profile, note=note, strategy=strategy))
     rows: dict[int, ItemPnL] = {}
     wins: dict[int, int] = {}
     for t in trades_list:
@@ -323,3 +329,105 @@ def compute_pnl_by_item(since: str = "",
         row.roi_pct = (row.profit / row.cost_basis * 100) if row.cost_basis > 0 else 0.0
         row.win_rate = (wins.get(row.item_id, 0) / row.trade_count * 100) if row.trade_count else 0.0
     return sorted(rows.values(), key=lambda r: r.profit, reverse=True)
+
+
+def read_trade_snapshot(profile=None):
+    """One validated load; tombstones and all fields contribute to the revision."""
+    with _TRADE_LOCK:
+        raw = _load(profile)
+    revision = hashlib.sha256(json.dumps(raw, sort_keys=True, separators=(',', ':'),
+                                         allow_nan=False).encode()).hexdigest()
+    rows = tuple(Trade(**filter_fields(Trade, row)) for row in raw if not row.get('tombstone', False))
+    return revision, rows
+
+
+def _utc(value):
+    parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed.astimezone(timezone.utc)
+
+
+def _trade_key(trade):
+    return (_utc(trade.timestamp).isoformat(), trade.record_uuid or 'legacy:' + str(trade.id))
+
+
+def _activity_filters(filters):
+    filters = dict(filters or {})
+    if set(filters) - {'since', 'until', 'strategy', 'note'}:
+        raise ValueError('unknown Activity filter')
+    if any(not isinstance(value, str) or len(value) > 256 for value in filters.values()):
+        raise ValueError('invalid Activity filter value')
+    if filters.get('strategy', '') not in ('', 'auto', 'manual'):
+        raise ValueError('invalid strategy')
+    for field in ('since', 'until'):
+        if filters.get(field):
+            _utc(filters[field])
+    if filters.get('since') and filters.get('until'):
+        start, end = _utc(filters['since']), _utc(filters['until'])
+        if (start.date() > end.date() if len(filters['until']) == 10 else start > end):
+            raise ValueError('since must not exceed until')
+    return {key: value for key, value in filters.items() if value}
+
+
+def _filtered_trades(trades, filters=None):
+    filters = _activity_filters(filters)
+    since = _utc(filters['since']) if filters.get('since') else None
+    until = _utc(filters['until']) if filters.get('until') else None
+    whole_day = bool(until and len(filters['until']) == 10)
+    rows = []
+    for trade in trades:
+        timestamp = _utc(trade.timestamp)
+        if since and timestamp < since or until and (
+                timestamp.date() > until.date() if whole_day else timestamp >= until):
+            continue
+        if filters.get('note') and trade.note != filters['note']:
+            continue
+        strategy = filters.get('strategy')
+        if strategy == 'auto' and trade.strategy != 'auto' or strategy == 'manual' and trade.strategy == 'auto':
+            continue
+        rows.append(trade)
+    return rows
+
+
+def page_trades(trades, *, revision, cursor=None, limit=50, filters=None):
+    """Bound rows and bind continuation to journal content and filter identity."""
+    if type(limit) is not int or not 1 <= limit <= 100:
+        raise ValueError('Activity limit must be 1..100')
+    if not isinstance(revision, str) or not revision or len(revision) > 128:
+        raise ValueError('invalid journal revision')
+    filters = _activity_filters(filters)
+    fingerprint = hashlib.sha256(json.dumps(filters, sort_keys=True).encode()).hexdigest()
+    result = {'revision': revision, 'total_count': len(trades), 'filtered_count': 0,
+              'trades': [], 'next_cursor': None, 'restart': False, 'timezone': 'UTC'}
+    after, offset = None, 0
+    if cursor:
+        if not isinstance(cursor, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,2048}', cursor):
+            raise ValueError('invalid Activity cursor')
+        try:
+            decoded = json.loads(base64.urlsafe_b64decode(cursor + '=' * (-len(cursor) % 4)))
+        except (ValueError, UnicodeError) as error:
+            raise ValueError('invalid Activity cursor') from error
+        if (not isinstance(decoded, dict) or set(decoded) != {'v', 'revision', 'filters', 'after', 'offset'}
+                or type(decoded['v']) is not int or decoded['v'] != 1
+                or not isinstance(decoded['revision'], str) or not isinstance(decoded['filters'], str)
+                or not isinstance(decoded['after'], list) or len(decoded['after']) != 2
+                or any(not isinstance(value, str) for value in decoded['after'])
+                or type(decoded['offset']) is not int or decoded['offset'] < 1):
+            raise ValueError('invalid Activity cursor')
+        if decoded['revision'] != revision or decoded['filters'] != fingerprint:
+            return dict(result, restart=True, reason='journal-or-filters-changed')
+        after = tuple(decoded['after'])
+        offset = decoded['offset']
+    rows = sorted(_filtered_trades(trades, filters), key=_trade_key, reverse=True)
+    result['filtered_count'] = len(rows)
+    if after is not None:
+        if offset > len(rows) or _trade_key(rows[offset - 1]) != after:
+            raise ValueError('cursor record is absent from this revision')
+    page = rows[offset:offset + limit]
+    result['trades'] = [dict(asdict(trade), timestamp=_utc(trade.timestamp).isoformat())
+                        for trade in page]
+    if offset + limit < len(rows):
+        continuation = {'v': 1, 'revision': revision, 'filters': fingerprint,
+                        'after': _trade_key(page[-1]), 'offset': offset + len(page)}
+        result['next_cursor'] = base64.urlsafe_b64encode(
+            json.dumps(continuation, separators=(',', ':')).encode()).decode().rstrip('=')
+    return result
