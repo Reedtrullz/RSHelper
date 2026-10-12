@@ -17,6 +17,7 @@ from rshelper.dashboard.http_inputs import (
 
 
 _GET_RESOURCES = {
+    '/api/annotations':'private-state',
     '/api/observed':'private-state',
     "/": "static",
     "/api/capabilities": "capabilities",
@@ -125,6 +126,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  reviews_fn: Callable[..., dict] | None = None,
                  observed_fn: Callable[..., dict] | None = None,
                  scenario_fn: Callable[..., dict] | None = None,
+                 annotations_fn: Callable[..., dict] | None = None,
                  catalog_fn: Callable[..., dict] | None = None,
                  item_details_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
@@ -176,7 +178,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except HttpInputError as exc:
                 self.send_error(exc.status, str(exc))
                 return
-            if path=='/api/scenario':
+            if path=='/api/annotations':
+                try:
+                    if annotations_fn is None:self.send_error(404)
+                    else:self._serve_json(annotations_fn())
+                except (ValueError,OSError):self.send_error(503,'Annotations unavailable')
+            elif path=='/api/scenario':
                 self._serve_scenario()
             elif path=='/api/observed':
                 self._serve_observed()

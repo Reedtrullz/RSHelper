@@ -161,6 +161,10 @@ def main():
     select=commands.add_parser('select');select.add_argument('--dataset',required=True);select.add_argument('--configs',required=True)
     select.add_argument('--slots',required=True,type=int,choices=(3,8))
     report=commands.add_parser('report');report.add_argument('--dataset',required=True);report.add_argument('--selection',required=True)
+    windows=commands.add_parser('event-window')
+    windows.add_argument('--dataset',required=True);windows.add_argument('--event-id',action='append',required=True)
+    windows.add_argument('--selection-at',required=True,type=int);windows.add_argument('--selection-note',required=True)
+    windows.add_argument('--retrospective',action='store_true');windows.add_argument('--item-id',type=int,action='append')
     args=parser.parse_args()
     try:
         if args.command=='pin':result=pin_dataset(args.data,args.mapping,args.destination,source={
@@ -171,7 +175,16 @@ def main():
             raw=read_json(args.configs)
             if not isinstance(raw,list) or not 1<=len(raw)<=64:raise ValueError('1..64 configuration objects required')
             result=select_parameters(args.dataset,[ReplayConfig(**cfg) for cfg in raw],slot_limit=args.slots)
-        else:result=evaluate_holdout(args.dataset,read_json(args.selection))
+        elif args.command=='report':result=evaluate_holdout(args.dataset,read_json(args.selection))
+        elif args.command=='event-window':
+            from rshelper.event_annotations import reviewed_events,event_windows
+            manifest,data,_=load_dataset(args.dataset)
+            events={row['id']:row for row in reviewed_events()}
+            if set(args.event_id)-set(events):raise ValueError('unsupported reviewed event selection')
+            result=event_windows(data,[events[iid] for iid in args.event_id],dataset_id=manifest['dataset_id'],
+                selection_at=args.selection_at,selection_note=args.selection_note,retrospective=args.retrospective,item_ids=args.item_id)
+        else:
+            raise ValueError('unknown dataset command')
         print(json.dumps(result,sort_keys=True,allow_nan=False));return 0
     except (OSError,ValueError,TypeError,KeyError) as error:
         print(str(error),file=sys.stderr);return 1

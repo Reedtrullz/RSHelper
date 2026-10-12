@@ -3,6 +3,17 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('chart event alternatives separate reviewed sources from private observations and escape text',()=>{
+  const {context}=harness();
+  const events=[{start:100,end:200,item_ids:[],groups:[],class:'reviewed-source',review_state:'reviewed',title:'Tax context',uncertainty:'Date only',reviewed_at:300,reviewer:'Synthetic reviewer',source_url:'https://example.com/source'},
+    {start:100,end:200,item_ids:[2],groups:[],class:'private-observation',review_state:'reviewed',title:'<private>',uncertainty:'Unverified',reviewed_at:300,reviewer:'Owner',source_url:'https://example.com/private'}];
+  context.syntheticEvents=events;
+  const html=vm.runInContext('annotationHtml(syntheticEvents,2,100,200)',context);
+  assert.match(html,/Event context \(2\)/);assert.match(html,/Reviewed source/);assert.match(html,/Private observation; unverified/);
+  assert.match(html,/&lt;private&gt;/);assert.doesNotMatch(html,/href="https:\/\/example.com\/private"/);
+  assert.match(vm.runInContext('annotationHtml(syntheticEvents,2,200,300)',context),/Event context \(0\)/);
+});
+
 test('scenario calculation preserves frozen revision and unknown totals without private URL data',async()=>{
   const calls=[];const {context,elements}=harness(async(url,options)=>{
     calls.push({url,body:JSON.parse(options.body)});

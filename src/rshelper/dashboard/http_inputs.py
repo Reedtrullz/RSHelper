@@ -169,7 +169,7 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
-    if route in ('/api/observed','/api/scenario') and values:raise HttpInputError('Query fields are not supported')
+    if route in ('/api/observed','/api/scenario','/api/annotations') and values:raise HttpInputError('Query fields are not supported')
     if route=='/api/catalog':
         if set(values)-{'q','limit'}:raise HttpInputError('Unknown catalog query field')
         text(values.get('q',[''])[0],'q',required=False,limit=200)
