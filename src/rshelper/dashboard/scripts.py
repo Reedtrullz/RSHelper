@@ -169,6 +169,7 @@ function disconnectOwner(){
   if(sseController){sseController.abort();sseController=null;}
   ownerToken='';authenticated=false;signalsMap={};meta={};watchIds=new Set();alertsData={alerts:[],unread:0};
   geData=null;bankData=null;alchItems=[];confMap={};viewRows=[];selectedId=null;strategy='';view='market';sseOk=false;
+  pendingPaperOps={};geOffset=0;
   ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
@@ -479,24 +480,35 @@ function setStrategy(v){
   document.querySelectorAll('[data-strategy]').forEach(b=>b.classList.toggle('active',b.dataset.strategy===strategy));
   setView(view);
 }
+let pendingPaperOps={},geOffset=0;
+async function submitPaperAction(fields){
+  const key=JSON.stringify(fields);
+  const stateResponse=await apiFetch('/api/ge');
+  const state=await stateResponse.json();
+  if(!stateResponse.ok)throw new Error(apiErrorMessage(state,stateResponse.status));
+  if(!state.initialized)throw new Error('Initialize the shared paper budget and account capability with trade budget.');
+  pendingPaperOps[key]??={...fields,operation_id:newCloseOperationId()};
+  const request={...pendingPaperOps[key],expected_revision:state.revision};
+  const response=await apiFetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(request)});
+  const result=await response.json();
+  if(!response.ok)throw new Error(apiErrorMessage(result,response.status)+'; operation '+request.operation_id);
+  delete pendingPaperOps[key];
+  return result;
+}
 async function paperTrade(){
   const item=document.getElementById('ptItem').value.trim();
-  const qty=parseInt(document.getElementById('ptQty').value,10);
+  const qty=Number(document.getElementById('ptQty').value);
   const action=document.getElementById('ptAction').value;
-  if(!item||!qty||qty<=0){
-    setStatus('Enter an item and a positive quantity',true);
+  if(!item||!Number.isSafeInteger(qty)||qty<=0){
+    setStatus('Enter an item and a positive whole quantity',true);
     return;
   }
   try{
-    const r=await apiFetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action,item,qty})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
-    setStatus(action==='open'?'Position opened':'Paper trade logged',false);
+    await submitPaperAction({action,item,qty});
+    setStatus('Paper purchase queued; cash reserved, no fill booked',false);
     fetchData();
-  }catch(e){
-    setStatus('Error: '+e.message,true);
-  }
+  }catch(e){setStatus('Error: '+e.message,true);}
 }
 function fetchData(){
   if(refreshFlight&&refreshFlight.epoch===authEpoch){refreshFlight.again=true;return refreshFlight.promise;}
@@ -592,7 +604,7 @@ function viewbarHtml(){
       '<input id="ptItem" list="ptItems" placeholder="Item name" aria-label="Item name" style="width:150px">'+
       '<datalist id="ptItems">'+allItems.map(i=>'<option value="'+escHtml(i.name)+'">').join('')+'</datalist>'+
       '<input id="ptQty" type="number" min="1" placeholder="Qty" aria-label="Quantity" style="width:64px">'+
-      '<select id="ptAction" aria-label="Trade action"><option value="open">Open position</option><option value="instant">Instant trade</option></select>'+
+      '<select id="ptAction" aria-label="Paper purchase policy"><option value="open">Buy and hold</option><option value="roundtrip">Buy then offer for sale</option></select>'+
       '<button class="act-btn" onclick="paperTrade()">Trade</button></div>';
   }
   if(view==='watchlist'){
@@ -1183,104 +1195,105 @@ async function renderGE(){
   renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
-  body.innerHTML='<div class="loading"><span class="spinner"></span>Loading Grand Exchange...</div>';
-  context.innerHTML='<div class="loading"><span class="spinner"></span></div>';
+  body.innerHTML='<div class="loading"><span class="spinner"></span>Loading paper offers...</div>';
   try{
-    const r=await apiFetch('/api/ge');
-    if(!r.ok)throw new Error('GE API failed');
+    const r=await apiFetch('/api/ge?offset='+geOffset);
+    if(!r.ok)throw new Error('Paper offer API failed');
     const data=await r.json();
     if(!current())return;
     geData=data;
-    document.getElementById('badgeGE').textContent=geData.slots.length||0;
-    const slots=geData.slots||[];
+    document.getElementById('badgeGE').textContent=data.total_count||0;
+    const slots=data.slots||[];
     let h='<div class="ge-grid">';
     slots.forEach(s=>{h+=geSlotHtml(s)});
-    for(let i=slots.length;i<8;i++)h+=geEmptySlotHtml();
+    const empty=Math.min(8,data.empty_count??0);
+    if(!geOffset)for(let i=0;i<empty;i++)h+=geEmptySlotHtml();
     h+='</div>';
-    if(!slots.length){
-      h+='<div class="loading">No active offers — open a position with <code>trade open &lt;item&gt;</code> or the Trading tab.</div>';
-    }
+    if(!data.total_count)h+='<div class="loading">No active paper offers or recorded holdings.</div>';
+    if(geOffset)h+='<button class="act-btn" onclick="geOffset=Math.max(0,geOffset-50);renderGE()">Previous offers</button>';
+    if(data.next_offset!=null)h+='<button class="act-btn" onclick="geOffset='+data.next_offset+';renderGE()">Next offers</button>';
     body.innerHTML=h;
-    context.innerHTML='<div class="item-name" style="margin-bottom:12px">Grand Exchange</div>'+
-      '<div class="metric-grid">'+
-      metric('Active Offers',format(slots.length)+' / 8','gold')+
-      metric('Open Value',format(geData.total_value||0)+' coins','')+
-      metric('Empty Slots',format(geData.empty_count||0),'')+
-      '</div>'+
-      '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
-      'Fill progress is simulated from 5-minute trade volume — high-volume items fill faster. Click Collect when an offer reaches 100%.</div>';
+    const budget=data.budget||{};
+    const capacity=data.slot_limit==null?'Unknown':format(data.slot_limit);
+    context.innerHTML='<div class="item-name">Paper offers</div><div class="metric-grid">'+
+      metric('Open cycles',format(data.total_count||0)+' / '+capacity,'gold')+
+      metric('Invested cash',format(budget.invested_cash??data.total_value??0)+' gp','')+
+      metric('Reserved cash',budget.reserved_cash==null?'Unknown':format(budget.reserved_cash)+' gp','')+
+      metric('Available cash',budget.available_cash==null?'Unknown':format(budget.available_cash)+' gp','')+
+      metric('Overflow',budget.slot_overflow==null?'Unknown':format(budget.slot_overflow),'')+'</div>'+
+      '<div class="notice">Illustrative paper participation in completed market windows. Purchases, sales and collection are separate. Unknown, proxy or stale execution evidence holds progress.</div>'+
+      (data.unknown||[]).map(reason=>'<div class="notice">'+escHtml(reason)+'</div>').join('');
     current.finish();
   }catch(e){
     if(!current()||e.name==='AbortError')return;
-    body.innerHTML='<div class="loading">Error loading Grand Exchange: '+escHtml(e.message)+'</div>';
+    body.innerHTML='<div class="loading">Error loading paper offers: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
     current.fail(e);
   }
 }
 function geSlotHtml(slot){
   const pct=Math.max(0,Math.min(100,Math.round((slot.fill_pct||0)*100)));
-  const buy=slot.offer_type==='buy';
-  const filled=pct>=100;
+  const buying=slot.stage==='buying',selling=slot.stage==='selling';
   let action='';
-  if(filled){
-    action=slot.auto
-      ?'<div class="ge-collect-btn visible" style="background:#2a4a2a;border-color:#4ecca3;color:#4ecca3;cursor:default">Auto</div>'
-      :'<button class="ge-collect-btn visible" onclick="collectOffer('+slot.position_id+',event)">Collect</button>';
+  if(!slot.auto&&slot.offer_id){
+    if(buying||selling)action+='<button class="act-btn" onclick="paperOfferAction(\'advance\','+slot.index+',event)">Check completed window</button>';
+    if(buying)action+='<button class="act-btn" onclick="paperOfferAction(\'cancel-buy\','+slot.index+',event)">Cancel unfilled purchase</button>';
+    if(selling)action+='<button class="act-btn" onclick="paperOfferAction(\'cancel-sale\','+slot.index+',event)">Cancel unfilled sale</button>';
+    if(slot.can_collect)action+='<button class="ge-collect-btn visible" onclick="paperOfferAction(\'collect\','+slot.index+',event)">Collect confirmed sale</button>';
   }
-  return '<div class="ge-slot" onclick="geSlotClick('+slot.position_id+')">'+
-    '<div class="ge-offer-type '+(buy?'buy':'sell')+'">'+(buy?'Buy':'Sell')+'</div>'+
+  const progress=slot.stage==='legacy-unknown'?'Execution unknown':format(slot.completed_qty)+' / '+format(slot.target_qty)+' units';
+  return '<div class="ge-slot"><div class="ge-offer-type '+(buying?'buy':'sell')+'">'+escHtml(slot.stage)+'</div>'+
     '<img class="ge-slot-icon" src="'+escHtml(slot.icon_url_detail||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
-    '<div class="ge-slot-name" title="'+escHtml(slot.name)+'">'+escHtml(slot.name)+'</div>'+
-    '<div class="ge-fill-track"><div class="ge-fill-bar '+(buy?'buy':'sell')+(filled?' filled':'')+'" style="width:'+pct+'%"></div></div>'+
-    '<div class="ge-slot-price">'+format(slot.price)+' coins</div>'+
-    action+
-    '</div>';
+    '<div class="ge-slot-name">'+escHtml(slot.name)+'</div>'+
+    '<div>'+escHtml(progress)+'</div>'+
+    (buying||selling?'<div class="ge-fill-track" role="progressbar" aria-label="Paper '+(buying?'purchase':'sale')+' progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><div class="ge-fill-bar '+(buying?'buy':'sell')+'" style="width:'+pct+'%"></div></div>':'')+
+    '<div class="ge-slot-price">'+format(slot.price)+' gp</div>'+
+    '<button class="act-btn" onclick="geSlotClick('+slot.index+')">Details'+(slot.auto?' (auto-trader)':'')+'</button>'+action+'</div>';
 }
 function geEmptySlotHtml(){
-  return '<div class="ge-slot empty"><div style="font-size:26px">&#127892;</div><div class="dim" style="font-size:10px">Empty</div></div>';
+  return '<div class="ge-slot empty"><div class="dim">Available slot</div></div>';
 }
-async function collectOffer(positionId,ev){
+async function paperOfferAction(action,index,ev){
   if(ev)ev.stopPropagation();
-  const btn=ev&&ev.target;
-  if(btn)btn.textContent='Collecting...';
-  try{
-    const r=await apiFetch('/api/ge/collect',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({position_id:positionId})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
-    setStatus('Collected '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp',false);
-    fetchData();
-  }catch(e){
-    setStatus('Error: '+e.message,true);
-    if(btn)btn.textContent='Collect';
+  const slot=(geData&&geData.slots||[]).find(row=>row.index===index);
+  if(!slot||slot.auto)return;
+  const fields={action};
+  if(action==='adopt')fields.lot_uid=slot.lot_uid;
+  else{
+    fields.offer_id=slot.offer_id;
+    if(action==='start-sale'){
+      fields.qty=Number(document.getElementById('geSellQty').value);
+      fields.sell_price=Number(document.getElementById('geSellPrice').value);
+      if(!Number.isSafeInteger(fields.qty)||fields.qty<=0||!Number.isSafeInteger(fields.sell_price)||fields.sell_price<=0){
+        setStatus('Enter a positive whole sale quantity and limit price',true);return;
+      }
+    }
   }
+  try{
+    const result=await submitPaperAction(fields);
+    setStatus(result.reason||(action==='collect'?'Confirmed sale collected':'Paper offer updated'),false);
+    fetchData();
+  }catch(e){setStatus('Error: '+e.message,true);}
 }
-function geSlotClick(positionId){
-  const s=(geData&&geData.slots||[]).find(x=>x.position_id===positionId);
-  if(!s)return;
-  const pnl=s.unrealized;
-  const pnlHtml=pnl!=null&&pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">-</span>';
-  const curHtml=s.current_price!=null?format(s.current_price)+' gp':'<span class="dim">-</span>';
-  const spreadHtml=s.spread_pct!=null?s.spread_pct.toFixed(2)+'%':'<span class="dim">-</span>';
-  const entryOfferHtml=s.entry_offer!=null?format(s.entry_offer)+' gp':'<span class="dim">-</span>';
-  const entrySellHtml=s.entry_sell!=null?format(s.entry_sell)+' gp':'<span class="dim">-</span>';
-  document.getElementById('contextPanel').innerHTML=
-    '<div class="item-name">'+escHtml(s.name)+'</div>'+
-    '<div class="metric-grid">'+
-    metric('Offer',s.offer_type==='buy'?'Buy':'Sell','')+
-    metric('Quantity',format(s.qty),'')+
-    metric('Buy Price',format(s.buy_price)+' gp','')+
-    metric('Fill',Math.round((s.fill_pct||0)*100)+'%','gold')+
-    metric('Total Value',format(s.price)+' coins','')+
-    metric('Current Price',curHtml,'')+
-    metric('Unrealized',pnlHtml,'')+
-    metric('Age',fmtAge((s.age_minutes||0)*60),'')+
-    metric('Status',escHtml(s.status||'pending'),'')+
-    metric('Entry Bid',entrySellHtml,'')+
-    metric('Entry Offer',entryOfferHtml,'')+
-    metric('Entry Spread',spreadHtml,'')+
-    (s.auto?metric('Managed','Auto (trader)','gold'):'')+
-    '</div>';
+function geSlotClick(index){
+  const slot=(geData&&geData.slots||[]).find(row=>row.index===index);
+  if(!slot)return;
+  let html='<div class="item-name">'+escHtml(slot.name)+'</div><div class="metric-grid">'+
+    metric('Stage',escHtml(slot.stage),'')+
+    metric('Recorded quantity',format(slot.held_qty),'')+
+    metric('Purchase limit',format(slot.buy_price)+' gp','')+
+    metric('Current quote',slot.current_price==null?'Unavailable':format(slot.current_price)+' gp','')+
+    metric('Progress',format(slot.completed_qty)+' / '+format(slot.target_qty),'')+
+    metric('Age',fmtAge((slot.age_minutes||0)*60),'')+'</div><div class="notice">'+escHtml(slot.fill_reason)+'</div>';
+  if(!slot.auto&&geData.initialized){
+    if(slot.stage==='legacy-unknown'&&slot.lot_uid)
+      html+='<button class="act-btn" onclick="paperOfferAction(\'adopt\','+index+',event)">Adopt recorded holding; historical execution stays unknown</button>';
+    if(slot.stage==='bought')
+      html+='<label>Sale quantity<input id="geSellQty" type="number" min="1" step="1" value="'+slot.held_qty+'"></label>'+
+        '<label>Sale limit (gp)<input id="geSellPrice" type="number" min="1" step="1" value="'+(slot.current_price??'')+'"></label>'+
+        '<button class="act-btn" onclick="paperOfferAction(\'start-sale\','+index+',event)">Queue sale</button>';
+  }
+  document.getElementById('contextPanel').innerHTML=html;
 }
 async function renderBank(){
   const current=beginViewRequest();
@@ -1701,7 +1714,6 @@ async function renderPaper(){
 // One UUID per logical close: a retry after a lost or ambiguous response
 // reuses the same operation id so the server replays the pinned close
 // instead of booking a second realization. Cleared only on success.
-const pendingCloseOps={};
 function newCloseOperationId(){
   if(typeof crypto!=='undefined'&&crypto&&typeof crypto.randomUUID==='function'){
     return crypto.randomUUID();
@@ -1714,17 +1726,9 @@ function newCloseOperationId(){
 }
 async function closePosition(positionId,ev){
   if(ev)ev.stopPropagation();
-  if(!confirm('Close this position at the current market price?'))return;
-  const opKey=String(positionId);
-  pendingCloseOps[opKey]??=newCloseOperationId();
-  const operationId=pendingCloseOps[opKey];
   try{
-    const r=await apiFetch('/api/positions',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'close',position_id:positionId,operation_id:operationId})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(apiErrorMessage(d,r.status));
-    delete pendingCloseOps[opKey];
-    setStatus('Closed '+d.name+': '+(d.profit>0?'+':'')+format(d.profit)+' gp',false);
+    await submitPaperAction({action:'queue-sale',position_id:positionId,qty:null});
+    setStatus('Sale queued; separate market fills and collection required',false);
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}
 }

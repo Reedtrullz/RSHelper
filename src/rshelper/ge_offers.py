@@ -1,14 +1,129 @@
 """Grand Exchange offer simulation: fill progress, slots, collect."""
 
 import time
+import copy
+import math
 from datetime import datetime, timezone
+from typing import TypedDict
 
-from rshelper.journal import log_trade
 from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.market_data import executed_volume_supported, provenance
-from rshelper.positions import close_positions, list_positions
+from rshelper.positions import list_positions
 
 MAX_GE_SLOTS = 8
+
+
+class PaperAdvance(TypedDict):
+    offer: dict[str,object]
+    fill: dict[str,str | int] | None
+    reason: str | None
+
+
+def advance_paper_offer(offer, market_snapshot, now, policy, *, window_consumed_qty=0):
+    if (not isinstance(policy,dict)
+            or set(policy)!={'model_id','participation_bps','max_window_age_sec'}
+            or policy['model_id']!='paper-conservative-v1'
+            or type(policy['participation_bps']) is not int or not 1<=policy['participation_bps']<=100
+            or type(policy['max_window_age_sec']) is not int or not 300<=policy['max_window_age_sec']<=600):
+        raise ValueError('explicit bounded paper participation policy required')
+    if type(now) not in (int,float) or not math.isfinite(now) or not 0<=now<=253402300799:
+        raise ValueError('invalid paper clock')
+    if type(window_consumed_qty) is not int or not 0<=window_consumed_qty<2**63:
+        raise ValueError('invalid shared window allocation')
+    if not isinstance(offer,dict) or type(offer.get('schema_version')) is not int or offer['schema_version']!=1:
+        raise ValueError('unsupported paper offer')
+    updated = copy.deepcopy(offer)
+    result: PaperAdvance = {'offer':updated,'fill':None,'reason':None}
+    if offer.get('stage')=='legacy-unknown':
+        result['reason']='legacy stage evidence unknown; migration review required'
+        return result
+    fields = {'schema_version','stage','item_id','direction','qty','bought_qty','sold_qty',
+              'canceled_buy_qty','canceled_sell_qty','buy_price','sell_price','created_at','stage_started_at','last_window'}
+    if set(offer)!=fields or offer['stage'] not in ('buying','bought','selling','collectable','collected','canceled'):
+        raise ValueError('invalid paper offer fields or stage')
+    if offer['direction'] not in ('traditional','arbitrage'):
+        raise ValueError('invalid paper direction')
+    for key in ('item_id','qty','buy_price','bought_qty','sold_qty','canceled_buy_qty','canceled_sell_qty'):
+        minimum = 1 if key in ('item_id','qty','buy_price') else 0
+        if type(offer[key]) is not int or not minimum<=offer[key]<2**63:
+            raise ValueError('invalid paper '+key)
+    if offer['qty']*offer['buy_price']>=2**63:
+        raise ValueError('paper reservation exceeds monetary bound')
+    qty,bought,sold = offer['qty'],offer['bought_qty'],offer['sold_qty']
+    canceled_buy,canceled_sell = offer['canceled_buy_qty'],offer['canceled_sell_qty']
+    if bought+canceled_buy>qty or sold+canceled_sell>bought:
+        raise ValueError('paper quantity conservation violated')
+    stage = offer['stage']
+    if (stage=='buying' and (sold or canceled_sell or bought+canceled_buy==qty)
+            or stage in ('bought','selling','collectable','collected') and bought+canceled_buy!=qty
+            or stage=='bought' and (sold or canceled_sell or bought==0)
+            or stage=='selling' and sold+canceled_sell>=bought
+            or stage in ('collectable','collected') and (sold==0 or sold+canceled_sell!=bought)
+            or stage=='canceled' and (bought or sold or canceled_buy!=qty)):
+        raise ValueError('paper stage inconsistent with quantities')
+    if offer['sell_price'] is not None and (type(offer['sell_price']) is not int
+            or not 0<offer['sell_price']<2**63 or offer['sell_price']*bought>=2**63):
+        raise ValueError('invalid paper sell price')
+    if stage in ('selling','collectable','collected') and offer['sell_price'] is None:
+        raise ValueError('selling stage needs a pinned price')
+    try:
+        created = datetime.fromisoformat(offer['created_at'].replace('Z','+00:00'))
+        if created.tzinfo is None:raise ValueError('UTC instant required')
+        created_at = created.timestamp()
+        started = datetime.fromisoformat(offer['stage_started_at'].replace('Z','+00:00'))
+        if started.tzinfo is None or not 0<=created_at<=started.timestamp()<=now:
+            raise ValueError('invalid stage instant')
+        stage_started_at = started.timestamp()
+    except (AttributeError,TypeError,ValueError,OverflowError) as exc:
+        raise ValueError('invalid paper creation instant') from exc
+    last_window = offer['last_window']
+    if last_window is not None and (type(last_window) is not int or last_window<0 or last_window%300 or last_window>now):
+        raise ValueError('invalid previous volume window')
+    def hold(reason):
+        result['reason']=reason
+        return result
+    if stage not in ('buying','selling'):return hold('stage requires an explicit owner action')
+    if not isinstance(market_snapshot,dict):return hold('market evidence unavailable')
+    latest,volume = market_snapshot.get('latest'),market_snapshot.get('5m')
+    if not isinstance(latest,dict) or not isinstance(volume,dict) or not executed_volume_supported(volume):
+        return hold('executed volume unavailable: zero, proxy, stale or unknown evidence')
+    latest_meta = provenance(latest)
+    if latest_meta['source']=='unknown' or latest_meta['stale']:
+        return hold('fresh quote provenance unavailable')
+    price = latest.get(str(offer['item_id']))
+    if not isinstance(price,dict) or price_issue(price,now=now):return hold('usable exit/entry quote unavailable')
+    candle = volume.get(str(offer['item_id']))
+    if not isinstance(candle,dict):return hold('item volume unavailable')
+    window = candle.get('window_timestamp')
+    if (type(window) is not int or window<=0 or window%300 or window<stage_started_at
+            or not 300<=now-window<=policy['max_window_age_sec']):
+        return hold('completed fresh post-entry volume window unavailable')
+    if last_window is not None and window<=last_window:return hold('volume window already considered')
+    side = 'buy' if stage=='buying' else 'sell'
+    low_side = (side=='buy')==(offer['direction']=='traditional')
+    leg = 'Low' if low_side else 'High'
+    observed_price = candle.get('avg'+leg+'Price')
+    traded = candle.get(leg.lower()+'PriceVolume')
+    if (isinstance(observed_price,bool) or not isinstance(observed_price,(int,float)) or not math.isfinite(observed_price)
+            or not 0<observed_price<2**63 or type(traded) is not int or not 0<traded<2**63):
+        return hold('side-specific executed price/volume unavailable')
+    limit = offer['buy_price'] if side=='buy' else offer['sell_price']
+    if not isinstance(limit,int):raise ValueError('paper limit required')
+    if side=='buy' and observed_price>limit or side=='sell' and observed_price<limit:
+        return hold('observed execution prices do not support the limit')
+    remaining = qty-bought-canceled_buy if side=='buy' else bought-sold-canceled_sell
+    fill_qty = min(remaining,max(0,traded*policy['participation_bps']//10000-window_consumed_qty))
+    updated['last_window']=window
+    if fill_qty==0:return hold('participation cap below one unit')
+    key = 'bought_qty' if side=='buy' else 'sold_qty'
+    updated[key]+=fill_qty
+    if fill_qty==remaining:
+        updated['stage']='bought' if side=='buy' else 'collectable'
+        updated['stage_started_at']=datetime.fromtimestamp(now,timezone.utc).isoformat()
+    result['fill']={'side':side,'qty':fill_qty,'price':limit,
+                    'tax_paid':ge_tax(limit)*fill_qty if side=='sell' else 0}
+    result['reason']='illustrative paper participation; no real queue/execution claim'
+    return result
 
 
 def resolve_icon_url(item_name: str, detail: bool = True) -> str:
@@ -75,180 +190,135 @@ def _item_volume_5m(entry) -> int:
     return safe_int(entry)
 
 
-def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None) -> dict:
-    """All 8 GE slots from open positions.
-
-    Returns {"slots": [...], "empty_count": int, "total_value": int}.
-    Each slot dict:
-    {"index", "offer_type": "buy"|"sell", "item_id", "name", "qty",
-     "fill_pct", "status": "pending"|"partially_filled"|"filled",
-     "price" (qty*buy_price), "price_each", "buy_price",
-     "current_price"|None, "unrealized"|None, "unrealized_pct",
-     "icon_url", "icon_url_detail", "position_id", "opened_at",
-     "age_minutes", "can_collect": fill >= 1.0}
-
-    latest/vol_5m are injected (dashboard cache dicts) so tests can pass
-    fixtures. Direction "traditional" -> buy offer, "arbitrage" -> sell
-    offer. Realized offer_type is the *open side* of the position.
-    """
-    now = now if now is not None else time.time()
-    latest = latest if latest is not None else {}
-    vol_5m = vol_5m if vol_5m is not None else {}
-    execution_supported = executed_volume_supported(vol_5m)
-    slots = []
-    for index, p in enumerate(list_positions(profile)[:MAX_GE_SLOTS]):
-        item_volume = _item_volume_5m(vol_5m.get(str(p.item_id)))
-        fill = compute_fill_pct(p.qty, item_volume,
-                                p.opened_at, now) if execution_supported and item_volume > 0 else 0.0
-        if fill >= 1.0:
-            status = "filled"
-        elif fill <= 0.0:
-            status = "pending"
-        else:
-            status = "partially_filled"
-        offer_type = "buy" if p.direction == "traditional" else "sell"
-        price = latest.get(str(p.item_id))
-        issue = price_issue(price, now=now) if isinstance(price, dict) else "no data"
-        current_price = None
-        unrealized = None
-        unrealized_pct = None
-        if issue is None:
-            current_price = _current_leg(price, p.direction)
-            tax = ge_tax(current_price)
-            unrealized = (current_price - p.buy_price) * p.qty - tax * p.qty
-            unrealized_pct = (round(
-                (current_price - p.buy_price - tax) / p.buy_price * 100, 2)
-                if p.buy_price > 0 else 0.0)
-        slots.append({
-            "index": index,
-            "offer_type": offer_type,
-            "item_id": p.item_id,
-            "name": p.name,
-            "qty": p.qty,
-            "fill_pct": round(fill, 4),
-            "fill_reason": ("execution-volume model" if execution_supported else
-                            "execution volume unavailable: proxy, stale or unknown evidence"),
-            "market_data": {"latest":provenance(latest),"5m":provenance(vol_5m)},
-            "status": status,
-            "price": p.qty * p.buy_price,
-            "price_each": p.buy_price,
-            "buy_price": p.buy_price,
-            "current_price": current_price,
-            "unrealized": unrealized,
-            "unrealized_pct": unrealized_pct,
-            "icon_url": resolve_icon_url(p.name, detail=False),
-            "icon_url_detail": resolve_icon_url(p.name, detail=True),
-            "position_id": p.id,
-            "opened_at": p.opened_at,
-            "age_minutes": round(_elapsed_minutes(p.opened_at, now), 1),
-            "can_collect": fill >= 1.0,
-            "auto": p.note == "auto",  # auto-trader closes these itself
-            "entry_sell": p.entry_sell,
-            "entry_offer": p.entry_offer,
-            "spread_pct": (round((p.entry_offer - p.buy_price) / p.buy_price * 100, 2)
-                           if p.entry_offer and p.buy_price > 0 else None),
-            "exit_reason": "ge_fill" if (p.note == "auto" and fill >= 1.0) else None,
-        })
-    return {
-        "slots": slots,
-        "empty_count": max(0, MAX_GE_SLOTS - len(slots)),
-        "total_value": sum(s["price"] for s in slots),
-    }
+def build_ge_slots(profile=None, latest=None, vol_5m=None, now=None, *, offset=0) -> dict:
+    from rshelper import paper_book, state_identity, state_transaction
+    if type(offset) is not int or not 0<=offset<=100000:raise ValueError('invalid paper page offset')
+    now=time.time() if now is None else now
+    latest={} if latest is None else latest
+    root=paper_book._root(profile)
+    with state_transaction.profile_transaction(profile or 'default',root):
+        activation=state_identity.activation_manifest(root/'identity-activation.json')
+        book=paper_book._read(root) if (root/paper_book.FILENAME).exists() or (activation or {}).get('paper_budget_origin') else None
+        budget=paper_book._summary(root,book,now) if book is not None else None
+        holdings=list_positions(profile)
+        by_lot={position.lot_uid:position for position in holdings if position.lot_uid}
+        records=[]
+        covered=set()
+        if book is not None:
+            for offer_id,record in book['offers'].items():
+                offer=record['offer']
+                if offer['stage'] in ('collected','canceled'):continue
+                covered.update(record['lots'])
+                position=by_lot.get(record['lots'][0]) if record['lots'] else None
+                records.append((offer_id,record,position))
+        for position in holdings:
+            if position.lot_uid not in covered:
+                records.append((position.lot_uid or 'position:'+str(position.id),None,position))
+        slots=[]
+        total_value=0
+        for index,(key,record,position) in enumerate(records):
+            if record is not None:
+                offer=record['offer']
+                item_id,name,qty=offer['item_id'],record['name'],offer['qty']
+                buy_price,direction,stage=offer['buy_price'],offer['direction'],offer['stage']
+                automatic=record['mode']=='auto'
+                selling=stage in ('selling','collectable')
+                target=offer['bought_qty']-offer['canceled_sell_qty'] if selling else qty-offer['canceled_buy_qty']
+                completed=offer['sold_qty'] if selling else offer['bought_qty']
+                pinned=offer['sell_price'] if selling else buy_price
+                invested_qty=offer['bought_qty']
+                held=position.qty if position is not None else offer['bought_qty']
+                opened_at=offer['created_at']
+            else:
+                if position is None:raise ValueError('paper projection lacks a holding')
+                offer=None
+                item_id,name,qty=position.item_id,position.name,position.qty
+                buy_price,direction,stage=position.buy_price,position.direction,'legacy-unknown'
+                automatic=position.note=='auto'
+                selling=False
+                target,completed,pinned=qty,0,buy_price
+                invested_qty=held=qty
+                opened_at=position.opened_at
+            fill=completed/target if target>0 else 0
+            total_value+=buy_price*invested_qty
+            if not offset<=index<offset+50:continue
+            price=latest.get(str(item_id))
+            current=_current_leg(price,direction) if isinstance(price,dict) and price_issue(price,now=now) is None else None
+            unrealized=(current-buy_price-ge_tax(current))*held if current is not None else None
+            slots.append({
+                'index':index,'slot_key':key,'offer_id':key if offer else None,
+                'lot_uid':position.lot_uid if position is not None else None,
+                'offer_type':'sell' if selling else 'buy' if stage=='buying' else 'hold',
+                'item_id':item_id,'name':name,'qty':qty,'target_qty':target,'completed_qty':completed,
+                'held_qty':held,'fill_pct':round(fill,4),'status':stage,'stage':stage,
+                'fill_reason':'Persisted illustrative participation; separate sale and collection' if offer else 'Historical holding; purchase execution and offer stage unknown',
+                'market_data':{'latest':provenance(latest)},
+                'price':target*pinned,'price_each':pinned,'buy_price':buy_price,
+                'current_price':current,'unrealized':unrealized,
+                'unrealized_pct':round((current-buy_price-ge_tax(current))/buy_price*100,2) if current is not None else None,
+                'icon_url':resolve_icon_url(name,False),'icon_url_detail':resolve_icon_url(name),
+                'position_id':position.id if position is not None else None,
+                'opened_at':opened_at,
+                'age_minutes':round(_elapsed_minutes(opened_at,now),1),
+                'can_collect':stage=='collectable' and not automatic,'auto':automatic,
+                'entry_sell':position.entry_sell if position is not None else None,
+                'entry_offer':position.entry_offer if position is not None else None,
+                'spread_pct':round((position.entry_offer-buy_price)/buy_price*100,2) if position is not None and position.entry_offer else None,
+                'exit_reason':None})
+        capacity=book['slot_limit'] if book is not None else None
+        return {'slots':slots,'total_count':len(records),'offset':offset,
+                'next_offset':offset+50 if offset+50<len(records) else None,
+                'empty_count':max(0,capacity-len(records)) if capacity is not None else None,
+                'slot_limit':capacity,'total_value':total_value,'budget':budget,
+                'initialized':book is not None,'revision':book['revision'] if book is not None else None,
+                'unknown':budget['unknown'] if budget is not None else ['explicit paper budget and account capability required']}
 
 
 def collect_offer(position_id: int, profile=None, latest=None,
                   operation_id: str | None = None) -> dict:
-    """Close a filled position at the live price.
-
-    Calls close_positions(position's item/qty, sell_price) then
-    log_trade(..., note="paper", strategy="ge_collect"). Sell price is
-    the current market "high" (offer) for traditional, "low" (bid) for
-    arbitrage; fall back to buy_price when no usable price. Returns
-    {"ok": True, "name", "qty", "sell_price", "profit"}. Raises
-    ValueError when the position id is unknown.
-    """
-    from rshelper import realization
-    gate = realization._financial_activation(profile)
-    if operation_id is not None and gate is not None:
-        # A lost response replays the PINNED request; the slot's position may
-        # already be consumed, so the live listing is not required.
-        summary = realization.batch_summary(profile, operation_id)
-        realization.realize_close_batch(profile, operation_id)
-        children = summary["operations"]
-        return {
-            "ok": True,
-            "name": next((child["name"] for child in children), ""),
-            "qty": sum(child["qty"] for child in children),
-            "sell_price": children[0]["sell_price"] if children else 0,
-            "profit": sum((child["sell_price"] - child["buy_price"]) * child["qty"]
-                          - ge_tax(child["sell_price"]) * child["qty"]
-                          for child in children),
-            "operation_id": operation_id,
-            "market_data": {"latest": provenance(latest)},
-        }
-    position = next((p for p in list_positions(profile)
-                     if p.id == position_id), None)
-    if position is None:
-        raise ValueError(f"unknown position id {position_id}")
-    sell_price = close_market_price(position, latest)
-    if gate is not None:
-        # Identified profile: the clicked slot closes ITS OWN lot through a
-        # durable recoverable operation; retrying the same operation id
-        # replays the pinned economics instead of re-quoting.
-        if operation_id is None:
-            operation_id = realization.new_operation_id(
-                gate["origin_uuid"], "ge:collect", str(position_id))
-        direction = position.direction or "traditional"
-        plan = realization.prepare_close_batch(
-            profile, position.item_id, position.qty, operation_id,
-            {direction: sell_price}, lot_uids=[position.lot_uid],
-            reason="collect",
-            metadata={"note": "paper", "strategy": "ge_collect",
-                      "market_data": {"latest": provenance(latest)}})
-        realization.realize_close_batch(profile, operation_id)
-        return {
-            "ok": True,
-            "name": position.name,
-            "qty": position.qty,
-            "sell_price": sell_price,
-            "profit": sum((child["sell_price"] - child["buy_price"]) * child["qty"]
-                          - ge_tax(child["sell_price"]) * child["qty"]
-                          for child in plan["operations"]),
-            "operation_id": operation_id,
-            "market_data": {"latest": provenance(latest)},
-        }
-    # Close the SPECIFIC lot (not FIFO): the GE Collect button maps to one
-    # slot; with several lots of the same item open, FIFO would book the
-    # oldest lot's cost basis instead of the clicked one.
-    lots = close_positions(position.item_id, position.qty, sell_price,
-                           profile, position_id=position.id)
-    for lot in lots:
-        log_trade(position.item_id, lot["name"], lot["qty"], lot["buy_price"],
-                  sell_price, note="paper", profile=profile,
-                  strategy="ge_collect", exit_reason="collect")
-    return {
-        "ok": True,
-        "name": position.name,
-        "qty": position.qty,
-        "sell_price": sell_price,
-        "profit": sum(lot["profit"] for lot in lots),
-        "market_data": {"latest": provenance(latest)},
-    }
+    from uuid import UUID,uuid5
+    from rshelper import paper_book,realization
+    root=paper_book._root(profile)
+    now=time.time()
+    if not (root/paper_book.FILENAME).exists():
+        if operation_id is not None:
+            summary=realization.batch_summary(profile,operation_id)
+            realization.realize_close_batch(profile,operation_id)
+            children=summary['operations']
+            if not isinstance(children,list) or not children:raise ValueError('legacy collection children unavailable')
+            return {'ok':True,'operation_id':operation_id,'replayed':True,
+                    'name':children[0]['name'],'qty':sum(child['qty'] for child in children),
+                    'sell_price':children[0]['sell_price'],
+                    'profit':sum((child['sell_price']-child['buy_price']-ge_tax(child['sell_price']))*child['qty'] for child in children)}
+        raise ValueError('historical stage unknown; initialize and adopt the holding before a paper sale')
+    state=paper_book.budget_snapshot(profile,now=now)
+    pinned=paper_book.operation_request(profile,operation_id) if operation_id is not None else None
+    if pinned is not None:
+        if pinned['action']!='collect':raise ValueError('operation belongs to another paper action')
+        offer_id=pinned['offer_id']
+    else:
+        position=next((row for row in list_positions(profile) if row.id==position_id),None)
+        if position is None:raise ValueError('recorded holding unavailable')
+        matching=[key for key,record in state['offers'].items()
+                  if position.lot_uid in record['lots'] and record['offer']['stage']=='collectable']
+        if len(matching)!=1:raise ValueError('collection requires a collectable paper sale')
+        offer_id=matching[0]
+    record=state['offers'][offer_id]
+    if record['mode']=='auto':raise ValueError('auto-trader owns this paper collection')
+    offer=record['offer']
+    operation_id=operation_id or str(uuid5(UUID(offer_id),'paper-ge-collection'))
+    result=paper_book.collect_offer(profile,offer_id,expected_revision=state['revision'],
+                                   operation_id=operation_id,now=now)
+    return {'ok':True,'operation_id':operation_id,'replayed':result['retry'],
+            'name':record['name'],'qty':offer['sold_qty'],'sell_price':offer['sell_price'],
+            'profit':(offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']}
 
 
 def close_market_price(position, latest: dict | None) -> int:
-    """Current market exit price for a position, else its entry price.
-
-    The direction-aware exit leg (offer/high for traditional, bid/low for
-    arbitrage) at a usable live quote; falls back to the entry buy_price
-    when no usable price exists (the same fallback collect_offer uses).
-    Shared by the dashboard's manual position close and GE collect.
-    """
-    latest = latest if latest is not None else {}
-    sell_price = position.buy_price
-    price = latest.get(str(position.item_id))
-    if isinstance(price, dict) and price_issue(price) is None:
-        leg = _current_leg(price, position.direction)
-        if leg > 0:
-            sell_price = leg
-    return sell_price
+    latest={} if latest is None else latest
+    price=latest.get(str(position.item_id))
+    if not isinstance(price,dict) or price_issue(price):
+        raise ValueError('usable current exit quote required; holding remains open')
+    sell=_current_leg(price,position.direction)
+    if sell<=0:raise ValueError('positive current exit quote required')
+    return sell

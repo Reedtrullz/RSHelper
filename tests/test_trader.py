@@ -843,7 +843,10 @@ def test_trader_daemon_guards_and_pnl():
     import os
     from unittest import mock
     old_pid, old_state = tmod.PID_PATH, tmod.STATE_PATH
-    with tempfile.TemporaryDirectory() as tmp:
+    from rshelper import paper_book
+    with tempfile.TemporaryDirectory() as tmp,\
+            mock.patch.object(paper_book,'_authority',return_value='11111111-1111-4111-8111-111111111111'),\
+            mock.patch.object(paper_book,'budget_snapshot',return_value={'revision':1}):
         tmod.PID_PATH = Path(tmp) / "trader.pid"
         tmod.STATE_PATH = Path(tmp) / "trader_state.json"
         try:

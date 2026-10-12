@@ -113,7 +113,13 @@ def validate_payload(endpoint: str, payload: object, now: float) -> dict:
             if sequence:
                 valid.append(row)
             else:
-                valid[str(key)] = row
+                valid[str(key)] = dict(row)
+                if endpoint == '5m':
+                    window = (payload.get('timestamp') if isinstance(payload,dict) and 'data' in payload
+                              else row.get('window_timestamp'))
+                    valid[str(key)].pop('window_timestamp',None)
+                    if type(window) is int and window>0 and window%300==0 and quote_time_issue(window,now) is None:
+                        valid[str(key)]['window_timestamp']=window
         else:
             rejected += 1
     return {'data': valid, 'rejected': rejected}

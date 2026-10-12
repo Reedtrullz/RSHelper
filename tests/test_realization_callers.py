@@ -224,125 +224,166 @@ class CallerRoutingTest(unittest.TestCase):
                     stack.enter_context(patch)
                 yield root, rows
 
+    def initialize_paper(self):
+        from rshelper import paper_book
+        self.now=int(__import__('time').time())//300*300
+        return paper_book.initialize_budget(None,bankroll=1000000,slot_limit=3,
+            operation_id=str(uuid.uuid4()),now=self.now)
+
+    def advance_sale(self,offer_id):
+        from rshelper import paper_book
+        from rshelper.market_data import MarketDataResult,market_payload
+        now=self.now+600
+        def wrap(data,kind):
+            return market_payload(MarketDataResult(data,'wiki','network',now,now,now,
+                False,kind,{'wiki':1}))
+        market={'latest':wrap({'561':{'high':150,'low':140,'highTime':now,'lowTime':now}},'unknown'),
+                '5m':wrap({'561':{'avgHighPrice':150,'avgLowPrice':140,'highPriceVolume':10000,
+                    'lowPriceVolume':10000,'window_timestamp':self.now+300}},'executed-trades')}
+        state=paper_book.budget_snapshot(None,now=now)
+        return paper_book.advance_offer(None,offer_id,market,expected_revision=state['revision'],
+                    operation_id=str(uuid.uuid4()),now=now)
+
     def test_cli_close_routes_selected_lot_through_realization(self):
-        from rshelper import cli as cmod
+        from rshelper import cli as cmod,paper_book
         from argparse import Namespace
-        with self.routed() as (root, rows):
-            with mock.patch.object(cmod, "_resolve_item",
-                                   return_value={"id": 561, "name": "Nature rune"}),                     mock.patch.object(cmod, "_resolve_paper_prices",
-                                      side_effect=lambda entry, profile, direction: (
-                                          150, 140, {"source": "wiki", "delivery": "network",
-                                                     "stale": False, "fetched_at": None,
-                                                     "last_success_at": None,
-                                                     "last_attempt_at": None})):
-                cmod._trade_close(Namespace(item="nature rune", qty=0, profile=None,
-                                            operation_id=None))
-            trades = journal.list_trades()
-            raw = json.loads((root / "trades.json").read_text())["trades"]
-            self.assertEqual(len(trades), 2)
-            parent_op = str(uuid.uuid5(uuid.UUID(ORIGIN), "trade:close:561"))
-            by_lot = {row["closed_lot_uid"]: row for row in raw}
-            self.assertEqual(set(by_lot), {rows[0]["lot_uid"], rows[1]["lot_uid"]})
-            for row in raw:
-                child_op = str(uuid.uuid5(uuid.UUID(parent_op),
-                                          "close:" + row["closed_lot_uid"]))
-                self.assertEqual(row["operation_id"], child_op)
-                self.assertEqual(row["record_uuid"],
-                                 str(uuid.uuid5(uuid.UUID(ORIGIN), child_op)))
-                self.assertEqual(row["strategy"], "manual")
-            self.assertEqual(sum(row["qty"] for row in raw), 17)
-            active = [p for p in json.loads((root / "positions.json").read_text())["positions"]
-                      if not p.get("tombstone")]
-            self.assertEqual(active, [])
+        import io
+        with self.routed() as (root,rows):
+            self.initialize_paper()
+            with mock.patch.object(cmod,'_resolve_item',return_value={'id':561,'name':'Nature rune'}), \
+                 mock.patch.object(cmod,'_resolve_paper_prices',
+                    side_effect=lambda entry,profile,direction:(150,150 if direction=='traditional' else 140,
+                                                            {'source':'wiki','stale':False})), \
+                 mock.patch.object(__import__('time'),'time',return_value=self.now), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                cmod._trade_close(Namespace(item='nature rune',qty=0,profile=None,
+                    operation_id=LOT_OP,expected_revision=1,json=True))
+            queued=json.loads(output.getvalue())
+            self.assertEqual(journal.list_trades(),[])
+            self.assertEqual(sum(p.qty for p in positions.list_positions()),17)
+            self.assertEqual([r['offer']['stage'] for r in queued['offers'].values()],['selling','selling'])
+            for offer_id in queued['offers']:
+                state=self.advance_sale(offer_id)
+                collect=str(uuid.uuid4())
+                paper_book.collect_offer(None,offer_id,expected_revision=state['revision'],
+                    operation_id=collect,now=self.now+600)
+                raw=json.loads((root/'trades.json').read_text())['trades']
+                trade=next(row for row in raw if row['closed_lot_uid'] in state['offers'][offer_id]['lots'])
+                child=str(uuid.uuid5(uuid.UUID(collect),'close:'+trade['closed_lot_uid']))
+                self.assertEqual(trade['operation_id'],child)
+                self.assertEqual(trade['record_uuid'],str(uuid.uuid5(uuid.UUID(ORIGIN),child)))
+                self.assertEqual(trade['strategy'],'manual')
+            raw=json.loads((root/'trades.json').read_text())['trades']
+            self.assertEqual({r['closed_lot_uid'] for r in raw},{r['lot_uid'] for r in rows})
+            self.assertEqual(sum(r['qty'] for r in raw),17)
+            self.assertEqual({r['buy_price'] for r in raw},{100,130})
+            self.assertEqual(positions.list_positions(),[])
 
     def test_cli_operation_id_pins_children(self):
         from rshelper import cli as cmod
         from argparse import Namespace
-        with self.routed() as (root, rows):
-            with mock.patch.object(cmod, "_resolve_item",
-                                   return_value={"id": 561, "name": "Nature rune"}),                  mock.patch.object(cmod, "_resolve_paper_prices",
-                                   side_effect=lambda entry, profile, direction: (150, 140, {"source": "wiki", "delivery": "network", "stale": False, "fetched_at": None, "last_success_at": None, "last_attempt_at": None})):
-                cmod._trade_close(Namespace(item="nature rune", qty=0, profile=None, operation_id=LOT_OP))
-            raw = json.loads((root / "trades.json").read_text())["trades"]
-            self.assertEqual(raw[0]["operation_id"], str(__import__("uuid").uuid5(
-                __import__("uuid").UUID(LOT_OP), "close:" + rows[0]["lot_uid"])))
+        import io
+        with self.routed() as (root,rows):
+            realization.prepare_close_batch(None,561,17,LOT_OP,
+                {'traditional':150,'arbitrage':140},reason='manual',metadata={'strategy':'manual'})
+            realization.realize_close_batch(None,LOT_OP)
+            before=(root/'trades.json').read_bytes()
+            with mock.patch.object(cmod,'_resolve_item',side_effect=AssertionError('offline receipt')), \
+                 mock.patch.object(cmod,'_resolve_paper_prices',side_effect=AssertionError('pinned prices')), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                cmod._trade_close(Namespace(item='nature rune',qty=0,profile=None,operation_id=LOT_OP))
+            receipt=json.loads(output.getvalue())
+            self.assertTrue(receipt['replayed'])
+            self.assertEqual(receipt['qty'],17)
+            self.assertEqual((root/'trades.json').read_bytes(),before)
+            with self.assertRaisesRegex(ValueError,'differs'):
+                cmod._trade_close(Namespace(item='other item',qty=0,profile=None,operation_id=LOT_OP))
 
     def test_cli_rejects_malformed_operation_before_writes(self):
         from rshelper import cli as cmod
         from argparse import Namespace
-        with self.routed() as (root, rows):
-            with mock.patch.object(cmod, "_resolve_item",
-                                   return_value={"id": 561, "name": "Nature rune"}):
-                with self.assertRaises(SystemExit):
-                    cmod._trade_close(Namespace(item="nature rune", qty=0, profile=None, operation_id="bogus"))
-            self.assertEqual(journal.list_trades(), [])
-            self.assertFalse((root / "realizations.json").exists())
+        with self.routed() as (root,rows):
+            with self.assertRaises(SystemExit):
+                cmod._trade_close(Namespace(item='nature rune',qty=0,profile=None,operation_id='bogus'))
+            self.assertEqual(journal.list_trades(),[])
+            self.assertFalse((root/'realizations.json').exists())
 
     def test_ge_collect_routes_exact_lot_and_replays(self):
-        from rshelper import ge_offers
-        latest = {"561": {"high": 150, "low": 140, "highTime": 0, "lowTime": 0}}
-        now = __import__("time").time()
-        latest["561"]["highTime"] = int(now) - 30
-        latest["561"]["lowTime"] = int(now) - 30
-        with self.routed() as (root, rows):
-            frozen = str(__import__("uuid").uuid4())
-            with mock.patch.object(ge_offers, "close_market_price", return_value=140),                     mock.patch.object(__import__("rshelper.realization", fromlist=["new_operation_id"]),
-                                      "new_operation_id", side_effect=[frozen]):
-                result = ge_offers.collect_offer(rows[0]["id"], latest=latest)
-            self.assertTrue(result["ok"])
-            trades = journal.list_trades()
-            raw = json.loads((root / "trades.json").read_text())["trades"]
-            self.assertEqual(len(trades), 1)
-            self.assertEqual(trades[0].strategy, "ge_collect")
-            self.assertEqual(raw[0]["closed_lot_uid"], rows[0]["lot_uid"])
-            again = ge_offers.collect_offer(rows[0]["id"], latest=latest, operation_id=frozen)
-            self.assertTrue(again["ok"])
-            self.assertEqual(len(journal.list_trades()), 1)
+        from rshelper import ge_offers,paper_book
+        with self.routed() as (root,rows):
+            state=self.initialize_paper()
+            state=paper_book.adopt_holding(None,rows[0]['lot_uid'],expected_revision=state['revision'],
+                    operation_id=str(uuid.uuid4()),now=self.now)
+            offer_id=state['offer_id']
+            state=paper_book.start_sale(None,offer_id,qty=10,sell_price=150,
+                expected_revision=state['revision'],operation_id=str(uuid.uuid4()),now=self.now)
+            with mock.patch.object(__import__('time'),'time',return_value=self.now):
+                with self.assertRaisesRegex(ValueError,'collectable'):
+                    ge_offers.collect_offer(rows[0]['id'])
+            self.advance_sale(offer_id)
+            operation=str(uuid.uuid4())
+            with mock.patch.object(__import__('time'),'time',return_value=self.now+600):
+                result=ge_offers.collect_offer(rows[0]['id'],latest={},operation_id=operation)
+                again=ge_offers.collect_offer(rows[0]['id'],latest={'561':{'high':9999}},
+                                               operation_id=operation)
+            self.assertEqual(result['sell_price'],150)
+            self.assertEqual(result['profit'],470)
+            self.assertTrue(again['replayed'])
+            raw=json.loads((root/'trades.json').read_text())['trades']
+            self.assertEqual(len(raw),1)
+            self.assertEqual(raw[0]['closed_lot_uid'],rows[0]['lot_uid'])
+            self.assertEqual(raw[0]['buy_price'],100)
+            self.assertEqual(raw[0]['strategy'],'manual')
+            self.assertEqual(positions.list_positions()[0].buy_price,130)
 
     def test_trader_exit_routes_through_identified_writer(self):
-        from rshelper import trader as tmod
+        from rshelper import trader as tmod,cli as cmod,paper_book
         from rshelper.config import TraderConfig
-        cfg = TraderConfig(capital=1_000_000, trade_capital_frac=0.40, max_positions=3,
-                           min_volume=800, min_price=25, max_spread_ratio=5.0,
-                           dip_depth_pct=2.5, max_dip_pct=10.0, min_spread_pct=3.5,
-                           max_entry_spread_pct=5.75, reentry_minutes=30,
-                           stop_reentry_minutes=90, take_profit_pct=3.0,
-                           stop_loss_pct=-2.0, stop_grace_minutes=0,
-                           max_hold_minutes=180, spread_collapse_exit_minutes=60,
-                           interval_sec=120, stop_slippage=0.97, stop_mark_blend=0.0)
-        with self.routed() as (root, rows):
-            auto_row = dict(rows[0])
-            auto_row["note"] = "auto"
-            store = json.loads((root / "positions.json").read_text())
-            store["positions"] = [auto_row]
-            (root / "positions.json").write_text(json.dumps(store))
-            now = int(__import__("time").time())
-            latest = {"561": {"high": 100, "low": 80, "highTime": now - 30, "lowTime": now - 30}}
-            vol_5m = {"561": {"avgLowPrice": 100, "lowPriceVolume": 5, "highPriceVolume": 5000}}
-            from rshelper.market_data import MarketDataResult, market_payload
-            wiki_vol = market_payload(MarketDataResult(vol_5m, "wiki", "network", 100, 100, 100,
-                                                       False, "executed-trades", {"wiki": 1}))
-            import rshelper.cli as cmod
-            with mock.patch.object(cmod, "_fetch_bootstrap",
-                                   return_value=({}, latest, wiki_vol, [])):
-                result = tmod.run_cycle(cfg, profile=None)
-            self.assertEqual(len(result["closed"]), 1)
-            trades = journal.list_trades()
-            raw = json.loads((root / "trades.json").read_text())["trades"]
-            self.assertEqual(len(trades), 1)
-            self.assertEqual(trades[0].strategy, "auto")
-            self.assertEqual(raw[0]["closed_lot_uid"], rows[0]["lot_uid"])
-            parent_op = str(uuid.uuid5(uuid.UUID(ORIGIN), "trade:auto:" + rows[0]["lot_uid"]))
-            child_op = str(uuid.uuid5(uuid.UUID(parent_op), "close:" + rows[0]["lot_uid"]))
-            self.assertEqual(raw[0]["operation_id"], child_op)
-            self.assertEqual(raw[0]["record_uuid"], str(uuid.uuid5(uuid.UUID(ORIGIN), child_op)))
-            store_rows = json.loads((root / "positions.json").read_text())["positions"]
-            active = [p for p in store_rows if not p.get("tombstone")]
-            self.assertEqual(active, [])
-            closed_rows = [p for p in store_rows if p.get("tombstone")]
-            self.assertEqual(len(closed_rows), 1)
-            self.assertEqual(closed_rows[0]["record_uuid"], rows[0]["record_uuid"])
-
+        from rshelper.market_data import MarketDataResult,market_payload
+        with self.routed() as (root,rows):
+            from datetime import datetime,timezone
+            auto_row={**rows[0],'note':'auto','opened_at':datetime.now(timezone.utc).isoformat()}
+            (root/'positions.json').write_text(json.dumps({'positions':[auto_row]}))
+            self.initialize_paper()
+            clock=[self.now]
+            def bootstrap(*args):
+                now=clock[0]
+                def wrap(data,kind):
+                    return market_payload(MarketDataResult(data,'wiki','network',now,now,now,
+                         False,kind,{'wiki':1}))
+                return ({},wrap({'561':{'high':150,'low':140,'highTime':now,'lowTime':now}},'unknown'),
+                    wrap({'561':{'avgHighPrice':150,'avgLowPrice':140,'highPriceVolume':10000,
+                         'lowPriceVolume':10000,'window_timestamp':self.now+300}},'executed-trades'),[])
+            old_exits=dict(tmod._RECENT_EXITS)
+            try:
+                with mock.patch.object(cmod,'_fetch_bootstrap',side_effect=bootstrap), \
+                     mock.patch.object(__import__('time'),'time',side_effect=lambda:clock[0]), \
+                     mock.patch.object(tmod,'_persist_recent_exits'):
+                    first=tmod.run_cycle(TraderConfig(),profile=None)
+                    self.assertEqual(first['closed'],[])
+                    self.assertEqual(journal.list_trades(),[])
+                    self.assertEqual(positions.list_positions()[0].qty,10)
+                    state=paper_book.budget_snapshot(None,now=clock[0])
+                    offer_id=next(iter(state['offers']))
+                    self.assertEqual(state['offers'][offer_id]['offer']['stage'],'selling')
+                    clock[0]=self.now+600
+                    result=tmod.run_cycle(TraderConfig(),profile=None)
+            finally:
+                tmod._RECENT_EXITS.clear()
+                tmod._RECENT_EXITS.update(old_exits)
+            self.assertEqual(len(result['closed']),1)
+            raw=json.loads((root/'trades.json').read_text())['trades']
+            self.assertEqual(len(raw),1)
+            self.assertEqual(raw[0]['strategy'],'auto')
+            self.assertEqual(raw[0]['exit_reason'],'take_profit')
+            self.assertEqual(raw[0]['closed_lot_uid'],rows[0]['lot_uid'])
+            parent=str(uuid.uuid5(uuid.UUID(offer_id),'paper-auto-collection'))
+            child=str(uuid.uuid5(uuid.UUID(parent),'close:'+rows[0]['lot_uid']))
+            self.assertEqual(raw[0]['operation_id'],child)
+            self.assertEqual(raw[0]['record_uuid'],str(uuid.uuid5(uuid.UUID(ORIGIN),child)))
+            self.assertEqual(positions.list_positions(),[])
+            tombstones=json.loads((root/'positions.json').read_text())['positions']
+            self.assertEqual(tombstones[0]['record_uuid'],rows[0]['record_uuid'])
 
 
 

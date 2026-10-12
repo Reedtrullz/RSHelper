@@ -57,7 +57,10 @@ def validate_authority(mode, manifest):
     if not manifest or mode['revision'] == 0:
         return mode
     origin = mode['authority_origin']
-    if (origin is None or origin not in manifest.get('replication_origins',[])
+    origins = manifest.get('replication_origins')
+    if (origin is None
+            or (origins is not None and origin not in origins)
+            or (origins is None and manifest.get('financial_authority') is not True)
             or (manifest.get('financial_authority') is True and origin != manifest['origin_uuid'])
             or (manifest.get('financial_authority') is False and origin == manifest['origin_uuid'])):
         raise ValueError('trading stance authority differs from the activated profile')

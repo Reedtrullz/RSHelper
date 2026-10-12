@@ -669,12 +669,14 @@ class TestHandlerRouting(unittest.TestCase):
         calls = []
         Handler = make_handler(
             self.scanner, lambda: [],
-            paper_trade_fn=lambda a, i, q: calls.append((a, i, q)) or {"ok": True})
+            paper_trade_fn=lambda body: calls.append(body) or {"ok": True})
         h = BaseHTTPRequestHandler.__new__(Handler)
         h.path = "/api/paper"
         h.command = "POST"
         h.request_version = "HTTP/1.1"
-        payload = json.dumps({"action": "open", "item": "nature rune", "qty": 5}).encode()
+        body={"action":"open","item":"nature rune","qty":5,"expected_revision":1,
+              "operation_id":"22222222-2222-4222-8222-222222222222"}
+        payload=json.dumps(body).encode()
         h.headers = {"Authorization": "Bearer synthetic-dashboard-owner-token", "Content-Length": str(len(payload)), "Host": "127.0.0.1:5555"}
         h.rfile = io.BytesIO(payload)
         h.wfile = io.BytesIO()
@@ -682,7 +684,7 @@ class TestHandlerRouting(unittest.TestCase):
         h.send_header = lambda key, value: None
         h.end_headers = lambda: None
         h.do_POST()
-        self.assertEqual(calls, [("open", "nature rune", 5)])
+        self.assertEqual(calls,[body])
 
     def test_api_trader_status(self):
         from http.server import BaseHTTPRequestHandler

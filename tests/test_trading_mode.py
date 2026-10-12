@@ -79,6 +79,18 @@ class TradingModeTest(unittest.TestCase):
         self.assertEqual(self.api().update_drain('default'),complete)
         with self.assertRaises(ValueError):
             positions.open_position(561,'Synthetic',1,100)
+    def test_local_activation_without_replication_list_retains_own_authority(self):
+        from rshelper.state_transaction import activate_profile
+        manifest=activate_profile(self.root,str(uuid4()))
+        mode=self.set('entries-paused')
+        self.assertEqual(self.api().read_mode('default')['mode'],'entries-paused')
+        self.assertEqual(self.api().validate_authority(mode,manifest),mode)
+        for changed in ({**manifest,'financial_authority':False},
+                        {**manifest,'origin_uuid':str(uuid4())},
+                        {**manifest,'replication_origins':[str(uuid4())]}):
+            with self.assertRaisesRegex(ValueError,'authority differs'):
+                self.api().validate_authority(mode,changed)
+
     def test_replica_cannot_change_mode(self):
         self.root.mkdir(parents=True)
         origin = str(uuid4())
@@ -91,7 +103,15 @@ class TradingModeTest(unittest.TestCase):
         self.set('draining')
         before=(self.root/'trading_mode.json').read_bytes()
         (self.root/'paper-offers.json').write_text('{}')
-        with self.assertRaisesRegex(ValueError,'proof unavailable'):
+        with mock.patch.object(self.api().importlib,'import_module',side_effect=ImportError('older image')), \
+                self.assertRaisesRegex(ValueError,'proof unavailable'):
+            self.api().update_drain('default')
+        self.assertEqual((self.root/'trading_mode.json').read_bytes(),before)
+    def test_current_reader_cannot_complete_drain_with_corrupt_paper_offers(self):
+        self.set('draining')
+        before=(self.root/'trading_mode.json').read_bytes()
+        (self.root/'paper-offers.json').write_text('{}')
+        with self.assertRaisesRegex(ValueError,'invalid paper book'):
             self.api().update_drain('default')
         self.assertEqual((self.root/'trading_mode.json').read_bytes(),before)
     def test_invalid_mode_and_revision_preserve_bytes(self):
@@ -153,6 +173,12 @@ class TradingModeTest(unittest.TestCase):
         self.assertTrue(backup.inspect_backup(target))
 
     def test_fresh_daemon_cycle_keeps_paused_stance_and_stays_healthy(self):
+        from rshelper import state_migration,paper_book
+        origin,identity=str(uuid4()),str(uuid4())
+        plan=state_migration.plan_migration('default',origin_uuid=origin,profile_uuid=identity,
+                    lineage={'mode':'independent','financial_authority':True,'replication_origins':[origin]})
+        state_migration.migrate_profile('default',plan=plan,operation_id=str(uuid4()))
+        paper_book.initialize_budget('default',bankroll=1000,slot_limit=8,operation_id=str(uuid4()),now=0)
         self.set('entries-paused')
         env = dict(os.environ, HOME=self.temp.name, PYTHONPATH=str(Path(__file__).resolve().parents[1]/'src'))
         code = "from rshelper import trader,cli; from rshelper.config import TraderConfig; cli._fetch_bootstrap=lambda *args:([],{},{},[]); trader.run_trader(TraderConfig(),profile='default',once=True)"

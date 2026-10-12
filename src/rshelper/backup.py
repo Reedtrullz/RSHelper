@@ -18,6 +18,7 @@ from rshelper.profile import resolve_config_path, resolve_profile
 
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
+    'paper-offers.json',
     'trading_mode.json',
     'alerts.json', 'tuning_log.json', 'volume_baseline.json', 'signal_cooldowns.json',
     'trader_state.json', 'recent_exits.json', 'monitor_state.json',
@@ -90,7 +91,7 @@ def _validate_file(name, raw):
         else:
             from rshelper.persistence import decode_json
             data = decode_json(raw)
-            validate_state(data, 'trading_mode' if name == 'trading_mode.json' else CORE_KINDS.get(name, 'generic'), name)
+            validate_state(data, 'paper-book' if name=='paper-offers.json' else 'trading_mode' if name=='trading_mode.json' else CORE_KINDS.get(name, 'generic'), name)
             if name == 'tuning_log.json':
                 entries = data.get('entries')
                 if not isinstance(entries, list) or any(not isinstance(row, dict)
@@ -120,6 +121,7 @@ def _profile_root(profile):
 
 
 def _export_profile(profile: str, destination: Path, policy: str = 'backup', *, allow_empty=False) -> dict:
+    from rshelper.persistence import decode_json as _decode
     if policy not in ('backup', 'private', 'evidence'):
         raise BackupError('profile backups are private; public publication requires its own policy')
     name = resolve_profile(profile)
@@ -154,6 +156,9 @@ def _export_profile(profile: str, destination: Path, policy: str = 'backup', *, 
         current, _ = _files(root)
         if set(current) != set(selected) or any(_read_file(current[key]) != raw for key, raw in content.items()):
             raise BackupError('profile changed during backup; retry capture')
+    activation = _decode(content['identity-activation.json']) if 'identity-activation.json' in content else {}
+    if policy != 'evidence' and activation.get('paper_budget_origin') is not None and 'paper-offers.json' not in content:
+        raise BackupError('acknowledged paper budget missing; recover before backup')
     files = {key: {'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw),
                    'sensitivity': 'private', 'validation': validation[key]} for key, raw in content.items()}
     revision = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
@@ -231,6 +236,8 @@ def _inspect(source):
         raise BackupError('backup source revision mismatch')
     activation = _decode(content['identity-activation.json']) if 'identity-activation.json' in content else {}
     profile_uuid = activation.get('profile_uuid')
+    if activation.get('paper_budget_origin') is not None and 'paper-offers.json' not in content:
+        raise BackupError('backup omits acknowledged paper budget')
     if profile_uuid is not None:
         canonical_uuid(profile_uuid)
         from rshelper import state_identity, realization
@@ -283,6 +290,14 @@ def _inspect(source):
         realization.verify_realization_snapshot(
             _decode(content['positions.json']) if 'positions.json' in content else {'positions': []},
             _decode(content['trades.json'])['trades'] if 'trades.json' in content else [], intents)
+        if 'paper-offers.json' in content:
+            from rshelper.paper_book import verify_book_financial
+            book=_decode(content['paper-offers.json'])
+            if activation.get('paper_budget_origin')!=book['origin_uuid']:
+                raise BackupError('backup paper authority marker differs')
+            verify_book_financial(book,_decode(content['positions.json']) if 'positions.json' in content else {'positions':[]},
+                _decode(content['trades.json']) if 'trades.json' in content else {'trades':[]},intents,
+                _decode(content['realization-batches.json']) if 'realization-batches.json' in content else {})
         lineage = _decode(content['identity-lineage.json']) if 'identity-lineage.json' in content else {'origins': {}}
         if not isinstance(lineage, dict) or not isinstance(lineage.get('origins'), dict):
             raise BackupError('invalid backup lineage collection')
@@ -396,6 +411,13 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
             incoming = _decode(content[name]).get(key, {}) if name in content else {}
             if any(operation not in incoming or _json(value) != _json(incoming[operation]) for operation, value in live.items()):
                 raise BackupError('backup would discard acknowledged operation proof')
+        if (root/'paper-offers.json').exists():
+            from rshelper.paper_book import require_book_successor
+            live_book=read_state(root/'paper-offers.json','paper-book')
+            if 'paper-offers.json' not in content:
+                raise BackupError('backup would discard acknowledged paper reservations')
+            try:require_book_successor(live_book,_decode(content['paper-offers.json']))
+            except ValueError as exc:raise BackupError('backup would rewind paper reservations: '+str(exc)) from None
         live_mode = read_state(root / 'trading_mode.json', 'trading_mode')
         saved_mode = _decode(content['trading_mode.json']) if 'trading_mode.json' in content else {}
         if live_mode and (saved_mode.get('revision',0) < live_mode['revision']

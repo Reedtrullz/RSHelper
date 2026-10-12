@@ -163,12 +163,17 @@ class TestCrossProcessThrottle(unittest.TestCase):
         amod._throttle()
         t1 = _t.monotonic()
         self.assertGreaterEqual(t1 - t0, 0.4)  # waited out the remaining budget
-        # A second call right after writes a fresh stamp -> serializes ~1s
-        # (correct 1 req/sec pacing).
+        # Durable stamp writes may consume part of the next reserved interval.
+        import json
+        next_at = json.loads(stamp.read_text())["next_at"]
+        remaining = max(0.0, next_at - _t.time())
         t2 = _t.monotonic()
         amod._throttle()
         t3 = _t.monotonic()
-        self.assertGreaterEqual(t3 - t2, 0.9)
+        self.assertGreaterEqual(t3 - t2, remaining - 0.02)
+        self.assertGreaterEqual(_t.time(), next_at)
+        self.assertGreaterEqual(json.loads(stamp.read_text())["next_at"],
+                                next_at + amod.REQUEST_INTERVAL)
         # An ancient stamp (dead process) must not serialize.
         amod._LAST_REQUEST = 0  # reset in-process state too
         stamp.write_text("0")

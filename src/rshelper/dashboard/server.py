@@ -25,6 +25,95 @@ from rshelper.dashboard.handlers import make_handler
 from rshelper import alerts, watchlist
 
 
+def paper_request(profile, body, refresh, direction):
+    from rshelper import paper_book
+    from rshelper.persistence import canonical_uuid
+    from rshelper.positions import list_positions
+    from rshelper.dashboard.http_inputs import validate_operation
+    validate_operation('/api/paper',body)
+    action=body.get('action')
+    operation=body['operation_id']
+    canonical_uuid(operation)
+    revision=body['expected_revision']
+    if type(revision) is not int or revision<1:raise ValueError('paper revision required')
+    now=time.time()
+    state=paper_book.budget_snapshot(profile,now=now)
+    pinned=paper_book.operation_request(profile,operation)
+    common: paper_book.PaperMutation={'expected_revision':revision,'operation_id':operation,'now':now}
+    if action in ('open','roundtrip'):
+        query=body['item']
+        qty=body['qty']
+        if not isinstance(query,str) or not query.strip() or len(query)>200 or type(qty) is not int or qty<=0:
+            raise ValueError('item and positive integer quantity required')
+        mode='manual-hold' if action=='open' else 'manual-roundtrip'
+        if pinned is not None:
+            if pinned['action']!='reserve':raise ValueError('operation belongs to another paper action')
+            entry={'id':pinned['item_id'],'name':pinned['name'],'limit':pinned['buy_limit'],'members':pinned['members']}
+            buy=pinned['buy_price']
+            direction=pinned['direction']
+        else:
+            cache=refresh()
+            matches=[entry for entry in cache['mapping'] if query.strip().lower() in entry['name'].lower()]
+            exact=[entry for entry in matches if query.strip().lower()==entry['name'].lower()]
+            if len(exact or matches)!=1:raise ValueError('item match must be unique')
+            entry=(exact or matches)[0]
+            latest=cache['latest']
+            price=latest.get(str(entry['id']))
+            meta=provenance(latest)
+            if meta['source']=='unknown' or meta['stale'] or not isinstance(price,dict) or price_issue(price):
+                raise ValueError('fresh usable quote provenance required')
+            buy=safe_int(price.get('low' if direction=='traditional' else 'high'))
+        result=paper_book.reserve_budget(profile,item_id=entry['id'],name=entry['name'],
+            qty=qty,buy_price=buy,buy_limit=safe_int(entry.get('limit')),members=entry.get('members'),direction=direction,
+            note='paper',mode=mode,client_ref=query.strip(),**common)
+    elif action=='queue-sale':
+        position_id=body['position_id']
+        qty=body['qty']
+        if type(position_id) is not int or position_id<=0 or qty is not None and (type(qty) is not int or qty<=0):
+            raise ValueError('position and positive sale quantity required')
+        if pinned is not None:
+            if pinned['action']!='queue-sales' or pinned['position_id']!=position_id:
+                raise ValueError('operation belongs to another paper sale')
+            item_id=pinned['item_id']
+            qty=qty if qty is not None else pinned['qty']
+            quotes=pinned['quotes']
+        else:
+            position=next((row for row in list_positions(profile) if row.id==position_id),None)
+            if position is None:raise ValueError('recorded holding unavailable')
+            latest=refresh()['latest']
+            price=latest.get(str(position.item_id))
+            meta=provenance(latest)
+            if meta['source']=='unknown' or meta['stale'] or not isinstance(price,dict) or price_issue(price):
+                raise ValueError('fresh usable sale quote required')
+            item_id=position.item_id
+            qty=position.qty if qty is None else qty
+            quotes={position.direction:safe_int(price.get('high' if position.direction=='traditional' else 'low'))}
+        result=paper_book.queue_sales(profile,item_id,qty,quotes,position_id=position_id,
+                                    client_ref=str(position_id),**common)
+    elif action=='adopt':
+        result=paper_book.adopt_holding(profile,body['lot_uid'],**common)
+    else:
+        offer_id=body['offer_id']
+        canonical_uuid(offer_id)
+        record=state['offers'].get(offer_id)
+        if record is None or record['mode']=='auto':raise ValueError('manual action requires a manual paper offer')
+        if action=='start-sale':
+            result=paper_book.start_sale(profile,offer_id,qty=body['qty'],sell_price=body['sell_price'],**common)
+        elif action=='advance':
+            market=None
+            if pinned is None:
+                cache=refresh()
+                market={'latest':cache['latest'],'5m':cache['vol']}
+            result=paper_book.advance_offer(profile,offer_id,market,**common)
+        else:
+            function={'cancel-buy':paper_book.cancel_buy,'cancel-sale':paper_book.cancel_sale,
+                      'collect':paper_book.collect_offer}[action]
+            result=function(profile,offer_id,**common)
+    return {'ok':True,'operation_id':operation,'revision':result['revision'],
+            'offer_id':result['offer_id'],'retry':result['retry'],'budget':result['budget'],
+            'reason':result.get('reason')}
+
+
 class EventHub:
     """Minimal pub/sub for server-push (SSE) refresh + alert events."""
 
@@ -650,122 +739,19 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def close_position(position_id: int, qty: int | None = None,
                        operation_id: str | None = None) -> dict:
-        """Close a manual paper position at the market price.
-
-        Auto-trader positions are refused (the trader owns those exits).
-        Raises ValueError when the position is unknown/auto or the close
-        cannot be priced.
-        """
-        cache = refresh()
-        identified = identified_position_close(
-            profile, position_id, qty, cache["latest"], operation_id)
-        if identified is not None:
-            return identified
-        from rshelper.ge_offers import close_market_price
-        from rshelper.positions import close_positions, list_positions
-        from rshelper.journal import log_trade
-        position = next((p for p in list_positions(profile)
-                         if p.id == position_id), None)
-        if position is None:
-            raise ValueError(f"unknown position id {position_id}")
-        if position.note == "auto":
-            raise ValueError("auto-trader positions close themselves")
-        close_qty = qty if qty and qty > 0 else position.qty
-        if close_qty > position.qty:
-            raise ValueError(f"only {position.qty} units open for {position.name}")
-        # Close at the direction-aware market leg when a usable price exists;
-        # otherwise fall back to the entry buy_price (like collect_offer) so a
-        # stale-data position is never stranded forever. The response flags
-        # the fallback so the UI can surface the warning.
-        latest = cache["latest"]
-        price = latest.get(str(position.item_id))
-        usable = isinstance(price, dict) and price_issue(price) is None
-        sell_price = close_market_price(position, latest)
-        at_entry = not usable
-        lots = close_positions(position.item_id, close_qty, sell_price,
-                               profile, position_id=position.id)
-        for lot in lots:
-            log_trade(position.item_id, lot["name"], lot["qty"],
-                      lot["buy_price"], sell_price, note="paper",
-                      profile=profile, strategy="manual",
-                      exit_reason="manual")
-        return {
-            "ok": True,
-            "name": position.name,
-            "qty": close_qty,
-            "sell_price": sell_price,
-            "profit": sum(lot["profit"] for lot in lots),
-            "closed_at_entry": at_entry,
-            "market_data": {"latest": provenance(latest)},
-        }
-
-    def paper_trade(action: str, query: str, qty: int) -> dict:
-        """Log a paper trade (instant round-trip) or open a hold position.
-
-        Both use the current guarded prices from the TTL cache, so the
-        dashboard can trade any mapped item without a CLI round trip.
-        """
-        cache = refresh()
-        mapping = cache["mapping"] or []
-        q = query.strip().lower()
-        entry = next((e for e in mapping
-                      if (e.get("name") or "").lower() == q), None)
-        if entry is None:
-            matches = [e for e in mapping if q in (e.get("name") or "").lower()]
-            if len(matches) == 1:
-                entry = matches[0]
-            elif len(matches) > 1:
-                names = ", ".join(e.get("name", "?") for e in matches[:8])
-                raise ValueError(f"multiple items match '{query}': {names}")
+        if operation_id is not None:
+            from rshelper import realization
+            try:
+                realization.batch_summary(profile,operation_id)
+            except ValueError:
+                pass
             else:
-                raise ValueError(f"no item found matching '{query}'")
-        latest = cache["latest"]
-        price = latest.get(str(entry["id"]))
-        issue = price_issue(price) if isinstance(price, dict) else "no data"
-        if issue:
-            raise ValueError(f"no reliable live price for {entry.get('name')} ({issue})")
-        high = safe_int(price.get("high", 0))
-        low = safe_int(price.get("low", 0))
-        if high <= 0 or low <= 0:
-            raise ValueError(f"no live price data for {entry.get('name')}")
-        from dataclasses import asdict
-        from rshelper.positions import open_position
-        from rshelper.journal import log_trade
-        # Honor the configured flip direction: the CLI's `trade open/paper`
-        # respects --flip-direction, so the dashboard must too — booking a
-        # traditional-config position as arbitrage buys the ask and sells
-        # the bid, a structurally negative trade.
-        direction = cfg.flip.direction
-        if action == "open":
-            # Cap the open qty at the item's 4h GE buy limit, matching the
-            # CLI's trade sizing (see _cap_open_qty).
-            qty = _cap_open_qty(qty, safe_int(entry.get("limit")),
-                                entry.get("name", "?"))
-            if direction == "traditional":
-                pos = open_position(entry["id"], entry["name"], qty, low,
-                                    direction="traditional", note="paper",
-                                    entry_sell=low, entry_offer=high,
-                                    profile=profile)
-            else:
-                pos = open_position(entry["id"], entry["name"], qty, high,
-                                    direction="arbitrage", note="paper",
-                                    entry_sell=low, profile=profile)
-            return {"ok": True, "position": asdict(pos),
-                    "market_data": {"latest": provenance(latest)}}
-        if action == "instant":
-            if qty <= 0:
-                raise ValueError("qty must be positive")
-            if direction == "traditional":
-                trade = log_trade(entry["id"], entry["name"], qty, low, high,
-                                  note="paper", strategy="manual",
-                                  profile=profile)
-            else:
-                trade = log_trade(entry["id"], entry["name"], qty, high, low,
-                                  note="paper", strategy="manual",
-                                  profile=profile)
-            return {"ok": True, "trade": asdict(trade),
-                    "market_data": {"latest": provenance(latest)}}
-        raise ValueError(f"unknown action '{action}'")
+                result=identified_position_close(profile,position_id,qty,{},operation_id)
+                if result is not None:return result
+        raise ValueError('queue a paper sale; confirmed sale fills must be collected separately')
+
+    def paper_trade(body):
+        return paper_request(profile,body,refresh,cfg.flip.direction)
 
     def get_trader_status() -> dict:
         from rshelper.trader import trader_status
@@ -810,17 +796,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         status = monitor_status(profile)
         return status if status else {"running": False}
 
-    def get_ge():
+    def get_ge(offset=0):
         cache = refresh()
         from rshelper.ge_offers import build_ge_slots
         return build_ge_slots(profile=profile, latest=cache["latest"],
-                              vol_5m=cache["vol"])
+                              vol_5m=cache["vol"],offset=offset)
 
     def collect_ge(position_id: int):
-        cache = refresh()  # a collect books P&L — don't use a stale quote
-        from rshelper.ge_offers import collect_offer
-        return collect_offer(position_id, profile=profile,
-                             latest=cache["latest"])
+        raise ValueError('collection requires a collectable paper offer, operation ID and revision')
 
     def get_bank():
         cache = refresh()

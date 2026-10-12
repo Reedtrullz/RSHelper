@@ -3,6 +3,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
@@ -35,6 +36,29 @@ class DisposableHomeTest(unittest.TestCase):
 class NativeWriterTest(DisposableHomeTest):
     def trade_payload(self):
         return dict(item_id=2, name='Lot', qty=10, buy_price=100, sell_price=120)
+
+    def test_confirmed_fill_and_sibling_state_recover_in_one_transaction(self):
+        self.activate()
+        request = dict(item_id=2,name='Lot',qty=10,buy_price=100,direction='traditional',
+                       note='auto',entry_sell=100,entry_offer=120)
+        with self.assertRaisesRegex(RuntimeError,'fixture interruption'):
+            with state_transaction.profile_transaction('default',profile.CONFIG_DIR) as txn:
+                position,created = positions._stage_open_position(txn,None,request,OPERATION,
+                    opened_at='2026-10-12T07:00:00+00:00')
+                self.assertTrue(created)
+                txn.stage('trader_state.json',{'confirmed_lot':position.lot_uid,'filled_qty':10})
+                with mock.patch.object(state_transaction,'_checkpoint',side_effect=RuntimeError('fixture interruption')):
+                    txn.commit(operation_id=OPERATION)
+        state_transaction.recover_profile(profile.CONFIG_DIR)
+        recovered = positions.list_positions()[0]
+        sibling = persistence.read_state(profile.CONFIG_DIR/'trader_state.json','generic')
+        self.assertEqual(sibling,{'confirmed_lot':recovered.lot_uid,'filled_qty':10})
+        self.assertEqual(recovered.opened_at,'2026-10-12T07:00:00+00:00')
+        with state_transaction.profile_transaction('default',profile.CONFIG_DIR) as txn:
+            retry,created = positions._stage_open_position(txn,None,request,OPERATION)
+        self.assertFalse(created)
+        self.assertEqual(retry.lot_uid,recovered.lot_uid)
+        self.assertEqual(len(positions.list_positions()),1)
 
     def test_same_tick_watch_readd_has_new_uuid(self):
         self.activate()

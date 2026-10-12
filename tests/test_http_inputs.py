@@ -109,9 +109,11 @@ class HttpInputsTest(unittest.TestCase):
                 self.assertEqual(self.calls, [])
 
     def test_valid_browser_payload_and_operation_types(self):
-        status, payload = self.request(body=b'{"action":"open","item":"nature rune","qty":5}')
+        body={'action':'open','item':'nature rune','qty':5,'expected_revision':1,
+              'operation_id':'22222222-2222-4222-8222-222222222222'}
+        status, payload = self.request(body=json.dumps(body).encode())
         self.assertEqual(status, 200); self.assertTrue(payload['ok'])
-        self.assertEqual(self.calls, [('open', 'nature rune', 5)])
+        self.assertEqual(self.calls, [(body,)])
         self.calls.clear()
         invalid = [('/api/ge/collect', {'position_id': True}),
                    ('/api/trades/delete', {'trade_id': -1}),
@@ -173,14 +175,36 @@ class HttpInputsTest(unittest.TestCase):
     def test_keepalive_uses_each_requests_body(self):
         connection = http.client.HTTPConnection(*self.server.server_address, timeout=2)
         try:
+            bodies=[]
             for qty in (5, 7):
+                body={'action':'open','item':'nature rune','qty':qty,'expected_revision':1,
+                      'operation_id':'22222222-2222-4222-8222-222222222222'}
+                bodies.append(body)
                 connection.request('POST', '/api/paper',
-                    json.dumps({'action': 'open', 'item': 'nature rune', 'qty': qty}),
+                    json.dumps(body),
                     {'Authorization': 'Bearer '+'a'*64, 'Host': 'localhost'})
                 response = connection.getresponse()
                 self.assertEqual(response.status, 200); response.read()
-            self.assertEqual(self.calls, [('open', 'nature rune', 5), ('open', 'nature rune', 7)])
+            self.assertEqual(self.calls,[(body,) for body in bodies])
         finally: connection.close()
+
+    def test_every_paper_action_survives_http_validation_and_bad_receipts_do_not(self):
+        identity='22222222-2222-4222-8222-222222222222'
+        actions={'open':{'item':'Synthetic','qty':1},'roundtrip':{'item':'Synthetic','qty':1},
+            'advance':{'offer_id':identity},'cancel-buy':{'offer_id':identity},
+            'cancel-sale':{'offer_id':identity},'collect':{'offer_id':identity},
+            'start-sale':{'offer_id':identity,'qty':1,'sell_price':120},
+            'adopt':{'lot_uid':identity},'queue-sale':{'position_id':1,'qty':None}}
+        for action,fields in actions.items():
+            body={'action':action,'operation_id':identity,'expected_revision':2,**fields}
+            self.assertEqual(self.request(body=json.dumps(body).encode())[0],200)
+            self.assertEqual(self.calls[-1],(body,))
+        self.calls.clear()
+        valid={'action':'advance','offer_id':identity,'operation_id':identity,'expected_revision':2}
+        for key,value in (('expected_revision',True),('expected_revision',0),('operation_id','bogus'),
+                          ('offer_id',7),('extra',1)):
+            self.assert_error(*self.request(body=json.dumps({**valid,key:value}).encode()),400)
+        self.assertEqual(self.calls,[])
 
     def test_query_batches_are_bounded_and_unambiguous(self):
         for query in ('ids=1,1', 'ids=0', 'ids=-1', 'ids=2,nope', 'ids=2&ids=3',
@@ -191,6 +215,9 @@ class HttpInputsTest(unittest.TestCase):
         for query in ('id=0', 'id=2&points=0', 'id=2&points=1001', 'id=2&step=bad'):
             self.assert_error(*self.request('/api/timeseries?' + query, method='GET'))
             self.assertEqual(self.calls, [])
+        for query in ('offset=-1','offset=100001','offset=x','offset=1&offset=2','offset=%2B1'):
+            self.assert_error(*self.request('/api/ge?'+query,method='GET'),400)
+            self.assertEqual(self.calls,[])
 
     def test_api_errors_are_json_including_auth_and_methods(self):
         for method, path, auth, expected in [('GET', '/api/missing', True, 404),

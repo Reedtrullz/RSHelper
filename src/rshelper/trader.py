@@ -422,11 +422,146 @@ def _preview_lots(position, sell_price: int) -> list[dict]:
     }]
 
 
+def _run_paper_cycle(cfg,profile):
+    from uuid import UUID,uuid4,uuid5
+    from rshelper import paper_book,positions
+    from rshelper.cli import _fetch_bootstrap
+    from rshelper.ge_offers import advance_paper_offer
+    from rshelper.market_data import provenance,executed_volume_supported
+    root=paper_book._root(profile)
+    paper_book._authority(root)
+    now=time.time()
+    state=paper_book.budget_snapshot(profile,now=now)
+    _load_recent_exits(profile,cfg)
+    mapping,latest,volume,items=_fetch_bootstrap(profile)
+    if not isinstance(latest,dict) or not isinstance(volume,dict):
+        raise ValueError('paper market snapshot must contain keyed quotes and volume')
+    market={'latest':latest,'5m':volume}
+    candidates=select_candidates(items,latest,volume,cfg)
+    closed=[]
+    queued=[]
+    bought=[]
+    held=[]
+    covered={lot for record in state['offers'].values()
+             if record['offer']['stage'] not in ('collected','canceled') for lot in record['lots']}
+    for position in positions.list_positions(profile):
+        if position.note=='auto' and position.lot_uid not in covered:
+            state=paper_book.adopt_holding(profile,position.lot_uid,mode='auto',
+                expected_revision=state['revision'],operation_id=str(uuid5(UUID(position.lot_uid),'paper-auto-adoption')),now=now)
+    for offer_id in list(state['offers']):
+        state=paper_book.budget_snapshot(profile,now=now)
+        record=state['offers'][offer_id]
+        offer=record['offer']
+        stage=offer['stage']
+        if stage in ('collected','canceled'):continue
+        if stage=='buying' and record['mode']=='auto' and _elapsed_offer_minutes(offer,now)>=cfg.max_hold_minutes:
+            state=paper_book.cancel_buy(profile,offer_id,expected_revision=state['revision'],
+                operation_id=str(uuid5(UUID(offer_id),'paper-auto-buy-timeout')),now=now)
+            record=state['offers'][offer_id]
+            offer=record['offer']
+            stage=offer['stage']
+        if stage in ('buying','selling'):
+            preview=advance_paper_offer(offer,market,now,paper_book.POLICY)
+            if preview['offer']!=offer:
+                window=preview['offer']['last_window']
+                state=paper_book.advance_offer(profile,offer_id,market,expected_revision=state['revision'],
+                    operation_id=str(uuid5(UUID(offer_id),'paper-advance:'+stage+':'+str(window))),now=now)
+                record=state['offers'][offer_id]
+                offer=record['offer']
+                stage=offer['stage']
+                if stage=='bought':
+                    bought.append({'item_id':offer['item_id'],'name':record['name'],
+                                   'qty':offer['bought_qty'],'buy_price':offer['buy_price'],'offer_id':offer_id})
+            else:held.append({'offer_id':offer_id,'reason':preview['reason']})
+        if stage=='bought' and record['mode']!='manual-hold':
+            position=next((row for row in positions.list_positions(profile) if row.lot_uid in record['lots']),None)
+            price=latest.get(str(offer['item_id']))
+            meta=provenance(latest)
+            if (position is None or meta['source']=='unknown' or meta['stale'] or not isinstance(price,dict)
+                    or price_issue(price,now=now) or not _fresh(price,EXIT_MAX_AGE,now)):
+                held.append({'offer_id':offer_id,'reason':'fresh usable sale quote unavailable'})
+                continue
+            candle=volume.get(str(offer['item_id']))
+            avg_low=candle.get('avgLowPrice') if isinstance(candle,dict) and executed_volume_supported(volume) else None
+            reason='roundtrip' if record['mode']=='manual-roundtrip' else exit_reason(position,latest,cfg,now=now,avg_low=avg_low)
+            if reason is None:continue
+            high,low=safe_int(price.get('high')),safe_int(price.get('low'))
+            if reason in ('take_profit','roundtrip') and position.direction=='traditional':sell=high
+            elif reason=='spread_collapse':sell=max(high,low)
+            else:sell=low
+            if reason in ('stop_loss','max_hold') and executed_volume_supported(volume):
+                guarded=_artifact_exit_fill(sell,candle,position.buy_price,cfg)
+                if guarded is not None:sell=guarded
+                elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
+            elif reason=='stop_loss':sell=int(sell*cfg.stop_slippage)
+            if sell<=0:continue
+            state=paper_book.start_sale(profile,offer_id,qty=position.qty,sell_price=sell,reason=reason,
+                expected_revision=state['revision'],operation_id=str(uuid5(UUID(offer_id),'paper-sale:'+str(state['revision']))),now=now)
+            record=state['offers'][offer_id]
+            offer=record['offer']
+            stage=offer['stage']
+        if stage=='collectable' and record['mode'] in ('auto','manual-roundtrip'):
+            operation=state['pending_collections'].get(offer_id) or str(uuid5(UUID(offer_id),'paper-auto-collection'))
+            state=paper_book.collect_offer(profile,offer_id,expected_revision=state['revision'],operation_id=operation,now=now)
+            if record['mode']=='auto':
+                profit=(offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']
+                reason=record['sale_reason']
+                closed.append({'item_id':offer['item_id'],'name':record['name'],'qty':offer['sold_qty'],
+                               'reason':reason,'sell_price':offer['sell_price'],'profit':profit})
+                _RECENT_EXITS[offer['item_id']]=(now,reason)
+                _persist_recent_exits(profile,cfg)
+    state=paper_book.budget_snapshot(profile,now=now)
+    active=[record for record in state['offers'].values() if record['offer']['stage'] not in ('collected','canceled')]
+    auto_count=sum(record['mode']=='auto' for record in active)
+    occupied={record['offer']['item_id'] for record in active}|{row.item_id for row in positions.list_positions(profile)}
+    meta=provenance(latest)
+    for candidate in candidates:
+        budget=state['budget']
+        if auto_count>=cfg.max_positions or budget['available_slots'] is None or budget['available_slots']<1:break
+        if candidate.id in occupied:continue
+        price=latest.get(str(candidate.id))
+        if (meta['source']=='unknown' or meta['stale'] or not isinstance(price,dict)
+                or price_issue(price,now=now) or not _fresh(price,ENTRY_MAX_AGE,now)):continue
+        buy=safe_int(price.get('low'))
+        if buy<=0:continue
+        qty=min(size_position(cfg,budget['invested_cash']+budget['reserved_cash'],candidate),
+                budget['available_cash']//buy)
+        if qty<=0:continue
+        try:
+            state=paper_book.reserve_budget(profile,item_id=candidate.id,name=candidate.name,qty=qty,
+                buy_price=buy,buy_limit=candidate.buy_limit,members=candidate.members,direction='traditional',
+                note='auto',mode='auto',expected_revision=state['revision'],operation_id=str(uuid4()),now=now)
+        except ValueError as exc:
+            held.append({'item_id':candidate.id,'reason':str(exc)})
+            state=paper_book.budget_snapshot(profile,now=now)
+            continue
+        auto_count+=1
+        occupied.add(candidate.id)
+        queued.append({'item_id':candidate.id,'name':candidate.name,'qty':qty,
+                       'buy_price':buy,'offer_id':state['offer_id'],'stage':'buying'})
+    stance=None
+    if (root/'trading_mode.json').exists():
+        import importlib
+        stance=importlib.import_module('rshelper.trading_mode').update_drain(profile)
+    return {'candidates':len(candidates),'opened':bought,'queued':queued,'closed':closed,'held':held,
+            'closed_pnl':sum(row['profit'] for row in closed),'budget':state['budget'],
+            'trading_mode':stance,'paper_model':paper_book.POLICY['model_id'],'market_data':market_snapshot(mapping,latest,volume)}
+
+
+def _elapsed_offer_minutes(offer,now):
+    opened=datetime.fromisoformat(offer['created_at']).timestamp()
+    return max(0,(now-opened)/60)
+
+
 def run_cycle(cfg, profile: str | None = None) -> dict:
     """One poll cycle: manage auto positions (exits) then open new ones."""
     from rshelper.cli import _fetch_bootstrap
     from rshelper.positions import close_positions, list_positions, open_position
     from rshelper.journal import log_trade
+    from rshelper import paper_book,state_identity
+    root=paper_book._root(profile)
+    if state_identity.activation_manifest(root/'identity-activation.json') is not None or (root/paper_book.FILENAME).exists():
+        return _run_paper_cycle(cfg,profile)
     from rshelper.trading_mode import EntriesPaused, update_drain
 
     _load_recent_exits(profile, cfg)
@@ -661,6 +796,9 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
     if not (0 <= cfg.stop_mark_blend <= 1):
         raise ValueError("stop_mark_blend must be in [0, 1]")
     interval = interval or cfg.interval_sec
+    from rshelper import paper_book
+    paper_book._authority(paper_book._root(profile))
+    paper_book.budget_snapshot(profile,now=time.time())
     prof_name = profile
     p_path = _pid_path(profile)
     try:

@@ -48,6 +48,34 @@ class ReplicationTest(unittest.TestCase):
         from rshelper import state_replication
         return state_replication
 
+    def test_authority_owned_paper_book_replicates_and_cannot_mutate_on_replica(self):
+        from rshelper import paper_book
+        from uuid import uuid4
+        paper_book.initialize_budget('a',bankroll=1000,slot_limit=3,operation_id=str(uuid4()),now=20000)
+        reserved=paper_book.reserve_budget('a',item_id=2,name='Synthetic',qty=6,buy_price=100,buy_limit=100,members=False,
+            direction='traditional',note='manual',expected_revision=1,operation_id=str(uuid4()),now=20000)
+        receipt=self.api().apply_packet('b',self.packet())
+        self.assertEqual(receipt['status'],'applied')
+        replica=paper_book.budget_snapshot('b',now=20000)
+        self.assertEqual(replica['budget']['reserved_cash'],600)
+        self.assertEqual(replica['offers'],reserved['offers'])
+        with self.assertRaisesRegex(ValueError,'authority'):
+            paper_book.cancel_buy('b',reserved['offer_id'],expected_revision=2,operation_id=str(uuid4()),now=20000)
+        reverse=self.api().apply_packet('a',self.packet('b'))
+        self.assertEqual(reverse['status'],'applied')
+        self.assertEqual(paper_book.budget_snapshot('a',now=20000)['budget']['reserved_cash'],600)
+
+    def test_missing_acknowledged_paper_book_cannot_be_published(self):
+        from rshelper import paper_book
+        from uuid import uuid4
+        paper_book.initialize_budget('a',bankroll=1000,slot_limit=3,
+                                    operation_id=str(uuid4()),now=20000)
+        (self.root('a')/'paper-offers.json').unlink()
+        destination=self.base/'missing-paper.zip'
+        with self.assertRaisesRegex(ValueError,'paper budget missing'):
+            self.api().capture_packet('a',destination)
+        self.assertFalse(destination.exists())
+
     def row(self, origin=A):
         row = {'id': 1, 'item_id': 2, 'name': 'Synthetic', 'qty': 10,
                'buy_price': 100, 'sell_price': 120, 'tax_paid': 20,

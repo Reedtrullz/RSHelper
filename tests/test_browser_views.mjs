@@ -32,6 +32,7 @@ const calls = [];
 let failed = true;
 const { context, elements } = harness(async (url, options = {}) => {
   calls.push({ url, options });
+  if(url==='/api/ge')return new Response(JSON.stringify({initialized:true,revision:5}),{status:200});
   return new Response(JSON.stringify(failed ? { error: 'fixture rejected' } : { name: 'Synthetic', profit: 1 }),
     { status: failed ? 409 : 200 });
 });
@@ -63,7 +64,7 @@ assert.match(elements.get('statusText').textContent, /fixture rejected/);
 assert.equal(elements.get('ptItem').value, 'Synthetic', 'failure preserves the draft');
 await vm.runInContext('closePosition(7)', context);
 await vm.runInContext('closePosition(7)', context);
-const failedCloses = calls.filter(c => c.url === '/api/positions').map(c => JSON.parse(c.options.body));
+const failedCloses = calls.filter(c => c.url === '/api/paper' && JSON.parse(c.options.body).action==='queue-sale').map(c => JSON.parse(c.options.body));
 assert.equal(failedCloses[0].operation_id, failedCloses[1].operation_id, 'retry retains the close operation');
 failed = false;
 await vm.runInContext('closePosition(7)', context);

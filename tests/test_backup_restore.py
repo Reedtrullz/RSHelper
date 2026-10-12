@@ -43,6 +43,35 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(receipt['operation_id'], OP)
         self.assertEqual(backup.restore_profile('restored', target, expected_profile_uuid=PROFILE, operation_id=OP), receipt)
 
+    def test_paper_reservations_restore_without_rewinding_spent_capacity(self):
+        from rshelper import paper_book
+        from uuid import uuid4
+        paper_book.initialize_budget('source',bankroll=1000,slot_limit=3,operation_id=str(uuid4()),now=20000)
+        old=self.base/'before-reservation.zip'
+        backup.export_profile('source',old)
+        paper_book.reserve_budget('source',item_id=2,name='Synthetic',qty=6,buy_price=100,buy_limit=100,members=False,
+            direction='traditional',note='manual',expected_revision=1,operation_id=str(uuid4()),now=20000)
+        latest=self.base/'reserved.zip'
+        backup.export_profile('source',latest)
+        self.assertIn('paper-offers.json',backup.inspect_backup(latest)['files'])
+        with self.assertRaisesRegex(backup.BackupError,'rewind paper'):
+            backup.restore_profile('source',old,expected_profile_uuid=PROFILE,operation_id=str(uuid4()),dry_run=True)
+        backup.restore_profile('restored',latest,expected_profile_uuid=PROFILE,operation_id=str(uuid4()))
+        restored=paper_book.budget_snapshot('restored',now=20000)
+        self.assertEqual(restored['budget']['reserved_cash'],600)
+        self.assertEqual(restored['revision'],2)
+
+    def test_missing_acknowledged_paper_book_cannot_create_validated_backup(self):
+        from rshelper import paper_book
+        from uuid import uuid4
+        paper_book.initialize_budget('source',bankroll=1000,slot_limit=3,
+                                    operation_id=str(uuid4()),now=20000)
+        (self.root/'paper-offers.json').unlink()
+        destination=self.base/'missing-paper.zip'
+        with self.assertRaisesRegex(backup.BackupError,'paper budget missing'):
+            backup.export_profile('source',destination)
+        self.assertFalse(destination.exists())
+
     def test_legacy_restore_requires_explicit_revision_and_empty_target(self):
         legacy = profile.resolve_config_path('', 'legacy')
         legacy.mkdir(parents=True)
