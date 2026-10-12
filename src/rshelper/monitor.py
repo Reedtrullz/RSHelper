@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from rshelper.market import ge_tax, price_issue, safe_int
+from rshelper.market_data import provenance
 from rshelper.profile import atomic_write_json, resolve_config_path
 from rshelper.daemon import (LeaseBusy, LeaseError, acquire_lease, daemon_status,
                              install_stop_signal, read_private_json,
@@ -32,17 +33,18 @@ def _monitor_dir(profile: str | None = None) -> Path:
     return resolve_config_path("", profile)
 
 
-def notify(title: str, message: str) -> None:
-    """Fire macOS notification via osascript. No-op on failure."""
+def notify(title: str, message: str) -> bool:
+    """Report delivery failure without interrupting the poll cycle."""
     safe_msg = message.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
     safe_title = title.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
     try:
-        subprocess.run(
+        result = subprocess.run(
             ["osascript", "-e",
              f'display notification "{safe_msg}" with title "{safe_title}"'],
             capture_output=True, timeout=5)
+        return result.returncode == 0
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        pass
+        return False
 
 
 def run_monitor(interval_sec: int = 120, no_notify: bool = False,
@@ -157,27 +159,13 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
                 margin = sell - buy
                 tax = ge_tax(sell)
             profit = margin - tax
-            above, below = entry.get("alert_margin_above"), entry.get("alert_margin_below")
-            if (above is not None and profit > above) or (below is not None and profit < below):
-                # Dedupe like the dashboard: a threshold crossing fires once
-                # per 15-min window, not every poll cycle (which would spam
-                # the feed + notifications every 2 minutes).
-                from rshelper.alerts import push_alert, watch_triggered, set_watch_triggered
-                item_id = int(item_id_str)
-                if watch_triggered(item_id, profile):
-                    continue
-                try:
-                    hit = (f"margin {profit:,} gp above {above:,}" if above is not None and profit > above
-                           else f"margin {profit:,} gp below {below:,}")
-                    push_alert("watch", "HIGH", item_id,
-                               entry.get("name", item_id_str),
-                               "Watchlist alert", f"{entry.get('name', '')}: {hit}",
-                               profile=profile)
-                    set_watch_triggered(item_id, profile)
-                except Exception:
-                    pass
-                if not no_notify:
-                    notify("RSHelper Watchlist", f"{entry['name']}: margin {profit:,} gp")
+            from rshelper.alerts import emit_watch_if_due
+            try:
+                emit_watch_if_due(profile, int(item_id_str), profit,
+                    source_revision=str(provenance(_latest).get('last_success_at') or ''),
+                    notify_fn=None if no_notify else notify)
+            except (OSError, ValueError) as error:
+                print(f'[monitor] watch alert unavailable: {error}', file=sys.stderr)
 
 
 def stop_monitor(profile: str | None = None) -> bool:

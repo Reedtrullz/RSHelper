@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -15,7 +16,13 @@ from rshelper import watchlist
 class TestWatchlist(unittest.TestCase):
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp()
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.tmp = directory.name
+        from rshelper import profile
+        config = mock.patch.object(profile, 'CONFIG_DIR', Path(self.tmp).resolve())
+        config.start()
+        self.addCleanup(config.stop)
         self._orig_path = watchlist.WATCHLIST_PATH
         watchlist.WATCHLIST_PATH = Path(self.tmp) / "watchlist.json"
 

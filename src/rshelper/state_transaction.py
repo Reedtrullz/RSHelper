@@ -19,6 +19,7 @@ from rshelper.persistence import locked_state
 
 SCHEMA_VERSION = 1
 STATE_FILES = {
+    'trading_mode.json': 'trading_mode',
     'positions.json': 'positions',
     'trades.json': 'trades',
     'alerts.json': 'alerts',
