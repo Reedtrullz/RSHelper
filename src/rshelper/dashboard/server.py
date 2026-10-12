@@ -1,6 +1,7 @@
 """Dashboard server — launch a local HTTP server for the RSHelper dashboard."""
 
 import errno
+import hashlib
 import os
 import stat
 import subprocess
@@ -11,6 +12,7 @@ import json
 import queue
 import threading
 from types import MappingProxyType
+from dataclasses import asdict
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
@@ -487,21 +489,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 else:
                     profit = (sell - buy) - ge_tax(sell)
                 item_id = int(id_str)
-                above = entry.get("alert_margin_above")
-                below = entry.get("alert_margin_below")
-                hit = None
-                if above is not None and profit > above:
-                    hit = f"margin {profit:,} gp above {above:,}"
-                elif below is not None and profit < below:
-                    hit = f"margin {profit:,} gp below {below:,}"
-                # Check-then-set must be atomic per item (this runs inside the
-                # single-flight refresh lock, so no other thread can race it).
-                if hit and not alerts.watch_triggered(item_id, profile):
-                    alert = alerts.push_alert(
-                        "watch", "HIGH", item_id, entry.get("name", str(item_id)),
-                        "Watchlist alert", f"{entry.get('name', '')}: {hit}",
-                        profile=profile)
-                    alerts.set_watch_triggered(item_id, profile)
+                alert = alerts.emit_watch_if_due(profile, item_id, profit,
+                    source_revision=str(provenance(latest).get('last_success_at') or ''))
+                if alert is not None:
                     hub.broadcast("alert", {"alert": _alert_to_dict(alert)})
         except Exception as e:
             print(f"[dashboard] watch alert check failed: {e}", file=sys.stderr)
@@ -647,6 +637,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = refresh()
         latest = cache["latest"] or {}
         rows = []
+        crossings = alerts._load(profile).get('watch_crossings', {})
         for id_str, entry in watchlist.load(profile).get("items", {}).items():
             price = latest.get(id_str)
             issue = price_issue(price) if isinstance(price, dict) else "no data"
@@ -654,6 +645,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "added": entry.get("added", ""),
                    "alert_above": entry.get("alert_margin_above"),
                    "alert_below": entry.get("alert_margin_below"),
+                   "alert_policy": alerts._watch_policy(entry.get('alert_policy')),
+                   "notification_status": crossings.get(id_str, {}).get('notification_status', 'not-requested'),
                    "usable": issue is None, "market_data":{"latest":provenance(latest)}}
             if issue is None:
                 row["buy"] = safe_int(price.get("high", 0))
@@ -666,7 +659,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def update_watchlist(action: str, item_id: int,
                          alert_above: int | None = None,
-                         alert_below: int | None = None) -> dict:
+                         alert_below: int | None = None, policy=None) -> dict:
         cache = refresh()
         if action == "add":
             item = next((i for i in cache["items"] if i.id == item_id), None)
@@ -687,7 +680,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
             alerts.update_watch_alerts(item_id, alert_above, alert_below,
-                                       profile)
+                                       profile, policy=policy)
         else:
             raise ValueError(f"unknown watchlist action '{action}'")
         return get_watchlist()
@@ -696,9 +689,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                        points: int = 96) -> dict:
         from rshelper.api import fetch_timeseries_result
         from rshelper.market import safe_int
+        from rshelper.market_validation import normalize_candles
         ts = market_payload(fetch_timeseries_result(item_id, step, profile), sequence=True)
+        normalized = normalize_candles(ts,step)
         points_out = []
-        for dp in (ts or [])[-points:]:
+        for dp in normalized['data'][-points:]:
             high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
             if high is None or low is None:
                 continue
@@ -707,6 +702,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 continue
             points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
         return {"points": points_out, "market_data":provenance(ts),
+                "candle_coverage":getattr(ts,'candle_coverage',normalized['coverage']),
                 "capability": {"available":bool(ts), "reason":None if ts else
                                "Wiki-only historical data unavailable; Tracker has no candle history"}}
 
@@ -759,13 +755,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_trader_status() -> dict:
         from rshelper.trader import trader_status
+        from rshelper.trading_mode import read_mode
         status = trader_status(profile)
-        return status if status else {"running": False}
+        return status if status else {"running": False, 'trading_mode':read_mode(profile)}
 
-    def trader_control(action: str) -> dict:
+    def trader_control(action: str, request=None) -> dict:
         """Start or stop the auto-trader daemon. 403-guarded by control flag."""
         if not control:
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
+        if action == 'mode':
+            from rshelper.trading_mode import set_mode
+            return set_mode(profile,request['mode'],expected_revision=request['expected_revision'],
+                            reason=request['reason'],operation_id=request['operation_id'],source='dashboard')
         if action == "start":
             from rshelper.trader import trader_status
             status = trader_status(profile)
@@ -812,7 +813,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_process():
         cache = refresh()
         from rshelper.scanner import ProcessScanner
-        from rshelper.recipes import RECIPES
+        from rshelper.recipes import RECIPES,process_payload
         lookup = {i.id: i for i in cache["items"]}
         # Honor the same filters as the CLI (members/min_volume/min_profit)
         # so the dashboard and CLI agree on what "profitable" means.
@@ -820,7 +821,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             cache["items"], members_only=cfg.process.members_only,
             min_volume=cfg.process.min_volume,
             min_profit=cfg.process.min_profit,
-            capital=cfg.process.capital)
+            capital=cfg.process.capital,
+            account=cfg.account.recipe_context() if access_mode=='owner' else None)
         out = []
         for r in results:
             recipe = RECIPES.get(r.id)
@@ -833,18 +835,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "qty": qty,
                         "buy_price": it.buy_price if it else 0,
                     })
-            out.append({
-                "name": r.name, "item_id": r.id, "market_data":r.market_data,
-                "skill": recipe.skill if recipe else "",
-                "input_cost": r.input_cost, "sell_price": r.sell_price,
-                "profit": r.profit,
-                "roi_pct": round(r.profit / r.input_cost * 100, 1) if r.input_cost else 0,
-                "gp_per_hour": r.gp_per_hour,
-                "volume": r.volume, "buy_limit": r.buy_limit,
-                "inputs": inputs,
-            })
+            out.append({**process_payload(r),'inputs':inputs})
         # Group by skill, then sort each skill's recipes by GP/hr desc.
-        out.sort(key=lambda x: (x["skill"], -x["gp_per_hour"]))
+        out.sort(key=lambda x: (x["skill"], -x["model_gp_per_hour"]))
         return {"recipes": out, "count": len(out)}
 
     def get_alch():
@@ -863,7 +856,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return {"items": [_item_dict(r) for r in results[:cfg.alch.top]],
                 "count": len(results), "nature_rune_cost": nature}
 
-    confidence_cache = {"ts": 0.0, "data": {}}
+    confidence_cache = {"ts": 0.0, "data": {}, 'key':None}
     conf_lock = __import__("threading").Lock()
 
     def get_confidence(item_ids: list[int]) -> dict:
@@ -871,11 +864,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = read_market()
         if not item_ids:
             return {}
+        key = (cache['revision'],hashlib.sha256(json.dumps(asdict(cfg),sort_keys=True).encode()).hexdigest())
+        item_ids = list(dict.fromkeys(item_ids))[:30]
         with conf_lock:
             now = time.time()
-            if now - confidence_cache["ts"] > 600 or not confidence_cache["data"]:
+            if now - confidence_cache["ts"] > 600 or confidence_cache['key'] != key:
                 confidence_cache["data"] = {}
                 confidence_cache["ts"] = now
+                confidence_cache['key'] = key
             want = [i for i in item_ids
                     if str(i) not in confidence_cache["data"]][:30]
         if want:
@@ -887,9 +883,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             ts_data = fetch_timeseries_batch_results(
                 want, timestep="5m", workers=2, profile=profile)
             results = MarginScanner().scan(
-                lookup, ts_data, direction=cfg.flip.direction)
+                lookup, ts_data, direction=cfg.flip.direction,timestep='5m')
             scored = {str(a.item_id) for a in results}
             with conf_lock:
+                if confidence_cache['key'] != key or read_market()['revision'] != cache['revision']:
+                    return {}
                 for a in results:
                     confidence_cache["data"][str(a.item_id)] = {
                         "market_data": a.market_data,
@@ -901,13 +899,23 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "avg_spread_pct": round(a.avg_spread_pct, 4),
                         "datapoints": a.datapoints,
                         "window_hours": round(a.window_hours, 1),
+                        "market_revision":cache['revision'],
+                        "current_profit":a.current_profit,
+                        "expected_gp_per_hour":a.expected_gp_per_hour,
+                        "candle_coverage":a.candle_coverage,
                     }
                 # Cache negative results (no timeseries / too few windows) so
                 # repeated polls don't re-fetch the same items every 10 min.
                 for iid in want:
                     if str(iid) not in scored:
-                        confidence_cache["data"][str(iid)] = None
+                        confidence_cache["data"][str(iid)] = {
+                            'available':False,'market_revision':cache['revision'],
+                            'reason':'Usable Wiki candle history unavailable; Tracker provides no candles.'}
+                while len(confidence_cache['data']) > 512:
+                    del confidence_cache['data'][next(iter(confidence_cache['data']))]
         with conf_lock:
+            if confidence_cache['key'] != key:
+                return {}
             return {k: v for k, v in confidence_cache["data"].items()
                     if k in {str(i) for i in item_ids} and v is not None}
 

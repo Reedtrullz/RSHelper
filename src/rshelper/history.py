@@ -38,6 +38,8 @@ def build_history(profile: str | None = None, paper_only: bool = True,
         vals = [v for v in vals if v is not None]
         snaps_by_day[day].append({
             "scan_type": data.get("scan_type"),
+            'manifest':data.get('manifest'),
+            'comparison':snapshot.compare_manifests(data,data),
             "count": data.get("count", 0),
             "avg_value": round(sum(vals) / len(vals)) if vals else None,
         })

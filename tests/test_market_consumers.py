@@ -114,8 +114,9 @@ class ConsumersTest(DisposableHomeTest):
     def test_historical_batch_retains_per_item_evidence_through_margin_analysis(self):
         from rshelper import api
         from rshelper.scanner import MarginScanner
+        base = int(time.time())-2400
         rows=[{'avgHighPrice':100,'avgLowPrice':120,'highPriceVolume':100,
-               'lowPriceVolume':100,'timestamp':time.time()-1800+i*300} for i in range(8)]
+               'lowPriceVolume':100,'timestamp':base+i*300} for i in range(8)]
         with mock.patch.object(api,'fetch_timeseries_result',return_value=result(rows)):
             batch=api.fetch_timeseries_batch_results([2],workers=1)
         item=Item(2,'Fixture',False,100,0,100,120,volume=100,
@@ -207,8 +208,9 @@ class ConsumersTest(DisposableHomeTest):
         item=Item(2,'Fixture',False,100,0,100,120,volume=100,
                   market_data={'latest':{'source':'ge-tracker','delivery':'network','stale':False},
                                '5m':{'volume_kind':'standing-orders'}})
+        base = int(time.time())-2400
         rows=self.view(result([{'avgHighPrice':100,'avgLowPrice':120,'highPriceVolume':100,
-               'lowPriceVolume':100,'timestamp':time.time()-1800+i*300} for i in range(8)]))
+               'lowPriceVolume':100,'timestamp':base+i*300} for i in range(8)]))
         args=argparse.Namespace(profile=None,members_only=False,min_volume=0,min_margin=0,
              ge_slots=8,check=1,workers=1,top=1,name='',flip_direction='arbitrage',csv=True,json=False,save_snapshot=False)
         stream=io.StringIO()

@@ -7,16 +7,62 @@ This matrix records observed acceptance; pending rows are not implementation cla
 | Wave | Issues | Implementation / PR | Release evidence | Residual acceptance |
 | --- | --- | --- | --- | --- |
 | A | #31, #32 | PR #78 merged as `4c7e08a08b86d3581616436733023c3e73f55381`; issues closed, Project Done | PR CI38197004334 and main38197171322 passed; public/OCI revision matches; 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; deployed-image recovery passed | Accepted |
-| B | #22, #23, #40 | #22 accepted PR79/main ea239519; #23 accepted PR80/main4332985a; #40 local implementation | #22 exact release/private ack17; #23 CI38201543317/main38201818300, public/OCI/Mac identity, ready/access and exact private ack19 | #40 full checks/review/release |
-| C | #15, #45, #50 | Pending | Pending | Atomic alerts, entry modes, measured container constraints |
-| D | #18, #21, #39, #30 | Pending | Pending | Candle normalization, confidence, scan comparability, verified recipes |
-| E | #16, #17 | Pending | Pending | Paper fill lifecycle and shared resource accounting |
+| B | #22, #23, #40 | Accepted PR79/80/81, current6fe661af | #40 CI38203418299/main38203726317, exact public/OCI/Mac, live3-row page/count agreement, ready/access/private ack20 | Accepted |
+| C | #15, #45, #50 | #15 accepted PR82/main8721d8da; #45 signed and integrated; #50 signed, integrating | C1:923/66; combined C2:939/67 and17 Node views; C3:907/65 offline tests, four skips each; live synthetic CLI/HTTP, authority/restore, Docker/Compose/restart/pressure checks | C2/C3 exact signed CI/deploy/runtime/private receipt and container limits |
+| D | #18, #21, #39, #30 | Four prepared isolated branches; GitHub bodies reflect local evidence, issues open | D1:915/66; D2:914/66; D3:913/66; D4:917/66 offline tests, four skips each; live Wiki CLI/HTTP and Node contracts | Integration, signed CI/deploy/runtime/private readback; processing rates explicitly unverified |
+| E | #16, #17 | Integrated isolated paper lifecycle branch; owner member/eight slots confirmed | 954 tests/68 files/four explicit offline skips;27 real HTTP actor cases,7 live provider tests,16 Node views; owned live CLI/HTTP/daemon and Python3.11 Docker migration/collection/backup/private transfer | Combined C/D integration, owner capital/baseline migration, signed CI/deploy/runtime/private receipt; no owner activation |
 | F | #29, #41, #43, #19, #20 | Pending | Pending | Strategy/equity, settings/reviews, replay alignment, held-out data |
 | G | #38, #26, #24, #25, #27 | Pending | Pending | Discovery, explanations, accessibility/touch trials, safe saved views |
 | H | #42, #46, #47, #48 | Pending | Pending | Offers, stress, reviewed events, bounded processing chains |
 | I | #35, #36 | Pending | Pending | Planner and complete child issue reconciliation |
 
 CI, production identity, private replication, domain facts and human/device trials require separate evidence. Every accepted release must include exact PR head, main revision, workflow results and public health identity before dependent tasks proceed.
+
+## Wave C1 local acceptance
+
+Watch observations, episode state, dedupe and event publication use one profile
+transaction. Dashboard and monitor share it; delivery follows commit and records
+pending/sent/failed status. Per-rule crossing/reminder policy, cooldown and recovery
+hysteresis are explicit in CLI and dashboard. CLI watch creation plus policy is
+also one recoverable publication. Equivalent UTC spellings have the same rule
+fingerprint; replication orders observation time before replica-local counters.
+
+The 923-test/66-file offline run passed with four named provider skips; both Node
+suites and 16 view scenarios passed. Thirteen crossing cases include real process
+races, concurrent edits, interrupted publication, policy preservation, profile
+isolation and failed delivery;26 replication cases cover connected observation
+and notification status convergence. Actual disposable-HOME Wiki watch JSON and
+authenticated HTTP policy roundtrip passed with Wiki network provenance. Owned
+backup inspection and old/new/old/new Docker readback preserved alert metadata.
+The previous image lacks crossing behavior; avoid alert-rule edits during code
+rollback. Disconnected independent peers can each observe their own event; this
+is not a distributed notification exactly-once service. Pending delivery after a
+crash remains visible and is not retried automatically.
+
+Native review and two bounded Anti reviews completed. Confirmed UTC fingerprint,
+cross-replica counter precedence and two-commit CLI policy publication defects
+were corrected with regressions. Speculative deadlock is refuted by the existing
+reentrant profile/file locks and process tests; existing-row policy inheritance
+is required and removal creates a new generation. None-threshold formatting is
+excluded by the raw breach guard. Numeric policy values are strictly validated
+before persistence/HTTP output, excluding the claimed stored XSS. Zero cooldown
+is an explicit operator choice; default remains900seconds and the feed cap200.
+Test-path, missing-dependency and negative-value claims are refuted by executed
+isolated fixtures. Monitor validation failures report stderr and persisted bad
+policy is rejected; module/private helper style suggestions do not demonstrate
+lost data. Single-file reads use atomic replacement; no torn JSON is exposed.
+
+## Wave C1 deployed acceptance
+
+Signed PR82 head d49f58c686553db4623d3ab5831b62944cd35dab passed CI38233531573;
+main8721d8da3503dd5d77ed93f45bc5c9b91941df72 passed38233880592 checks/build/deploy.
+Public health and installed Mac match. Declared digest
+sha256:df58dff794618e19a20690cd215a88e71a47c63955583c424a6accd92354532b;
+physical image sha256:2f71f5df96c7517c2d4ba59067a446619ed03b4a039dcc48cae385e77c39439c.
+Live Activity summaries agree, private401/disabled-controls403/readiness ready.
+Mac owned jobs resumed and trader reports ready/running with a fresh cycle;
+private sync has no pending packet and exact VPS HTTP receipt40. #15 closed,
+Project Done. Signing recovered after owner unlock.23 work issues plus36 remain.
 
 ## Wave A local acceptance
 
@@ -139,3 +185,16 @@ scenarios pass, including actual callback one-load/revision agreement. Disposabl
 HOME live CLI and dashboard HTTP produced two3-row pages with identical revision
 and126GP summary, with live Wiki mapping/latest/5m provenance. UTC page timestamp
 serialization was then covered directly; final suite/release pending.
+
+## Wave B3 deployed acceptance
+
+PR81 head06518db09966c9bcaeae96eeda11fbc34e954445 passed CI38203418299;
+main6fe661afa998f4df5c8c4724bc3b75be4a6a919c passed38203726317 checks/build/deploy.
+Public health/OCI/physical image and Mac match. Declared digest
+sha256:25e56fe8578762772f68ed5365d064ae88a3d328d020f4faa0f4e9932355d759;
+physical image sha256:fd924746d4265e03a836d8f2949f2d5a96ae4b2ed672061694e41193a205eece.
+Live authenticated3-row Activity page/P&L/history counts agree, private401 and
+disabled-controls403; readiness ready. Mac trader resumed healthy; sync ready/
+no pending and exact HTTP receipt20.906 Python tests/65 files/four explicit
+provider skips/zero failures/errors, both Node suites with15 view scenarios.
+#40 closed completed and Project Done.24 work issues plus36 remain.

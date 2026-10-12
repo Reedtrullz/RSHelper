@@ -50,6 +50,38 @@ class PaperBookTest(DisposableHomeTest):
         with self.assertRaisesRegex(ValueError,'cash'):
             self.reserve(revision=2)
 
+    def test_pause_blocks_new_entries_but_publishes_reserved_confirmed_buy(self):
+        from rshelper import trading_mode
+        self.now=19800
+        self.initialize()
+        reserved=self.reserve()
+        trading_mode.set_mode(None,'entries-paused',expected_revision=0,
+                              reason='Synthetic pause',operation_id=str(uuid4()))
+        filled=paper_book.advance_offer(None,reserved['offer_id'],self.market(self.now+300,volume=1000),
+                    expected_revision=2,operation_id=str(uuid4()),now=self.now+600)
+        self.assertEqual(positions.list_positions()[0].qty,6)
+        with self.assertRaisesRegex(ValueError,'entries-paused'):
+            self.reserve(revision=filled['revision'],qty=2)
+        retry=positions.open_position(2,'Synthetic',6,100,direction='traditional',note='manual',
+                                     operation_id=reserved['offer_id'])
+        self.assertEqual(retry.qty,6)
+        with self.assertRaisesRegex(ValueError,'entries-paused'):
+            positions.open_position(2,'Synthetic',1,100,operation_id=str(uuid4()))
+        self.assertEqual(len(positions.list_positions()),1)
+
+    def test_pending_buy_prevents_drain_until_unfilled_cancel_is_durable(self):
+        from rshelper import trading_mode
+        self.initialize()
+        reserved=self.reserve()
+        trading_mode.set_mode(None,'draining',expected_revision=0,
+                              reason='Synthetic drain',operation_id=str(uuid4()))
+        self.assertIsNone(trading_mode.update_drain(None)['drain_completed_at'])
+        paper_book.cancel_buy(None,reserved['offer_id'],expected_revision=2,
+                              operation_id=str(uuid4()),now=self.now+1)
+        done=trading_mode.update_drain(None)
+        self.assertIsNotNone(done['drain_completed_at'])
+        self.assertEqual(done['mode'],'draining')
+
     def test_actual_owner_http_reserves_fills_sells_and_collects_in_separate_steps(self):
         from http.server import ThreadingHTTPServer
         from urllib import request,error

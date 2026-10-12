@@ -1,6 +1,7 @@
 from pathlib import Path
 import importlib.util
 import io
+import copy
 import json
 import tempfile
 import unittest
@@ -10,6 +11,29 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProductionLeaseTest(unittest.TestCase):
+    def test_runtime_constraints_refuse_incomplete_or_weakened_inspection(self):
+        spec = importlib.util.spec_from_file_location('runtime_fixture', ROOT / 'deploy/verify_artifact.py')
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        observed = {'ReadonlyRootfs':True,'Privileged':False,'CapAdd':None,'CapDrop':['ALL'],
+                    'SecurityOpt':['no-new-privileges:true'],'Memory':2*1024**3,
+                    'MemorySwap':2*1024**3,'PidsLimit':128,
+                    'Tmpfs':{'/tmp':'rw,noexec,nosuid,nodev,size=32m,mode=1777'}}
+        self.assertEqual(module.validate_runtime_constraints(observed),observed)
+        self.assertEqual(module.validate_runtime_constraints({**observed,'CapAdd':[]})['CapAdd'],[])
+        bad = {'ReadonlyRootfs':False,'Privileged':True,'CapAdd':['SYS_ADMIN'],
+               'CapDrop':[],'SecurityOpt':[],'Memory':0,'MemorySwap':-1,
+               'PidsLimit':0,'Tmpfs':{'/tmp':'rw,size=1g'}}
+        for field,value in bad.items():
+            with self.subTest(field=field),self.assertRaises(ValueError):
+                module.validate_runtime_constraints({**observed,field:value})
+        for field in observed:
+            missing = copy.deepcopy(observed)
+            del missing[field]
+            with self.subTest(missing=field),self.assertRaises(ValueError):
+                module.validate_runtime_constraints(missing)
+
     def test_code_deploy_and_state_apply_share_production_lease(self):
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
         self.assertIn('rshelper-production', ci)
@@ -43,6 +67,9 @@ class ProductionLeaseTest(unittest.TestCase):
                               Path('/private/stage'), ['-m', 'rshelper', 'state', 'apply'])
         self.assertIn('none', calls[0])
         self.assertIn('--read-only', calls[0])
+        for flag,value in (('--cap-drop','ALL'),('--security-opt','no-new-privileges:true'),
+                           ('--memory','2g'),('--memory-swap','2g'),('--pids-limit','128')):
+            self.assertEqual(calls[0][calls[0].index(flag)+1],value)
         self.assertIn('1000:1000', calls[0])
         self.assertIn('type=bind,src=/private/stage,dst=/state-stage,readonly', calls[0])
         self.assertIn('sha256:' + 'a' * 64, calls[0])

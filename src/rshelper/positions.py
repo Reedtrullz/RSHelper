@@ -98,6 +98,7 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   profile: str | None = None,
                   operation_id: str | None = None) -> Position:
     """Open a hold position at buy_price. Returns the Position."""
+    from rshelper.trading_mode import require_entries_running
     if qty <= 0:
         raise ValueError(f"qty must be positive, got {qty}")
     if buy_price <= 0:
@@ -116,9 +117,12 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
             position,created = _stage_open_position(txn,profile,request,operation_id)
-            if created:txn.commit(operation_id=operation_id)
+            if created:
+                require_entries_running(path.parent)
+                txn.commit(operation_id=operation_id)
         return position
     with _positions_lock(profile):
+        require_entries_running(path.parent)
         positions = _load(profile)
         position = {
             "id": _next_id(positions), "item_id": item_id, "name": name,

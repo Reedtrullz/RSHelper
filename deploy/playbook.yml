@@ -146,6 +146,15 @@
       failed_when: false
       tags: [deploy, rollback]
 
+    - name: Require observed runtime settings before a replacement
+      ansible.builtin.assert:
+        that:
+          - current_container.container.HostConfig is mapping
+          - "['ReadonlyRootfs', 'CapDrop', 'CapAdd', 'SecurityOpt', 'Memory', 'MemorySwap', 'PidsLimit'] | difference(current_container.container.HostConfig.keys() | list) | length == 0"
+        fail_msg: Previous runtime settings are unavailable; retain the current container.
+      when: current_container.exists | default(false)
+      tags: [deploy, rollback]
+
     - name: Remember previous deployment for rollback
       ansible.builtin.set_fact:
         previous_container_exists: "{{ current_container.exists | default(false) }}"
@@ -154,6 +163,7 @@
         previous_immutable_image: "{{ (previous_receipt.stdout | default('{}') | from_json).image | default('') }}"
         previous_image_digest: "{{ (previous_receipt.stdout | default('{}') | from_json).digest | default('') }}"
         previous_has_baked_metadata: "{{ (previous_health.json.build_revision | default('')) is match('^[0-9a-f]{40}$') }}"
+        previous_runtime: "{{ current_container.container.HostConfig | default({}) }}"
         candidate_replacement_started: false
       tags: [deploy, rollback]
 
@@ -252,7 +262,8 @@
           ansible.builtin.command:
             argv: [flock, --exclusive, "{{ app_dir }}/production.lock", docker, run,
                    --rm, --name, "rshelper-state-check-{{ rollout_id }}", --network, none,
-                   --read-only, --user, '1000:1000', --mount,
+                   --read-only, --cap-drop, ALL, --security-opt, 'no-new-privileges:true',
+                   --memory, 2g, --memory-swap, 2g, --pids-limit, '128', --user, '1000:1000', --mount,
                    "type=bind,src={{ app_dir }}/data,dst=/home/rshelper", --entrypoint,
                    python, "{{ candidate_image_id }}", -m, rshelper, state, check, --json]
           when: private_activation.stat.exists
@@ -284,6 +295,16 @@
               - --network
               - none
               - --read-only
+              - --cap-drop
+              - ALL
+              - --security-opt
+              - no-new-privileges:true
+              - --memory
+              - 2g
+              - --memory-swap
+              - 2g
+              - --pids-limit
+              - '128'
               - --user
               - '1000:1000'
               - --mount
@@ -338,6 +359,7 @@
               - "{{ container_name }}"
               - --expected-image-id
               - "{{ candidate_image_id }}"
+              - --runtime-constraints
               - --validation-module
               - "{{ app_dir }}/release-validation.py"
           changed_when: false
@@ -472,6 +494,14 @@
             compose_image: "{{ previous_immutable_image }}"
             compose_app_version: "{{ previous_app_version }}"
             compose_image_digest: "{{ previous_image_digest }}"
+            compose_read_only: "{{ previous_runtime.ReadonlyRootfs | default(false) }}"
+            compose_cap_drop: "{{ previous_runtime.CapDrop | default([], true) }}"
+            compose_cap_add: "{{ previous_runtime.CapAdd | default([], true) }}"
+            compose_security_opt: "{{ previous_runtime.SecurityOpt | default([], true) }}"
+            compose_memory: "{{ previous_runtime.Memory | default(0) }}"
+            compose_memory_swap: "{{ previous_runtime.MemorySwap | default(0) }}"
+            compose_pids: "{{ previous_runtime.PidsLimit | default(-1, true) }}"
+            compose_tmpfs: "{{ previous_runtime.Tmpfs | default({}, true) }}"
           tags: [rollback]
 
         - name: Restore previous RSHelper container

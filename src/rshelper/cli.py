@@ -90,7 +90,8 @@ def _format_table(results, top: int) -> str:
 
 def _process_roi(r) -> float:
     """ROI% for a process recipe: profit / input_cost (the actual capital)."""
-    return (r.profit / r.input_cost * 100) if r.input_cost > 0 else 0.0
+    cost = r.recipe_economics.get('input_cost_per_output',r.input_cost)
+    return (r.profit / cost * 100) if cost > 0 else 0.0
 
 
 def _roi_pct(item) -> float:
@@ -286,7 +287,9 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
-        _save_alch_snapshot(snap_results, args.profile)
+        _save_alch_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'alch',mapping,latest,volume_5m,
+                                nature_rune_cost=nature_cost))
 
 
 def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
@@ -372,7 +375,8 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
     if getattr(args, 'save_snapshot', False):
-        _save_flip_snapshot(snap_results, args.profile)
+        _save_flip_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'flip',mapping,latest,volume_5m))
 
 
 def process_scan(args: argparse.Namespace) -> None:
@@ -380,6 +384,7 @@ def process_scan(args: argparse.Namespace) -> None:
     mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
 
     from rshelper.scanner import ProcessScanner
+    from rshelper.recipes import process_payload
     scanner = ProcessScanner()
     skill = getattr(args, "skill", "")
     results = scanner.scan(
@@ -389,9 +394,10 @@ def process_scan(args: argparse.Namespace) -> None:
         min_profit=args.min_profit,
         capital=args.capital,
         skill=skill,
+        account=load_config(args.profile).account.recipe_context(),
     )
     scope = f" ({skill})" if skill else ""
-    print(f"  {len(results)} profitable processing recipes{scope}", file=sys.stderr)
+    print(f"  {len(results)} positive illustrative processing models{scope}", file=sys.stderr)
     snap_results = results[:args.top]
     if args.name:
         results = _filter_by_name(results, args.name)
@@ -400,50 +406,44 @@ def process_scan(args: argparse.Namespace) -> None:
         print(file=sys.stderr)
 
     if args.csv:
-        from dataclasses import asdict
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
             "rank", "name", "input_cost", "sell_price", "profit", "roi",
-            "gp_per_hour", "volume", "buy_limit", *_CSV_MARKET_FIELDS,
+            "gp_per_hour", "model_profit", "model_gp_per_hour", "eligibility",
+            "source_url", "reviewed_on", "evidence_gaps",
+            "volume", "buy_limit", *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
-            row = asdict(item)
+            row = process_payload(item)
+            row.update(source_url=item.recipe_economics.get('source_url'),
+                       reviewed_on=item.recipe_economics.get('reviewed_on'),
+                       evidence_gaps='; '.join(item.recipe_economics.get('evidence_gaps',[])))
             row.update(_csv_market(item.market_data))
             row["rank"] = i
-            row["roi"] = round(_process_roi(item), 2)
             writer.writerow(row)
         print(out.getvalue())
     elif args.json:
         print(json.dumps([
-            {
-                "rank": i + 1,
-                "market_data": r.market_data,
-                "name": r.name,
-                "input_cost": r.input_cost,
-                "sell_price": r.sell_price,
-                "profit": r.profit,
-                "roi": round(_process_roi(r), 2),
-                "gp_per_hour": r.gp_per_hour,
-                "volume": r.volume,
-                "buy_limit": r.buy_limit,
-            }
+            {"rank":i+1,**process_payload(r)}
             for i, r in enumerate(results[:args.top])
         ], indent=2))
     elif args.html:
-        cols = ["Rank", "Output", "Input Cost", "Sell", "Profit", "ROI%", "GP/hr"]
+        cols = ["Rank", "Output", "Input Cost", "Sell", "Model Profit", "Model ROI%", "Illustrative GP/hr", "Eligibility"]
         rows = [{"Rank": i + 1, "Output": r.name,
                  "Input Cost": f"{r.input_cost:,}", "Sell": f"{r.sell_price:,}",
-                 "Profit": f"{r.profit:,}", "ROI%": f"{_process_roi(r):.1f}",
-                 "GP/hr": f"{r.gp_per_hour:,}"}
+                 "Model Profit": f"{r.profit:,}", "Model ROI%": f"{_process_roi(r):.1f}",
+                 "Illustrative GP/hr": f"{r.gp_per_hour:,}","Eligibility":r.recipe_economics.get('eligibility','unknown')}
                 for i, r in enumerate(results[:args.top])]
-        print(_html_output(rows, cols, "Materials Processing", _market_description(mapping, latest, volume_5m)))
+        print(_html_output(rows, cols, "Materials Processing — illustrative models; rates unverified", _market_description(mapping, latest, volume_5m)))
     else:
+        print('Illustrative models; unverified rates or yields do not establish executable profit.')
         print(_format_process_table(results, args.top))
         print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
-        _save_process_snapshot(snap_results, args.profile)
+        _save_process_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'process',mapping,latest,volume_5m))
 
 
 def _format_process_table(results, top: int) -> str:
@@ -462,19 +462,26 @@ def _format_process_table(results, top: int) -> str:
         lines.append(f"{r.name:<{name_width}} {r.input_cost:>9,} "
                      f"{r.sell_price:>8,} {r.profit:>7,} "
                      f"{roi:>6.1f} {r.gp_per_hour:>9,}")
+        economics = r.recipe_economics
+        lines.append('  Eligibility: '+economics.get('eligibility','unknown')+
+                     '; evidence: '+', '.join(economics.get('evidence_gaps',[])))
     return "\n".join(lines)
 
 
-def _save_process_snapshot(results, profile: str | None = None) -> None:
+def _save_process_snapshot(results, profile: str | None = None,
+                           *, scan_spec=None, market_metadata=None) -> None:
     """Persist a process scan snapshot for diffing across days."""
     from rshelper import snapshot
     data = [{
         "item_id": r.id, "name": r.name,
         "input_cost": r.input_cost, "sell_price": r.sell_price,
-        "profit": r.profit, "gp_per_hour": r.gp_per_hour,
+        "profit": r.profit, "profit_basis": "illustrative-model",
+        "gp_per_hour": r.recipe_economics.get('gp_per_hour'),
+        "model_gp_per_hour": r.gp_per_hour,
+        "recipe_economics": r.recipe_economics,
         "volume": r.volume, "buy_limit": r.buy_limit,
     } for r in results]
-    snapshot.save("process", data, profile)
+    snapshot.save("process", data, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     from rshelper import tuning
     tuning.record_if_changed(profile)
 
@@ -961,10 +968,13 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     if args.status:
         status = trader_status(profile)
         if not status:
+            from rshelper.trading_mode import read_mode
+            mode = read_mode(profile)
             if args.json:
-                print(json.dumps({"running": False, "local": False, "pid": None}))
+                print(json.dumps({"running": False, "local": False, "pid": None, 'trading_mode':mode}))
             else:
                 print("Trader: not running (no state yet)")
+                print(f"  Paper stance: {mode['mode']}")
             return
         if args.json:
             print(json.dumps(status, indent=2))
@@ -972,6 +982,8 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         running = "running" if status.get("running") else "not running"
         where = "this machine" if status.get("local") else "synced state (runs on Mac)"
         print(f"Trader: {running} ({where}, profile {status['profile']})")
+        mode = status.get('trading_mode', {})
+        print(f"  Paper stance: {mode.get('mode', 'unknown')}")
         if status.get("pid"):
             print(f"  PID: {status['pid']}")
         print(f"  Started: {status.get('started_iso', '-')}")
@@ -1060,7 +1072,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     # Analyze
     margin_scanner = MarginScanner()
-    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction)
+    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction,timestep='5m')
     print(f"  {len(results)} items analyzed\n", file=sys.stderr)
 
     if args.csv:
@@ -1071,12 +1083,15 @@ def margin_check(args: argparse.Namespace) -> None:
             "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
             "avg_volume", "spread_score", "volume_score", "volatility_score",
             "datapoints", "window_hours", "margin_trend",
+            "candle_timestep", "candle_samples", "candle_missing_windows", "candle_rejected", "candle_coverage_ratio",
             *("history_" + field for field in _EVIDENCE_FIELDS),
             *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, a in enumerate(results[:args.top], 1):
             row = asdict(a)
+            row.update({'candle_'+key:a.candle_coverage.get(key) for key in
+                        ('timestep','samples','missing_windows','rejected','coverage_ratio')})
             row.update(_csv_market(a.market_data.get("current", {})))
             history = a.market_data.get("history", {})
             row.update({"history_" + field: history.get(field, provenance(None)[field])
@@ -1101,6 +1116,7 @@ def margin_check(args: argparse.Namespace) -> None:
                 "name": item.name if item else str(a.item_id),
                 "item_id": a.item_id,
                 "market_data": a.market_data,
+                "candle_coverage": a.candle_coverage,
                 "current_profit": a.current_profit,
                 "expected_gp_per_hour": a.expected_gp_per_hour,
                 "confidence": round(a.confidence, 3),
@@ -1149,7 +1165,8 @@ def margin_check(args: argparse.Namespace) -> None:
         print("History: " + "; ".join(histories))
 
     if getattr(args, 'save_snapshot', False):
-        _save_margin_snapshot(results[:args.top], lookup, args.profile)
+        _save_margin_snapshot(results[:args.top], lookup, args.profile,
+            **_snapshot_context(args,'margin',mapping,latest,volume_5m))
 
 
 def item_info(args: argparse.Namespace) -> None:
@@ -1246,10 +1263,11 @@ def item_info(args: argparse.Namespace) -> None:
         if (args.timeseries or getattr(args, "predict", False)) and buy_price > 0:
             ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
             out["historical"] = {"market_data":provenance(ts),"available":bool(ts),
+                                 "candle_coverage":getattr(ts,'candle_coverage',{}),
                                  "reason":None if ts else "Wiki-only historical data unavailable; Tracker has no candle history"}
             if ts:
                 from rshelper.analysis import analyze_timeseries
-                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
                 if analysis:
                     out["timeseries_analysis"] = {
                         "confidence": round(analysis.confidence, 3),
@@ -1261,6 +1279,7 @@ def item_info(args: argparse.Namespace) -> None:
                         "avg_spread_pct": round(analysis.avg_spread_pct, 2),
                         "datapoints": analysis.datapoints,
                         "window_hours": round(analysis.window_hours, 1),
+                        "candle_coverage":analysis.candle_coverage,
                     }
                     if getattr(args, "predict", False):
                         try:
@@ -1340,7 +1359,7 @@ def item_info(args: argparse.Namespace) -> None:
         ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
         if ts:
             from rshelper.analysis import analyze_timeseries
-            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
             if analysis:
                 print(f"\n  Historical ({analysis.datapoints} windows, {analysis.window_hours:.0f}h):")
                 print(f"  Confidence: {analysis.confidence:.2f} (reliability: {analysis.reliability:.2f}, profitability: {analysis.profitability_score:.2f})")
@@ -1408,10 +1427,16 @@ def watch_add(args: argparse.Namespace) -> None:
 
     item_id = matched["id"]
     name = matched["name"]
+    policy = None
+    if any(getattr(args, key, None) is not None for key in ('alert_mode', 'alert_cooldown_sec', 'alert_hysteresis_gp')):
+        from rshelper.persistence import validate_watch_policy
+        policy = validate_watch_policy({'mode': args.alert_mode or 'crossing',
+            'cooldown_sec': 900 if args.alert_cooldown_sec is None else args.alert_cooldown_sec,
+            'hysteresis_gp': 0 if args.alert_hysteresis_gp is None else args.alert_hysteresis_gp})
     watchlist.add(item_id, name,
                   alert_margin_above=args.alert_above,
                   alert_margin_below=args.alert_below,
-                  profile=args.profile)
+                  profile=args.profile, alert_policy=policy)
     print(f"Added '{name}' (id={item_id}) to watchlist.")
 
 
@@ -1521,29 +1546,47 @@ def watch_check(args: argparse.Namespace) -> None:
         for a in alerts:
             print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
     sys.exit(1)
-def _save_alch_snapshot(results, profile: str | None = None):
+def _snapshot_context(args,scan_type,mapping,latest,volume,**effective):
+    spec = {key:getattr(args,key,None) for key in
+            ('members_only','min_volume','min_margin','min_profit','capital','ge_slots','skill','top','check')}
+    spec.update(direction=getattr(args,'flip_direction',scan_type),
+                units='gp-per-item-after-tax',selection='ranked-top',
+                name_filter=args.name if scan_type=='margin' else None,**effective)
+    if scan_type == 'process':
+        from dataclasses import asdict
+        from rshelper.recipes import RECIPES
+        spec.update(units='illustrative-gp-per-output-after-tax',
+                    recipe_model_sha256=snapshot._specification_hash({str(iid):asdict(recipe) for iid,recipe in RECIPES.items()}),
+                    account_sha256=snapshot._specification_hash(asdict(load_config(args.profile)).get('account')))
+    return {'scan_spec':spec,'market_metadata':market_snapshot(mapping,latest,volume)}
+
+
+def _save_alch_snapshot(results, profile: str | None = None,
+                        *, scan_spec=None, market_metadata=None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "alch_value": r.alch_value, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("alch", items, profile)
+    path = snapshot.save("alch", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_flip_snapshot(results, profile: str | None = None):
+def _save_flip_snapshot(results, profile: str | None = None,
+                        *, scan_spec=None, market_metadata=None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "sell_price": r.sell_price, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("flip", items, profile)
+    path = snapshot.save("flip", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_margin_snapshot(results, lookup, profile: str | None = None):
+def _save_margin_snapshot(results, lookup, profile: str | None = None,
+                          *, scan_spec=None, market_metadata=None):
     items = []
     for a in results:
         item = lookup.get(a.item_id)
@@ -1557,7 +1600,7 @@ def _save_margin_snapshot(results, lookup, profile: str | None = None):
             "avg_margin": round(a.avg_margin, 0),
             "margin_volatility": round(a.margin_volatility, 4),
         })
-    path = snapshot.save("margin", items, profile)
+    path = snapshot.save("margin", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
@@ -1583,8 +1626,18 @@ def diff_cmd(args: argparse.Namespace) -> None:
             print(f"Could not compute diff.", file=sys.stderr)
         sys.exit(1)
 
+    if getattr(args, 'json', False):
+        print(json.dumps(result, indent=2))
+        return
+
     print(f"Diff: {scan_type} scan — {result['prev_date']} → {result['today_date']}")
     print(f"  {result['today_count']} items today, {result['prev_count']} previously")
+    comparison = result['comparison']
+    print('  Comparison: '+comparison['status'])
+    for reason in comparison['reasons']:
+        print('    '+reason)
+    if comparison['status'] != 'compatible':
+        print('  Numerical differences are qualified; do not infer a strategy improvement.')
     print()
 
     if result["new"]:
@@ -1795,6 +1848,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
+    maintenance = maintenance or remaining[:1] == ['trading-mode']
     if maintenance:
         from rshelper.config import Config
         cfg = Config()
@@ -1809,6 +1863,12 @@ def _main() -> None:
     parser.add_argument("--quiet", action="store_true", help="Suppress status output (cron-friendly)")
     parser.add_argument("--version", action="version", version=f"rshelper {__version__}")
     sub = parser.add_subparsers(dest="command")
+    mode_p = sub.add_parser('trading-mode', help='Read or change durable paper entry stance')
+    mode_p.add_argument('--mode', choices=('running','entries-paused','draining'))
+    mode_p.add_argument('--expected-revision', type=int)
+    mode_p.add_argument('--reason')
+    mode_p.add_argument('--operation-id')
+    mode_p.add_argument('--json', action='store_true')
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
     alch.add_argument("--nature-rune-cost", type=int, default=cfg.alch.nature_rune_cost,
@@ -2041,6 +2101,9 @@ def _main() -> None:
                              help="Alert when margin exceeds this (gp)")
     watch_add_p.add_argument("--alert-below", type=int, default=None,
                              help="Alert when margin falls below this (gp)")
+    watch_add_p.add_argument('--alert-mode', choices=('crossing', 'reminder'), default=None)
+    watch_add_p.add_argument('--alert-cooldown-sec', type=int, default=None)
+    watch_add_p.add_argument('--alert-hysteresis-gp', type=int, default=None)
     watch_rm = watch_sub.add_parser("remove", help="Remove item from watchlist")
     watch_rm.add_argument("item_id", type=int, help="Item ID to remove")
     watch_sub.add_parser("list", help="List all watched items")
@@ -2062,6 +2125,7 @@ def _main() -> None:
                         help="Scan type to compare (default: flip)")
     diff_p.add_argument("--date", type=str, default=None,
                         help="Previous date to compare against (YYYY-MM-DD, default: most recent)")
+    diff_p.add_argument("--json", action="store_true", help="Output qualified comparison as JSON")
 
     # Snapshots subcommand
     # Profile subcommand
@@ -2226,6 +2290,19 @@ def _main() -> None:
                                            operation_id=args.operation_id,
                                            expected_source_revision=args.expected_source_revision)
         print(json.dumps(result, sort_keys=True))
+    elif args.command == 'trading-mode':
+        from rshelper.trading_mode import read_mode, set_mode
+        result = (read_mode(args.profile) if args.mode is None else
+                  set_mode(args.profile,args.mode,expected_revision=args.expected_revision,
+                           reason=args.reason,operation_id=args.operation_id))
+        if args.json:
+            print(json.dumps(result,sort_keys=True))
+        else:
+            print(f"Paper stance: {result['mode']} (revision {result['revision']})")
+            if result['reason']:
+                print(f"  Reason: {result['reason']}")
+            if result['drain_completed_at']:
+                print(f"  Drain completed: {result['drain_completed_at']}; explicit resume required")
     elif args.command == 'state':
         from pathlib import Path
         from rshelper import state_replication

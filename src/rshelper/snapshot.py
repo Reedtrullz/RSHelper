@@ -1,6 +1,7 @@
 """Daily scan snapshots for diff/trend comparison."""
 
 import json
+import hashlib
 import os
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -16,7 +17,54 @@ def _snapshot_dir(profile: str | None = None) -> Path:
     return CONFIG_DIR / "profiles" / profile / "snapshots"
 
 
-def save(scan_type: str, results: list[dict], profile: str | None = None) -> Path:
+def _specification_hash(spec):
+    return hashlib.sha256(json.dumps(spec,sort_keys=True,separators=(',',':'),
+                                    allow_nan=False).encode()).hexdigest()
+
+
+def compare_manifests(current, previous):
+    if (current.get('scan_type') is not None and previous.get('scan_type') is not None
+            and current.get('scan_type') != previous.get('scan_type')):
+        return {'status':'incompatible','reasons':['scan_type changed']}
+    manifests = [current.get('manifest'),previous.get('manifest')]
+    if any(value is None for value in manifests):
+        return {'status':'partially-comparable','reasons':['legacy scan specification or market provenance unknown']}
+    for manifest in manifests:
+        if (not isinstance(manifest,dict) or manifest.get('schema_version') != 1
+                or set(manifest) != {'schema_version','scan_spec','specification_sha256','market_metadata'}):
+            return {'status':'incompatible','reasons':['invalid or unsupported scan manifest']}
+        try:
+            if manifest['specification_sha256'] != _specification_hash(manifest['scan_spec']):
+                raise ValueError('fingerprint mismatch')
+        except (TypeError,ValueError):
+            return {'status':'incompatible','reasons':['scan specification fingerprint invalid']}
+    specs = [manifest['scan_spec'] for manifest in manifests]
+    if any(not isinstance(spec,dict) for spec in specs):
+        return {'status':'partially-comparable','reasons':['scan specification unknown']}
+    changed = [key for key in sorted(set(specs[0])|set(specs[1]))
+               if key not in specs[0] or key not in specs[1] or specs[0][key] != specs[1][key]]
+    if changed:
+        return {'status':'incompatible','reasons':[key+' changed' for key in changed]}
+    reasons = []
+    if specs[0].get('units','').startswith('illustrative-'):
+        reasons.append('processing timing, yield or eligibility evidence remains illustrative')
+    if not {'direction','units','members_only','min_volume','capital','top','selection'} <= set(specs[0]):
+        reasons.append('effective scan settings incomplete')
+    metadata = [manifest['market_metadata'] for manifest in manifests]
+    for endpoint in ('latest','5m'):
+        records = [value.get(endpoint) if isinstance(value,dict) else None for value in metadata]
+        if any(not isinstance(row,dict) or row.get('source') not in ('wiki','ge-tracker')
+               or row.get('stale') is not False or not isinstance(row.get('coverage'),dict)
+               or (endpoint=='5m' and row.get('volume_kind') not in ('executed-trades','standing-orders'))
+               for row in records):
+            reasons.append(endpoint+' provenance unknown or stale')
+        elif any(records[0].get(key) != records[1].get(key) for key in ('source','volume_kind','coverage')):
+            reasons.append(endpoint+' source, volume quality or coverage changed')
+    return {'status':'partially-comparable' if reasons else 'compatible','reasons':reasons}
+
+
+def save(scan_type: str, results: list[dict], profile: str | None = None,
+         *, scan_spec=None, market_metadata=None) -> Path:
     """Save a snapshot for today. Returns the file path."""
     from rshelper.tuning import params
     snap_dir = _snapshot_dir(profile)
@@ -31,6 +79,9 @@ def save(scan_type: str, results: list[dict], profile: str | None = None) -> Pat
         "count": len(results),
         "config": params(profile),
         "items": results,
+        'manifest':{'schema_version':1,'scan_spec':scan_spec,
+                    'specification_sha256':_specification_hash(scan_spec),
+                    'market_metadata':market_metadata},
     }
 
     # Atomic write
@@ -99,6 +150,8 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
     if prev_data is None:
         return None
 
+    comparison = compare_manifests(today_data,prev_data)
+
     # Build lookup by item_id
     prev_by_id = {}
     for item in prev_data.get("items", []):
@@ -132,10 +185,15 @@ def diff_scan_type(scan_type: str, day: str | None = None, profile: str | None =
     prev_ids = set(prev_by_id)
     today_ids = {item["item_id"] for item in today_data.get("items", [])}
     removed_ids = prev_ids - today_ids
-    removed = [prev_by_id[iid] for iid in removed_ids]
+    removed = [{**prev_by_id[iid],'removal_reason':'unknown: absent from saved selection'}
+               for iid in sorted(removed_ids)]
+    if comparison['status']=='incompatible':
+        improved = []
+        fell_off = []
 
     return {
         "scan_type": scan_type,
+        'comparison':comparison,
         "today_date": today_data.get("date"),
         "prev_date": prev_data.get("date"),
         "today_count": len(today_data.get("items", [])),

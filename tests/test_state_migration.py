@@ -56,6 +56,9 @@ class MigrationTest(unittest.TestCase):
         self.assertFalse(path.with_name('identity-activation.json').exists())
 
     def test_migration_and_packet_validate_manifest_per_origin_batch(self):
+        from rshelper import trading_mode
+        trading_mode.set_mode('a','entries-paused',expected_revision=0,
+                              reason='Synthetic legacy pause',operation_id=B)
         root = profile.resolve_config_path('', 'a')
         rows = [{'id': index, 'item_id': 561, 'name': 'Synthetic', 'qty': 10,
                  'buy_price': 100, 'sell_price': 120, 'tax_paid': 20, 'profit': 180,
@@ -72,6 +75,8 @@ class MigrationTest(unittest.TestCase):
                          'replication_origins': [A, B], 'record_origins': assignments})
             self.assertLess(validate.call_count, 30)
         self.api().migrate_profile('a', plan=plan, operation_id=P)
+        stance = trading_mode.read_mode('a')
+        self.assertEqual((stance['mode'],stance['authority_origin']),('entries-paused',A))
         migrated = json.loads((root / 'trades.json').read_text())['trades']
         self.assertEqual([row['id'] for row in migrated], [row['id'] for row in rows])
         self.assertEqual([row['origin_uuid'] for row in migrated],

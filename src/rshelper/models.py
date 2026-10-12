@@ -19,3 +19,4 @@ class Item:
     input_cost: int = 0  # total input cost per output unit (process scan)
     output_id: int = 0  # output item id (process scan result; == id)
     market_data: dict = field(default_factory=dict)  # explicit acquisition evidence
+    recipe_economics: dict = field(default_factory=dict)

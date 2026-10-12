@@ -142,7 +142,7 @@ class MarketDataResultTest(unittest.TestCase):
         self.assertEqual(result.source, "ge-tracker")
 
     def test_timeseries_result_and_data_only_wrapper(self):
-        data = [{"timestamp": self.now, "avgHighPrice": 100,
+        data = [{"timestamp": int(self.now), "avgHighPrice": 100,
                  "avgLowPrice": 90, "highPriceVolume": 4, "lowPriceVolume": 3}]
         with mock.patch.object(api, "_get", return_value={"data": data}):
             result = api.fetch_timeseries_result(2, "5m", "default")

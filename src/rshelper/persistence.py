@@ -6,6 +6,7 @@ import fcntl
 import json
 import math
 import os
+import re
 from pathlib import Path
 import stat
 import threading
@@ -114,6 +115,15 @@ def validate_record_identity(row, kind):
     return record
 
 
+def validate_watch_policy(policy):
+    if (not isinstance(policy, dict) or set(policy) != {'mode', 'cooldown_sec', 'hysteresis_gp'}
+            or policy['mode'] not in ('crossing', 'reminder')
+            or any(not _integer(policy[key], 0) or policy[key] > 10**9
+                   for key in ('cooldown_sec', 'hysteresis_gp'))):
+        raise ValueError('invalid watch alert policy')
+    return policy
+
+
 def _watch_row(row, path):
     if not isinstance(row, dict):
         _fail(path, 'state row must be an object')
@@ -126,6 +136,13 @@ def _watch_row(row, path):
     for field in ('alert_margin_above', 'alert_margin_below'):
         if row.get(field) is not None and not _integer(row[field]):
             _fail(path, f'invalid {field}')
+    if 'alert_policy' in row:
+        try:
+            validate_watch_policy(row['alert_policy'])
+        except ValueError as error:
+            _fail(path, str(error))
+    if 'alert_rule_revision' in row and not _integer(row['alert_rule_revision'], 0):
+        _fail(path, 'invalid watch rule revision')
     if identity is not None:
         if not _integer(row.get('item_id'), 1):
             _fail(path, 'invalid watched item id')
@@ -162,7 +179,7 @@ def _validate_watchlist(data, path):
 
 
 def validate_state(data, kind, path):
-    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic', 'paper-book'):
+    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic', 'paper-book', 'trading_mode'):
         _fail(path, 'unknown state kind')
     if not isinstance(data, dict):
         _fail(path, 'state root must be an object')
@@ -170,6 +187,12 @@ def validate_state(data, kind, path):
     if kind == 'paper-book':
         from rshelper.paper_book import validate_book
         return validate_book(data)
+    if kind == 'trading_mode':
+        from rshelper.trading_mode import validate_mode
+        try:
+            return validate_mode(data)
+        except (ValueError, TypeError, AttributeError) as error:
+            _fail(path, str(error))
     version = data.get('schema_version', 1)
     if not _integer(version) or version not in (1, 2) or (kind == 'generic' and version != 1):
         _fail(path, 'unsupported schema version')
@@ -244,12 +267,31 @@ def validate_state(data, kind, path):
         triggered = data.get('watch_triggered', {})
         if not isinstance(triggered, dict) or any(not _finite(value) or value < 0 for value in triggered.values()):
             _fail(path, 'invalid watch dedupe timestamps')
+        crossings = data.get('watch_crossings', {})
+        if not isinstance(crossings, dict):
+            _fail(path, 'invalid watch crossings')
+        for key, row in crossings.items():
+            if (not isinstance(key, str) or not key.isascii() or not key.isdigit()
+                    or not isinstance(row, dict)
+                    or set(row) != {'rule', 'side', 'fired', 'observed_at', 'source_revision', 'notification_status', 'event_id', 'revision'}
+                    or not isinstance(row['rule'], str) or not re.fullmatch('[0-9a-f]{64}', row['rule'])
+                    or row['side'] not in ('', 'above', 'below') or type(row['fired']) is not bool
+                    or not _finite(row['observed_at']) or row['observed_at'] < 0
+                    or not _integer(row['revision'], 1)
+                    or not isinstance(row['source_revision'], str) or len(row['source_revision']) > 128
+                    or row['notification_status'] not in ('not-requested', 'pending', 'sent', 'failed')):
+                _fail(path, 'invalid watch crossing observation')
+            if row['event_id'] is not None:
+                try:
+                    canonical_uuid(row['event_id'])
+                except ValueError:
+                    _fail(path, 'invalid watch crossing event identity')
     return data
 
 
 def read_state(path: Path, kind: str, *, _publication_check=True) -> dict:
     defaults = {'watchlist': {'items': {}}, 'alerts': {'alerts': [], 'watch_triggered': {}},
-                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}, 'paper-book': {}}
+                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}, 'paper-book': {}, 'trading_mode': {}}
     if kind not in defaults:
         _fail(path, 'unknown state kind')
     marker = path.with_name('.' + path.name + '.publishing')
@@ -298,7 +340,7 @@ def locked_state(path: Path):
                           'identity-activation.json', 'realization-intents.json',
                           'realization-batches.json', 'tuning_log.json', 'trader_state.json',
                           'monitor_state.json', 'recent_exits.json', 'config.toml',
-                          'signal_cooldowns.json', 'volume_baseline.json') or canonical.parent.name == 'snapshots':
+                          'signal_cooldowns.json', 'volume_baseline.json', 'trading_mode.json') or canonical.parent.name == 'snapshots':
         root = canonical.parent.parent if canonical.parent.name == 'snapshots' else canonical.parent
         with locked_state(root / '.profile'):
             with _locked_file(canonical):

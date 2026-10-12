@@ -172,7 +172,7 @@ def test_build_items_skips_stale_and_manipulated_prices():
 def test_margin_scanner_matches_analysis_direction():
     """MarginScanner current_profit must match analyze_timeseries window math."""
     ts = [{"avgHighPrice": 100, "avgLowPrice": 120, "highPriceVolume": 10,
-           "lowPriceVolume": 10, "timestamp": 1_700_000_000 + i}
+           "lowPriceVolume": 10, "timestamp": 1_700_000_000 + i * 300}
           for i in range(10)]
     item = Item(id=1, name="Momentum", members=False, buy_limit=100,
                 alch_value=0, buy_price=100, sell_price=120, volume=20)
