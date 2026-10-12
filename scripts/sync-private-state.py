@@ -185,9 +185,15 @@ def main(argv=None):
         report = run_sync(args.profile, args.host, args.destination,
                           profiles.resolve_cache_path('private-sync', args.profile),
                           dry_run=args.dry_run, status=args.status)
+        if not args.dry_run and not args.status:
+            from rshelper.readiness import record_sync
+            record_sync(args.profile, report)
         print(json.dumps(report, sort_keys=True) if args.json else 'Private state: ' + json.dumps(report, sort_keys=True))
         return 0
     except (OSError, ValueError):
+        if not args.dry_run and not args.status:
+            from rshelper.readiness import record_sync
+            record_sync(args.profile, {'status': 'failed'})
         print('[sync] private replication failed; source and pending packet preserved; inspect --status', file=sys.stderr)
         return 1
 

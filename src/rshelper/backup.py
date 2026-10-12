@@ -1,5 +1,5 @@
 """App-owned private backup inspection and recoverable restoration."""
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
 from datetime import datetime, timezone
 import hashlib
 from itertools import islice
@@ -118,7 +118,7 @@ def _profile_root(profile):
     return resolve_config_path('', name)
 
 
-def _export_profile(profile: str, destination: Path, policy: str = 'backup') -> dict:
+def _export_profile(profile: str, destination: Path, policy: str = 'backup', *, allow_empty=False) -> dict:
     if policy not in ('backup', 'private', 'evidence'):
         raise BackupError('profile backups are private; public publication requires its own policy')
     name = resolve_profile(profile)
@@ -129,7 +129,7 @@ def _export_profile(profile: str, destination: Path, policy: str = 'backup') -> 
     if destination.exists() or destination.is_symlink():
         raise FileExistsError('backup destination already exists')
     selected, excluded = _files(root)
-    if not selected:
+    if not selected and not allow_empty:
         raise BackupError('profile has no supported files to back up')
     content = {}
     validation = {}
@@ -240,15 +240,79 @@ def _inspect(source):
         state_identity.validate_manifest(identity)
         if identity['origin_uuid'] != activation['origin_uuid']:
             raise BackupError('backup manifest origin differs from activation')
+        from rshelper import identity_merge
+        allowed_origins = activation.get('replication_origins', [activation['origin_uuid']])
+        if not isinstance(allowed_origins, list) or activation['origin_uuid'] not in allowed_origins:
+            raise BackupError('invalid declared replication origins')
+        for origin in allowed_origins:
+            canonical_uuid(origin)
+        for name, kind in CORE_KINDS.items():
+            if name not in content:
+                continue
+            data = _decode(content[name])
+            if kind == 'watchlist':
+                identity_merge.merge_watchlists(data, data)
+                rows = list(data['items'].values()) + list(data.get('tombstones', {}).values())
+            else:
+                rows = identity_merge.merge_rows(data[kind], [], kind)
+            if any(row['origin_uuid'] not in allowed_origins for row in rows):
+                raise BackupError('backup contains undeclared foreign profile lineage')
         if 'realization-batches.json' in content:
             realization.validate_batches(_decode(content['realization-batches.json']))
         intents = _decode(content['realizations.json']) if 'realizations.json' in content else {'schema_version': 1, 'operations': {}}
+        if not isinstance(intents, dict) or not isinstance(intents.get('operations'), dict):
+            raise BackupError('invalid backup operation collection')
+        operations = intents['operations']
+        assert isinstance(operations, dict)
         realization.validate_intents(intents, 'realizations.json')
-        if any(not intent['done'] for intent in intents['operations'].values()):
+        consumed_by_lot = {}
+        for operation in operations.values():
+            lot = operation['request']['lot_uid']
+            consumed_by_lot[lot] = consumed_by_lot.get(lot, 0) + operation['request']['qty']
+        if any(not intent['done'] for intent in operations.values()):
             raise BackupError('recover pending financial operations before restoring backup')
         realization.verify_realization_snapshot(
             _decode(content['positions.json']) if 'positions.json' in content else {'positions': []},
             _decode(content['trades.json'])['trades'] if 'trades.json' in content else [], intents)
+        lineage = _decode(content['identity-lineage.json']) if 'identity-lineage.json' in content else {'origins': {}}
+        if not isinstance(lineage, dict) or not isinstance(lineage.get('origins'), dict):
+            raise BackupError('invalid backup lineage collection')
+        manifests = dict(lineage['origins'])
+        for origin, attestation in manifests.items():
+            state_identity.validate_manifest(attestation)
+            if attestation['origin_uuid'] != origin:
+                raise BackupError('foreign manifest origin mismatch')
+        if identity['origin_uuid'] in manifests:
+            prior = manifests[identity['origin_uuid']]
+            for field in ('mappings', 'native'):
+                for key, value in prior.get(field, {}).items():
+                    if key not in identity.get(field, {}) or identity[field][key] != value:
+                        raise BackupError('own lineage does not include its attested history')
+        manifests[identity['origin_uuid']] = identity
+        for name, kind in CORE_KINDS.items():
+            if name not in content:
+                continue
+            store = _decode(content[name])
+            rows = list(store['items'].values()) + list(store.get('tombstones', {}).values()) if kind == 'watchlist' else store[kind]
+            groups = {}
+            for row in rows:
+                attestation = manifests.get(row['origin_uuid'])
+                if attestation is None:
+                    raise BackupError('backup record lacks attested lineage')
+                intent = operations.get(row.get('operation_id')) if kind == 'trades' else None
+                if intent is not None and intent['trade']['record_uuid'] == row['record_uuid']:
+                    continue
+                groups.setdefault(row['origin_uuid'], []).append(row)
+                if kind == 'positions' and row['record_uuid'] in attestation.get('native', {}):
+                    consumed = consumed_by_lot.get(row['record_uuid'], 0)
+                    if consumed + (0 if row['tombstone'] else row['qty']) != attestation['native'][row['record_uuid']]['creation_qty']:
+                        raise BackupError('native lot creation quantity conflicts with realized state')
+            for origin, group in groups.items():
+                if kind == 'watchlist':
+                    state_identity.migrate_watchlist({'items': {str(row['item_id']): row for row in group if not row['tombstone']},
+                        'tombstones': {row['record_uuid']: row for row in group if row['tombstone']}}, manifests[origin])
+                else:
+                    state_identity.migrate_rows(group, kind, manifests[origin])
     return {**manifest, 'profile_uuid': profile_uuid}, content
 
 
@@ -256,13 +320,15 @@ def inspect_backup(source: Path) -> dict:
     return _inspect(source)[0]
 
 
-def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, operation_id: str,
-                    expected_source_revision: str | None = None) -> dict:
+def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, operation_id: str | None,
+                    expected_source_revision: str | None = None, dry_run=False,
+                    pre_restore_backup: Path | None = None) -> dict:
     from rshelper import identity_merge, state_transaction
     from rshelper.persistence import decode_json as _decode
     from rshelper.identity_merge import _json
     canonical_uuid(expected_profile_uuid)
-    canonical_uuid(operation_id)
+    if operation_id is not None or not dry_run:
+        canonical_uuid(operation_id)
     manifest, content = _inspect(source)
     legacy = manifest['profile_uuid'] is None
     if legacy:
@@ -277,14 +343,15 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
                 validate_writable_state(_decode(content[name]), kind, Path(name))
     elif manifest['profile_uuid'] != expected_profile_uuid:
         raise BackupError('backup profile UUID does not match explicit restore target')
-    root = resolve_config_path('', profile)
-    with state_transaction.profile_transaction(profile, root) as txn:
+    root = _profile_root(profile)
+    with (nullcontext() if dry_run else state_transaction.profile_transaction(profile, root)) as txn:
         activation = read_state(root / 'identity-activation.json', 'generic')
         incoming_activation = _decode(content['identity-activation.json']) if not legacy else {}
         if legacy and activation:
             raise BackupError('legacy restore cannot replace an activated profile')
         if activation and (activation.get('profile_uuid') != expected_profile_uuid
-                           or activation.get('origin_uuid') != incoming_activation.get('origin_uuid')):
+                           or activation.get('origin_uuid') != incoming_activation.get('origin_uuid')
+                           or activation.get('financial_authority') != incoming_activation.get('financial_authority')):
             raise BackupError('existing profile identity differs from restore target')
         operations = read_state(root / 'backup-restores.json', 'generic').get('operations', {})
         if operation_id in operations:
@@ -292,7 +359,8 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
             if (prior['source_revision'] != manifest['source_revision']
                     or prior['profile_uuid'] != expected_profile_uuid):
                 raise BackupError('restore operation reused with another backup')
-            return prior
+            if not dry_run:
+                return prior
         if legacy and any((root / name).exists() or (root / name).is_symlink()
                           for name in FILES if name != 'backup-restores.json'):
             raise BackupError('legacy restore requires an empty inactive target')
@@ -331,10 +399,28 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
                          or saved_outgoing['source_revision'] == outgoing['source_revision']
                          and saved_outgoing['packet_hash'] != outgoing['packet_hash']):
             raise BackupError('backup would roll back the publication cursor')
+        if dry_run:
+            changes = []
+            for name, payload in sorted(content.items()):
+                if name == 'backup-restores.json':
+                    continue
+                path = root/name
+                if not path.exists() or _read_file(path) != payload:
+                    changes.append({'file': name, 'action': 'replace' if path.exists() else 'create'})
+            return {'status': 'preview', 'sensitivity': 'private', 'profile_uuid': expected_profile_uuid,
+                    'source_revision': manifest['source_revision'], 'changes': changes,
+                    'files': sorted(content)}
+        prior_backup = None
+        if pre_restore_backup is not None:
+            prior_backup = _export_profile(profile, pre_restore_backup, allow_empty=True)
         result = {'schema_version': 1, 'operation_id': operation_id, 'status': 'restored',
                   'source_revision': manifest['source_revision'], 'profile_uuid': expected_profile_uuid,
                   'restored_files': sorted(content)}
+        if prior_backup is not None:
+            result['pre_apply_backup_revision'] = prior_backup['source_revision']
+        assert operation_id is not None
         operations[operation_id] = result
+        assert txn is not None
         for name, payload in content.items():
             if name != 'backup-restores.json':
                 txn.stage_bytes(name, payload)

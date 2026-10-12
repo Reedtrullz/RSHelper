@@ -22,7 +22,7 @@ class TestOutputContract(unittest.TestCase):
         for failure in failures:
             with self.subTest(failure=type(failure).__name__):
                 response = mock.MagicMock()
-                response.__enter__.return_value.read.return_value = b'{"data": {"2": {"high": 200}}}'
+                response.__enter__.return_value.read1.side_effect = [b'{"data": {"2": {"high": 200}}}', b'']
                 out, err = io.StringIO(), io.StringIO()
                 with mock.patch.object(api.urllib.request, "urlopen", side_effect=[failure, response]), \
                         mock.patch.object(api.time, "sleep"), \

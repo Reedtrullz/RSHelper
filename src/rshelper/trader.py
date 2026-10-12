@@ -701,6 +701,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                     if result.get("error"):
                         state["errors"] = state.get("errors", 0) + 1
                     state["last_cycle_iso"] = datetime.now(timezone.utc).isoformat()
+                    if not result.get('error'):
+                        state['last_success_iso'] = state['last_cycle_iso']
                     state["last_result"] = result
                     _write_state(state, profile)
                     if once:

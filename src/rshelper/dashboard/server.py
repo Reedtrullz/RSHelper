@@ -953,6 +953,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                      if h.strip()] or None
 
     from rshelper.state_replication import read_receipt
+    from rshelper import readiness
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -976,7 +977,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            log_trade_fn=log_trade_fn, event_hub=hub,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
-                           state_receipt_fn=lambda origin: read_receipt(profile, origin))
+                           state_receipt_fn=lambda origin: read_receipt(profile, origin),
+                           readiness_fn=lambda: readiness.status(profile,
+                               sources={'latest': cache['latest'], '5m': cache['vol']}))
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

@@ -20,6 +20,7 @@ _GET_RESOURCES = {
     "/": "static",
     "/api/capabilities": "capabilities",
     "/api/health": "sanitized-health",
+    '/api/readiness': 'private-state',
     "/api/scan": "public-market",
     "/api/prices": "public-market",
     "/api/timeseries": "public-market",
@@ -106,7 +107,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  event_hub=None,
                  allowed_hosts: list[str] | None = None,
                  mode: str = "owner", owner_token: str | None = None,
-                 control: bool = False, state_receipt_fn: Callable[[str], dict] | None = None) -> type:
+                 control: bool = False, state_receipt_fn: Callable[[str], dict] | None = None,
+                 readiness_fn: Callable[[], dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -164,6 +166,11 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._serve_scan()
             elif path == "/api/health":
                 self._serve_health()
+            elif path == '/api/readiness':
+                try:
+                    self._serve_json(readiness_fn() if readiness_fn else {'ready': False, 'status': 'unavailable'})
+                except (OSError, ValueError):
+                    self._serve_json({'ready': False, 'status': 'unavailable', 'reasons': ['state:unavailable']})
             elif path == "/api/monitor":
                 self._serve_monitor()
             elif path == "/api/signals":
