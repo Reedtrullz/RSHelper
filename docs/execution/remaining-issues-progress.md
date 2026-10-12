@@ -8,9 +8,9 @@ This matrix records observed acceptance; pending rows are not implementation cla
 | --- | --- | --- | --- | --- |
 | A | #31, #32 | PR #78 merged as `4c7e08a08b86d3581616436733023c3e73f55381`; issues closed, Project Done | PR CI38197004334 and main38197171322 passed; public/OCI revision matches; 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; deployed-image recovery passed | Accepted |
 | B | #22, #23, #40 | Accepted PR79/80/81, current6fe661af | #40 CI38203418299/main38203726317, exact public/OCI/Mac, live3-row page/count agreement, ready/access/private ack20 | Accepted |
-| C | #15, #45, #50 | Three prepared isolated branches; signed commits waiting for1Password | C1:923/66; C2:921/66; C3:907/65 offline tests, four skips each; live synthetic CLI/HTTP, authority/restore, Docker/Compose/restart/pressure checks | Integration, signed CI/deploy, runtime/private receipt; exact container limits |
+| C | #15, #45, #50 | #15 accepted PR82/main8721d8da; #45 signed and integrated; #50 signed, integrating | C1:923/66; combined C2:939/67 and17 Node views; C3:907/65 offline tests, four skips each; live synthetic CLI/HTTP, authority/restore, Docker/Compose/restart/pressure checks | C2/C3 exact signed CI/deploy/runtime/private receipt and container limits |
 | D | #18, #21, #39, #30 | Four prepared isolated branches; GitHub bodies reflect local evidence, issues open | D1:915/66; D2:914/66; D3:913/66; D4:917/66 offline tests, four skips each; live Wiki CLI/HTTP and Node contracts | Integration, signed CI/deploy/runtime/private readback; processing rates explicitly unverified |
-| E | #16, #17 | Durable core in isolated paper lifecycle branch; caller integration in progress | 940 tests/68 files/four explicit offline skips;16 actor cases, backup/replica checks and scoped review | CLI/dashboard/trader integration, C2 stance integration, owned live checks, migration/rollback and signed release; no owner activation |
+| E | #16, #17 | Integrated isolated paper lifecycle branch; owner member/eight slots confirmed | 954 tests/68 files/four explicit offline skips;27 real HTTP actor cases,7 live provider tests,16 Node views; owned live CLI/HTTP/daemon and Python3.11 Docker migration/collection/backup/private transfer | Combined C/D integration, owner capital/baseline migration, signed CI/deploy/runtime/private receipt; no owner activation |
 | F | #29, #41, #43, #19, #20 | Pending | Pending | Strategy/equity, settings/reviews, replay alignment, held-out data |
 | G | #38, #26, #24, #25, #27 | Pending | Pending | Discovery, explanations, accessibility/touch trials, safe saved views |
 | H | #42, #46, #47, #48 | Pending | Pending | Offers, stress, reviewed events, bounded processing chains |
@@ -51,6 +51,18 @@ Test-path, missing-dependency and negative-value claims are refuted by executed
 isolated fixtures. Monitor validation failures report stderr and persisted bad
 policy is rejected; module/private helper style suggestions do not demonstrate
 lost data. Single-file reads use atomic replacement; no torn JSON is exposed.
+
+## Wave C1 deployed acceptance
+
+Signed PR82 head d49f58c686553db4623d3ab5831b62944cd35dab passed CI38233531573;
+main8721d8da3503dd5d77ed93f45bc5c9b91941df72 passed38233880592 checks/build/deploy.
+Public health and installed Mac match. Declared digest
+sha256:df58dff794618e19a20690cd215a88e71a47c63955583c424a6accd92354532b;
+physical image sha256:2f71f5df96c7517c2d4ba59067a446619ed03b4a039dcc48cae385e77c39439c.
+Live Activity summaries agree, private401/disabled-controls403/readiness ready.
+Mac owned jobs resumed and trader reports ready/running with a fresh cycle;
+private sync has no pending packet and exact VPS HTTP receipt40. #15 closed,
+Project Done. Signing recovered after owner unlock.23 work issues plus36 remain.
 
 ## Wave A local acceptance
 
