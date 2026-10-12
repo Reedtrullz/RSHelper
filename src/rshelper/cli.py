@@ -913,10 +913,13 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
     if args.status:
         status = trader_status(profile)
         if not status:
+            from rshelper.trading_mode import read_mode
+            mode = read_mode(profile)
             if args.json:
-                print(json.dumps({"running": False, "local": False, "pid": None}))
+                print(json.dumps({"running": False, "local": False, "pid": None, 'trading_mode':mode}))
             else:
                 print("Trader: not running (no state yet)")
+                print(f"  Paper stance: {mode['mode']}")
             return
         if args.json:
             print(json.dumps(status, indent=2))
@@ -924,6 +927,8 @@ def auto_trade_cmd(args: argparse.Namespace) -> None:
         running = "running" if status.get("running") else "not running"
         where = "this machine" if status.get("local") else "synced state (runs on Mac)"
         print(f"Trader: {running} ({where}, profile {status['profile']})")
+        mode = status.get('trading_mode', {})
+        print(f"  Paper stance: {mode.get('mode', 'unknown')}")
         if status.get("pid"):
             print(f"  PID: {status['pid']}")
         print(f"  Started: {status.get('started_iso', '-')}")
@@ -1753,6 +1758,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
+    maintenance = maintenance or remaining[:1] == ['trading-mode']
     if maintenance:
         from rshelper.config import Config
         cfg = Config()
@@ -1767,6 +1773,12 @@ def _main() -> None:
     parser.add_argument("--quiet", action="store_true", help="Suppress status output (cron-friendly)")
     parser.add_argument("--version", action="version", version=f"rshelper {__version__}")
     sub = parser.add_subparsers(dest="command")
+    mode_p = sub.add_parser('trading-mode', help='Read or change durable paper entry stance')
+    mode_p.add_argument('--mode', choices=('running','entries-paused','draining'))
+    mode_p.add_argument('--expected-revision', type=int)
+    mode_p.add_argument('--reason')
+    mode_p.add_argument('--operation-id')
+    mode_p.add_argument('--json', action='store_true')
 
     alch = sub.add_parser("alch-scan", help="Scan for profitable high alchemy items")
     alch.add_argument("--nature-rune-cost", type=int, default=cfg.alch.nature_rune_cost,
@@ -2165,6 +2177,19 @@ def _main() -> None:
                                            operation_id=args.operation_id,
                                            expected_source_revision=args.expected_source_revision)
         print(json.dumps(result, sort_keys=True))
+    elif args.command == 'trading-mode':
+        from rshelper.trading_mode import read_mode, set_mode
+        result = (read_mode(args.profile) if args.mode is None else
+                  set_mode(args.profile,args.mode,expected_revision=args.expected_revision,
+                           reason=args.reason,operation_id=args.operation_id))
+        if args.json:
+            print(json.dumps(result,sort_keys=True))
+        else:
+            print(f"Paper stance: {result['mode']} (revision {result['revision']})")
+            if result['reason']:
+                print(f"  Reason: {result['reason']}")
+            if result['drain_completed_at']:
+                print(f"  Drain completed: {result['drain_completed_at']}; explicit resume required")
     elif args.command == 'state':
         from pathlib import Path
         from rshelper import state_replication

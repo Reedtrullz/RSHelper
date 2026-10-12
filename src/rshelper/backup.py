@@ -18,6 +18,7 @@ from rshelper.profile import resolve_config_path, resolve_profile
 
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
+    'trading_mode.json',
     'alerts.json', 'tuning_log.json', 'volume_baseline.json', 'signal_cooldowns.json',
     'trader_state.json', 'recent_exits.json', 'monitor_state.json',
     'identity-manifest.json', 'identity-activation.json', 'identity-lineage.json',
@@ -89,7 +90,7 @@ def _validate_file(name, raw):
         else:
             from rshelper.persistence import decode_json
             data = decode_json(raw)
-            validate_state(data, CORE_KINDS.get(name, 'generic'), name)
+            validate_state(data, 'trading_mode' if name == 'trading_mode.json' else CORE_KINDS.get(name, 'generic'), name)
             if name == 'tuning_log.json':
                 entries = data.get('entries')
                 if not isinstance(entries, list) or any(not isinstance(row, dict)
@@ -238,6 +239,12 @@ def _inspect(source):
             raise BackupError('invalid backup activation')
         if 'identity-manifest.json' not in content:
             raise BackupError('backup activation lacks lineage manifest')
+        if 'trading_mode.json' in content:
+            from rshelper.trading_mode import validate_authority
+            try:
+                validate_authority(_decode(content['trading_mode.json']),activation)
+            except ValueError as error:
+                raise BackupError('backup stance authority differs from activation') from error
         identity = _decode(content['identity-manifest.json'])
         state_identity.validate_manifest(identity)
         if identity['origin_uuid'] != activation['origin_uuid']:
@@ -389,6 +396,11 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
             incoming = _decode(content[name]).get(key, {}) if name in content else {}
             if any(operation not in incoming or _json(value) != _json(incoming[operation]) for operation, value in live.items()):
                 raise BackupError('backup would discard acknowledged operation proof')
+        live_mode = read_state(root / 'trading_mode.json', 'trading_mode')
+        saved_mode = _decode(content['trading_mode.json']) if 'trading_mode.json' in content else {}
+        if live_mode and (saved_mode.get('revision',0) < live_mode['revision']
+                or saved_mode.get('revision') == live_mode['revision'] and _json(saved_mode) != _json(live_mode)):
+            raise BackupError('backup would roll back an acknowledged trading stance')
         live_packets = read_state(root / 'replication-state.json', 'generic')
         old_packets = _decode(content['replication-state.json']) if 'replication-state.json' in content else {}
         for origin, receipt in live_packets.get('receipts', {}).items():

@@ -179,11 +179,17 @@ def _validate_watchlist(data, path):
 
 
 def validate_state(data, kind, path):
-    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic'):
+    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic', 'trading_mode'):
         _fail(path, 'unknown state kind')
     if not isinstance(data, dict):
         _fail(path, 'state root must be an object')
     _bounded_json(data, path)
+    if kind == 'trading_mode':
+        from rshelper.trading_mode import validate_mode
+        try:
+            return validate_mode(data)
+        except (ValueError, TypeError, AttributeError) as error:
+            _fail(path, str(error))
     version = data.get('schema_version', 1)
     if not _integer(version) or version not in (1, 2) or (kind == 'generic' and version != 1):
         _fail(path, 'unsupported schema version')
@@ -282,7 +288,7 @@ def validate_state(data, kind, path):
 
 def read_state(path: Path, kind: str, *, _publication_check=True) -> dict:
     defaults = {'watchlist': {'items': {}}, 'alerts': {'alerts': [], 'watch_triggered': {}},
-                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}}
+                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}, 'trading_mode': {}}
     if kind not in defaults:
         _fail(path, 'unknown state kind')
     marker = path.with_name('.' + path.name + '.publishing')
@@ -331,7 +337,7 @@ def locked_state(path: Path):
                           'identity-activation.json', 'realization-intents.json',
                           'realization-batches.json', 'tuning_log.json', 'trader_state.json',
                           'monitor_state.json', 'recent_exits.json', 'config.toml',
-                          'signal_cooldowns.json', 'volume_baseline.json') or canonical.parent.name == 'snapshots':
+                          'signal_cooldowns.json', 'volume_baseline.json', 'trading_mode.json') or canonical.parent.name == 'snapshots':
         root = canonical.parent.parent if canonical.parent.name == 'snapshots' else canonical.parent
         with locked_state(root / '.profile'):
             with _locked_file(canonical):
