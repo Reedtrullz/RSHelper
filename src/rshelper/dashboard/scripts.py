@@ -14,11 +14,44 @@ let chip='all',density='normal',strategy='';
 let viewRows=[];
 let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
-let sparkSeq=0;
 let countdown=refreshSecs;
 let sseOk=false,sseLastEvent=Date.now(),sseController=null;
 let accessMode='owner',capabilities={mode:'owner',features:[]},ownerToken='',authenticated=false;
 let accessReady=false,authEpoch=0;
+let viewEpoch=0,renderEpoch=0,refreshFlight=null;
+function beginViewRequest(){
+  const epoch=authEpoch,tab=viewEpoch,name=view,request=++renderEpoch;
+  const panels=['listBody','contextPanel'].map(id=>{
+    const node=document.getElementById(id);
+    return {node,html:node.innerHTML,top:node.scrollTop,left:node.scrollLeft};
+  });
+  const current=()=>epoch===authEpoch&&tab===viewEpoch&&name===view&&request===renderEpoch;
+  current.finish=()=>{if(current())panels.forEach(p=>{p.node.scrollTop=p.top;p.node.scrollLeft=p.left;});};
+  current.fail=error=>{
+    if(!current()||error.name==='AbortError')return;
+    panels.forEach(p=>{if(p.html&&!p.html.includes('class="spinner"'))p.node.innerHTML=p.html;});
+    current.finish();setStatus('Error: '+error.message,true);
+  };
+  return current;
+}
+function detailCurrent(id,node){
+  const epoch=authEpoch,tab=viewEpoch;
+  return ()=>epoch===authEpoch&&tab===viewEpoch&&selectedId===id&&node&&document.getElementById(node.id)===node;
+}
+function renderViewbar(bar){
+  const active=document.activeElement,scroll=bar.scrollLeft;
+  const drafts=Array.from(bar.querySelectorAll('input,select,textarea'),field=>({
+    id:field.id,value:field.value,checked:field.checked,focused:field===active,
+    start:field.selectionStart,end:field.selectionEnd}));
+  bar.innerHTML=viewbarHtml();
+  drafts.forEach(draft=>{
+    const field=document.getElementById(draft.id);if(!field)return;
+    field.value=draft.value;field.checked=draft.checked;
+    if(draft.focused){field.focus({preventScroll:true});
+      if(draft.start!=null&&draft.end!=null)field.setSelectionRange(draft.start,draft.end);}
+  });
+  bar.scrollLeft=scroll;
+}
 const pendingRequests=new Set();
 const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity']);
 const publicMarketPaths=new Set(['/api/scan','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
@@ -131,6 +164,7 @@ async function connectOwner(candidate){
 }
 function disconnectOwner(){
   authEpoch++;
+  viewEpoch++;renderEpoch++;
   pendingRequests.forEach(controller=>controller.abort());pendingRequests.clear();
   if(sseController){sseController.abort();sseController=null;}
   ownerToken='';authenticated=false;signalsMap={};meta={};watchIds=new Set();alertsData={alerts:[],unread:0};
@@ -252,10 +286,12 @@ let _extBadgeFetched=false;
 async function refreshExtBadges(){
   if(_extBadgeFetched)return;
   _extBadgeFetched=true;
+  const epoch=authEpoch;
   try{
     const [g,b]=await Promise.all([
       apiFetch('/api/ge').then(r=>r.ok?r.json():null).catch(()=>null),
       apiFetch('/api/bank').then(r=>r.ok?r.json():null).catch(()=>null)]);
+    if(epoch!==authEpoch)return;
     if(g&&g.slots)document.getElementById('badgeGE').textContent=g.slots.length||0;
     if(b&&typeof b.slot_count==='number')document.getElementById('badgeBank').textContent=b.slot_count||0;
   }catch(e){}
@@ -403,7 +439,9 @@ function sigBadge(item){
   return '<span class="sig-badge sig-'+escHtml(best.type)+'" title="'+escHtml(best.message)+'">'+escHtml(best.type)+'</span>';
 }
 function setView(v){
+  viewEpoch++;renderEpoch++;
   if(privateViews.has(v)&&!(accessMode==='owner'&&authenticated&&hasFeature('private-state'))){v='market';}
+  if(v!==view){document.getElementById('listBody').innerHTML='';document.getElementById('contextPanel').innerHTML='';}
   view=v;
   const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity'];
   names.forEach(n=>{
@@ -459,7 +497,18 @@ async function paperTrade(){
     setStatus('Error: '+e.message,true);
   }
 }
-async function fetchData(){
+function fetchData(){
+  if(refreshFlight&&refreshFlight.epoch===authEpoch){refreshFlight.again=true;return refreshFlight.promise;}
+  const flight={epoch:authEpoch,again:false,promise:null};
+  refreshFlight=flight;
+  flight.promise=loadData().finally(()=>{
+    if(refreshFlight!==flight)return;
+    refreshFlight=null;
+    if(flight.again&&flight.epoch===authEpoch)fetchData();
+  });
+  return flight.promise;
+}
+async function loadData(){
   if(!accessReady)return;
   if(accessMode==='owner'&&!authenticated){
     setStatus('Connect with your owner token',false);
@@ -476,12 +525,13 @@ async function fetchData(){
     const [r,m,s]=await Promise.all(requests);
     if(epoch!==authEpoch)return;
     if(!r.ok||(privateReady&&(!m.ok||!s.ok)))throw new Error('api error');
-    const scan=await r.json();allItems=scan.items||[];
+    const [scan,metadata,signalData]=await Promise.all([r.json(),m?m.json():null,s?s.json():null]);
     if(epoch!==authEpoch)return;
+    allItems=scan.items||[];
     signalsMap={};
     if(privateReady){
-      meta=await m.json();
-      (await s.json()).signals.forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
+      meta=metadata;
+      (signalData.signals||[]).forEach(x=>{signalsMap[x.item_id+':'+x.type]=x});
       watchIds=new Set(meta.watch_ids||[]);
       if(typeof meta.unread_alerts==='number')alertsData.unread=meta.unread_alerts;
     }else{meta={market_data:scan.market_data||{}};watchIds=new Set();alertsData={alerts:[],unread:0};}
@@ -585,7 +635,7 @@ SCRIPT_CHARTS = r"""
 function drawSpark(id){
   const cv=document.getElementById('spark');
   if(!cv)return;
-  const seq=++sparkSeq;
+  const current=detailCurrent(id,cv);
   let pts=[],historyReason='No recent trade history for this item.';
   (async()=>{
     try{
@@ -594,7 +644,7 @@ function drawSpark(id){
       historyReason=history.capability?.reason||historyReason;
     }catch(e){}
     if(pts.length<2){
-      if(seq!==sparkSeq)return;
+      if(!current())return;
       cv.style.display='none';
       const note=document.createElement('div');
       note.className='loading';
@@ -603,7 +653,7 @@ function drawSpark(id){
       return;
     }
     const draw=()=>{
-      if(seq!==sparkSeq)return;
+      if(!current())return;
       const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
       if(!w){requestAnimationFrame(draw);return}
       const h=84;
@@ -635,7 +685,7 @@ function drawSpark(id){
 function drawMargin(id){
   const cv=document.getElementById('marginChart');
   if(!cv)return;
-  const seq=++sparkSeq;
+  const current=detailCurrent(id,cv);
   (async()=>{
     let pts=[],historyReason='No hourly history for a margin chart.';
     try{
@@ -644,7 +694,7 @@ function drawMargin(id){
       historyReason=history.capability?.reason||historyReason;
     }catch(e){}
     if(pts.length<2){
-      if(seq!==sparkSeq)return;
+      if(!current())return;
       cv.style.display='none';
       const note=document.createElement('div');
       note.className='loading';
@@ -654,7 +704,7 @@ function drawMargin(id){
     }
     const margins=pts.map(p=>((p.avgLow||0)-(p.avgHigh||0))-taxOf(p.avgLow||0));
     const draw=()=>{
-      if(seq!==sparkSeq)return;
+      if(!current())return;
       const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
       if(!w){requestAnimationFrame(draw);return}
       const h=120;
@@ -801,11 +851,12 @@ function renderDetail(id){
 function loadConfidence(id){
   const ctx=document.getElementById('contextPanel');
   if(!ctx)return;
+  const epoch=authEpoch,tab=viewEpoch,tile=document.getElementById('confTile');
   // Lazily fetch margin confidence and append a tile; failure is silent.
   apiFetch('/api/confidence?ids='+id).then(r=>r.ok?r.json():{}).then(d=>{
     const row=d[String(id)];
-    if(!row||!ctx.contains(document.getElementById('confTile')))return;
-    const tile=document.getElementById('confTile');
+    if(!row||epoch!==authEpoch||tab!==viewEpoch||selectedId!==id||
+       document.getElementById('confTile')!==tile||!ctx.contains(tile))return;
     if(row.confidence==null||row.confidence===0)return;
     const pct=(row.confidence*100).toFixed(0);
     const cls=pct>=70?'green':pct>=40?'gold':'red';
@@ -842,13 +893,14 @@ function setMarketMode(m){
 }
 function renderMarket(){
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   if(density==='dense')document.getElementById('listBody').classList.add('dense');
   const body=document.getElementById('listBody');
   if(marketMode==='alch'){
     renderAlch();
     return;
   }
+  const scroll=body.scrollTop;
   const rows=marketRows();
   viewRows=rows;
   if(!rows.length){
@@ -890,6 +942,7 @@ function renderMarket(){
   });
   h+='</tbody></table>';
   body.innerHTML=h;
+  body.scrollTop=scroll;
   loadConfColumn(rows);
 }
 function loadConfColumn(rows){
@@ -905,6 +958,7 @@ function loadConfColumn(rows){
   }).catch(()=>{});
 }
 async function renderAlch(){
+  const current=beginViewRequest();
   const body=document.getElementById('listBody');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading alchemy...</div>';
   let items=[];
@@ -912,8 +966,11 @@ async function renderAlch(){
     const r=await apiFetch('/api/alch');
     if(!r.ok)throw new Error('alch api');
     items=(await r.json()).items||[];
+    if(!current())return;
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading alchemy: '+escHtml(e.message)+'</div>';
+    current.fail(e);
     return;
   }
   viewRows=items;
@@ -935,11 +992,13 @@ async function renderAlch(){
   });
   h+='</tbody></table>';
   body.innerHTML=h;
+  current.finish();
 }
 async function renderSignals(){
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
+  const scroll=body.scrollTop;
   viewRows=[];
   const q=(document.getElementById('search').value||'').toLowerCase();
   let signals=Object.values(signalsMap);
@@ -980,20 +1039,25 @@ async function renderSignals(){
   });
   h+='</tbody></table>';
   body.innerHTML=h;
+  body.scrollTop=scroll;
   if(selectedId!=null)renderDetail(selectedId);
   else renderContextEmpty();
 }
 async function renderWatchlist(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   viewRows=[];
   let items;
   try{
     const r=await apiFetch('/api/watchlist');
     items=(await r.json()).items||[];
+    if(!current())return;
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading watchlist: '+escHtml(e.message)+'</div>';
+    current.fail(e);
     return;
   }
   watchIds=new Set(items.map(i=>i.id));
@@ -1030,6 +1094,7 @@ async function renderWatchlist(){
   });
   h+='</tbody></table>';
   body.innerHTML=h;
+  current.finish();
   if(selectedId!=null)renderDetail(selectedId);
   else renderContextEmpty();
 }
@@ -1065,22 +1130,25 @@ async function saveWatchAlerts(id){
       body:JSON.stringify({action:'alerts',item_id:id,alert_above,alert_below})});
     if(!r.ok)await rejectApiError(r);
     document.querySelectorAll('.ge-history-overlay').forEach(o=>o.remove());
-    renderWatchlist();
+    if(view==='watchlist')renderWatchlist();
     setStatus('Alert thresholds saved',false);
   }catch(e){
     setStatus('Error: '+e.message,true);
   }
 }
 async function watchCheckNow(){
+  const epoch=authEpoch,tab=viewEpoch;
   const body=document.getElementById('listBody');
   try{
     const r=await apiFetch('/api/watchlist/check');
     if(!r.ok)throw new Error('check failed');
     const d=await r.json();
     const trig=d.triggered||[];
+    if(epoch!==authEpoch||tab!==viewEpoch||view!=='watchlist')return;
     // Re-render fresh (not a captured snapshot) so a concurrent SSE refresh
     // can't be clobbered, then pin the notice above the list.
     await renderWatchlist();
+    if(epoch!==authEpoch||tab!==viewEpoch||view!=='watchlist')return;
     let notice;
     if(trig.length){
       notice='<div class="notice warn-red" style="margin:8px 0">'+trig.length+' alert(s) triggered now:'+
@@ -1095,8 +1163,9 @@ async function watchCheckNow(){
   }
 }
 async function renderGE(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading Grand Exchange...</div>';
@@ -1104,7 +1173,9 @@ async function renderGE(){
   try{
     const r=await apiFetch('/api/ge');
     if(!r.ok)throw new Error('GE API failed');
-    geData=await r.json();
+    const data=await r.json();
+    if(!current())return;
+    geData=data;
     document.getElementById('badgeGE').textContent=geData.slots.length||0;
     const slots=geData.slots||[];
     let h='<div class="ge-grid">';
@@ -1123,9 +1194,12 @@ async function renderGE(){
       '</div>'+
       '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
       'Fill progress is simulated from 5-minute trade volume — high-volume items fill faster. Click Collect when an offer reaches 100%.</div>';
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading Grand Exchange: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 function geSlotHtml(slot){
@@ -1194,8 +1268,9 @@ function geSlotClick(positionId){
     '</div>';
 }
 async function renderBank(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading bank...</div>';
@@ -1203,7 +1278,9 @@ async function renderBank(){
   try{
     const r=await apiFetch('/api/bank');
     if(!r.ok)throw new Error('Bank API failed');
-    bankData=await r.json();
+    const data=await r.json();
+    if(!current())return;
+    bankData=data;
     document.getElementById('badgeBank').textContent=bankData.slot_count||0;
     const items=bankData.items||[];
     const pnl=bankData.unrealized_pnl||0;
@@ -1225,9 +1302,12 @@ async function renderBank(){
       metric('Cost Basis',format(bankData.cost_basis||0)+' gp','')+
       metric('Item Stacks',format(bankData.slot_count||0),'')+
       '</div>';
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading bank: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 function bankSlotHtml(it){
@@ -1262,8 +1342,9 @@ function bankSlotClick(itemId){
     '</div>';
 }
 async function renderProcess(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading materials...</div>';
@@ -1273,6 +1354,7 @@ async function renderProcess(){
     if(!r.ok)throw new Error('Process API failed');
     const data=await r.json();
     let recipes=data.recipes||[];
+    if(!current())return;
     const sel=document.getElementById('processSkill');
     if(sel&&sel.value)recipes=recipes.filter(x=>x.skill===sel.value);
     document.getElementById('badgeProcess').textContent=recipes.length;
@@ -1299,9 +1381,12 @@ async function renderProcess(){
       '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
       'Buys inputs at instant-buy, sells the processed output at instant-sell (2% GE tax on the sale). '+
       'GP/hr is capped by action rate, the output buy limit, and the limiting input feed.</div>';
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading materials: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 function traderNoticeHtml(trader){
@@ -1427,8 +1512,9 @@ async function monitorControl(action){
   }catch(e){setStatus('Error: '+e.message,true);}
 }
 async function renderPaper(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading paper trading...</div>';
@@ -1446,6 +1532,7 @@ async function renderPaper(){
     const h=await hr.json();
     const pos=(await posr.json())||{positions:[]};
     const trader=(await trr.json())||{running:false};
+    if(!current())return;
     const s=h.summary||{};
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Paper Trading</div>'+
       '<div class="metric-grid">'+
@@ -1551,9 +1638,12 @@ async function renderPaper(){
       drawCumulative(document.getElementById('paperCum'),buckets);
       drawDaily(document.getElementById('paperDaily'),buckets);
     }
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading paper trading: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 // One UUID per logical close: a retry after a lost or ambiguous response
@@ -1615,8 +1705,9 @@ function historyTablesHtml(h){
   return html;
 }
 async function renderOverview(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading overview...</div>';
@@ -1632,6 +1723,7 @@ async function renderOverview(){
     const mon=(await mr.json())||{running:false};
     const h=await hr.json();
     const al=await alr.json();
+    if(!current())return;
     alertsData={alerts:al.alerts||[],unread:al.unread||0};
     const buckets=h.buckets||[];
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Overview</div>'+
@@ -1676,14 +1768,18 @@ async function renderOverview(){
     body.innerHTML=html;
     updateBadges();
     if(buckets.length>=2)drawCumulative(document.getElementById('ovCum'),buckets);
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading overview: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 async function renderActivity(){
+  const current=beginViewRequest();
   const bar=document.getElementById('viewbar');
-  bar.innerHTML=viewbarHtml();
+  renderViewbar(bar);
   const body=document.getElementById('listBody');
   const context=document.getElementById('contextPanel');
   body.innerHTML='<div class="loading"><span class="spinner"></span>Loading activity...</div>';
@@ -1697,6 +1793,7 @@ async function renderActivity(){
     const pnl=await pr.json();
     const trades=(await tr.json()).trades||[];
     const h=await hr.json();
+    if(!current())return;
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Activity</div>'+
       '<div class="metric-grid">'+
       metric('Total P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
@@ -1734,9 +1831,12 @@ async function renderActivity(){
       drawCumulative(document.getElementById('actCum'),buckets);
       drawDaily(document.getElementById('actDaily'),buckets);
     }
+    current.finish();
   }catch(e){
+    if(!current()||e.name==='AbortError')return;
     body.innerHTML='<div class="loading">Error loading activity: '+escHtml(e.message)+'</div>';
     context.innerHTML='';
+    current.fail(e);
   }
 }
 async function deleteTrade(tradeId,ev){
