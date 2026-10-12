@@ -40,7 +40,7 @@ and financial baseline; an activation marker prevents a missing acknowledged
 book from silently resetting spent capacity. Account slot facts can change only
 through an explicit authority operation.
 
-Twenty-seven actor cases cover reservation races, intent recovery, unknown account/
+Twenty-nine actor cases cover reservation races, intent recovery, unknown account/
 history/limits, partial cancellation, atomic confirmed-lot publication, shared
 window allocation, separate sell windows, premature collection, interrupted
 collection, pinned tax, profit/loss cash, journal hiding and a legacy partial
@@ -156,3 +156,32 @@ actions, malformed receipts, duplicate/invalid page offsets and keepalive bodies
 The scoped review excludes other persistence changes and is not whole-repo or
 physical accessibility acceptance. Signed CI/deployment/Mac/private receipt and
 controlled owner migration remain required before closing16/17.
+
+## Combined data and stance acceptance
+
+After integration with C1/C2/C3 and all four data branches,1,027 tests across74
+files pass with four explicit offline provider skips and zero failures/errors.
+Both Node suites and19 view scenarios pass. Fresh disposable Wiki CLI/HTTP and
+one daemon cycle retain eight slots, require later executed windows, create no
+invented holding/profit and include the Book in the private backup.
+
+Pause stops new reservations and direct opens while already reserved confirmed
+buys may publish; exact native retries remain valid. Pending buys prevent drain
+completion until durable cancellation. Local authority manifests without a
+replication list can read their own stance; replicas and explicit unlisted
+origins remain rejected. Old missing Book modules and current corrupt Book bytes
+both block drain completion. The throttle fixture checks remaining reserved
+time and durable one-second slot spacing, accounting for fsync time.
+
+One bounded Sonnet integration review covered mode, positions, Book, backup and
+replication (five complete files,one generation,no retry/fallback). Its ten claims
+were checked locally: revision-zero stance is an absent-file default, not a
+persisted schema; drain dictionaries are fresh reads without shared references;
+uncommitted staged opens publish nothing and exact retries intentionally survive
+pause; activation reads stay under one profile lock; interrupted collection
+resumes the original operation, directly tested; app-version restore rejection
+is the explicit compatibility gate; the dry-run condition is correct; hard-link
+publication cannot overwrite an intervening destination symlink; unchanged stance
+requests still record explicit operator reasons; fill timestamps greater than
+Book updated_at are already rejected. None demonstrates an unhandled defect.
+An earlier admission refusal made zero generation attempts and is not a review.
