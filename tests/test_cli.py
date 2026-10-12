@@ -592,7 +592,7 @@ class TestCLI(unittest.TestCase):
         import rshelper.cli as cmod
         now = int(time.time())
         ts_data = [
-            {"timestamp": now - (60 * (10 - i)), "avgHighPrice": 100 + i,
+            {"timestamp": now - (300 * (10 - i)), "avgHighPrice": 100 + i,
              "avgLowPrice": 90 + i, "highPriceVolume": 100, "lowPriceVolume": 100}
             for i in range(10)
         ]
@@ -665,7 +665,7 @@ class TestCLI(unittest.TestCase):
         now = int(time.time())
         # Monotonic rising lows: trend must be "up".
         ts_data = [
-            {"timestamp": now - (60 * (10 - i)), "avgHighPrice": 100 + i,
+            {"timestamp": now - (300 * (10 - i)), "avgHighPrice": 100 + i,
              "avgLowPrice": 90 + i, "highPriceVolume": 100, "lowPriceVolume": 100}
             for i in range(10)
         ]
