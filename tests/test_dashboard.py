@@ -958,6 +958,11 @@ class TestHandlerRouting(unittest.TestCase):
         self.handler.do_GET()
         self.assertEqual(self.handler.response_code, 404)
 
+    def test_api_annotations_without_provider_404(self):
+        self.handler.path = "/api/annotations"
+        self.handler.do_GET()
+        self.assertEqual(self.handler.response_code, 404)
+
     def test_content_type_html(self):
         self.handler.path = "/"
         self.handler.do_GET()

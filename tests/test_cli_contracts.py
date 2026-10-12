@@ -19,6 +19,8 @@ from rshelper.market_data import MarketDataResult
 
 CASES = {
     'scenario': '--input scenario.json --json',
+    'annotations list': '--json',
+    'annotations write': '--input annotation.json --expected-revision 0 --json',
     'observed list': '--slots 8 --json',
     'observed history': '11111111-1111-4111-8111-111111111111 --offset 1 --json',
     'observed record': '11111111-1111-4111-8111-111111111111 --input observed.json --expected-revision 0 --operation-id 22222222-2222-4222-8222-222222222222 --json',

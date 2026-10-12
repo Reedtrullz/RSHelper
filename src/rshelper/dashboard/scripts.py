@@ -789,6 +789,24 @@ function addChartData(cv,columns,rows){
   const data=document.createElement('div');data.innerHTML=chartDataHtml(columns,rows);
   cv.parentNode.appendChild(data);cv.setAttribute('aria-hidden','true');
 }
+function annotationHtml(rows,id,start,end){
+  const selected=rows.filter(row=>row.start<end&&row.end>start&&(!row.item_ids.length&&!row.groups.length||row.item_ids.includes(id)));
+  return '<details class="chart-data"><summary>Event context ('+selected.length+')</summary><p>Contextual intervals; price causation and exact activation times are not established.</p>'+selected.map(row=>{
+    const verified=row.class==='reviewed-source'&&row.review_state==='reviewed';
+    const safeUrl=verified&&typeof row.source_url==='string'&&row.source_url.startsWith('https://')?row.source_url:null;
+    return '<article><h4>'+escHtml(row.title)+'</h4><p>'+(verified?'Reviewed source':'Private observation; unverified')+' · '+escHtml(new Date(row.start*1000).toISOString())+' through '+escHtml(new Date(row.end*1000).toISOString())+' (end excluded)</p><p>'+escHtml(row.uncertainty)+'</p>'+
+      (safeUrl?'<p>Reviewed '+escHtml(new Date(row.reviewed_at*1000).toISOString())+' by '+escHtml(row.reviewer)+'. <a rel="noreferrer" href="'+escHtml(safeUrl)+'">Primary source</a></p>':verified?'<p>Reviewed '+escHtml(new Date(row.reviewed_at*1000).toISOString())+' by '+escHtml(row.reviewer)+'.</p>':'')+'</article>';
+  }).join('')+'</details>';
+}
+async function addChartAnnotations(cv,id,pts,current){
+  if(!authenticated)return;
+  try{
+    const response=await apiFetch('/api/annotations');if(!response.ok)throw new Error('Annotations unavailable');
+    const result=await response.json();if(!current()||!cv.parentNode)return;
+    const data=document.createElement('div');data.innerHTML=annotationHtml(result.events||[],id,pts[0].ts,pts[pts.length-1].ts+1);
+    cv.parentNode.appendChild(data);
+  }catch(error){if(current()&&cv.parentNode){const note=document.createElement('p');note.textContent='Event context unavailable';cv.parentNode.appendChild(note);}}
+}
 function drawSpark(id){
   const cv=document.getElementById('spark');
   if(!cv)return;
@@ -809,7 +827,7 @@ function drawSpark(id){
       cv.parentNode.appendChild(note);
       return;
     }
-    if(current())addChartData(cv,['UTC','Instant buy high (gp)','Instant sell low (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.avgHigh,point.avgLow]));
+    if(current()){addChartData(cv,['UTC','Instant buy high (gp)','Instant sell low (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.avgHigh,point.avgLow]));addChartAnnotations(cv,id,pts,current);}
     const draw=()=>{
       if(!current())return;
       const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
@@ -861,7 +879,7 @@ function drawMargin(id){
       return;
     }
     const margins=pts.map(p=>p.net_profit);
-    if(current())addChartData(cv,['UTC','Scan direction','Net margin after tax (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.direction,point.net_profit]));
+    if(current()){addChartData(cv,['UTC','Scan direction','Net margin after tax (gp)'],pts.map(point=>[new Date(point.ts*1000).toISOString(),point.direction,point.net_profit]));addChartAnnotations(cv,id,pts,current);}
     if(margins.some(value=>!Number.isFinite(value))){if(current())cv.style.display='none';return;}
     const draw=()=>{
       if(!current())return;

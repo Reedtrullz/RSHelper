@@ -1874,7 +1874,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
-    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews'],['observed'],['scenario']) or remaining[:2] in (
+    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews'],['observed'],['scenario'],['annotations']) or remaining[:2] in (
         ['config','preview'],['config','apply'],['config','rollback'])
     if maintenance:
         from rshelper.config import Config
@@ -2200,6 +2200,11 @@ def _main() -> None:
     review_parser=sub.add_parser('reviews',help='Private stable-lot hypotheses and append-only reviews')
     scenario=sub.add_parser('scenario',help='Read-only conditional arithmetic from frozen explicit inputs')
     scenario.add_argument('--input',required=True);scenario.add_argument('--json',action='store_true')
+    annotation=sub.add_parser('annotations',help='Reviewed context and private manual observations')
+    annotation_sub=annotation.add_subparsers(dest='annotation_action',required=True)
+    annotation_list=annotation_sub.add_parser('list');annotation_list.add_argument('--json',action='store_true')
+    annotation_write=annotation_sub.add_parser('write');annotation_write.add_argument('--input',required=True)
+    annotation_write.add_argument('--expected-revision',required=True,type=int);annotation_write.add_argument('--json',action='store_true')
     observed=sub.add_parser('observed',help='Private manual GE offer receipts, separate from paper simulation')
     observed_sub=observed.add_subparsers(dest='observed_action',required=True)
     observed_list=observed_sub.add_parser('list');observed_list.add_argument('--slots',type=int,choices=[3,8])
@@ -2672,6 +2677,15 @@ def _main() -> None:
         trade_review_cmd(args)
     elif args.command=='observed':
         observed_cmd(args)
+    elif args.command=='annotations':
+        from pathlib import Path
+        from rshelper import backup,persistence,event_annotations
+        if args.annotation_action=='list':result=event_annotations.all_events(args.profile)
+        else:
+            body=persistence.decode_json(backup._read_file(Path(args.input),65536))
+            if not isinstance(body,dict) or set(body)!={'id','annotation'}:raise ValueError('annotation write fields differ')
+            result=event_annotations.write_annotation(args.profile,body['id'],body['annotation'],expected_revision=args.expected_revision)
+        print(json.dumps(result,indent=2))
     elif args.command=='scenario':
         from pathlib import Path
         from rshelper import backup,persistence

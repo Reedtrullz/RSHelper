@@ -18,6 +18,7 @@ from rshelper.profile import resolve_config_path, resolve_profile
 
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
+    'event-annotations.json',
     'observed-offers.json',
     'paper-offers.json',
     'trade-reviews.json',
@@ -102,6 +103,9 @@ def _validate_file(name, raw):
                 validate_store(data)
             if name=='observed-offers.json':
                 from rshelper.observed_offers import validate_store
+                validate_store(data)
+            if name=='event-annotations.json':
+                from rshelper.event_annotations import validate_store
                 validate_store(data)
             if name=='peer-information.json':
                 from rshelper.trade_reviews import validate_peers
