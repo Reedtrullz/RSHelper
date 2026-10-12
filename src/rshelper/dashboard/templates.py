@@ -261,6 +261,7 @@ _NAV = r"""
   <button class="nav-btn" id="btnBank" role="tab" onclick="setView('bank')">Bank <span class="badge" id="badgeBank">-</span></button>
   <button class="nav-btn" id="btnProcess" role="tab" onclick="setView('process')">Materials <span class="badge" id="badgeProcess">-</span></button>
   <button class="nav-btn" id="btnActivity" role="tab" onclick="setView('activity')">Activity <span class="badge" id="badgeActivity">-</span></button>
+  <button class="nav-btn" id="btnSettings" role="tab" onclick="setView('settings')">Settings</button>
 </div>
 """
 

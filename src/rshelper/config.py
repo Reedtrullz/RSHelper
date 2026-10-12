@@ -365,11 +365,12 @@ def _config_from_toml(raw: dict) -> Config:
 def load_config(profile: str | None = None) -> Config:
     """Load, validate and return config before command-specific work begins."""
     path = resolve_config_path("config.toml", profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        atomic_write_text(path, DEFAULT_CONFIG_TOML)
-    try:
-        raw = tomllib.loads(path.read_text())
-    except tomllib.TOMLDecodeError as exc:
-        raise ConfigError("config", "toml", str(exc)) from exc
-    return validate_config(_config_from_toml(raw))
+    from rshelper.state_transaction import profile_transaction
+    with profile_transaction(profile or 'default',path.parent):
+        if not path.exists():
+            atomic_write_text(path, DEFAULT_CONFIG_TOML)
+        try:
+            raw = tomllib.loads(path.read_text())
+        except tomllib.TOMLDecodeError as exc:
+            raise ConfigError("config", "toml", str(exc)) from exc
+        return validate_config(_config_from_toml(raw))

@@ -19,6 +19,7 @@ let sseOk=false,sseLastEvent=Date.now(),sseController=null;
 let accessMode='owner',capabilities={mode:'owner',features:[]},ownerToken='',authenticated=false;
 let accessReady=false,authEpoch=0;
 let viewEpoch=0,renderEpoch=0,refreshFlight=null;
+let settingsState=null,settingsPreviewCandidate=null,pendingSettingsOperation=null;
 function beginViewRequest(){
   const epoch=authEpoch,tab=viewEpoch,name=view,request=++renderEpoch;
   const panels=['listBody','contextPanel'].map(id=>{
@@ -53,7 +54,7 @@ function renderViewbar(bar){
   bar.scrollLeft=scroll;
 }
 const pendingRequests=new Set();
-const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity']);
+const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings']);
 const publicMarketPaths=new Set(['/api/scan','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
 
 function apiFetch(url,options={}){
@@ -125,7 +126,7 @@ function applyAccessGates(){
   const canPrivate=accessMode==='owner'&&authenticated&&hasFeature('private-state');
   const hasMarket=hasFeature('market');
   const views={market:hasMarket,process:hasMarket,paper:canPrivate,signals:canPrivate,watchlist:canPrivate,
-    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate};
+    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate};
   Object.entries(views).forEach(([name,allowed])=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
@@ -170,6 +171,7 @@ function disconnectOwner(){
   ownerToken='';authenticated=false;signalsMap={};meta={};watchIds=new Set();alertsData={alerts:[],unread:0};
   geData=null;bankData=null;alchItems=[];confMap={};viewRows=[];selectedId=null;strategy='';view='market';sseOk=false;
   pendingPaperOps={};geOffset=0;
+  settingsState=null;settingsPreviewCandidate=null;pendingSettingsOperation=null;
   ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
@@ -444,13 +446,13 @@ function setView(v){
   if(privateViews.has(v)&&!(accessMode==='owner'&&authenticated&&hasFeature('private-state'))){v='market';}
   if(v!==view){document.getElementById('listBody').innerHTML='';document.getElementById('contextPanel').innerHTML='';}
   view=v;
-  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity'];
+  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings'];
   names.forEach(n=>{
     const btn=document.getElementById('btn'+n.charAt(0).toUpperCase()+n.slice(1));
     if(btn)btn.classList.toggle('active',v===n);
   });
   const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
-                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity'};
+                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings'};
   if(titles[v])document.title='RSHelper — '+titles[v];
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
@@ -461,6 +463,7 @@ function setView(v){
   else if(v==='process')renderProcess();
   else if(v==='overview')renderOverview();
   else if(v==='activity')renderActivity();
+  else if(v==='settings')renderSettings();
   if(v==='market'&&selectedId==null)renderContextEmpty();
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
@@ -822,6 +825,62 @@ function drawDaily(cv,buckets){
 """
 
 SCRIPT_VIEWS = r"""
+async function renderSettings(){
+  const current=beginViewRequest();
+  try{
+    const response=await apiFetch('/api/settings');
+    const result=await response.json();
+    if(!current())return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    settingsState=result;settingsPreviewCandidate=null;
+    document.getElementById('listBody').innerHTML='<h2>Settings</h2><p>'+escHtml(result.guidance)+'</p>'+
+      '<label for="settingsDocument">Exact profile TOML</label><textarea id="settingsDocument" rows="18" style="width:100%;font-family:monospace" oninput="settingsPreviewCandidate=null;document.getElementById(\'settingsApply\').disabled=true">'+escHtml(result.document)+'</textarea>'+
+      '<button type="button" onclick="settingsAction(\'preview\')">Preview changes</button><div id="settingsPreview" role="status" aria-live="polite"></div>'+
+      '<label for="settingsBackup">New private backup archive path</label><input id="settingsBackup" autocomplete="off" style="width:100%">'+
+      '<button type="button" id="settingsApply" disabled onclick="settingsAction(\'apply\')">Apply preview</button>'+
+      '<label for="settingsRestore">Prior configuration operation UUID</label><input id="settingsRestore" autocomplete="off" style="width:100%">'+
+      '<button type="button" '+(result.can_apply?'':'disabled')+' onclick="settingsAction(\'rollback\')">Restore prior configuration</button>'+
+      '<p>'+(result.can_apply?'Apply records one UTC transition and retains a coherent backup.':'Read-only: apply requires the local financial authority and enabled controls.')+'</p>';
+    const rows=Object.entries(result.effective||{}).flatMap(([section,values])=>Object.entries(values).map(([key,value])=>
+      '<tr><td>'+escHtml(section+'.'+key)+'</td><td>'+escHtml(JSON.stringify(result.profile_values?.[section]?.[key]??'inherited'))+'</td><td>'+escHtml(JSON.stringify(value))+'</td><td>'+escHtml(JSON.stringify(result.defaults?.[section]?.[key]))+'</td></tr>')).join('');
+    const processes=Object.entries(result.processes||{}).map(([name,data])=>'<p>'+escHtml(name)+': '+escHtml(data.config_id||'Unknown / not observed')+'<br>'+escHtml(data.reload)+'</p>').join('');
+    document.getElementById('contextPanel').innerHTML='<h3>Stored revision</h3><p>'+escHtml(result.revision)+'</p><h3>Process effective config IDs</h3>'+processes+'<h3>Effective settings</h3><table><thead><tr><th>Field</th><th>Profile</th><th>Effective</th><th>Default</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    current.finish();
+  }catch(error){current.fail(error);}
+}
+async function settingsAction(action){
+  if(!authenticated||!settingsState)return;
+  const epoch=authEpoch,tab=viewEpoch;
+  try{
+    const candidate=document.getElementById('settingsDocument').value;
+    let request={action,candidate};
+    if(action!=='preview'){
+      if(!settingsState.can_apply)throw new Error('Settings are read-only');
+      if(action==='apply'&&settingsPreviewCandidate!==candidate)throw new Error('Preview this exact document first');
+      const fields={action,expected_revision:settingsState.revision,backup_path:document.getElementById('settingsBackup').value};
+      if(!fields.backup_path.trim())throw new Error('A new private backup path is required');
+      if(action==='apply')fields.candidate=candidate;
+      else fields.restore_operation_id=document.getElementById('settingsRestore').value;
+      const fingerprint=JSON.stringify(fields);
+      if(pendingSettingsOperation?.fingerprint!==fingerprint)pendingSettingsOperation={fingerprint,operation_id:newCloseOperationId()};
+      request={...fields,operation_id:pendingSettingsOperation.operation_id};
+    }
+    const response=await apiFetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
+    const result=await response.json();
+    if(epoch!==authEpoch||tab!==viewEpoch)return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    if(action==='preview'){
+      settingsPreviewCandidate=candidate;settingsState={...result};
+      document.getElementById('settingsPreview').innerHTML='<p>'+escHtml(result.guidance)+'</p>'+
+        (result.diff||[]).map(row=>'<p>'+escHtml(row.field)+': '+escHtml(JSON.stringify(row.before))+' → '+escHtml(JSON.stringify(row.after))+'</p>').join('');
+      document.getElementById('settingsApply').disabled=!result.can_apply;
+    }else{
+      pendingSettingsOperation=null;
+      setStatus('Configuration saved; operation '+request.operation_id+'. Explicit restart may be required.',false);
+      await renderSettings();
+    }
+  }catch(error){if(epoch===authEpoch&&tab===viewEpoch&&error.name!=='AbortError')setStatus(error.message,true);}
+}
 function renderContextEmpty(){
   document.getElementById('contextPanel').innerHTML='<div class="empty">&#8592; Select an item to inspect</div>';
 }

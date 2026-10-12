@@ -43,9 +43,11 @@ _GET_RESOURCES = {
     "/api/bank": "private-state",
     "/api/alerts": "private-state",
     "/api/events": "private-state",
+    "/api/settings": "private-state",
 }
 
 _POST_RESOURCES = {
+    "/api/settings": "private-state",
     "/api/trades": "private-state",
     "/api/watchlist": "private-state",
     "/api/paper": "private-state",
@@ -110,7 +112,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  mode: str = "owner", owner_token: str | None = None,
                  control: bool = False, state_receipt_fn: Callable[[str], dict] | None = None,
                  readiness_fn: Callable[[], dict] | None = None,
-                 activity_fn: Callable[..., dict] | None = None) -> type:
+                 activity_fn: Callable[..., dict] | None = None,
+                 settings_fn: Callable[..., dict] | None = None) -> type:
     """Return a BaseHTTPRequestHandler subclass.
 
     scanner: FlipScanner instance
@@ -160,7 +163,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
             except HttpInputError as exc:
                 self.send_error(exc.status, str(exc))
                 return
-            if path == "/":
+            if path == '/api/settings':
+                self._serve_settings()
+            elif path == "/":
                 self._serve_html()
             elif path == "/api/capabilities":
                 self._serve_capabilities()
@@ -243,7 +248,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 except HttpInputError as exc:
                     self.send_error(exc.status, str(exc))
                     return
-            if path == "/api/trades":
+            if path == '/api/settings':
+                if self._json_body['action']!='preview' and not control:
+                    self.send_error(403,'Settings apply requires local controls')
+                    return
+                self._serve_settings(self._json_body)
+            elif path == "/api/trades":
                 self._handle_log_trade()
             elif path == "/api/watchlist":
                 self._handle_watchlist()
@@ -263,6 +273,19 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self._handle_trade_delete()
             else:
                 self.send_error(404)
+
+        def _serve_settings(self,body=None):
+            if settings_fn is None:
+                self.send_error(404)
+                return
+            try:
+                self._serve_json(settings_fn(body))
+            except PermissionError as error:
+                self.send_error(403,str(error))
+            except (ValueError,TypeError) as error:
+                self.send_error(400,str(error))
+            except OSError:
+                self.send_error(503,'Settings or backup unavailable')
 
         def _serve_html(self):
             body = INDEX_HTML.encode("utf-8")

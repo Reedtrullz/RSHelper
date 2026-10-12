@@ -3,6 +3,27 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('settings preview keeps private TOML local and ambiguous apply retries retain identity',async()=>{
+  const calls=[];
+  const {context,elements}=harness(async(url,options={})=>{
+    calls.push({url,body:options.body?JSON.parse(options.body):null});
+    return new Response(JSON.stringify({error:'Synthetic failure'}),{status:500});
+  });
+  vm.runInContext("accessMode='owner';authenticated=true;accessReady=true;capabilities={features:['private-state','daemon-control']};settingsState={can_apply:true,revision:'0:synthetic'};settingsPreviewCandidate='[trader]\\\\ncapital=2000'",context);
+  elements.set('settingsDocument',{value:'[trader]\\ncapital=2000'});
+  elements.set('settingsBackup',{value:'/synthetic/before.zip'});
+  elements.set('settingsRestore',{value:''});
+  await vm.runInContext("settingsAction('apply')",context);
+  await vm.runInContext("settingsAction('apply')",context);
+  assert.equal(calls.length,2);
+  assert.equal(calls[0].url,'/api/settings');
+  assert.equal(calls[0].body.operation_id,calls[1].body.operation_id);
+  assert.equal(calls[0].body.candidate,'[trader]\\ncapital=2000');
+  vm.runInContext('authenticated=false',context);
+  await vm.runInContext("settingsAction('apply')",context);
+  assert.equal(calls.length,2);
+});
+
 test('equity metrics retain unknown marks and disclose whole-profile scope',()=>{
   const {context}=harness(async()=>new Response('{}'));
   const html=vm.runInContext("equityMetricsHtml({initialized:true,available_cash:636,reserved_cash:0,marked_equity:null,equity_return_pct:null})",context);

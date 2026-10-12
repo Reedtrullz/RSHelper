@@ -1047,6 +1047,29 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = read_market()
         return readiness.status(profile, sources={'latest': cache['latest'], '5m': cache['vol']})
 
+    from rshelper import config_edit,tuning,state_identity
+    from rshelper.config import effective_config_dict
+    from rshelper.profile import resolve_config_path
+    dashboard_config_id=tuning.config_id(effective_config_dict(cfg)) if access_mode=='owner' else None
+
+    def settings(body=None):
+        if body is None or body['action']=='preview':
+            result=config_edit.preview_config(profile,None if body is None else body['candidate'])
+        else:
+            root=resolve_config_path('',profile)
+            if not control or (state_identity.activation_manifest(root/'identity-activation.json') or {}).get('financial_authority') is not True:
+                raise PermissionError('Configuration apply requires the local financial authority')
+            options={key:body[key] for key in ('expected_revision','operation_id','backup_path')}
+            if body['action']=='apply':result=config_edit.apply_config(profile,body['candidate'],**options)
+            else:result=config_edit.rollback_config(profile,body['restore_operation_id'],**options)
+            return result
+        root=resolve_config_path('',profile)
+        result['can_apply']=bool(control and (state_identity.activation_manifest(root/'identity-activation.json') or {}).get('financial_authority') is True)
+        result['processes']={'dashboard':{'config_id':dashboard_config_id,'reload':'explicit restart'},
+             'trader':{'config_id':(get_trader_status().get('configuration') or {}).get('config_id'),'reload':'explicit restart'},
+             'monitor':{'config_id':(get_monitor_status().get('configuration') or {}).get('config_id'),'reload':'each successful poll'}}
+        return result
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -1071,7 +1094,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness, activity_fn=get_activity)
+                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

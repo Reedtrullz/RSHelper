@@ -75,6 +75,10 @@ def _load_log(profile: str | None = None) -> dict:
             path.stat()
         except FileNotFoundError:
             return {"entries": []}
+    return validate_log(data)
+
+
+def validate_log(data):
     entries = data.get("entries")
     if not isinstance(entries, list):
         raise StateCorruptionError("tuning_log.json: entries must be a list; original bytes preserved")
@@ -94,6 +98,37 @@ def _load_log(profile: str | None = None) -> dict:
                 _instant(entry['ts'])
             except (ValueError,TypeError,AttributeError):
                 raise StateCorruptionError('tuning_log.json: invalid configuration evidence; original bytes preserved') from None
+    if 'config_revision' in data or 'config_operations' in data:
+        from rshelper.persistence import canonical_uuid
+        import re
+        operations=data.get('config_operations')
+        number=data.get('config_revision')
+        if type(number) is not int or not 0<=number<2**63 or not isinstance(operations,dict):
+            raise StateCorruptionError('invalid configuration receipt inventory; source preserved')
+        revisions=set()
+        fields={'request_sha256','operation_revision','revision','before_toml','candidate_sha256',
+                'effective_at','effective_config_id','backup_path','restart_required'}
+        try:
+            for operation,receipt in operations.items():
+                canonical_uuid(operation)
+                if not isinstance(receipt,dict) or set(receipt)!=fields:raise ValueError('invalid receipt')
+                ordinal=receipt['operation_revision']
+                if type(ordinal) is not int or not 1<=ordinal<=number or ordinal in revisions:
+                    raise ValueError('invalid receipt revision')
+                revisions.add(ordinal)
+                for key in ('request_sha256','candidate_sha256','effective_config_id'):
+                    if not isinstance(receipt[key],str) or not re.fullmatch('[0-9a-f]{64}',receipt[key]):raise ValueError('invalid receipt hash')
+                if not isinstance(receipt['revision'],str) or not re.fullmatch(str(ordinal)+':[0-9a-f]{64}',receipt['revision']):
+                    raise ValueError('invalid source revision')
+                if not isinstance(receipt['before_toml'],str) or len(receipt['before_toml'].encode())>65536:
+                    raise ValueError('invalid preserved configuration')
+                if _instant(receipt['effective_at']).isoformat()!=receipt['effective_at']:raise ValueError('invalid effective time')
+                if not isinstance(receipt['backup_path'],str) or not receipt['backup_path'].startswith('/') or len(receipt['backup_path'])>4096:
+                    raise ValueError('invalid backup path')
+                if type(receipt['restart_required']) is not bool:raise ValueError('invalid restart marker')
+            if len(revisions)!=number:raise ValueError('missing configuration receipt')
+        except (ValueError,TypeError,AttributeError,KeyError):
+            raise StateCorruptionError('invalid configuration operation receipt; original bytes preserved') from None
     return data
 
 
@@ -103,7 +138,8 @@ def load_entries(profile: str | None = None) -> list[dict]:
 
 def record_if_changed(profile: str | None = None, note: str = "auto") -> dict | None:
     """Append under a shared lock; failed reads preserve the existing log."""
-    with locked_state(log_path(profile)):
+    from rshelper.state_transaction import profile_transaction
+    with profile_transaction(profile or 'default',log_path(profile).parent),locked_state(log_path(profile)):
         data = _load_log(profile)
         current = params(profile)
         entries = data["entries"]
