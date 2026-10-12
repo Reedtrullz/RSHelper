@@ -19,6 +19,7 @@ from rshelper.profile import resolve_config_path, resolve_profile
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
     'paper-offers.json',
+    'trade-reviews.json',
     'trading_mode.json',
     'alerts.json', 'tuning_log.json', 'volume_baseline.json', 'signal_cooldowns.json',
     'trader_state.json', 'recent_exits.json', 'monitor_state.json',
@@ -95,6 +96,12 @@ def _validate_file(name, raw):
             if name == 'tuning_log.json':
                 from rshelper.tuning import validate_log
                 validate_log(data)
+            if name=='trade-reviews.json':
+                from rshelper.trade_reviews import validate_store
+                validate_store(data)
+            if name=='peer-information.json':
+                from rshelper.trade_reviews import validate_peers
+                validate_peers(data)
     except (ValueError, UnicodeDecodeError, RecursionError):
         raise BackupError(f'{name}: backup validation failed; source preserved') from None
 
@@ -235,6 +242,14 @@ def _inspect(source):
     profile_uuid = activation.get('profile_uuid')
     if activation.get('paper_budget_origin') is not None and 'paper-offers.json' not in content:
         raise BackupError('backup omits acknowledged paper budget')
+    from rshelper.trade_reviews import authority_origin
+    review_sources=[]
+    if 'trade-reviews.json' in content:review_sources.append(_decode(content['trade-reviews.json']))
+    if 'peer-information.json' in content:
+        for information in _decode(content['peer-information.json'])['origins'].values():
+            if 'trade-reviews.json' in information['files']:review_sources.append(information['files']['trade-reviews.json'])
+    if any(value['revision'] and value['authority_origin']!=authority_origin(activation) for value in review_sources):
+        raise BackupError('backup review authority differs from financial activation')
     if profile_uuid is not None:
         canonical_uuid(profile_uuid)
         from rshelper import state_identity, realization
@@ -408,6 +423,21 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
             incoming = _decode(content[name]).get(key, {}) if name in content else {}
             if any(operation not in incoming or _json(value) != _json(incoming[operation]) for operation, value in live.items()):
                 raise BackupError('backup would discard acknowledged operation proof')
+        if (root/'trade-reviews.json').exists():
+            from rshelper.trade_reviews import require_successor
+            current_reviews=read_state(root/'trade-reviews.json','generic')
+            if 'trade-reviews.json' not in content:raise BackupError('backup would discard review history')
+            require_successor(current_reviews,_decode(content['trade-reviews.json']))
+        if (root/'peer-information.json').exists():
+            from rshelper.trade_reviews import require_successor
+            current_peers=read_state(root/'peer-information.json','generic')
+            saved_peers=_decode(content['peer-information.json']) if 'peer-information.json' in content else {}
+            for origin,information in current_peers.get('origins',{}).items():
+                reviews=information['files'].get('trade-reviews.json')
+                if reviews is None:continue
+                saved=saved_peers.get('origins',{}).get(origin,{}).get('files',{}).get('trade-reviews.json')
+                if saved is None:raise BackupError('backup would discard peer review history')
+                require_successor(reviews,saved)
         if (root/'paper-offers.json').exists():
             from rshelper.paper_book import require_book_successor
             live_book=read_state(root/'paper-offers.json','paper-book')

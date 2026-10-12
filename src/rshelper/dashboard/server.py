@@ -1070,6 +1070,20 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
              'monitor':{'config_id':(get_monitor_status().get('configuration') or {}).get('config_id'),'reload':'each successful poll'}}
         return result
 
+    def reviews(body=None,lot_uid=''):
+        from rshelper import trade_reviews,positions
+        root=resolve_config_path('',profile)
+        can_write=(state_identity.activation_manifest(root/'identity-activation.json') or {}).get('financial_authority') is True
+        if body and body['action']=='append':
+            if not can_write:raise PermissionError('Reviews must be recorded on the financial authority')
+            return trade_reviews.append_review(profile,body['lot_uid'],body['entry'],expected_revision=body['expected_revision'],operation_id=body['operation_id'])
+        if lot_uid:return {**trade_reviews.review_detail(profile,lot_uid),'can_write':can_write}
+        body=body or {'tag':'','unreviewed':False,'note':'','strategy':'','limit':50}
+        result=trade_reviews.review_queue(profile,note=body['note'],strategy=body['strategy'],tag=body['tag'],unreviewed=body['unreviewed'],limit=body['limit'])
+        lots=[{'lot_uid':lot.lot_uid,'name':lot.name,'qty':lot.qty} for lot in positions.list_positions(profile) if lot.lot_uid]
+        result.update(can_write=can_write,open_lots=lots[:20],open_lot_count=len(lots))
+        return result
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -1094,7 +1108,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings)
+                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):

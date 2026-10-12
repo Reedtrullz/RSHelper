@@ -5,7 +5,7 @@ import math
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from rshelper import snapshot, tuning
+from rshelper import snapshot, tuning, trade_reviews
 from rshelper.journal import compute_pnl, compute_pnl_by_item, list_trades, _utc
 
 
@@ -144,6 +144,7 @@ def build_history(profile: str | None = None, paper_only: bool = True,
         curve.append(point)
         previous=instant
     return {
+        'reviews':trade_reviews.review_queue(profile,trades,note=note,strategy=strategy),
         'strategy_eras':list(strategy_groups.values()),
         'equity_curve':curve,
         'equity_scope':'whole-profile; independent of trade filters',
