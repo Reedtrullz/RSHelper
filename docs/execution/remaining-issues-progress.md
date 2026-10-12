@@ -7,7 +7,7 @@ This matrix records observed acceptance; pending rows are not implementation cla
 | Wave | Issues | Implementation / PR | Release evidence | Residual acceptance |
 | --- | --- | --- | --- | --- |
 | A | #31, #32 | PR #78 merged as `4c7e08a08b86d3581616436733023c3e73f55381`; issues closed, Project Done | PR CI38197004334 and main38197171322 passed; public/OCI revision matches; 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; deployed-image recovery passed | Accepted |
-| B | #22, #23, #40 | #22 snapshot/event implementation in progress | Controlled interleaving, failure/isolation,16-client HTTP ceiling/shutdown and memory fixtures pass; release pending | Full regression/review/release; #23/#40 pending |
+| B | #22, #23, #40 | #22 accepted in PR79/main ea239519; #23 implemented locally | #22 CI38199873605/main38200094363 passed; live HTTP/SSE revision2, ready/access verified; Mac upgraded/private ack17; #23 local checks/review pass | #23 release; #40 implementation/release |
 | C | #15, #45, #50 | Pending | Pending | Atomic alerts, entry modes, measured container constraints |
 | D | #18, #21, #39, #30 | Pending | Pending | Candle normalization, confidence, scan comparability, verified recipes |
 | E | #16, #17 | Pending | Pending | Paper fill lifecycle and shared resource accounting |
@@ -81,3 +81,22 @@ this excludes socket buffers, HTTP threads and the process's other allocations,
 which #50 measures before choosing production container limits. HTTP fixture
 accepted16 subscribers, rejected17th with503 and verified stream closure and
 subscriber release on shutdown. These are measured fixtures, not load guarantees.
+
+## Wave B1 release and Wave B2 local acceptance
+
+PR79 head8b6bf1082e63e36505441e290b8bd388cfdac0bc passed CI38199873605.
+Merge ea2395193fe19016cf1f3c1db238e4eab576f9fd passed main38200094363 checks,
+build, deploy and public verification. Public/OCI revision match; declared
+digest sha256:d174b27e0d622faaf5abe49fb3650fb905902f7e778fbf262be8a5825ca5781d,
+physical image sha256:a73bb85a4d5f435babe64d6a80b37e2c6badefca150dba107ec0472e9ae47e51.
+Live HTTP/SSE both revision2, private unauthorized401, disabled-controls403,
+readiness ready. Mac runtime upgraded/resumed with healthy trader cycle;
+retained packet recovered, sync ready/no pending and exact VPS HTTP ack17.
+#22 closed/Project Done; #50 Ready after prerequisite, measured limits pending.
+
+#23 coalesces acquisition, fences asynchronous view/detail responses, retains
+trade/filter drafts and focus/selection, restores scroll and keeps good data on
+refresh failure. Both charts use current canvas identity. Eleven Node scenarios
+and original auth/mutation suites pass; offline892/64 files/four explicit skips/
+zero failures/errors. Native and one Anti review completed; confirmed Alchemy
+scroll omission and native Watchlist omission fixed. CI/deployment pending.

@@ -18,7 +18,7 @@ export function harness(fetchImpl) {
   const document = {
     getElementById(id) {
       if (!elements.has(id)) elements.set(id, { id, textContent: '', className: '', innerHTML: '', style: {},
-        classList: { toggle() {} }, remove() {}, appendChild() {}, addEventListener() {} });
+        classList: { toggle() {} }, remove() {}, appendChild() {}, addEventListener() {}, querySelectorAll(){return [];} });
       return elements.get(id);
     },
     createElement(tag) { return { tag, style: {}, classList: { add() {}, remove() {} }, appendChild() {} }; },
