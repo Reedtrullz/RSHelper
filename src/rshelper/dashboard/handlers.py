@@ -87,12 +87,12 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  timeseries_fn: Callable[[int, str, int], dict] | None = None,
                  positions_fn: Callable[[], dict] | None = None,
                  close_position_fn: Callable[[int, int | None], dict] | None = None,
-                 paper_trade_fn: Callable[[str, str, int], dict] | None = None,
+                 paper_trade_fn: Callable[[dict], dict] | None = None,
                  trader_fn: Callable[[], dict] | None = None,
                  trader_control_fn: Callable[[str], dict] | None = None,
                  monitor_fn: Callable[[], dict] | None = None,
                  monitor_control_fn: Callable[[str], dict] | None = None,
-                 ge_fn: Callable[[], dict] | None = None,
+                 ge_fn: Callable[..., dict] | None = None,
                  ge_collect_fn: Callable[[int], dict] | None = None,
                  bank_fn: Callable[[], dict] | None = None,
                  process_fn: Callable[[], dict] | None = None,
@@ -125,7 +125,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
     timeseries_fn: Optional callable(item_id, step, points) -> {points: [...]}
     positions_fn: Optional callable() -> {positions, open_qty, unrealized}
     close_position_fn: Optional callable(position_id, qty) -> {ok, ...}
-    paper_trade_fn: Optional callable(action, item, qty) -> {ok, ...}
+    paper_trade_fn: Optional callable(body) -> paper operation receipt
     trader_fn: Optional callable() -> trader status dict
     trader_control_fn: Optional callable(action) -> {ok, ...} (403 without control)
     monitor_fn: Optional callable() -> monitor status dict
@@ -492,9 +492,16 @@ def make_handler(scanner, scan_items: Callable[[], list],
 
         def _serve_ge(self):
             try:
-                self._serve_json(ge_fn() if ge_fn else
-                                 {"slots": [], "empty_count": 8,
+                params=parse_query(self.path)
+                raw=params.get('offset',['0'])[0]
+                if not raw.isascii() or not raw.isdecimal() or len(raw)>6:raise ValueError('invalid paper page offset')
+                offset=int(raw)
+                if not 0<=offset<=100000:raise ValueError('invalid paper page offset')
+                self._serve_json((ge_fn(offset) if 'offset' in params else ge_fn()) if ge_fn else
+                                 {"slots": [], "empty_count": None,
                                   "total_value": 0})
+            except (ValueError,TypeError):
+                self.send_error(400,'Invalid paper page offset')
             except Exception as e:
                 print(f"[dashboard] GE data error: {e}", file=sys.stderr)
                 self.send_error(500, "GE data failed")
@@ -623,9 +630,6 @@ def make_handler(scanner, scan_items: Callable[[], list],
         def _handle_paper_trade(self):
             try:
                 body = self._read_json_object()
-                action = body.get("action", "")
-                item = body.get("item", "")
-                qty = int(body.get("qty", 0))
             except Exception:
                 self.send_error(400, "Invalid JSON")
                 return
@@ -633,7 +637,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(404)
                 return
             try:
-                self._serve_json(paper_trade_fn(action, item, qty))
+                self._serve_json(paper_trade_fn(body))
             except (ValueError, TypeError) as e:
                 print(f"[dashboard] paper trade error: {e}", file=sys.stderr)
                 self.send_error(400, str(e))

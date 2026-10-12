@@ -578,6 +578,8 @@ def _resolve_paper_prices(entry: dict, profile: str | None, direction: str
 
 def _size_qty(args: argparse.Namespace, entry: dict, buy_price: int) -> int:
     """Size a trade from --qty, --capital, or default to 1."""
+    if type(args.qty) is not int or type(args.capital) is not int or args.qty<0 or args.capital<0:
+        raise ValueError('quantity and capital must be nonnegative integers')
     if args.qty > 0:
         return args.qty
     if args.capital > 0:
@@ -592,139 +594,185 @@ def _size_qty(args: argparse.Namespace, entry: dict, buy_price: int) -> int:
 
 
 def _trade_paper(args: argparse.Namespace) -> None:
-    """Log a paper trade at live GE prices, sized from --capital or --qty."""
-    from rshelper.journal import log_trade
-    profile = getattr(args, "profile", None)
-    entry = _resolve_item(args)
-    buy_price, sell_price, quote = _resolve_paper_prices(
-        entry, profile, args.flip_direction)
-    qty = _size_qty(args, entry, buy_price)
-    trade = log_trade(entry["id"], entry["name"], qty, buy_price,
-                      sell_price, note=args.note or "paper", profile=profile,
-                      strategy="manual")
-    mode = args.flip_direction
-    print(f"Paper trade #{trade.id}: {trade.qty:,}x {trade.name} "
-          f"({mode}) buy {trade.buy_price:,} gp, sell {trade.sell_price:,} gp "
-          f"— profit: {trade.profit:+,} gp "
-          f"(tax: {trade.tax_paid:,})")
-    print("Quote: " + _quote_description(quote))
+    _queue_paper_purchase(args,'manual-roundtrip')
+
+
+def _queue_paper_purchase(args,mode):
+    import time
+    from rshelper import paper_book
+    state=_paper_book_read(args.profile)
+    if not state['initialized']:
+        raise ValueError('initialize an identified shared paper budget with trade budget before queuing a purchase')
+    operation=_paper_operation(args)
+    pinned=paper_book.operation_request(args.profile,operation)
+    quote=None
+    if pinned is not None:
+        if pinned['action']!='reserve':raise ValueError('operation belongs to a different paper action')
+        entry={'id':pinned['item_id'],'name':pinned['name'],'limit':pinned['buy_limit'],'members':pinned['members']}
+        buy_price=pinned['buy_price']
+    else:
+        entry=_resolve_item(args)
+        buy_price,_sell,quote=_resolve_paper_prices(entry,args.profile,args.flip_direction)
+        if quote['source']=='unknown' or quote['stale']:raise ValueError('fresh quote provenance required for a new paper reservation')
+    qty=_size_qty(args,entry,buy_price)
+    revision=args.expected_revision if args.expected_revision is not None else state['revision']
+    result=paper_book.reserve_budget(args.profile,item_id=entry['id'],name=entry['name'],qty=qty,
+                buy_price=buy_price,buy_limit=safe_int(entry.get('limit')),members=entry.get('members'),direction=args.flip_direction,
+                note=args.note or 'paper',mode=mode,client_ref=args.item.strip(),expected_revision=revision,
+                operation_id=operation,now=time.time())
+    if args.json:
+        print(json.dumps({'operation_id':operation,'entry_quote':quote,**result},allow_nan=False))
+    else:
+        print(f"Queued paper offer {result['offer_id']}: {qty:,}x {entry['name']} at limit {buy_price:,} gp; no fill booked")
+        if quote is not None:print('Quote: '+_quote_description(quote))
+
+
+def _paper_book_read(profile):
+    import time
+    from rshelper import paper_book,state_identity
+    root=paper_book._root(profile)
+    activation=state_identity.activation_manifest(root/'identity-activation.json')
+    if not (root/paper_book.FILENAME).exists() and not (activation or {}).get('paper_budget_origin'):
+        return {'initialized':False,'offers':{},'unknown':['explicit paper budget and account capability required']}
+    return {'initialized':True,**paper_book.budget_snapshot(profile,now=time.time())}
+
+
+def _paper_operation(args):
+    from uuid import uuid4
+    operation=args.operation_id or str(uuid4())
+    if args.operation_id is None:print('Paper operation: '+operation,file=sys.stderr)
+    return operation
+
+
+def _trade_budget(args):
+    import time
+    from rshelper import paper_book
+    if args.initialize:
+        if args.bankroll is None or args.expected_revision is not None:
+            raise ValueError('initialization requires --bankroll and no prior revision')
+        operation=_paper_operation(args)
+        slots={'unknown':None,'free':3,'member':8}[args.membership or 'unknown']
+        result=paper_book.initialize_budget(args.profile,bankroll=args.bankroll,slot_limit=slots,
+                                           operation_id=operation,now=time.time())
+        result={'initialized':True,'operation_id':operation,**result}
+    elif args.membership is not None:
+        if args.bankroll is not None or args.expected_revision is None:
+            raise ValueError('account capability update requires --expected-revision and cannot reset bankroll')
+        operation=_paper_operation(args)
+        result=paper_book.set_slot_limit(args.profile,{'unknown':None,'free':3,'member':8}[args.membership],
+                    expected_revision=args.expected_revision,operation_id=operation,now=time.time())
+        result={'initialized':True,'operation_id':operation,**result}
+    else:
+        if args.bankroll is not None or args.operation_id is not None or args.expected_revision is not None:
+            raise ValueError('read-only budget does not accept mutation arguments')
+        result=_paper_book_read(args.profile)
+    print(json.dumps(result,indent=None if args.json else 2,allow_nan=False))
+
+
+def _trade_offers(args):
+    import time
+    from rshelper import paper_book
+    if args.action=='list':
+        if any(value is not None for value in (args.offer_id,args.lot_uid,args.qty,args.sell_price,args.expected_revision,args.operation_id)):
+            raise ValueError('read-only offers does not accept mutation arguments')
+        result=_paper_book_read(args.profile)
+    else:
+        if args.expected_revision is None:raise ValueError('offer mutation requires --expected-revision')
+        operation=_paper_operation(args)
+        common: paper_book.PaperMutation={'expected_revision':args.expected_revision,'operation_id':operation,'now':time.time()}
+        if args.action=='adopt':
+            if args.lot_uid is None or args.offer_id is not None or args.qty is not None or args.sell_price is not None:
+                raise ValueError('holding adoption requires only --lot-uid and operation/revision')
+            result=paper_book.adopt_holding(args.profile,args.lot_uid,**common)
+        else:
+            if args.offer_id is None or args.lot_uid is not None:raise ValueError('offer action requires --offer-id')
+            record=paper_book.budget_snapshot(args.profile,now=common['now'])['offers'].get(args.offer_id)
+            if record is None or record['mode']=='auto':raise ValueError('manual action requires a manual paper offer')
+            if args.action=='start-sale':
+                if args.qty is None or args.sell_price is None:raise ValueError('sale requires --qty and --sell-price')
+                result=paper_book.start_sale(args.profile,args.offer_id,qty=args.qty,sell_price=args.sell_price,**common)
+            else:
+                if args.qty is not None or args.sell_price is not None:raise ValueError('this offer action does not accept sale parameters')
+                if args.action=='advance':
+                    market=None
+                    if paper_book.operation_request(args.profile,operation) is None:
+                        market={'latest':market_payload(fetch_latest_result(args.profile)),
+                                '5m':market_payload(fetch_5m_result(args.profile))}
+                    result=paper_book.advance_offer(args.profile,args.offer_id,market,**common)
+                else:
+                    action={'cancel-buy':paper_book.cancel_buy,'cancel-sale':paper_book.cancel_sale,'collect':paper_book.collect_offer}[args.action]
+                    result=action(args.profile,args.offer_id,**common)
+        result={'initialized':True,'operation_id':operation,**result}
+    print(json.dumps(result,indent=None if args.json else 2,allow_nan=False))
 
 
 def _trade_open(args: argparse.Namespace) -> None:
-    """Open a paper position: buy and hold at the live price."""
-    from rshelper.positions import open_position
-    profile = getattr(args, "profile", None)
-    entry = _resolve_item(args)
-    buy_price, sell_price, quote = _resolve_paper_prices(
-        entry, profile, args.flip_direction)
-    qty = _size_qty(args, entry, buy_price)
-    entry_offer = sell_price if args.flip_direction == "traditional" else None
-    pos = open_position(entry["id"], entry["name"], qty, buy_price,
-                        direction=args.flip_direction,
-                        note=args.note or "paper", profile=profile,
-                        entry_sell=sell_price, entry_offer=entry_offer)
-    print(f"Opened position #{pos.id}: {pos.qty:,}x {pos.name} at "
-          f"{pos.buy_price:,} gp ({pos.direction})")
-    print("Quote: " + _quote_description(quote))
+    _queue_paper_purchase(args,'manual-hold')
+
+
+def _queue_paper_sale(args):
+    import time
+    from rshelper import paper_book
+    from rshelper.positions import list_positions
+    if type(args.qty) is not int or args.qty<0:raise ValueError('sale quantity must be a nonnegative integer')
+    state=_paper_book_read(args.profile)
+    operation=_paper_operation(args)
+    pinned=paper_book.operation_request(args.profile,operation)
+    if pinned is not None:
+        if (pinned['action']!='queue-sales' or pinned['client_ref']!=args.item.strip()
+                or pinned['position_id'] is not None):
+            raise ValueError('operation belongs to a different paper sale request')
+        item_id=pinned['item_id']
+        qty=args.qty or pinned['qty']
+        quotes=pinned['quotes']
+    else:
+        entry=_resolve_item(args)
+        item_id=entry['id']
+        holdings=[position for position in list_positions(args.profile) if position.item_id==item_id]
+        if not holdings:raise ValueError('no recorded holding for requested item')
+        if any(position.note=='auto' for position in holdings):raise ValueError('holding belongs to auto-trader')
+        qty=args.qty or sum(position.qty for position in holdings)
+        quotes={}
+        for direction in sorted({position.direction for position in holdings}):
+            _buy,sell,quote=_resolve_paper_prices(entry,args.profile,direction)
+            if quote['source']=='unknown' or quote['stale']:raise ValueError('fresh sale quote provenance required')
+            quotes[direction]=sell
+    revision=args.expected_revision if args.expected_revision is not None else state['revision']
+    result=paper_book.queue_sales(args.profile,item_id,qty,quotes,client_ref=args.item.strip(),
+                expected_revision=revision,operation_id=operation,now=time.time())
+    if args.json:print(json.dumps({'operation_id':operation,**result},allow_nan=False))
+    else:print(f'Queued paper sale {operation}: {qty:,} units; separate fills and collection required')
 
 
 def _trade_close(args: argparse.Namespace) -> None:
-    """Close open paper positions for an item at the live price."""
-    from rshelper.positions import list_positions
-    from rshelper.market import ge_tax
-    profile = getattr(args, "profile", None)
-    entry = _resolve_item(args)
-    operation_id = getattr(args, "operation_id", None)
-    if operation_id is not None:
-        from rshelper.persistence import canonical_uuid
-        try:
-            canonical_uuid(operation_id)
-        except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
+    from rshelper import paper_book,realization
+    from rshelper.persistence import canonical_uuid
+    operation=getattr(args,'operation_id',None)
+    if operation is not None:
+        try:canonical_uuid(operation)
+        except ValueError as exc:
+            print('Error: '+str(exc),file=sys.stderr)
             sys.exit(1)
-    open_positions = [p for p in list_positions(profile) if p.item_id == entry["id"]]
-    if not open_positions:
-        print(f"No open positions for {entry['name']}.", file=sys.stderr)
-        sys.exit(1)
-    # Auto-trader positions are owned by the daemon — closing one by hand
-    # would corrupt the auto P&L and fight the trader's exit logic.
-    auto_lots = [p for p in open_positions if p.note == "auto"]
-    if auto_lots:
-        print(f"Position(s) on {entry['name']} are managed by the auto-trader; "
-              f"let the trader close them.", file=sys.stderr)
-        sys.exit(1)
-    # Close each lot at its OWN direction's exit leg: a mixed traditional +
-    # arbitrage stack must not sell both at the oldest lot's leg (one would
-    # book a guaranteed loss).
-    qty = args.qty if args.qty > 0 else sum(p.qty for p in open_positions)
-    from rshelper import realization
-    gate = realization._financial_activation(profile)
-    if gate is not None:
-        # Identified profile: pin the exact lots and per-direction prices in
-        # one durable batch, then realize through recoverable operations.
-        legs = {}
-        quotes = set()
-        market_data = {}
-        for direction in sorted({p.direction for p in open_positions}):
-            _buy, sell_price, quote = _resolve_paper_prices(entry, profile, direction)
-            if sell_price <= 0:
-                print(f"No live price data for {entry['name']}.", file=sys.stderr)
-                sys.exit(1)
-            legs[direction] = sell_price
-            quotes.add(_quote_description(quote))
-            market_data[direction] = quote
-        if operation_id is None:
-            operation_id = realization.new_operation_id(
-                gate["origin_uuid"], "trade:close", str(entry["id"]))
-        try:
-            plan = realization.prepare_close_batch(
-                profile, entry["id"], qty, operation_id, legs, reason="manual",
-                metadata={"note": "paper", "strategy": "manual",
-                          "market_data": {"latest": market_data}})
-            receipts = realization.realize_close_batch(profile, operation_id)
-        except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
-            sys.exit(1)
-        total_profit = sum((child["sell_price"] - child["buy_price"]) * child["qty"]
-                           - ge_tax(child["sell_price"]) * child["qty"]
-                           for child in plan["operations"])
-        total_tax = sum(ge_tax(child["sell_price"]) * child["qty"]
-                        for child in plan["operations"])
-        print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
-              f"(tax: {total_tax:,})")
-        print("Quote: " + "; ".join(sorted(quotes)))
-        return
-    from rshelper.positions import close_positions
-    from rshelper.journal import log_trade
-    remaining = qty
-    total_profit = 0
-    total_tax = 0
-    quotes = set()
-    for p in sorted(open_positions, key=lambda x: x.id):
-        if remaining <= 0:
-            break
-        take = min(remaining, p.qty)
-        if p.direction == "traditional":
-            _, sell_price, quote = _resolve_paper_prices(entry, profile, "traditional")
+    state=_paper_book_read(args.profile)
+    if operation is not None and (not state['initialized'] or paper_book.operation_request(args.profile,operation) is None):
+        try:summary=realization.batch_summary(args.profile,operation)
+        except ValueError:pass
         else:
-            _buy, sell_price, quote = _resolve_paper_prices(entry, profile, "arbitrage")
-        quotes.add(_quote_description(quote))
-        try:
-            lots = close_positions(entry["id"], take, sell_price, profile,
-                                   position_id=p.id)
-        except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
-            sys.exit(1)
-        for lot in lots:
-            log_trade(entry["id"], lot["name"], lot["qty"], lot["buy_price"],
-                      sell_price, note="paper", profile=profile, strategy="manual",
-                      exit_reason="manual")
-        total_profit += sum(l["profit"] for l in lots)
-        total_tax += sum(l["tax_paid"] for l in lots)
-        remaining -= take
-    print(f"Closed {qty:,}x {entry['name']} — profit: {total_profit:+,} gp "
-          f"(tax: {total_tax:,})")
-    print("Quote: " + "; ".join(sorted(quotes)))
+            children=summary['operations']
+            if not isinstance(children,list) or not children:raise ValueError('legacy close children unavailable')
+            qty=sum(child['qty'] for child in children)
+            references={str(summary['item_id'])}|{child['name'].lower() for child in children}
+            if args.item.strip().lower() not in references or args.qty not in (0,qty):
+                raise ValueError('legacy close retry differs from its pinned request')
+            realization.realize_close_batch(args.profile,operation)
+            result={'operation_id':operation,'replayed':True,'qty':qty,
+                    'profit':sum((child['sell_price']-child['buy_price'])*child['qty']-ge_tax(child['sell_price'])*child['qty'] for child in children)}
+            print(json.dumps(result,allow_nan=False))
+            return
+    if not state['initialized']:
+        print('Error: initialize a shared paper budget before queuing a sale; historical execution stays unknown',file=sys.stderr)
+        sys.exit(1)
+    _queue_paper_sale(args)
 
 
 def _trade_positions(args: argparse.Namespace) -> None:
@@ -1881,6 +1929,22 @@ def _main() -> None:
     # Trade subcommand
     trade_p = sub.add_parser("trade", help="Trade journal and P&L tracking")
     trade_sub = trade_p.add_subparsers(dest="trade_action")
+    budget_p=trade_sub.add_parser('budget',help='Inspect/init paper bankroll or record explicit account capacity')
+    budget_p.add_argument('--initialize',action='store_true')
+    budget_p.add_argument('--bankroll',type=int,default=None)
+    budget_p.add_argument('--membership',choices=['unknown','free','member'],default=None)
+    budget_p.add_argument('--expected-revision',type=int,default=None)
+    budget_p.add_argument('--operation-id',default=None)
+    budget_p.add_argument('--json',action='store_true')
+    offers_p=trade_sub.add_parser('offers',help='Inspect or advance persistent paper stages')
+    offers_p.add_argument('--action',choices=['list','advance','cancel-buy','cancel-sale','start-sale','collect','adopt'],default='list')
+    offers_p.add_argument('--offer-id',default=None)
+    offers_p.add_argument('--lot-uid',default=None)
+    offers_p.add_argument('--qty',type=int,default=None)
+    offers_p.add_argument('--sell-price',type=int,default=None)
+    offers_p.add_argument('--expected-revision',type=int,default=None)
+    offers_p.add_argument('--operation-id',default=None)
+    offers_p.add_argument('--json',action='store_true')
     trade_log = trade_sub.add_parser("log", help="Log a completed trade")
     trade_log.add_argument("item", help="Item name")
     trade_log.add_argument("qty", type=int, help="Quantity traded")
@@ -1888,7 +1952,7 @@ def _main() -> None:
     trade_log.add_argument("sell_price", type=int, help="Sell price per unit (gp)")
     trade_log.add_argument("--note", type=str, default="", help="Optional note")
     trade_paper = trade_sub.add_parser(
-        "paper", help="Log a paper trade at live GE prices")
+        "paper", help="Queue a paper buy then a separate modeled sale")
     trade_paper.add_argument("item", help="Item name")
     trade_paper.add_argument("qty", type=int, nargs="?", default=0,
                              help="Quantity (default: sized from --capital or 1)")
@@ -1896,12 +1960,12 @@ def _main() -> None:
                              help="GP to spend; sizes quantity within buy limit")
     trade_paper.add_argument("--flip-direction", type=str, default=cfg.flip.direction,
                              choices=["arbitrage", "traditional"],
-                             help="arbitrage: instant buy/sell (default); "
+                             help="arbitrage: buy at ask, sell at bid (default); "
                                   "traditional: buy at bid, sell at offer")
     trade_paper.add_argument("--note", type=str, default="",
                              help="Optional note")
     trade_open = trade_sub.add_parser(
-        "open", help="Open a paper position (buy and hold at live price)")
+        "open", help="Reserve a paper buy; hold after confirmed fills")
     trade_open.add_argument("item", help="Item name")
     trade_open.add_argument("qty", type=int, nargs="?", default=0,
                             help="Quantity (default: sized from --capital or 1)")
@@ -1912,13 +1976,19 @@ def _main() -> None:
                             help="arbitrage: buy at instant-buy (default); "
                                  "traditional: buy at bid")
     trade_open.add_argument("--note", type=str, default="", help="Optional note")
+    for paper_command in (trade_paper,trade_open):
+        paper_command.add_argument('--operation-id',default=None,help='Stable operation UUID for exact offline retry')
+        paper_command.add_argument('--expected-revision',type=int,default=None,help='Expected shared paper book revision')
+        paper_command.add_argument('--json',action='store_true')
     trade_close = trade_sub.add_parser(
-        "close", help="Close open paper positions at live price (FIFO)")
+        "close", help="Queue paper sale offers for recorded holdings (FIFO)")
     trade_close.add_argument("item", help="Item name")
     trade_close.add_argument("qty", type=int, nargs="?", default=0,
-                             help="Units to close (default: all open)")
+                             help="Units to offer for sale (default: all held)")
     trade_close.add_argument("--operation-id", type=str, default=None,
                              help="Stable operation UUID; reuse it to replay a lost response")
+    trade_close.add_argument('--expected-revision',type=int,default=None)
+    trade_close.add_argument('--json',action='store_true')
     trade_pos = trade_sub.add_parser(
         "positions", help="List open paper positions with unrealized P&L")
     trade_pos.add_argument("--json", action="store_true")
@@ -2237,7 +2307,11 @@ def _main() -> None:
             parser.print_help()
             sys.exit(1)
     elif args.command == "trade":
-        if args.trade_action == "log":
+        if args.trade_action == 'budget':
+            _trade_budget(args)
+        elif args.trade_action == 'offers':
+            _trade_offers(args)
+        elif args.trade_action == "log":
             from rshelper.journal import log_trade
             from rshelper.api import fetch_mapping_result
             profile = args.profile if hasattr(args, "profile") else None

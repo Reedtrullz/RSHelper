@@ -140,162 +140,142 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(cfg.flip.min_volume, 10)
         self.assertEqual(cfg.margin.min_volume, 10)
 
-    def test_trade_paper_uses_live_prices(self):
+    @contextlib.contextmanager
+    def paper_profile(self, **overrides):
+        from argparse import Namespace
         from pathlib import Path
         from unittest import mock
-        from argparse import Namespace
-        import tempfile
-        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
-        import rshelper.api as amod
-        import rshelper.journal as jmod
-        import rshelper.cli as cmod
-        original_path = jmod.TRADES_PATH
-        with tempfile.TemporaryDirectory() as tmp:
-            jmod.TRADES_PATH = Path(tmp) / "trades.json"
-            try:
-                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
-                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest_result", return_value={
-                            "1": {"high": 150, "low": 140,
-                                  "highTime": int(time.time()) - 60,
-                                  "lowTime": int(time.time()) - 60}}):
-                        cmod._trade_paper(Namespace(
-                            item="nature rune", qty=100, capital=0, note="",
-                            profile=None, flip_direction="arbitrage"))
-                trades = jmod.list_trades()
-            finally:
-                jmod.TRADES_PATH = original_path
-        self.assertEqual(len(trades), 1)
-        t = trades[0]
-        self.assertEqual(t.name, "Nature rune")
-        self.assertEqual(t.qty, 100)
-        self.assertEqual(t.buy_price, 150)
-        self.assertEqual(t.sell_price, 140)
-        self.assertEqual(t.note, "paper")
+        from uuid import uuid4
+        from rshelper import api, profile, state_transaction, paper_book
+        from rshelper.market_data import MarketDataResult
+        clock = [2100]
+        def result(data):
+            return MarketDataResult(data, 'wiki', 'network', clock[0], clock[0],
+                                    clock[0], False, 'unknown', {'wiki': 1})
+        with tempfile.TemporaryDirectory() as tmp, contextlib.ExitStack() as stack:
+            stack.enter_context(mock.patch.object(profile, 'CONFIG_DIR', Path(tmp) / 'config'))
+            stack.enter_context(mock.patch.object(profile, 'CACHE_DIR', Path(tmp) / 'cache'))
+            stack.enter_context(mock.patch.object(time, 'time', side_effect=lambda: clock[0]))
+            stack.enter_context(mock.patch.object(api, 'fetch_mapping_result',
+                side_effect=lambda *args: result([{'id': 1, 'name': 'Nature rune', 'limit': 13000, 'members': False}])))
+            stack.enter_context(mock.patch.object(api, 'fetch_latest_result',
+                side_effect=lambda *args: result({'1': {'high': 150, 'low': 140,
+                                        'highTime': clock[0], 'lowTime': clock[0]}})))
+            state_transaction.activate_profile(profile.CONFIG_DIR / 'profiles' / 'paper',
+                '33333333-3333-4333-8333-333333333333', financial_authority=True)
+            paper_book.initialize_budget('paper', bankroll=100000, slot_limit=3,
+                                         operation_id=str(uuid4()), now=clock[0])
+            args = Namespace(item='nature rune', qty=100, capital=0, note='',
+                             profile='paper', flip_direction='arbitrage',
+                             operation_id=str(uuid4()), expected_revision=None, json=True)
+            for key, value in overrides.items():
+                setattr(args, key, value)
+            yield args, clock
+
+    def paper_command(self, command, args):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            command(args)
+        return json.loads(output.getvalue())
+
+    def paper_advance(self, offer_id, window, volume=1000):
+        from uuid import uuid4
+        from rshelper import paper_book
+        from rshelper.market_data import MarketDataResult, market_payload
+        now = window + 300
+        def result(data, kind):
+            return market_payload(MarketDataResult(data, 'wiki', 'network', now, now,
+                                                  now, False, kind, {'wiki': 1}))
+        market = {
+            'latest': result({'1': {'high': 150, 'low': 140,
+                                   'highTime': now, 'lowTime': now}}, 'unknown'),
+            '5m': result({'1': {'avgHighPrice': 150, 'avgLowPrice': 140,
+                               'highPriceVolume': volume, 'lowPriceVolume': volume,
+                               'window_timestamp': window}}, 'executed-trades')}
+        revision = paper_book.budget_snapshot('paper', now=now)['revision']
+        return paper_book.advance_offer('paper', offer_id, market,
+                    expected_revision=revision, operation_id=str(uuid4()), now=now)
+
+    def test_trade_paper_uses_live_prices(self):
+        from rshelper import cli, journal, positions
+        with self.paper_profile() as (args, clock):
+            queued = self.paper_command(cli._trade_paper, args)
+            record = queued['offers'][queued['offer_id']]
+            self.assertEqual(record['name'], 'Nature rune')
+            self.assertEqual(record['offer']['qty'], 100)
+            self.assertEqual(record['offer']['buy_price'], 150)
+            self.assertIsNone(record['offer']['sell_price'])
+            self.assertEqual(record['offer']['stage'], 'buying')
+            self.assertEqual(record['mode'], 'manual-roundtrip')
+            self.assertEqual(record['note'], 'paper')
+            self.assertEqual(queued['budget']['reserved_cash'], 15000)
+            self.assertEqual(queued['entry_quote']['source'], 'wiki')
+            self.assertEqual(journal.list_trades(profile='paper'), [])
+            self.assertEqual(positions.list_positions('paper'), [])
 
     def test_trade_paper_sizes_from_capital(self):
-        from pathlib import Path
-        from unittest import mock
-        from argparse import Namespace
-        import tempfile
-        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
-        import rshelper.api as amod
-        import rshelper.journal as jmod
-        import rshelper.cli as cmod
-        original_path = jmod.TRADES_PATH
-        with tempfile.TemporaryDirectory() as tmp:
-            jmod.TRADES_PATH = Path(tmp) / "trades.json"
-            try:
-                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
-                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest_result", return_value={
-                            "1": {"high": 150, "low": 140,
-                                  "highTime": int(time.time()) - 60,
-                                  "lowTime": int(time.time()) - 60}}):
-                        cmod._trade_paper(Namespace(
-                            item="nature rune", qty=0, capital=3000, note="",
-                            profile=None, flip_direction="arbitrage"))
-                trades = jmod.list_trades()
-            finally:
-                jmod.TRADES_PATH = original_path
-        self.assertEqual(len(trades), 1)
-        self.assertEqual(trades[0].qty, 20)  # 3000 // 150, capped by limit
+        from rshelper import cli, journal
+        with self.paper_profile(qty=0, capital=3000) as (args, clock):
+            queued = self.paper_command(cli._trade_paper, args)
+            self.assertEqual(queued['offers'][queued['offer_id']]['offer']['qty'], 20)
+            self.assertEqual(queued['budget']['reserved_cash'], 3000)
+            self.assertEqual(journal.list_trades(profile='paper'), [])
 
     def test_trade_paper_traditional_direction(self):
-        from pathlib import Path
-        from unittest import mock
-        from argparse import Namespace
-        import tempfile
-        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
-        import rshelper.api as amod
-        import rshelper.journal as jmod
-        import rshelper.cli as cmod
-        original_path = jmod.TRADES_PATH
-        with tempfile.TemporaryDirectory() as tmp:
-            jmod.TRADES_PATH = Path(tmp) / "trades.json"
-            try:
-                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
-                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest_result", return_value={
-                            "1": {"high": 150, "low": 140,
-                                  "highTime": int(time.time()) - 60,
-                                  "lowTime": int(time.time()) - 60}}):
-                        cmod._trade_paper(Namespace(
-                            item="nature rune", qty=10, capital=0, note="",
-                            profile=None, flip_direction="traditional"))
-                t = jmod.list_trades()[0]
-            finally:
-                jmod.TRADES_PATH = original_path
-        self.assertEqual(t.buy_price, 140)  # bid
-        self.assertEqual(t.sell_price, 150)  # offer
+        from uuid import uuid4
+        from rshelper import cli, paper_book
+        with self.paper_profile(qty=10, flip_direction='traditional') as (args, clock):
+            queued = self.paper_command(cli._trade_paper, args)
+            offer = queued['offers'][queued['offer_id']]['offer']
+            self.assertEqual(offer['buy_price'], 140)
+            self.assertIsNone(offer['sell_price'])
+            self.assertEqual(offer['direction'], 'traditional')
+            clock[0] = 2700
+            bought = self.paper_advance(queued['offer_id'], 2400)
+            selling = paper_book.start_sale('paper', queued['offer_id'], qty=10,
+                sell_price=150, expected_revision=bought['revision'],
+                operation_id=str(uuid4()), now=clock[0])
+            self.assertEqual(selling['offers'][queued['offer_id']]['offer']['sell_price'], 150)
 
     def test_trade_paper_insufficient_capital(self):
-        from pathlib import Path
-        from unittest import mock
-        from argparse import Namespace
-        import tempfile
-        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
-        import rshelper.api as amod
-        import rshelper.journal as jmod
-        import rshelper.cli as cmod
-        original_path = jmod.TRADES_PATH
-        with tempfile.TemporaryDirectory() as tmp:
-            jmod.TRADES_PATH = Path(tmp) / "trades.json"
-            try:
-                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
-                        {"id": 1, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest_result", return_value={
-                            "1": {"high": 150, "low": 140,
-                                  "highTime": int(time.time()) - 60,
-                                  "lowTime": int(time.time()) - 60}}):
-                        with self.assertRaises(SystemExit):
-                            cmod._trade_paper(Namespace(
-                                item="nature rune", qty=0, capital=100,
-                                note="", profile=None,
-                                flip_direction="arbitrage"))
-                self.assertEqual(jmod.list_trades(), [])
-            finally:
-                jmod.TRADES_PATH = original_path
+        from rshelper import cli, journal, paper_book
+        with self.paper_profile(qty=0, capital=100) as (args, clock):
+            with self.assertRaises(SystemExit):
+                self.paper_command(cli._trade_paper, args)
+            self.assertEqual(journal.list_trades(profile='paper'), [])
+            self.assertEqual(paper_book.budget_snapshot('paper', now=clock[0])['revision'], 1)
 
     def test_trade_open_close_positions(self):
-        from pathlib import Path
-        from unittest import mock
-        from argparse import Namespace
-        import tempfile
-        sys.path.insert(0, os.path.join(_TEST_DIR, "..", "src"))
-        import rshelper.api as amod
-        import rshelper.journal as jmod
-        import rshelper.positions as pmod
-        import rshelper.cli as cmod
-        original_path = jmod.TRADES_PATH
-        original_pos = pmod.POSITIONS_PATH
-        with tempfile.TemporaryDirectory() as tmp:
-            jmod.TRADES_PATH = Path(tmp) / "trades.json"
-            pmod.POSITIONS_PATH = Path(tmp) / "positions.json"
-            try:
-                with mock.patch.object(amod, "fetch_mapping_result", return_value=[
-                        {"id": 561, "name": "Nature rune", "limit": 13000}]):
-                    with mock.patch.object(amod, "fetch_latest_result", return_value={
-                            "561": {"high": 150, "low": 140,
-                                    "highTime": int(time.time()) - 60,
-                                    "lowTime": int(time.time()) - 60}}):
-                        cmod._trade_open(Namespace(
-                            item="nature rune", qty=10, capital=0, note="",
-                            profile=None, flip_direction="arbitrage"))
-                        self.assertEqual(len(pmod.list_positions()), 1)
-                        cmod._trade_close(Namespace(
-                            item="nature rune", qty=0, profile=None))
-                trades = jmod.list_trades()
-                positions_after = pmod.list_positions()
-            finally:
-                jmod.TRADES_PATH = original_path
-                pmod.POSITIONS_PATH = original_pos
-        self.assertEqual(len(trades), 1)
-        self.assertEqual(trades[0].qty, 10)
-        self.assertEqual(trades[0].buy_price, 150)  # arbitrage: buy at high
-        self.assertEqual(trades[0].sell_price, 140)
-        self.assertEqual(trades[0].note, "paper")
-        self.assertEqual(positions_after, [])
+        from uuid import uuid4
+        from rshelper import cli, journal, positions, paper_book
+        with self.paper_profile(qty=10) as (args, clock):
+            queued = self.paper_command(cli._trade_open, args)
+            offer_id = queued['offer_id']
+            self.assertEqual(positions.list_positions('paper'), [])
+            clock[0] = 2700
+            bought = self.paper_advance(offer_id, 2400)
+            self.assertEqual(bought['offers'][offer_id]['offer']['stage'], 'bought')
+            self.assertEqual(positions.list_positions('paper')[0].qty, 10)
+            args.qty = 0
+            args.operation_id = str(uuid4())
+            selling = self.paper_command(cli._trade_close, args)
+            self.assertEqual(selling['offers'][offer_id]['offer']['stage'], 'selling')
+            self.assertEqual(selling['offers'][offer_id]['offer']['sell_price'], 140)
+            self.assertEqual(journal.list_trades(profile='paper'), [])
+            clock[0] = 3300
+            sold = self.paper_advance(offer_id, 3000)
+            self.assertEqual(sold['offers'][offer_id]['offer']['stage'], 'collectable')
+            paper_book.collect_offer('paper', offer_id, expected_revision=sold['revision'],
+                                     operation_id=str(uuid4()), now=clock[0])
+            trades = journal.list_trades(profile='paper')
+            self.assertEqual(len(trades), 1)
+            self.assertEqual(trades[0].qty, 10)
+            self.assertEqual(trades[0].buy_price, 150)
+            self.assertEqual(trades[0].sell_price, 140)
+            self.assertEqual(trades[0].tax_paid, 20)
+            self.assertEqual(trades[0].profit, -120)
+            self.assertEqual(trades[0].note, 'paper')
+            self.assertEqual(positions.list_positions('paper'), [])
 
     def test_trade_positions_json_round_trip(self):
         from pathlib import Path

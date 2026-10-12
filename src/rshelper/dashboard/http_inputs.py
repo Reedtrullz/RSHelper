@@ -67,8 +67,23 @@ def validate_operation(path, body):
         if not isinstance(body.get('action'), str) or body['action'] not in choices:
             raise HttpInputError('Unknown action')
     if path == '/api/paper':
-        action(('open', 'instant')); text(body.get('item'), 'item')
-        positive_int(body.get('qty'), 'qty')
+        from rshelper.persistence import canonical_uuid
+        fields={'open':{'item','qty'},'roundtrip':{'item','qty'},
+                'advance':{'offer_id'},'cancel-buy':{'offer_id'},'cancel-sale':{'offer_id'},
+                'collect':{'offer_id'},'start-sale':{'offer_id','qty','sell_price'},
+                'adopt':{'lot_uid'},'queue-sale':{'position_id','qty'}}
+        action(fields)
+        if set(body)!={'action','operation_id','expected_revision'}|fields[body['action']]:
+            raise HttpInputError('Paper action fields differ')
+        for key in ('operation_id','offer_id','lot_uid'):
+            if key in body:
+                try:canonical_uuid(body[key])
+                except ValueError as exc:raise HttpInputError('Invalid '+key) from exc
+        positive_int(body['expected_revision'],'expected_revision')
+        if 'item' in body:text(body['item'],'item',limit=200)
+        for key in ('qty','sell_price','position_id'):
+            if key in body and not (key=='qty' and body['action']=='queue-sale' and body[key] is None):
+                positive_int(body[key],key)
     elif path == '/api/watchlist':
         action(('add', 'remove', 'alerts')); positive_int(body.get('item_id'), 'item_id')
         for key in ('alert_above', 'alert_below'):

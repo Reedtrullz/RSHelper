@@ -140,8 +140,9 @@ def test_fill_bad_opened_at():
 def test_build_slots_empty():
     _clean()
     data = build_ge_slots()
-    assert data == {"slots": [], "empty_count": MAX_GE_SLOTS,
-                    "total_value": 0}
+    assert data['slots']==[] and data['total_count']==0 and data['total_value']==0
+    assert data['empty_count'] is None and data['slot_limit'] is None
+    assert data['initialized'] is False
     print("  PASSED test_build_slots_empty")
 
 
@@ -153,15 +154,15 @@ def test_build_slot_shape():
     data = build_ge_slots(latest={"561": _fresh_price(120, 110, now)},
                           vol_5m={"561": 500}, now=now)
     assert len(data["slots"]) == 1
-    assert data["empty_count"] == 7
+    assert data["empty_count"] is None
     s = data["slots"][0]
     assert s["index"] == 0
-    assert s["offer_type"] == "buy"
+    assert s["offer_type"] == "hold"
     assert s["item_id"] == 561
     assert s["name"] == "Nature rune"
     assert s["qty"] == 10
     assert s["fill_pct"] == 0.0
-    assert s["status"] == "pending"
+    assert s["status"] == "legacy-unknown"
     assert s["price"] == 1000
     assert s["price_each"] == 100
     assert s["buy_price"] == 100
@@ -181,8 +182,9 @@ def test_offer_type_mapping():
     open_position(561, "Nature rune", 1, 100, direction="traditional")
     open_position(562, "Fire rune", 1, 10, direction="arbitrage")
     slots = build_ge_slots()["slots"]
-    assert slots[0]["offer_type"] == "buy"       # traditional -> buy offer
-    assert slots[1]["offer_type"] == "sell"      # arbitrage -> sell offer
+    assert slots[0]["offer_type"] == "hold"
+    assert slots[1]["offer_type"] == "hold"
+    assert all(slot['stage']=='legacy-unknown' and not slot['can_collect'] for slot in slots)
     print("  PASSED test_offer_type_mapping")
 
 
@@ -191,8 +193,9 @@ def test_max_eight_slots():
     for i in range(10):
         open_position(1000 + i, f"Item {i}", 1, 100)
     data = build_ge_slots()
-    assert len(data["slots"]) == MAX_GE_SLOTS
-    assert data["empty_count"] == 0
+    assert len(data["slots"]) == 10
+    assert data["total_count"] == 10
+    assert data["empty_count"] is None
     print("  PASSED test_max_eight_slots")
 
 
@@ -239,16 +242,13 @@ def test_slot_entry_fields():
 def test_collect_closes_and_logs():
     _clean()
     p = open_position(561, "Nature rune", 10, 100, direction="traditional")
-    r = collect_offer(p.id, latest={"561": _fresh_price(120, 110, time.time())})
-    assert r["market_data"]["latest"]["source"] == "unknown"
-    assert r["market_data"]["latest"]["last_success_at"] is None
-    assert {key: value for key, value in r.items() if key != "market_data"} == {"ok": True, "name": "Nature rune", "qty": 10,
-                 "sell_price": 120, "profit": 180}  # (120-100)*10 - 2*10
-    assert list_positions() == []
-    trades = list_trades()
-    assert len(trades) == 1
-    assert trades[0].strategy == "ge_collect"
-    assert trades[0].profit == 180
+    from unittest import mock
+    with mock.patch.object(gmod,'close_market_price',side_effect=AssertionError('must not infer execution')):
+        try:collect_offer(p.id, latest={"561": _fresh_price(120, 110, time.time())})
+        except ValueError as exc:assert 'historical stage unknown' in str(exc)
+        else:raise AssertionError('legacy holding must not collect without a confirmed sale')
+    assert list_positions()[0].qty==10
+    assert list_trades()==[]
     print("  PASSED test_collect_closes_and_logs")
 
 
@@ -265,10 +265,14 @@ def test_collect_unknown_id():
 def test_collect_no_price_fallback():
     _clean()
     p = open_position(561, "Nature rune", 10, 100)
-    r = collect_offer(p.id, latest={})
-    assert r["sell_price"] == 100  # falls back to buy_price
-    assert r["profit"] == -20      # -ge_tax(100)=2 per item
-    assert list_positions() == []
+    try:collect_offer(p.id,latest={})
+    except ValueError:pass
+    else:raise AssertionError('missing quote cannot invent a sale')
+    try:gmod.close_market_price(p,{})
+    except ValueError:pass
+    else:raise AssertionError('entry cost cannot substitute for a current quote')
+    assert list_positions()[0].qty==10
+    assert list_trades()==[]
     print("  PASSED test_collect_no_price_fallback")
 
 
@@ -277,15 +281,14 @@ def test_collect_closes_specific_lot_not_fifo():
     _clean()
     p1 = open_position(561, "Nature rune", 5, 90, direction="traditional")
     open_position(561, "Nature rune", 5, 110, direction="traditional")
-    r = collect_offer(p1.id, latest={"561": _fresh_price(120, 110, time.time())})
-    assert r["qty"] == 5
-    assert r["profit"] == 140  # (120-90)*5 - 2*5
+    try:collect_offer(p1.id,latest={"561": _fresh_price(120,110,time.time())})
+    except ValueError:pass
+    else:raise AssertionError('a selected historical lot still needs a confirmed sale')
     remaining = list_positions()
-    assert len(remaining) == 1
-    assert remaining[0].buy_price == 110  # the OTHER lot is still open
+    assert len(remaining)==2
+    assert [p.buy_price for p in remaining]==[90,110]
     trades = list_trades()
-    assert len(trades) == 1
-    assert trades[0].buy_price == 90  # journaled the clicked lot's cost basis
+    assert trades==[]
     _clean()
     print("  PASSED test_collect_closes_specific_lot_not_fifo")
 

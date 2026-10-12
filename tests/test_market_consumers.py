@@ -3,6 +3,8 @@ import sys,time,unittest
 from pathlib import Path
 from unittest import mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from test_native_writers import DisposableHomeTest
 from rshelper import market_data
 from rshelper.market_data import MarketDataResult
 from rshelper.models import Item
@@ -12,7 +14,7 @@ from rshelper.positions import Position
 def result(data,source='wiki',volume_kind='executed-trades',stale=False):
     return MarketDataResult(data,source,'stale-cache' if stale else 'network',100,200,100,stale,volume_kind,{source:len(data)})
 
-class ConsumersTest(unittest.TestCase):
+class ConsumersTest(DisposableHomeTest):
     def view(self,value):
         factory=getattr(market_data,'market_payload',None)
         self.assertTrue(callable(factory),'provenance-preserving consumer payload boundary is missing')
@@ -45,7 +47,8 @@ class ConsumersTest(unittest.TestCase):
                 self.assertEqual(slots['slots'][0]['fill_pct'],0)
                 self.assertIn('execution',slots['slots'][0]['fill_reason'])
             slots=ge_offers.build_ge_slots(vol_5m=self.view(result(raw)))
-            self.assertTrue(slots['slots'][0]['can_collect'])
+            self.assertFalse(slots['slots'][0]['can_collect'])
+            self.assertEqual(slots['slots'][0]['stage'],'legacy-unknown')
 
     def test_trader_proxy_volume_cannot_certify_offer_exit(self):
         from rshelper.trader import _ge_fill_pct
@@ -153,8 +156,10 @@ class ConsumersTest(unittest.TestCase):
             def serve_forever(self):
                 callbacks['signal_detector']()
                 case.assertEqual(len(seen),1)
-                closed=callbacks['close_position_fn'](1,1)
-                case.assertEqual(closed['market_data']['latest']['last_success_at'],100)
+                with case.assertRaisesRegex(ValueError,'queue a paper sale'):
+                    callbacks['close_position_fn'](1,1)
+                with case.assertRaisesRegex(ValueError,'collectable paper offer'):
+                    callbacks['ge_collect_fn'](1)
                 meta=callbacks['meta_fn']()
                 case.assertNotIn('last_attempt_at',meta)
                 case.assertEqual(meta['market_data']['latest']['last_attempt_at'],200)
@@ -218,24 +223,31 @@ class ConsumersTest(unittest.TestCase):
 
     def test_paper_confirmations_retain_quote_evidence(self):
         import argparse,contextlib,io
-        from rshelper import api,cli
-        now=time.time();entry={'id':2,'name':'Fixture','limit':100}
-        args=argparse.Namespace(item='Fixture',profile=None,flip_direction='arbitrage',qty=1,capital=0,note='')
+        from rshelper import api,cli,paper_book,positions,journal
+        from uuid import uuid4
+        self.activate()
+        now=time.time();entry={'id':2,'name':'Fixture','limit':100,'members':False}
+        paper_book.initialize_budget(None,bankroll=1000,slot_limit=3,operation_id=str(uuid4()),now=now)
+        args=argparse.Namespace(item='Fixture',profile=None,flip_direction='arbitrage',qty=1,capital=0,note='',expected_revision=None,json=False)
         with mock.patch.object(api,'fetch_mapping_result',return_value=result([entry])), mock.patch.object(api,'fetch_latest_result',return_value=result({'2':{'high':100,'low':120,'highTime':now,'lowTime':now}},'ge-tracker','standing-orders')):
-            for callback in (cli._trade_paper,cli._trade_open,cli._trade_close):
+            for callback in (cli._trade_paper,cli._trade_open):
+                args.operation_id=str(uuid4())
                 stream=io.StringIO()
                 with contextlib.redirect_stdout(stream):callback(args)
                 self.assertIn('Quote: ge-tracker / network',stream.getvalue())
                 self.assertIn('last success: 100; last attempt: 200',stream.getvalue())
+        self.assertEqual(positions.list_positions(),[])
+        self.assertEqual(journal.list_trades(),[])
 
     def test_collect_receipt_retains_quote_evidence(self):
         from rshelper import ge_offers
         p=Position(1,2,'Fixture',1,100,'arbitrage','2026-01-01T00:00:00Z')
         now=time.time();prices=self.view(result({'2':{'high':100,'low':120,'highTime':now,'lowTime':now}}))
-        with mock.patch.object(ge_offers,'list_positions',return_value=[p]), mock.patch.object(ge_offers,'close_positions',return_value=[{'name':'Fixture','qty':1,'buy_price':100,'profit':18}]), mock.patch.object(ge_offers,'log_trade'):
-            receipt=ge_offers.collect_offer(1,latest=prices)
-        self.assertEqual(receipt['market_data']['latest']['last_attempt_at'],200)
-        self.assertEqual(receipt['market_data']['latest']['last_success_at'],100)
+        with mock.patch.object(ge_offers,'list_positions',return_value=[p]), mock.patch.object(ge_offers,'close_market_price',side_effect=AssertionError('collection cannot manufacture fresh quote evidence')):
+            with self.assertRaisesRegex(ValueError,'historical stage unknown'):
+                ge_offers.collect_offer(1,latest=prices)
+        self.assertEqual(market_data.provenance(prices)['last_attempt_at'],200)
+        self.assertEqual(market_data.provenance(prices)['last_success_at'],100)
 
     def test_empty_public_scan_has_explicit_unknown_evidence(self):
         import threading,json,urllib.request

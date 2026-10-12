@@ -162,11 +162,14 @@ def _validate_watchlist(data, path):
 
 
 def validate_state(data, kind, path):
-    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic'):
+    if kind not in ('watchlist', 'alerts', 'trades', 'positions', 'generic', 'paper-book'):
         _fail(path, 'unknown state kind')
     if not isinstance(data, dict):
         _fail(path, 'state root must be an object')
     _bounded_json(data, path)
+    if kind == 'paper-book':
+        from rshelper.paper_book import validate_book
+        return validate_book(data)
     version = data.get('schema_version', 1)
     if not _integer(version) or version not in (1, 2) or (kind == 'generic' and version != 1):
         _fail(path, 'unsupported schema version')
@@ -246,7 +249,7 @@ def validate_state(data, kind, path):
 
 def read_state(path: Path, kind: str, *, _publication_check=True) -> dict:
     defaults = {'watchlist': {'items': {}}, 'alerts': {'alerts': [], 'watch_triggered': {}},
-                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}}
+                'trades': {'trades': []}, 'positions': {'positions': []}, 'generic': {}, 'paper-book': {}}
     if kind not in defaults:
         _fail(path, 'unknown state kind')
     marker = path.with_name('.' + path.name + '.publishing')
@@ -291,7 +294,7 @@ def locked_state(path: Path):
     """An unavailable interprocess lock prevents mutation; never fall back."""
     canonical = Path(path).resolve()
     if canonical.name in ('positions.json', 'trades.json', 'alerts.json',
-                          'watchlist.json', 'realizations.json', 'identity-manifest.json',
+                          'watchlist.json', 'paper-offers.json', 'realizations.json', 'identity-manifest.json',
                           'identity-activation.json', 'realization-intents.json',
                           'realization-batches.json', 'tuning_log.json', 'trader_state.json',
                           'monitor_state.json', 'recent_exits.json', 'config.toml',

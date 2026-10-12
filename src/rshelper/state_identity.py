@@ -26,7 +26,7 @@ MAX_MAPPINGS = 100_000
 
 REPLICATION_OWNERSHIP = {
     # financial: Mac authority only; replicated as owned financial data.
-    'positions.json': 'financial', 'trades.json': 'financial',
+    'positions.json': 'financial', 'trades.json': 'financial', 'paper-offers.json':'financial',
     'alerts.json': 'shared',
     'watchlist.json': 'shared',
     # informational: replicated for operator visibility only.

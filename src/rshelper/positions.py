@@ -69,6 +69,28 @@ def _next_id(positions: list[dict]) -> int:
     return max(p["id"] for p in positions) + 1
 
 
+def _stage_open_position(txn, profile, request, operation_id, *, opened_at=None):
+    path = _positions_path(profile)
+    if path.parent != txn.root:
+        raise ValueError('position and transaction profiles differ')
+    manifest = state_identity.activation_manifest(path.with_name('identity-activation.json'))
+    state_identity.require_financial_authority(manifest)
+    identity = state_identity.new_record_identity(manifest['origin_uuid'],'positions',operation_id)
+    store = read_state(path,'positions')
+    state_identity.validate_activated_store(store,'positions',path)
+    rows = store['positions']
+    for row in rows:
+        if row.get('record_uuid')==identity['record_uuid']:
+            state_identity.validate_native_retry(path.parent,'positions',row,request)
+            return Position(**filter_fields(Position,row)),False
+    row = {'id':_next_id(rows),**request,
+           'opened_at':opened_at or datetime.now(timezone.utc).isoformat(),**identity}
+    rows.append(row)
+    state_identity.attest_native(txn,path.parent,'positions',row,operation_id,request)
+    txn.stage('positions.json',store)
+    return Position(**filter_fields(Position,row)),True
+
+
 def open_position(item_id: int, name: str, qty: int, buy_price: int,
                   direction: str = "arbitrage", note: str = "",
                   entry_sell: int | None = None,
@@ -91,30 +113,11 @@ def open_position(item_id: int, name: str, qty: int, buy_price: int,
         request = dict(item_id=item_id, name=name, qty=qty, buy_price=buy_price,
                        direction=direction, note=note, entry_sell=entry_sell,
                        entry_offer=entry_offer)
-        identity = state_identity.new_record_identity(
-            manifest['origin_uuid'], 'positions', operation_id)
         with state_transaction.profile_transaction(profile or 'default',
                                                    path.parent) as txn:
-            store = read_state(path, 'positions')
-            state_identity.validate_activated_store(store, 'positions', path)
-            positions_list = store['positions']
-            for row in positions_list:
-                if row.get('record_uuid') == identity['record_uuid']:
-                    state_identity.validate_native_retry(path.parent, 'positions', row, request)
-                    return Position(**filter_fields(Position, row))
-            position = {
-                "id": _next_id(positions_list), "item_id": item_id,
-                "name": name, "qty": qty, "buy_price": buy_price,
-                "direction": direction, "note": note,
-                "opened_at": datetime.now(timezone.utc).isoformat(),
-                "entry_sell": entry_sell, "entry_offer": entry_offer,
-                **identity,
-            }
-            positions_list.append(position)
-            state_identity.attest_native(txn, path.parent, 'positions', position, operation_id, request)
-            txn.stage('positions.json', store)
-            txn.commit(operation_id=operation_id)
-        return Position(**filter_fields(Position, position))
+            position,created = _stage_open_position(txn,profile,request,operation_id)
+            if created:txn.commit(operation_id=operation_id)
+        return position
     with _positions_lock(profile):
         positions = _load(profile)
         position = {

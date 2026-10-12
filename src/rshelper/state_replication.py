@@ -20,7 +20,7 @@ MAX_BYTES = 64 * 1024 * 1024
 MAX_ROWS = 100_000
 CORE = {'positions.json': 'positions', 'trades.json': 'trades',
         'alerts.json': 'alerts', 'watchlist.json': 'watchlist'}
-FILES = {**CORE, 'identity-manifest.json': 'identity',
+FILES = {**CORE, 'paper-offers.json':'paper-book', 'identity-manifest.json': 'identity',
          'identity-lineage.json': 'lineage', 'realizations.json': 'realizations',
          'realization-batches.json': 'batches', 'replication-receipts.json': 'receipts',
          'information.json': 'information'}
@@ -193,6 +193,12 @@ def _validate_files(files):
         elif name == 'information.json':
             count += _information(data)
             selected_files += len(data['files'])
+        elif name=='paper-offers.json':
+            from rshelper.paper_book import validate_book
+            validate_book(data)
+            if any(collection['status']!='committed' for collection in data['collections'].values()):
+                raise ValueError('recover pending paper collections before replication')
+            count+=len(data['offers'])+len(data['operations'])+len(data['purchases'])+sum(len(record['fills']) for record in data['offers'].values())
         else:
             raise ValueError('unapproved packet file')
         parsed[name] = data
@@ -201,6 +207,10 @@ def _validate_files(files):
     from rshelper.realization import verify_realization_snapshot
     verify_realization_snapshot(parsed['positions.json'], parsed['trades.json']['trades'],
                                 parsed.get('realizations.json', {'operations': {}}))
+    if 'paper-offers.json' in parsed:
+        from rshelper.paper_book import verify_book_financial
+        verify_book_financial(parsed['paper-offers.json'],parsed['positions.json'],parsed['trades.json'],
+                             parsed.get('realizations.json',{}),parsed.get('realization-batches.json',{}))
     manifests = dict(parsed.get('identity-lineage.json', {}).get('origins', {}))
     own = parsed['identity-manifest.json']
     if own['origin_uuid'] in manifests:
@@ -247,6 +257,8 @@ def capture_packet(profile, destination):
         raise ValueError('packet output must be a new file outside the profile')
     with state_transaction.profile_transaction(profile, root) as txn:
         activation = _activation(root)
+        if activation.get('paper_budget_origin') is not None and not (root/'paper-offers.json').exists():
+            raise ValueError('acknowledged paper budget missing; recover before capture')
         state = _metadata(root)
         files = {}
         for name, kind in FILES.items():
@@ -272,7 +284,7 @@ def capture_packet(profile, destination):
             raise ValueError('packet exceeds transfer budget')
         entries = [{'path': name, 'kind': FILES[name],
                     'owner': 'informational' if name == 'information.json' else
-                             'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared',
+                             'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json', 'realizations.json', 'realization-batches.json') else 'shared',
                     'bytes': len(files[name]), 'sha256': hashlib.sha256(files[name]).hexdigest()}
                    for name in sorted(files)]
         previous = state['outgoing']
@@ -382,7 +394,7 @@ def _read_packet(source):
         if type(name) is not str or name not in files or name in seen:
             raise ValueError('duplicate or unapproved packet path')
         seen.add(name)
-        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared'
+        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'paper-offers.json', 'realizations.json', 'realization-batches.json') else 'shared'
         if (entry['kind'] != FILES[name] or entry['owner'] != expected_owner
                 or type(entry['bytes']) is not int or entry['bytes'] != len(files[name])
                 or entry['sha256'] != hashlib.sha256(files[name]).hexdigest()):
@@ -415,8 +427,27 @@ def _merge_manifest(left, right):
     return state_identity.validate_manifest(merged)
 
 
-def _merge(root, incoming):
+def _merge(root, incoming, source_origin):
     result = {}
+    from rshelper.paper_book import require_book_successor,verify_book_financial
+    local_book=persistence.read_state(root/'paper-offers.json','paper-book')
+    activation=_activation(root)
+    if not local_book and activation.get('paper_budget_origin') is not None:
+        raise ValueError('acknowledged paper book missing; backup recovery required')
+    peer_book=incoming.get('paper-offers.json')
+    if peer_book is not None:
+        approved=activation['origin_uuid'] if activation['financial_authority'] else activation.get('paper_budget_origin')
+        if approved is None:
+            candidates=set(activation['replication_origins'])-{activation['origin_uuid']}
+            if len(candidates)!=1:raise ValueError('paper financial authority ambiguous')
+            approved=next(iter(candidates))
+        if peer_book['origin_uuid']!=approved:raise ValueError('paper financial authority differs from approved origin')
+        if local_book:require_book_successor(local_book,peer_book)
+        result['paper-offers.json']=copy.deepcopy(peer_book)
+        if activation.get('paper_budget_origin')!=approved:
+            result['identity-activation.json']={**activation,'paper_budget_origin':approved}
+    elif local_book and source_origin==local_book['origin_uuid']:
+        raise ValueError('financial authority packet omitted acknowledged paper book')
     if 'information.json' in incoming:
         information = incoming['information.json']
         peers = persistence.read_state(root / 'peer-information.json', 'generic') or {'schema_version': 1, 'origins': {}}
@@ -466,6 +497,8 @@ def _merge(root, incoming):
     from rshelper.realization import validate_intents, verify_realization_snapshot
     validate_intents(result['realizations.json'], 'realizations.json')
     verify_realization_snapshot(result['positions.json'], result['trades.json']['trades'], result['realizations.json'])
+    book=result.get('paper-offers.json',local_book)
+    if book:verify_book_financial(book,result['positions.json'],result['trades.json'],result['realizations.json'],result.get('realization-batches.json',{}))
     _validate_files({**{name: _json(value) for name, value in result.items() if name in FILES},
                      'identity-manifest.json': _json(persistence.read_state(root / 'identity-manifest.json', 'generic'))})
     return result
@@ -515,7 +548,7 @@ def _apply_packet(root, profile, source):
         try:
             if manifest['parent_revision'] != revision or manifest['parent_hash'] != digest:
                 raise ValueError('packet parent or same-revision hash conflict')
-            merged = _merge(root, incoming)
+            merged = _merge(root, incoming, origin)
             proofs = persistence.read_state(root / 'peer-receipts.json', 'generic').get('sources', {})
             proofs[origin] = foreign_receipts
             merged['peer-receipts.json'] = {'schema_version': 1, 'sources': proofs}
