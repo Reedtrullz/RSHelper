@@ -158,6 +158,18 @@ class HttpInputsTest(unittest.TestCase):
         self.assertEqual(status, 200); self.assertTrue(payload['ok'])
         self.assertEqual(self.calls, [(3, None, None)])
 
+    def test_mode_request_is_typed_and_retains_the_operation(self):
+        body = {'action':'mode','mode':'entries-paused','expected_revision':0,
+                'reason':'Synthetic HTTP','operation_id':'11111111-1111-4111-8111-111111111111'}
+        status,payload = self.request('/api/trader',json.dumps(body).encode())
+        self.assertEqual(status,200)
+        self.assertEqual(self.calls,[('mode',body)])
+        self.calls.clear()
+        for patch in ({'expected_revision':True},{'expected_revision':-1},
+                      {'mode':'other'},{'reason':''},{'operation_id':'invalid'}):
+            self.assert_error(*self.request('/api/trader',json.dumps({**body,**patch}).encode()),400)
+            self.assertEqual(self.calls,[])
+
     def test_keepalive_uses_each_requests_body(self):
         connection = http.client.HTTPConnection(*self.server.server_address, timeout=2)
         try:

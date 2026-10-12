@@ -427,6 +427,7 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
     from rshelper.cli import _fetch_bootstrap
     from rshelper.positions import close_positions, list_positions, open_position
     from rshelper.journal import log_trade
+    from rshelper.trading_mode import EntriesPaused, update_drain
 
     _load_recent_exits(profile, cfg)
     _mapping, latest, vol_5m, items = _fetch_bootstrap(profile)
@@ -609,15 +610,19 @@ def run_cycle(cfg, profile: str | None = None) -> dict:
             print(f"[trader] skipped {cand.name}: size 0 "
                   f"(limit/by-market/budget constraint)", file=sys.stderr)
             continue
-        open_position(cand.id, cand.name, qty, cand.sell_price,
-                      direction="traditional", note="auto", profile=profile,
-                      entry_sell=cand.sell_price, entry_offer=cand.buy_price)
+        try:
+            open_position(cand.id, cand.name, qty, cand.sell_price,
+                          direction="traditional", note="auto", profile=profile,
+                          entry_sell=cand.sell_price, entry_offer=cand.buy_price)
+        except EntriesPaused:
+            break
         capital_used += qty * cand.sell_price
         slots -= 1
         opened.append({"item_id": cand.id, "name": cand.name,
                        "qty": qty, "buy_price": cand.sell_price})
     return {"candidates": len(candidates), "opened": opened, "closed": closed,
             "closed_pnl": sum(c["profit"] for c in closed),
+            "trading_mode": update_drain(profile),
             "market_data": market_snapshot(_mapping,latest,vol_5m)}
 
 
@@ -741,10 +746,12 @@ def trader_status(profile: str | None = None) -> dict | None:
     p_path = _pid_path(profile)
     state = _read_state(profile)
     daemon = daemon_status("trader", profile, pid_path=p_path, state=state)
-    if (state is None and not daemon.get("running")
-            and daemon.get("ownership") == "synced_snapshot"):
+    from rshelper.trading_mode import read_mode
+    mode = read_mode(profile)
+    if (state is None and not daemon.get('running')
+            and daemon.get('ownership') == 'synced_snapshot' and mode['revision'] == 0):
         return None
-    state = state or {}
+    state = state or {'profile': profile or 'default'}
     # The journal is the authoritative P&L ledger; the state counter resets
     # on every daemon start, so expose the all-time auto P&L alongside it.
     journal_pnl = None
@@ -757,6 +764,7 @@ def trader_status(profile: str | None = None) -> dict | None:
     except Exception:
         pass
     base = _status_base(state)
+    base['trading_mode'] = mode
     base["journal_realized_pnl"] = journal_pnl
     base["journal_auto_trades"] = journal_trades
     for key in ("ownership", "supervisor", "service_domain", "service_label",
