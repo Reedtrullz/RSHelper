@@ -39,6 +39,7 @@ STATE_FILES = {
     'signal_cooldowns.json': 'generic', 'trader_state.json': 'generic',
     'recent_exits.json': 'generic', 'monitor_state.json': 'generic',
     'config.toml': 'config',
+    'trade-reviews.json':'generic',
 }
 MAX_PROFILE_BYTES = 64 * 1024 * 1024
 
@@ -134,6 +135,9 @@ def _validate_bytes(filename, raw):
         if filename=='tuning_log.json':
             from rshelper.tuning import validate_log
             validate_log(persistence.decode_json(raw))
+        if filename=='trade-reviews.json':
+            from rshelper.trade_reviews import validate_store
+            validate_store(persistence.decode_json(raw))
     if len(raw) > MAX_PROFILE_BYTES:
         raise ValueError('profile state file exceeds byte budget')
 

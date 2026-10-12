@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import io
 import json
 import os
@@ -31,13 +32,26 @@ def _read_csv(raw):
             csv.field_size_limit(limit)
 
 
-def export_profile(profile, destination, format='json'):
+def export_profile(profile, destination, format='json', *, include_reviews=True):
+    if type(include_reviews) is not bool:raise ValueError('invalid review export policy')
     if format not in ('json', 'csv'):
         raise ValueError('unsupported private export format')
     with tempfile.TemporaryDirectory(prefix='rshelper-transfer-') as folder:
         archive = Path(folder)/'profile.zip'
         backup.export_profile(profile, archive)
         manifest, content = backup._inspect(archive)
+    if not include_reviews:
+        from rshelper.trade_reviews import FILENAME
+        content.pop(FILENAME,None)
+        manifest['files'].pop(FILENAME,None)
+        if 'peer-information.json' in content:
+            peers=persistence.decode_json(content['peer-information.json'])
+            for information in peers['origins'].values():information['files'].pop(FILENAME,None)
+            content['peer-information.json']=json.dumps(peers,sort_keys=True).encode()
+            metadata=manifest['files']['peer-information.json']
+            metadata.update(sha256=hashlib.sha256(content['peer-information.json']).hexdigest(),bytes=len(content['peer-information.json']))
+        manifest['excluded']=sorted(set(manifest['excluded'])|{FILENAME})
+        manifest['source_revision']=hashlib.sha256(json.dumps(manifest['files'],sort_keys=True).encode()).hexdigest()
     content = {name: raw.decode('utf-8') for name, raw in content.items()}
     if format == 'json':
         payload = json.dumps({'manifest': manifest, 'files': content}, sort_keys=True).encode()

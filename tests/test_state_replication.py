@@ -48,6 +48,28 @@ class ReplicationTest(unittest.TestCase):
         from rshelper import state_replication
         return state_replication
 
+    def test_review_prefix_tombstone_and_redacted_replica_exports(self):
+        from rshelper import positions,trade_reviews,profile_transfer
+        from uuid import uuid4
+        lot=positions.open_position(2,'Synthetic',10,100,profile='a')
+        entry={'hypothesis':'Synthetic private text','planned_exit':'Target','tags':['reversion'],'review':'','deleted':False}
+        trade_reviews.append_review('a',lot.lot_uid,entry,expected_revision=0,operation_id=str(uuid4()),now=1000)
+        original=self.packet('a','review-first');self.api().apply_packet('b',original)
+        self.assertEqual(trade_reviews.read_reviews('b')['revision'],1)
+        trade_reviews.append_review('a',lot.lot_uid,{**entry,'deleted':True},expected_revision=1,operation_id=str(uuid4()),now=1001)
+        tombstone=self.packet('a','review-delete');self.api().apply_packet('b',tombstone)
+        self.api().apply_packet('b',tombstone);self.api().apply_packet('b',original)
+        store=trade_reviews.read_reviews('b')
+        self.assertEqual(store['revision'],2);self.assertTrue(trade_reviews.latest_reviews(store)[lot.lot_uid]['entry']['deleted'])
+        with self.assertRaises(ValueError):
+            trade_reviews.append_review('b',lot.lot_uid,entry,expected_revision=2,operation_id=str(uuid4()))
+        for format in ('json','csv'):
+            target=self.base/('replica-redacted.'+format)
+            exported=profile_transfer.export_profile('b',target,format,include_reviews=False)
+            self.assertNotIn(b'Synthetic private text',target.read_bytes())
+            with self.assertRaisesRegex(ValueError,'review history'):
+                profile_transfer.import_profile('b',target,format,expected_profile_uuid=exported['profile_uuid'])
+
     def test_authority_owned_paper_book_replicates_and_cannot_mutate_on_replica(self):
         from rshelper import paper_book
         from uuid import uuid4
