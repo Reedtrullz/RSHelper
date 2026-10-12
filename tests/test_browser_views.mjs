@@ -61,6 +61,20 @@ function deferred(){
   const promise=new Promise(r=>{resolve=r;});
   return {promise,resolve};
 }
+test('processing displays unknown evidence without claiming verified hourly profit',async()=>{
+  const {context}=ownerContext(async()=>new Response(JSON.stringify({recipes:[{
+    name:'Synthetic',skill:'smithing',inputs:[],model_profit:20,model_gp_per_hour:100,
+    profit:null,gp_per_hour:null,eligibility:'unknown',recipe_economics:{
+      requirements:null,evidence_gaps:['rate unverified <script>'],outputs_per_run:1,
+      success_probability:null,reviewed_on:null,source_url:null}}]})));
+  vm.runInContext("view='process'",context);
+  await vm.runInContext('renderProcess()',context);
+  const content=context.document.getElementById('listBody').innerHTML;
+  assert.match(content,/Illustrative GP\/hr/);
+  assert.match(content,/unknown/);
+  assert.match(content,/rate unverified &lt;script&gt;/);
+  assert.match(content,/success unknown/);
+});
 test('late watchlist response cannot replace the newly selected market view',async()=>{
   const response=deferred();
   const {context,elements}=ownerContext(()=>response.promise);

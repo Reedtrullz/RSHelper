@@ -1362,29 +1362,41 @@ async function renderProcess(){
     const sel=document.getElementById('processSkill');
     if(sel&&sel.value)recipes=recipes.filter(x=>x.skill===sel.value);
     document.getElementById('badgeProcess').textContent=recipes.length;
-    let h='<table><thead><tr><th>Skill</th><th>Output</th><th>Inputs</th><th>Profit</th><th>ROI%</th><th>GP/hr</th></tr></thead><tbody>';
+    let h='<table><thead><tr><th>Skill</th><th>Output</th><th>Inputs per run</th><th>Model profit per output</th><th>ROI%</th><th>Illustrative GP/hr</th><th>Eligibility / evidence</th></tr></thead><tbody>';
     recipes.forEach(x=>{
       const roi=x.roi_pct!=null?x.roi_pct.toFixed(1):'-';
       const inputs=(x.inputs||[]).map(i=>escHtml(i.name)+' &times;'+i.qty).join(', ')||'-';
+      const e=x.recipe_economics||{},req=e.requirements;
+      const requirements=req?((req.members?'Membership required; ':'')+
+        (req.level!=null?'Required level '+req.level:'Level unknown')+
+        ((req.unlocks||[]).length?'; unlocks: '+req.unlocks.join(', '):'')):'Requirements unverified';
+      const evidence=(e.evidence_gaps||[]).concat(e.eligibility_reasons||[],e.limiting_factors||[]).join('; ');
+      const source=typeof e.source_url==='string'&&e.source_url.startsWith('https://oldschool.runescape.wiki/w/')
+        ?'<a href="'+escHtml(e.source_url)+'" target="_blank" rel="noopener">Wiki source</a>': 'Source unreviewed';
       h+='<tr><td class="dim">'+escHtml(x.skill||'')+'</td>'+
         '<td class="name">'+escHtml(x.name)+'</td>'+
         '<td class="dim">'+inputs+'</td>'+
-        '<td class="margin pos">'+format(x.profit)+' gp</td>'+
+        '<td>'+format(x.model_profit??x.profit)+' gp</td>'+
         '<td>'+roi+'%</td>'+
-        '<td class="margin pos">'+format(x.gp_per_hour)+'</td></tr>';
+        '<td>'+format(x.model_gp_per_hour??x.gp_per_hour)+'</td>'+
+        '<td>'+escHtml(x.eligibility||'unknown')+'<details><summary>Evidence and requirements</summary>'+
+        '<div>'+escHtml(requirements)+'</div><div>'+escHtml(evidence)+'</div>'+
+        '<div>'+e.outputs_per_run+' outputs/run; success '+(e.success_probability==null?'unknown':e.success_probability*100+'%')+'</div>'+
+        '<div>'+source+'; reviewed '+escHtml(e.reviewed_on||'unknown')+'</div></details></td></tr>';
     });
     h+='</tbody></table>';
-    if(!recipes.length)h='<div class="loading">No profitable processing recipes right now — buy inputs cheap, sell output dear.</div>';
+    if(!recipes.length)h='<div class="loading">No processing models pass the current filters and available input limits.</div>';
     body.innerHTML=h;
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Materials Processing</div>'+
       '<div class="metric-grid">'+
       metric('Recipes',format(recipes.length),'gold')+
-      metric('Best GP/hr',recipes.length?format(recipes[0].gp_per_hour):'-','gold')+
+      metric('Illustrative GP/hr',recipes.length?format(recipes[0].model_gp_per_hour):'-','gold')+
       metric('Best ROI',recipes.length?(recipes[0].roi_pct||0).toFixed(1)+'%':'','')+
       '</div>'+
       '<div class="notice" style="border-color:var(--border);color:var(--text-dim);background:var(--surface)">'+
-      'Buys inputs at instant-buy, sells the processed output at instant-sell (2% GE tax on the sale). '+
-      'GP/hr is capped by action rate, the output buy limit, and the limiting input feed.</div>';
+      'Buys inputs at instant-buy and sells outputs at instant-sell; tax is calculated per output. '+
+      'Rates, yields and account requirements have separate evidence gaps. Hourly figures use illustrative '+
+      'route rates and sell-volume estimates. Input purchase limits do not limit output sales.</div>';
     current.finish();
   }catch(e){
     if(!current()||e.name==='AbortError')return;

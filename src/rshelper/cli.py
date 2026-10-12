@@ -90,7 +90,8 @@ def _format_table(results, top: int) -> str:
 
 def _process_roi(r) -> float:
     """ROI% for a process recipe: profit / input_cost (the actual capital)."""
-    return (r.profit / r.input_cost * 100) if r.input_cost > 0 else 0.0
+    cost = r.recipe_economics.get('input_cost_per_output',r.input_cost)
+    return (r.profit / cost * 100) if cost > 0 else 0.0
 
 
 def _roi_pct(item) -> float:
@@ -380,6 +381,7 @@ def process_scan(args: argparse.Namespace) -> None:
     mapping, latest, volume_5m, items = _fetch_bootstrap(args.profile)
 
     from rshelper.scanner import ProcessScanner
+    from rshelper.recipes import process_payload
     scanner = ProcessScanner()
     skill = getattr(args, "skill", "")
     results = scanner.scan(
@@ -389,9 +391,10 @@ def process_scan(args: argparse.Namespace) -> None:
         min_profit=args.min_profit,
         capital=args.capital,
         skill=skill,
+        account=load_config(args.profile).account.recipe_context(),
     )
     scope = f" ({skill})" if skill else ""
-    print(f"  {len(results)} profitable processing recipes{scope}", file=sys.stderr)
+    print(f"  {len(results)} positive illustrative processing models{scope}", file=sys.stderr)
     snap_results = results[:args.top]
     if args.name:
         results = _filter_by_name(results, args.name)
@@ -400,45 +403,38 @@ def process_scan(args: argparse.Namespace) -> None:
         print(file=sys.stderr)
 
     if args.csv:
-        from dataclasses import asdict
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=[
             "rank", "name", "input_cost", "sell_price", "profit", "roi",
-            "gp_per_hour", "volume", "buy_limit", *_CSV_MARKET_FIELDS,
+            "gp_per_hour", "model_profit", "model_gp_per_hour", "eligibility",
+            "source_url", "reviewed_on", "evidence_gaps",
+            "volume", "buy_limit", *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, item in enumerate(results[:args.top], 1):
-            row = asdict(item)
+            row = process_payload(item)
+            row.update(source_url=item.recipe_economics.get('source_url'),
+                       reviewed_on=item.recipe_economics.get('reviewed_on'),
+                       evidence_gaps='; '.join(item.recipe_economics.get('evidence_gaps',[])))
             row.update(_csv_market(item.market_data))
             row["rank"] = i
-            row["roi"] = round(_process_roi(item), 2)
             writer.writerow(row)
         print(out.getvalue())
     elif args.json:
         print(json.dumps([
-            {
-                "rank": i + 1,
-                "market_data": r.market_data,
-                "name": r.name,
-                "input_cost": r.input_cost,
-                "sell_price": r.sell_price,
-                "profit": r.profit,
-                "roi": round(_process_roi(r), 2),
-                "gp_per_hour": r.gp_per_hour,
-                "volume": r.volume,
-                "buy_limit": r.buy_limit,
-            }
+            {"rank":i+1,**process_payload(r)}
             for i, r in enumerate(results[:args.top])
         ], indent=2))
     elif args.html:
-        cols = ["Rank", "Output", "Input Cost", "Sell", "Profit", "ROI%", "GP/hr"]
+        cols = ["Rank", "Output", "Input Cost", "Sell", "Model Profit", "Model ROI%", "Illustrative GP/hr", "Eligibility"]
         rows = [{"Rank": i + 1, "Output": r.name,
                  "Input Cost": f"{r.input_cost:,}", "Sell": f"{r.sell_price:,}",
-                 "Profit": f"{r.profit:,}", "ROI%": f"{_process_roi(r):.1f}",
-                 "GP/hr": f"{r.gp_per_hour:,}"}
+                 "Model Profit": f"{r.profit:,}", "Model ROI%": f"{_process_roi(r):.1f}",
+                 "Illustrative GP/hr": f"{r.gp_per_hour:,}","Eligibility":r.recipe_economics.get('eligibility','unknown')}
                 for i, r in enumerate(results[:args.top])]
-        print(_html_output(rows, cols, "Materials Processing", _market_description(mapping, latest, volume_5m)))
+        print(_html_output(rows, cols, "Materials Processing — illustrative models; rates unverified", _market_description(mapping, latest, volume_5m)))
     else:
+        print('Illustrative models; unverified rates or yields do not establish executable profit.')
         print(_format_process_table(results, args.top))
         print(_market_description(mapping,latest,volume_5m))
 
@@ -462,6 +458,9 @@ def _format_process_table(results, top: int) -> str:
         lines.append(f"{r.name:<{name_width}} {r.input_cost:>9,} "
                      f"{r.sell_price:>8,} {r.profit:>7,} "
                      f"{roi:>6.1f} {r.gp_per_hour:>9,}")
+        economics = r.recipe_economics
+        lines.append('  Eligibility: '+economics.get('eligibility','unknown')+
+                     '; evidence: '+', '.join(economics.get('evidence_gaps',[])))
     return "\n".join(lines)
 
 
@@ -471,7 +470,10 @@ def _save_process_snapshot(results, profile: str | None = None) -> None:
     data = [{
         "item_id": r.id, "name": r.name,
         "input_cost": r.input_cost, "sell_price": r.sell_price,
-        "profit": r.profit, "gp_per_hour": r.gp_per_hour,
+        "profit": r.profit, "profit_basis": "illustrative-model",
+        "gp_per_hour": r.recipe_economics.get('gp_per_hour'),
+        "model_gp_per_hour": r.gp_per_hour,
+        "recipe_economics": r.recipe_economics,
         "volume": r.volume, "buy_limit": r.buy_limit,
     } for r in results]
     snapshot.save("process", data, profile)

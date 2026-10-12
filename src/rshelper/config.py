@@ -41,6 +41,11 @@ min_profit = 0
 top = 20
 capital = 0
 
+[account]
+membership = "unknown"   # "unknown", "free", or "member"; never inferred
+levels = {}
+unlocks = {}              # named unlocks: true/false; omitted facts stay unknown
+
 [trader]
 capital = 1000000        # paper bankroll for sizing auto-trades
 trade_capital_frac = 0.40  # fraction of bankroll per position (replay: 0.40
@@ -114,6 +119,19 @@ class ProcessConfig:
 
 
 @dataclass
+class AccountConfig:
+    membership: str = 'unknown'
+    levels: dict[str, int] = field(default_factory=dict)
+    unlocks: dict[str, bool] = field(default_factory=dict)
+
+    def recipe_context(self):
+        if self.membership not in ('unknown','free','member'):
+            raise ConfigError('account','membership','must be unknown, free, or member')
+        return {'members':{'unknown':None,'free':False,'member':True}[self.membership],
+                'levels':dict(self.levels),'unlocks':dict(self.unlocks)}
+
+
+@dataclass
 class TraderConfig:
     capital: int = 1_000_000
     trade_capital_frac: float = 0.40
@@ -146,6 +164,7 @@ class Config:
     flip: FlipConfig = field(default_factory=FlipConfig)
     margin: MarginConfig = field(default_factory=MarginConfig)
     process: ProcessConfig = field(default_factory=ProcessConfig)
+    account: AccountConfig = field(default_factory=AccountConfig)
     trader: TraderConfig = field(default_factory=TraderConfig)
 
 
@@ -164,6 +183,7 @@ _SECTION_TYPES = {
     "flip": FlipConfig,
     "margin": MarginConfig,
     "process": ProcessConfig,
+    "account": AccountConfig,
     "trader": TraderConfig,
 }
 _MAX_CONFIG_INTEGER = (1 << 63) - 1
@@ -240,6 +260,17 @@ def validate_config(config: Config) -> Config:
         if type(values) is not config_type:
             raise ConfigError(section, "section",
                               f"expected {config_type.__name__} instance")
+        if isinstance(values,AccountConfig):
+            if values.membership not in ('unknown','free','member'):
+                raise ConfigError(section,'membership','must be unknown, free, or member')
+            for key,expected in (('levels',int),('unlocks',bool)):
+                facts = getattr(values,key)
+                if (not isinstance(facts,dict) or len(facts)>100
+                        or any(not isinstance(name,str) or not name or len(name)>100
+                            or type(value) is not expected
+                            or expected is int and not 0<=value<=99 for name,value in facts.items())):
+                    raise ConfigError(section,key,'expected bounded named account facts; levels 0–99, unlocks true/false')
+            continue
         for item in fields(config_type):
             key = item.name
             value = getattr(values, key)

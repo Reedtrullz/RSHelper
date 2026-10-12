@@ -829,7 +829,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_process():
         cache = refresh()
         from rshelper.scanner import ProcessScanner
-        from rshelper.recipes import RECIPES
+        from rshelper.recipes import RECIPES,process_payload
         lookup = {i.id: i for i in cache["items"]}
         # Honor the same filters as the CLI (members/min_volume/min_profit)
         # so the dashboard and CLI agree on what "profitable" means.
@@ -837,7 +837,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             cache["items"], members_only=cfg.process.members_only,
             min_volume=cfg.process.min_volume,
             min_profit=cfg.process.min_profit,
-            capital=cfg.process.capital)
+            capital=cfg.process.capital,
+            account=cfg.account.recipe_context() if access_mode=='owner' else None)
         out = []
         for r in results:
             recipe = RECIPES.get(r.id)
@@ -850,18 +851,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "qty": qty,
                         "buy_price": it.buy_price if it else 0,
                     })
-            out.append({
-                "name": r.name, "item_id": r.id, "market_data":r.market_data,
-                "skill": recipe.skill if recipe else "",
-                "input_cost": r.input_cost, "sell_price": r.sell_price,
-                "profit": r.profit,
-                "roi_pct": round(r.profit / r.input_cost * 100, 1) if r.input_cost else 0,
-                "gp_per_hour": r.gp_per_hour,
-                "volume": r.volume, "buy_limit": r.buy_limit,
-                "inputs": inputs,
-            })
+            out.append({**process_payload(r),'inputs':inputs})
         # Group by skill, then sort each skill's recipes by GP/hr desc.
-        out.sort(key=lambda x: (x["skill"], -x["gp_per_hour"]))
+        out.sort(key=lambda x: (x["skill"], -x["model_gp_per_hour"]))
         return {"recipes": out, "count": len(out)}
 
     def get_alch():
