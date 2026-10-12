@@ -811,7 +811,8 @@ def run_trader(cfg, interval: int | None = None, profile: str | None = None,
                      "cycles": 0, "errors": 0, "exits_by_reason": {},
                      "daemon_instance": lease.daemon_instance,
                      "supervisor": lease.supervisor_kind,
-                     "desired_state": lease.desired_state, "ready": False}
+                     "desired_state": lease.desired_state, "ready": False,
+                     "configuration":__import__('rshelper.tuning',fromlist=['config_evidence']).config_evidence(profile,trader_config=cfg)}
             previous_handler = None
             state_written = False
             try:

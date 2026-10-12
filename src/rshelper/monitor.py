@@ -75,7 +75,7 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
                       file=sys.stderr)
                 while not lease.stop_event.is_set():
                     try:
-                        _poll_cycle(no_notify, profile)
+                        state['configuration'] = _poll_cycle(no_notify, profile)
                         state["last_check_iso"] = datetime.now(timezone.utc).isoformat()
                     except Exception as e:
                         print(f"[monitor] Cycle error: {e}", file=sys.stderr)
@@ -103,7 +103,7 @@ def run_monitor(interval_sec: int = 120, no_notify: bool = False,
         raise
 
 
-def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
+def _poll_cycle(no_notify: bool, profile: str | None = None) -> dict:
     from rshelper.cli import _fetch_bootstrap
     from rshelper.scanner import FlipScanner
     from rshelper.signals import detect_signals
@@ -166,6 +166,10 @@ def _poll_cycle(no_notify: bool, profile: str | None = None) -> None:
                     notify_fn=None if no_notify else notify)
             except (OSError, ValueError) as error:
                 print(f'[monitor] watch alert unavailable: {error}', file=sys.stderr)
+    from rshelper import tuning
+    from rshelper.config import effective_config_dict
+    effective=effective_config_dict(cfg)
+    return {'config_id':tuning.config_id(effective),'params':effective}
 
 
 def stop_monitor(profile: str | None = None) -> bool:

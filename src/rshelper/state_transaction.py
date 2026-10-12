@@ -131,6 +131,9 @@ def _validate_bytes(filename, raw):
         validate_config(_config_from_toml(tomllib.loads(raw.decode('utf-8'))))
     else:
         persistence.validate_state(persistence.decode_json(raw), kind, filename)
+        if filename=='tuning_log.json':
+            from rshelper.tuning import validate_log
+            validate_log(persistence.decode_json(raw))
     if len(raw) > MAX_PROFILE_BYTES:
         raise ValueError('profile state file exceeds byte budget')
 

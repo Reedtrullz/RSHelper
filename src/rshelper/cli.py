@@ -1721,6 +1721,23 @@ def config_path(args: argparse.Namespace) -> None:
     p = resolve_config_path("config.toml", getattr(args, 'profile', None))
     print(p)
 
+def config_edit_cmd(args: argparse.Namespace) -> None:
+    from rshelper import config_edit,backup
+    from pathlib import Path
+    try:
+        candidate=backup._read_file(Path(args.input),config_edit.MAX_CONFIG_BYTES).decode('utf-8') if getattr(args,'input',None) else None
+    except OSError:
+        raise ValueError('configuration input unavailable') from None
+    if args.config_action=='preview':
+        result=config_edit.preview_config(args.profile,candidate)
+    else:
+        options={'expected_revision':args.expected_revision,'operation_id':args.operation_id,'backup_path':args.backup}
+        if args.config_action=='apply':
+            result=config_edit.apply_config(args.profile,candidate,**options)
+        else:
+            result=config_edit.rollback_config(args.profile,args.restore_operation_id,**options)
+    print(json.dumps(result,indent=2))
+
 def signals_cmd(args: argparse.Namespace) -> None:
     """Fetch data, detect market signals, print results grouped by type."""
     monitor_interval = getattr(args, "monitor", 0) or 0
@@ -1859,7 +1876,8 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
-    maintenance = maintenance or remaining[:1] == ['trading-mode']
+    maintenance = maintenance or remaining[:1] == ['trading-mode'] or remaining[:2] in (
+        ['config','preview'],['config','apply'],['config','rollback'])
     if maintenance:
         from rshelper.config import Config
         cfg = Config()
@@ -2180,6 +2198,15 @@ def _main() -> None:
     config_sub = config_parser.add_subparsers(dest="config_action")
     config_sub.add_parser("show", help="Print current config as JSON")
     config_sub.add_parser("path", help="Print config file path")
+    for action in ('preview','apply','rollback'):
+        edit=config_sub.add_parser(action,help='Preview, apply or restore an exact TOML configuration')
+        if action!='rollback':edit.add_argument('--input',required=action=='apply',help='Bounded TOML file')
+        if action!='preview':
+            edit.add_argument('--expected-revision',required=True)
+            edit.add_argument('--operation-id',required=True)
+            edit.add_argument('--backup',required=True,help='New private backup archive path')
+        if action=='rollback':edit.add_argument('--restore-operation-id',required=True)
+        edit.add_argument('--json',action='store_true',help='Emit the JSON preview or receipt')
 
     dash = sub.add_parser("dashboard", help="Launch local web dashboard")
     dash.add_argument("--port", type=int, default=5555)
@@ -2610,7 +2637,9 @@ def _main() -> None:
     elif args.command == "snapshots":
         snapshot_list(args)
     elif args.command == "config":
-        if args.config_action == "show":
+        if args.config_action in ('preview','apply','rollback'):
+            config_edit_cmd(args)
+        elif args.config_action == "show":
             config_show(args)
         elif args.config_action == "path":
             config_path(args)

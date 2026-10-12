@@ -93,11 +93,8 @@ def _validate_file(name, raw):
             data = decode_json(raw)
             validate_state(data, 'paper-book' if name=='paper-offers.json' else 'trading_mode' if name=='trading_mode.json' else CORE_KINDS.get(name, 'generic'), name)
             if name == 'tuning_log.json':
-                entries = data.get('entries')
-                if not isinstance(entries, list) or any(not isinstance(row, dict)
-                        or not isinstance(row.get('params'), dict)
-                        or not isinstance(row.get('ts'), str) for row in entries):
-                    raise ValueError('invalid tuning log')
+                from rshelper.tuning import validate_log
+                validate_log(data)
     except (ValueError, UnicodeDecodeError, RecursionError):
         raise BackupError(f'{name}: backup validation failed; source preserved') from None
 

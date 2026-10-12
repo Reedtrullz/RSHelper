@@ -132,6 +132,9 @@ def _information(data):
             raise ValueError('unapproved informational source')
         state_transaction._kind(relative)
         persistence.validate_state(value, 'generic', relative)
+        if relative=='tuning_log.json':
+            from rshelper.tuning import validate_log
+            validate_log(value)
         rows = value.get('entries' if relative == 'tuning_log.json' else 'items', [])
         if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
             raise ValueError('invalid informational record collection')

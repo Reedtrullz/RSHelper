@@ -66,7 +66,21 @@ def validate_operation(path, body):
     def action(choices):
         if not isinstance(body.get('action'), str) or body['action'] not in choices:
             raise HttpInputError('Unknown action')
-    if path == '/api/paper':
+    if path == '/api/settings':
+        from rshelper.persistence import canonical_uuid
+        fields={'preview':{'candidate'},'apply':{'candidate','expected_revision','operation_id','backup_path'},
+                'rollback':{'restore_operation_id','expected_revision','operation_id','backup_path'}}
+        action(fields)
+        if set(body)!={'action'}|fields[body['action']]:raise HttpInputError('Settings action fields differ')
+        if 'candidate' in body:text(body['candidate'],'candidate',required=False,limit=65536)
+        for key in ('operation_id','restore_operation_id'):
+            if key in body:
+                try:canonical_uuid(body[key])
+                except ValueError as exc:raise HttpInputError('Invalid '+key) from exc
+        if 'expected_revision' in body:
+            text(body['expected_revision'],'expected_revision',limit=100)
+            text(body['backup_path'],'backup_path',limit=4096)
+    elif path == '/api/paper':
         from rshelper.persistence import canonical_uuid
         fields={'open':{'item','qty'},'roundtrip':{'item','qty'},
                 'advance':{'offer_id'},'cancel-buy':{'offer_id'},'cancel-sale':{'offer_id'},
