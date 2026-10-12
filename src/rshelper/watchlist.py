@@ -3,8 +3,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
+from contextlib import contextmanager
 
-from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state
+from rshelper.persistence import read_state, locked_writable_state, StateCorruptionError, validate_state, validate_watch_policy
 from rshelper.profile import atomic_write_json, resolve_config_path
 from rshelper import state_identity, state_transaction
 
@@ -19,11 +20,15 @@ def _watchlist_path(profile: str | None = None) -> Path:
     return resolve_config_path("watchlist.json", profile)
 
 
+@contextmanager
 def _watchlist_lock(profile: str | None = None):
     path = _watchlist_path(profile)
-    if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
-        return state_transaction.profile_transaction(profile or 'default', path.parent)
-    return locked_writable_state(_watchlist_path(profile), 'watchlist')
+    with state_transaction.profile_transaction(profile or 'default', path.parent):
+        if state_identity.activation_manifest(path.with_name('identity-activation.json')) is not None:
+            yield
+        else:
+            with locked_writable_state(path, 'watchlist'):
+                yield
 
 
 def load(profile: str | None = None):
@@ -43,11 +48,24 @@ def _save(data: dict, profile: str | None = None) -> None:
     atomic_write_json(_watchlist_path(profile), data, indent=2)
 
 
+def _stage_alert_policy(txn, row, policy, profile):
+    if policy is None:
+        return
+    from rshelper import alerts
+    row['alert_policy'] = policy
+    row['alert_rule_revision'] = row.get('alert_rule_revision', 0) + 1
+    store = alerts._load(profile)
+    key = str(row.get('item_id'))
+    store.setdefault('watch_triggered', {}).pop(key, None)
+    store.setdefault('watch_crossings', {}).pop(key, None)
+    txn.stage('alerts.json', store)
+
+
 def add(item_id: int, name: str,
         alert_margin_above: int | None = None,
         alert_margin_below: int | None = None,
         profile: str | None = None,
-        operation_id: str | None = None) -> None:
+        operation_id: str | None = None, *, alert_policy=None) -> None:
     """Add or update a watched item.
 
     Re-adding an existing item preserves its original added timestamp so
@@ -57,6 +75,8 @@ def add(item_id: int, name: str,
     Identified profiles mint a fresh record identity per creation generation;
     a re-add after remove is a new record and the old one stays tombstoned.
     """
+    if alert_policy is not None:
+        alert_policy = validate_watch_policy(alert_policy)
     path = _watchlist_path(profile)
     manifest = state_identity.activation_manifest(
         path.with_name('identity-activation.json'))
@@ -78,11 +98,13 @@ def add(item_id: int, name: str,
             if alert_margin_below is None and existing is not None:
                 alert_margin_below = existing.get("alert_margin_below")
             row = {
+                **(existing or {}),
                 "name": name, "added": added, "item_id": int(item_id),
                 "alert_margin_above": alert_margin_above,
                 "alert_margin_below": alert_margin_below,
                 **identity,
             }
+            _stage_alert_policy(txn, row, alert_policy, profile)
             if existing == row:
                 return
             if existing is not None:
@@ -103,13 +125,19 @@ def add(item_id: int, name: str,
             alert_margin_above = existing.get("alert_margin_above")
         if alert_margin_below is None and existing is not None:
             alert_margin_below = existing.get("alert_margin_below")
-        data["items"][str(item_id)] = {
+        row = {
+            **(existing or {}),
             "name": name,
             "added": added,
             "alert_margin_above": alert_margin_above,
             "alert_margin_below": alert_margin_below,
         }
-        _save(data, profile)
+        with state_transaction.profile_transaction(profile or 'default', path.parent) as txn:
+            row['item_id'] = int(item_id)
+            _stage_alert_policy(txn, row, alert_policy, profile)
+            data['items'][str(item_id)] = row
+            txn.stage('watchlist.json', data)
+            txn.commit(operation_id or str(uuid4()))
 
 
 def remove(item_id: int, profile: str | None = None) -> bool:
