@@ -33,6 +33,27 @@ class PaperBookTest(DisposableHomeTest):
                     buy_price=100,buy_limit=100,members=False,direction='traditional',note='manual',
                     expected_revision=revision,operation_id=operation_id or str(uuid4()),now=self.now)
 
+    def test_large_baseline_classification_scales_and_reports_unknown_activity(self):
+        self.initialize()
+        book=paper_book._read(self.tmp/'config')
+        comparisons=[0]
+        class CountedID(str):
+            __hash__=str.__hash__
+            def __eq__(self,other):
+                comparisons[0]+=1
+                return str.__eq__(self,other)
+        ids=[str(uuid4()) for _ in range(500)]
+        book['baseline_trades']=[CountedID(value) for value in ids]
+        rows=[{'record_uuid':value} for value in ids]+[{'record_uuid':str(uuid4())}]
+        original=paper_book.persistence.read_state
+        def read(path,kind):
+            return {'trades':rows} if path.name=='trades.json' else original(path,kind)
+        with mock.patch.object(paper_book.persistence,'read_state',side_effect=read), \
+             mock.patch.object(paper_book,'verify_book_financial'):
+            summary=paper_book._summary(self.tmp/'config',book,self.now)
+        self.assertIn('unreconciled financial activity; paper budget recovery required',summary['unknown'])
+        self.assertLess(comparisons[0],len(ids)*3,'historical baseline classification repeated a quadratic scan')
+
     def test_atomic_reservation_exact_retry_and_conflicting_operation(self):
         self.initialize()
         operation=str(uuid4())

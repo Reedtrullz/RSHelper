@@ -318,12 +318,13 @@ def _summary(root,book,now,extra_limit=None):
     result['realized_profit']=book['realized_profit']
     result['cash_deficit']+=max(0,-book['bankroll']-book['realized_profit'])
     known_lots=set(book['baseline_lots'])|{lot for record in book['offers'].values() for lot in record['lots']}
+    known_trades=set(book['baseline_trades'])
     trades=persistence.read_state(root/'trades.json','trades')['trades']
     verify_book_financial(book,position_store,{'trades':trades},
         persistence.read_state(root/'realizations.json','generic'),
         persistence.read_state(root/'realization-batches.json','generic'))
     if (any(row.get('lot_uid') not in known_lots for row in rows)
-            or any(row.get('record_uuid') not in book['baseline_trades'] for row in trades)):
+            or any(row.get('record_uuid') not in known_trades for row in trades)):
         result['unknown'].append('unreconciled financial activity; paper budget recovery required')
     intents=persistence.read_state(root/'realizations.json','generic').get('operations',{})
     if any(collection['status']=='pending' for collection in book['collections'].values()) or any(not intent['done'] for intent in intents.values()):
