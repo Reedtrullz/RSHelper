@@ -1,28 +1,11 @@
 {
   "positions": [
     {
-      "id": 2,
-      "item_id": 1119,
-      "name": "Steel platebody",
-      "qty": 85,
-      "buy_price": 925,
+      "buy_price": 110,
       "direction": "traditional",
-      "opened_at": "2026-08-24T04:21:45.523816+00:00",
-      "note": "auto",
-      "entry_sell": 925,
-      "entry_offer": 965
-    },
-    {
-      "id": 3,
-      "item_id": 113,
-      "name": "Strength potion(4)",
-      "qty": 81,
-      "buy_price": 112,
-      "direction": "traditional",
-      "opened_at": "2026-08-24T04:29:49.129811+00:00",
-      "note": "auto",
-      "entry_sell": 112,
-      "entry_offer": 116
+      "item_id": 561,
+      "qty": 3
     }
-  ]
+  ],
+  "schema_version": 1
 }

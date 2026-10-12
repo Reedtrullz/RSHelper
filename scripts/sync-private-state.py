@@ -33,7 +33,7 @@ def _ssh(host, destination, mode, origin, selected_profile, packet=None):
                                 '-o', 'IdentityAgent=none', '-o', 'StrictHostKeyChecking=yes',
                                 host, shlex.join(command)],
                                data=_read_file(packet) if packet else None,
-                               timeout=60, output_limit=65536)
+                               timeout=180 if mode == 'apply' else 60, output_limit=65536)
     if result.returncode:
         raise OSError('private SSH transfer or pinned apply failed; pending packet retained')
     return persistence.decode_json(result.stdout)

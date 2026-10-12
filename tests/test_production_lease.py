@@ -12,19 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 class ProductionLeaseTest(unittest.TestCase):
     def test_code_deploy_and_state_apply_share_production_lease(self):
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
-        state = (ROOT / '.github/workflows/state-sync.yml').read_text()
         self.assertIn('rshelper-production', ci)
-        self.assertIn('rshelper-production', state)
         self.assertIn('production.lock', (ROOT / 'deploy/playbook.yml').read_text())
         helper = ROOT / 'deploy/private_state.py'
         self.assertTrue(helper.is_file(), 'version-pinned private apply helper missing')
         self.assertIn('production.lock', helper.read_text())
 
-    def test_same_sha_rerun_has_unique_stage_and_failure_cleanup(self):
-        state = (ROOT / '.github/workflows/state-sync.yml').read_text()
-        self.assertIn('github.run_id', state)
-        self.assertIn('github.run_attempt', state)
-        self.assertIn('always()', state)
+    def test_legacy_git_state_workflow_is_retired(self):
+        self.assertFalse((ROOT / '.github/workflows/state-sync.yml').exists())
 
     def helper(self):
         spec = importlib.util.spec_from_file_location('private_state_fixture', ROOT / 'deploy/private_state.py')
@@ -42,6 +37,7 @@ class ProductionLeaseTest(unittest.TestCase):
                 raise ValueError('failed apply')
             return b''
         verifier._docker_bytes.side_effect = invoke
+        verifier.bounded_command.side_effect = lambda command, **kwargs: invoke(command[1:])
         with self.assertRaises(ValueError):
             module._run_image(verifier, 'sha256:' + 'a' * 64, Path('/opt/apps/rshelper'),
                               Path('/private/stage'), ['-m', 'rshelper', 'state', 'apply'])
@@ -52,6 +48,7 @@ class ProductionLeaseTest(unittest.TestCase):
         self.assertIn('sha256:' + 'a' * 64, calls[0])
         self.assertEqual(calls[1][:2], ['rm', '--force'])
         self.assertEqual(calls[1][2], calls[0][calls[0].index('--name') + 1])
+        self.assertEqual(verifier.bounded_command.call_args.kwargs['timeout'], 150)
 
     def test_failed_apply_cleans_only_owned_stage(self):
         module = self.helper()

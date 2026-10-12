@@ -53,7 +53,8 @@ def _run_image(verifier, image_id, root, stage, arguments):
     if stage is not None:
         command += ['--mount', 'type=bind,src=' + str(stage) + ',dst=/state-stage,readonly']
     try:
-        return json.loads(verifier._docker_bytes(command + [image_id, *arguments]))
+        return json.loads(verifier.bounded_command(
+            ['docker', *command, image_id, *arguments], timeout=150))
     finally:
         verifier._docker_bytes(['rm', '--force', name])
 
