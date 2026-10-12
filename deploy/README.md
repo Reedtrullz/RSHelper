@@ -214,3 +214,41 @@ live service. Validate the copied layout in a disposable HOME before the
 operator's migration window. The existing private feed is a compatibility
 bridge; E08's owner publication choice and private transport transition remain
 separate acceptance gates. See [the synchronizer migration note](../docs/execution/synchronizer-migration.md).
+
+## Measured container limits
+
+Production Compose retains the non-root application user and durable HOME mount,
+with read-only root, all capabilities dropped, no-new-privileges,2GiB memory with
+no extra swap,128 PIDs and a32MiB `/tmp` tmpfs using noexec/nosuid/nodev. Private
+state helper, candidate check and legacy seed containers also have the measured
+memory/PID/security bounds; their writes remain in durable HOME/staging mounts.
+Running artifact verification requires the selected runtime settings as well as
+the exact image identity. No daemon controls are enabled.
+
+The12 October2026 isolated VPS fixture used the actual6fe661af image,25,000
+synthetic journal rows, a14,135,760-byte exact packet/apply,8 concurrent HTTP
+requests,16 SSE clients and an injected primary-unavailable real Tracker fetch.
+Observed memory peak353,398,784 bytes, PID peak33 and temporary test write4MiB.
+Selected caps give approximately6 times memory,4 times PIDs and8 times that
+temporary write. Root writes failed; owner token, locks, atomic HOME writes,
+health, DNS/HTTPS and subscriber overflow503 passed. These are fixture bounds;
+maximum admissible state inventories and sustained production load have not
+been measured. Packet/backup scratch belongs in durable HOME/staging, not tmpfs.
+
+An owned128MiB OOM fixture produced a Docker OOM event, restarted once, recovered
+health and retained the exact state hash. A rendered Compose baseline/candidate/
+rollback rehearsal then verified Docker settings, unchanged durable hash and
+the effective prior PID cgroup. This host's daemon default was7011 with a null
+HostConfig PID limit. It must not be described as an observed unlimited cgroup.
+
+Deployment captures and requires the previous inspected runtime settings before
+replacement. On candidate failure, rollback renders the previous image and those
+settings, retaining the same durable mount; it does not reapply failed candidate
+limits or restore an old financial backup. Verify rollback image/health/state
+receipt separately. The new settings still require production exact-SHA CI,
+deployment, Docker/cgroup inspection and private sync acceptance before#50 closes.
+
+Native and one bounded Sonnet review completed. A missing previous-settings guard
+was added and empty CapAdd tested. Proposed relaxed SecurityOpt/user forms are
+outside this measured pinned deployment contract; strict inspection is deliberate.
+Removing candidate PID limits on rollback restores the previous observed state.

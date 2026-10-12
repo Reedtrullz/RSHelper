@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 import math
 from rshelper.market import MAX_PRICE_RATIO, ge_tax
+from rshelper.market_validation import normalize_candles
 
 
 @dataclass
@@ -29,6 +30,7 @@ class MarginAnalysis:
     current_profit: int = 0        # current margin after tax per item
     expected_gp_per_hour: int = 0  # confidence * current_profit * throughput
     market_data: dict = field(default_factory=dict)
+    candle_coverage: dict = field(default_factory=dict)
 
 
 def analyze_timeseries(
@@ -37,6 +39,7 @@ def analyze_timeseries(
     current_buy: int,
     current_sell: int,
     direction: str = "arbitrage",
+    *, timestep: str = '5m',
 ) -> MarginAnalysis | None:
     """Analyze timeseries data to score margin reliability.
 
@@ -46,7 +49,10 @@ def analyze_timeseries(
     datapoints: list of dicts from timeseries API, each with:
         avgHighPrice, avgLowPrice, highPriceVolume, lowPriceVolume, timestamp
     """
-    if not datapoints or len(datapoints) < 6:
+    normalized = normalize_candles(datapoints,timestep)
+    coverage = getattr(datapoints,'candle_coverage',normalized['coverage'])
+    datapoints = normalized['data']
+    if len(datapoints) < 6 or normalized['coverage']['irregular_intervals']:
         return None
 
     margins: list[float] = []
@@ -135,13 +141,10 @@ def analyze_timeseries(
         margin_trend = 0.0
 
     # Time span (timestamps collected in loop above)
-    if timestamps:
-        window_hours = (max(timestamps) - min(timestamps)) / 3600
-    else:
-        window_hours = len(margins) * 5 / 60
+    window_hours = (max(timestamps) - min(timestamps)) / 3600
 
     # Sub-scores
-    vol_score = min(1.0, avg_volume / 50)
+    vol_score = min(1.0, avg_volume * 300 / normalized['coverage']['timestep_seconds'] / 50)
     # margin_cv of 2.0 (200%) → volatility_score = 0
     volatility_score = max(0.0, 1.0 - margin_cv * 0.5)
     spread_score = min(1.0, avg_spread_pct / 5.0)
@@ -154,6 +157,8 @@ def analyze_timeseries(
         0.20 * vol_score +
         0.25 * volatility_score
     )
+    priced_coverage = len(margins) / normalized['coverage']['expected_windows']
+    reliability *= priced_coverage
 
     # Profitability: blend of historical and current ROI-based sigmoids
     # Historical ROI captures the long-term pattern
@@ -199,6 +204,7 @@ def analyze_timeseries(
         profitability_score=profitability_score,
         datapoints=len(margins),
         window_hours=window_hours,
+        candle_coverage={**coverage,'priced_samples':len(margins),'priced_coverage':priced_coverage},
         spread_score=spread_score,
         volume_score=vol_score,
         volatility_score=volatility_score,

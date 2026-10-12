@@ -59,7 +59,9 @@ class WatchIdentityTest(unittest.TestCase):
     def test_actual_legacy_writers_refuse_active_and_deleted_identity_without_byte_changes(self):
         row = self.identified()['items']['561']
         stores = [self.identified(), {'items': {}, 'tombstones': {RECORD: {**row, 'tombstone': True}}}]
-        with tempfile.TemporaryDirectory() as folder, mock.patch.object(watchlist, 'WATCHLIST_PATH', Path(folder)/'watchlist.json'):
+        with tempfile.TemporaryDirectory() as folder, \
+             mock.patch.object(watchlist, 'WATCHLIST_PATH', Path(folder)/'watchlist.json'), \
+             mock.patch.object(alerts, '_alerts_path', return_value=Path(folder)/'alerts.json'):
             for store in stores:
                 watchlist.WATCHLIST_PATH.write_text(json.dumps(store)); before = watchlist.WATCHLIST_PATH.read_bytes()
                 for action in (lambda: watchlist.add(561, 'Nature rune'), lambda: watchlist.remove(561),

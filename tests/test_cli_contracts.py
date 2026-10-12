@@ -18,6 +18,7 @@ from rshelper.config import Config
 from rshelper.market_data import MarketDataResult
 
 CASES = {
+    'trading-mode': '--mode entries-paused --expected-revision 0 --reason Synthetic --operation-id 11111111-1111-4111-8111-111111111111 --json',
     'alch-scan': '--nature-rune-cost 1 --members-only --no-members-only --min-volume 1 --top 3 --name Synthetic --json --csv --html --save-snapshot',
     'flip-scan': '--members-only --no-members-only --min-volume 1 --min-margin 1 --top 3 --capital 10000 --flip-direction traditional --name Synthetic --json --csv --html --save-snapshot --ge-slots 2',
     'process-scan': '--members-only --no-members-only --skill smithing --min-volume 1 --min-profit 1 --top 3 --capital 10000 --name Synthetic --json --csv --html --save-snapshot',
@@ -34,11 +35,11 @@ CASES = {
     'trade delete': '1',
     'trade status': '--json',
     'signals': '--members-only --no-members-only --flip-direction traditional --cooldown 1 --json --monitor 1',
-    'watch add': '2 --alert-above 1 --alert-below -1',
+    'watch add': '2 --alert-above 1 --alert-below -1 --alert-mode crossing --alert-cooldown-sec 900 --alert-hysteresis-gp 10',
     'watch remove': '2',
     'watch list': '',
     'watch check': '--flip-direction traditional --ge-slots 2 -v --verbose --json',
-    'diff': 'flip --date 2026-01-01',
+    'diff': 'flip --date 2026-01-01 --json',
     'profile create': 'fixture',
     'profile switch': 'fixture',
     'profile list': '',

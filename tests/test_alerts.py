@@ -19,8 +19,13 @@ class TestAlerts(unittest.TestCase):
         self._old_config = pmod.CONFIG_DIR
         pmod.CONFIG_DIR = self.tmp
         pmod.ACTIVE_PROFILE_PATH = self.tmp / "active_profile"
+        from unittest import mock
+        from rshelper import watchlist
+        self._watch_path = mock.patch.object(watchlist, 'WATCHLIST_PATH', self.tmp/'watchlist.json')
+        self._watch_path.start()
 
     def tearDown(self):
+        self._watch_path.stop()
         import shutil
         pmod.CONFIG_DIR = self._old_config
         pmod.ACTIVE_PROFILE_PATH = self._old_config / "active_profile"

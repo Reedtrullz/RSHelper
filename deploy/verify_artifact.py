@@ -68,6 +68,18 @@ def copy_build_metadata(image):
         _docker_bytes(['rm', '--force', name])
 
 
+def validate_runtime_constraints(config):
+    if (not isinstance(config,dict) or config.get('ReadonlyRootfs') is not True
+            or config.get('Privileged') is not False or 'CapAdd' not in config or config['CapAdd'] not in (None,[])
+            or config.get('CapDrop') != ['ALL']
+            or config.get('SecurityOpt') != ['no-new-privileges:true']
+            or config.get('Memory') != 2*1024**3 or config.get('MemorySwap') != 2*1024**3
+            or config.get('PidsLimit') != 128
+            or config.get('Tmpfs') != {'/tmp':'rw,noexec,nosuid,nodev,size=32m,mode=1777'}):
+        raise ValueError('Running container constraints differ from the measured contract')
+    return config
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=('candidate', 'previous', 'running'), required=True)
@@ -76,6 +88,7 @@ def main():
     parser.add_argument('--repository')
     parser.add_argument('--container', default='rshelper')
     parser.add_argument('--expected-image-id')
+    parser.add_argument('--runtime-constraints', action='store_true')
     parser.add_argument('--validation-module', required=True)
     args = parser.parse_args()
     spec = importlib.util.spec_from_file_location('release_validation', args.validation_module)
@@ -84,6 +97,12 @@ def main():
     if args.mode == 'running':
         identity = docker_json(['container', 'inspect', '--format', '{{json .Image}}', args.container])
         if identity != args.expected_image_id: raise ValueError('Running image ID differs from the verified artifact')
+        if args.runtime_constraints:
+            config = docker_json(['container','inspect','--format','{{json .HostConfig}}',args.container])
+            validate_runtime_constraints(config)
+            user = docker_json(['container','inspect','--format','{{json .Config.User}}',args.container])
+            if user not in ('rshelper','1000','1000:1000'):
+                raise ValueError('Running container must retain the non-root application user')
         print(json.dumps({'image_id': identity, 'image': args.image, 'revision': args.revision}))
         return
     inspected = docker_json(['image', 'inspect', args.image])

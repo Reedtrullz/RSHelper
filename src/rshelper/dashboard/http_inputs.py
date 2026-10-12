@@ -80,7 +80,20 @@ def validate_operation(path, body):
             if body.get('qty') is not None: positive_int(body['qty'], 'qty')
             if body.get('operation_id') is not None:
                 text(body['operation_id'], 'operation_id', limit=64)
-    elif path in ('/api/trader', '/api/monitor'):
+    elif path == '/api/trader':
+        action(('start','stop','mode'))
+        if body['action'] == 'mode':
+            if body.get('mode') not in ('running','entries-paused','draining'):
+                raise HttpInputError('Unknown trading stance')
+            positive_int(body.get('expected_revision'),'expected_revision',minimum=0)
+            text(body.get('reason'),'reason',limit=500)
+            text(body.get('operation_id'),'operation_id',limit=64)
+            from rshelper.persistence import canonical_uuid
+            try:
+                canonical_uuid(body['operation_id'])
+            except ValueError as error:
+                raise HttpInputError('Invalid stance operation identity') from error
+    elif path == '/api/monitor':
         action(('start', 'stop'))
     elif path == '/api/trades/delete':
         positive_int(body.get('trade_id'), 'trade_id')
