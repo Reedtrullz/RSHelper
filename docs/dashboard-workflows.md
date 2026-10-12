@@ -46,6 +46,8 @@ chart data tables, named-preset save/load and reload/reconnect, and Back/Forward
 view/item restoration. The browser trial found and fixed the initial bookmark
 loss, Enter interception, missing inspector on tab return and unusable preset
 prompt. No owner financial state was modified for those trials.
+The final 320px trading-input trial exposed a duplicated toolbar flex container;
+removing the outer toolbar class lets the actual controls wrap inside the panel.
 
 At 320px/375px/768px, the alert dialog measured 296px/351px/600px wide,
 respectively, within the viewport. Its narrow controls measured at least 44px

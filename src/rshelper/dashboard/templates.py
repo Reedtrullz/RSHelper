@@ -317,7 +317,7 @@ INDEX_HTML = f"""<!DOCTYPE html>
 {_NAV}
 <div class="main">
   <div class="list-panel">
-    <div class="viewbar" id="viewbar"></div>
+    <div id="viewbar"></div>
     <div class="list-body" id="listBody" tabindex="0" aria-label="Items list">
       <div class="loading"><span class="spinner"></span>Loading market data...</div>
     </div>
