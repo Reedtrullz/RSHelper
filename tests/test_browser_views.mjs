@@ -102,6 +102,20 @@ test('overlapping refresh calls coalesce network acquisition',async()=>{
   assert.equal(requests,3,'only one scan/meta/signals flight may run');
   response.resolve();await Promise.all([first,second]);
 });
+test('confidence discloses unavailable history and displays a valid zero score',async()=>{
+  let row={available:false,reason:'Wiki history unavailable <script>'};
+  const {context}=ownerContext(async()=>new Response(JSON.stringify({'1':row})));
+  context.document.getElementById('contextPanel').contains=()=>true;
+  vm.runInContext('selectedId=1;loadConfidence(1)',context);
+  await new Promise(resolve=>setImmediate(resolve));
+  const tile=context.document.getElementById('confTile');
+  assert.match(tile.innerHTML,/Confidence unavailable/);
+  assert.match(tile.innerHTML,/&lt;script&gt;/);
+  row={confidence:0,datapoints:8,window_hours:1};
+  vm.runInContext('loadConfidence(1)',context);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.match(tile.innerHTML,/0%/);
+});
 test('refresh retains trade form values, focus and selection across replacement',async()=>{
   const {context,elements}=ownerContext(async()=>new Response('{}'));
   vm.runInContext("view='paper'",context);

@@ -856,12 +856,15 @@ function loadConfidence(id){
   const ctx=document.getElementById('contextPanel');
   if(!ctx)return;
   const epoch=authEpoch,tab=viewEpoch,tile=document.getElementById('confTile');
-  // Lazily fetch margin confidence and append a tile; failure is silent.
   apiFetch('/api/confidence?ids='+id).then(r=>r.ok?r.json():{}).then(d=>{
     const row=d[String(id)];
     if(!row||epoch!==authEpoch||tab!==viewEpoch||selectedId!==id||
        document.getElementById('confTile')!==tile||!ctx.contains(tile))return;
-    if(row.confidence==null||row.confidence===0)return;
+    if(row.available===false){
+      tile.innerHTML='<div class="lbl">Margin Confidence unavailable</div><div class="lbl">'+escHtml(row.reason)+'</div>';
+      tile.style.display='';return;
+    }
+    if(row.confidence==null)return;
     const pct=(row.confidence*100).toFixed(0);
     const cls=pct>=70?'green':pct>=40?'gold':'red';
     tile.innerHTML='<div class="lbl">Margin Confidence</div><div class="val '+cls+'">'+pct+'%</div>'+
@@ -932,7 +935,7 @@ function renderMarket(){
     const conf=confMap[item.id];
     const confTxt=conf&&conf.confidence!=null
       ?'<span class="'+(conf.confidence>=0.7?'pos':conf.confidence>=0.4?'gold':'neg')+'" title="'+conf.datapoints+' windows, '+(conf.window_hours||0).toFixed(1)+'h">'+(conf.confidence*100).toFixed(0)+'%</span>'
-      :'<span class="dim">-</span>';
+      :'<span class="dim" title="'+escHtml(conf&&conf.reason||'Confidence not yet available')+'">-</span>';
     h+='<tr class="'+sel+'" data-id="'+item.id+'" onclick="selectId('+item.id+',false)">'+
       '<td class="name" title="'+escHtml(item.name)+'">'+escHtml(item.name)+'</td>'+
       '<td>'+gp(item.buy_price)+'</td><td>'+gp(item.sell_price)+'</td>'+

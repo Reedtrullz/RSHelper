@@ -1,6 +1,7 @@
 """Dashboard server — launch a local HTTP server for the RSHelper dashboard."""
 
 import errno
+import hashlib
 import os
 import stat
 import subprocess
@@ -11,6 +12,7 @@ import json
 import queue
 import threading
 from types import MappingProxyType
+from dataclasses import asdict
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
@@ -880,7 +882,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return {"items": [_item_dict(r) for r in results[:cfg.alch.top]],
                 "count": len(results), "nature_rune_cost": nature}
 
-    confidence_cache = {"ts": 0.0, "data": {}}
+    confidence_cache = {"ts": 0.0, "data": {}, 'key':None}
     conf_lock = __import__("threading").Lock()
 
     def get_confidence(item_ids: list[int]) -> dict:
@@ -888,11 +890,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = read_market()
         if not item_ids:
             return {}
+        key = (cache['revision'],hashlib.sha256(json.dumps(asdict(cfg),sort_keys=True).encode()).hexdigest())
+        item_ids = list(dict.fromkeys(item_ids))[:30]
         with conf_lock:
             now = time.time()
-            if now - confidence_cache["ts"] > 600 or not confidence_cache["data"]:
+            if now - confidence_cache["ts"] > 600 or confidence_cache['key'] != key:
                 confidence_cache["data"] = {}
                 confidence_cache["ts"] = now
+                confidence_cache['key'] = key
             want = [i for i in item_ids
                     if str(i) not in confidence_cache["data"]][:30]
         if want:
@@ -907,6 +912,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 lookup, ts_data, direction=cfg.flip.direction)
             scored = {str(a.item_id) for a in results}
             with conf_lock:
+                if confidence_cache['key'] != key or read_market()['revision'] != cache['revision']:
+                    return {}
                 for a in results:
                     confidence_cache["data"][str(a.item_id)] = {
                         "market_data": a.market_data,
@@ -918,13 +925,22 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "avg_spread_pct": round(a.avg_spread_pct, 4),
                         "datapoints": a.datapoints,
                         "window_hours": round(a.window_hours, 1),
+                        "market_revision":cache['revision'],
+                        "current_profit":a.current_profit,
+                        "expected_gp_per_hour":a.expected_gp_per_hour,
                     }
                 # Cache negative results (no timeseries / too few windows) so
                 # repeated polls don't re-fetch the same items every 10 min.
                 for iid in want:
                     if str(iid) not in scored:
-                        confidence_cache["data"][str(iid)] = None
+                        confidence_cache["data"][str(iid)] = {
+                            'available':False,'market_revision':cache['revision'],
+                            'reason':'Usable Wiki candle history unavailable; Tracker provides no candles.'}
+                while len(confidence_cache['data']) > 512:
+                    del confidence_cache['data'][next(iter(confidence_cache['data']))]
         with conf_lock:
+            if confidence_cache['key'] != key:
+                return {}
             return {k: v for k, v in confidence_cache["data"].items()
                     if k in {str(i) for i in item_ids} and v is not None}
 
