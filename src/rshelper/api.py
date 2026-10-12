@@ -10,6 +10,7 @@ import fcntl
 import json
 import math
 import os
+import socket
 import stat
 import sys
 import tempfile
@@ -45,6 +46,28 @@ _MARKET_SOURCES = {"wiki", "ge-tracker", "unknown"}
 _DELIVERIES = {"fresh-cache", "network", "stale-cache"}
 _VOLUME_KINDS = {"executed-trades", "standing-orders", "unknown"}
 _TRACKER_DELIVERY = threading.local()
+PROVIDER_TIMEOUT = 30.0
+ACQUISITION_TIMEOUT = 60.0
+_ACQUISITION = threading.local()
+_PROVIDER_SLOTS = threading.BoundedSemaphore(4)
+
+
+class ProviderDeadline(TimeoutError):
+    pass
+
+
+def _remaining():
+    end = getattr(_ACQUISITION, 'end', None)
+    remaining = end - time.monotonic() if end is not None else 15.0
+    if remaining <= 0:
+        raise ProviderDeadline('provider acquisition deadline exceeded')
+    return remaining
+
+
+def _sleep(delay):
+    remaining = _remaining()
+    time.sleep(min(delay, remaining))
+    _remaining()
 
 # Ensure cache dir exists at import time (parents for fresh HOMEs)
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -56,11 +79,11 @@ class RequestBudgetUnavailable(RuntimeError):
 
 def _throttle_path() -> Path:
     """Shared reservation state, independent of the active account profile."""
-    return CACHE_DIR / ".throttle"
+    return getattr(_ACQUISITION, 'cache_dir', CACHE_DIR) / '.throttle'
 
 
 def _throttle_lock_path() -> Path:
-    return CACHE_DIR / ".throttle.lock"
+    return getattr(_ACQUISITION, 'cache_dir', CACHE_DIR) / '.throttle.lock'
 
 
 def _load_request_budget(stamp: Path, now: float) -> tuple[float, float, float, float]:
@@ -166,7 +189,16 @@ def _locked_request_budget():
             raise RequestBudgetUnavailable('shared request lock is not a regular file')
         lock_file = os.fdopen(fd, 'r+')
         fd = None
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        if getattr(_ACQUISITION, 'end', None) is None:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        else:
+            while True:
+                _remaining()
+                try:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    _sleep(.02)
     except (OSError, OverflowError, ValueError) as exc:
         if lock_file is not None: lock_file.close()
         raise RequestBudgetUnavailable('cannot coordinate shared request budget') from exc
@@ -241,7 +273,7 @@ def _wait_for_reservation(reserved: float) -> None:
             delay = reserved - now
         if delay <= 0:
             return
-        time.sleep(delay)
+        _sleep(delay)
 
 
 def _dispatch_request(request, attempt=0):
@@ -264,7 +296,15 @@ def _dispatch_request(request, attempt=0):
                 response = None
                 server_delay = 0.0
                 try:
-                    response = urllib.request.urlopen(request, timeout=15)
+                    response = urllib.request.urlopen(request, timeout=min(15, _remaining()))
+                    context = getattr(_ACQUISITION, 'context', None)
+                    if context is not None:
+                        context['response'] = response
+                    try:
+                        _remaining()
+                    except ProviderDeadline:
+                        response.close()
+                        raise
                     return response
                 except urllib.error.HTTPError as exc:
                     if exc.code in (429, 503):
@@ -282,7 +322,7 @@ def _dispatch_request(request, attempt=0):
                     except BaseException:
                         if response is not None: response.close()
                         raise
-        time.sleep(delay)
+        _sleep(delay)
 
 
 def _throttle() -> None:
@@ -325,10 +365,56 @@ RETRY_DELAY = 2.0  # seconds, doubles each retry
 
 
 def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
-    """GET url with retry+backoff, return parsed JSON (None on failure)."""
+    end = min(getattr(_ACQUISITION, 'end', float('inf')),
+              time.monotonic() + PROVIDER_TIMEOUT)
+    if end <= time.monotonic() or not _PROVIDER_SLOTS.acquire(blocking=False):
+        print('  Warning: provider deadline or worker capacity exhausted', file=sys.stderr)
+        return None
+    done = threading.Event()
+    outcome = {}
+    context = {}
+    cache_dir = CACHE_DIR
+
+    def acquire():
+        _ACQUISITION.end = end
+        _ACQUISITION.context = context
+        _ACQUISITION.cache_dir = cache_dir
+        try:
+            outcome['result'] = _fetch_url_attempts(url, retries)
+        except BaseException as exc:
+            outcome['error'] = exc
+        finally:
+            _PROVIDER_SLOTS.release()
+            done.set()
+
+    # DNS and header reads can ignore socket inactivity timeouts. Bound the
+    # caller separately; four slots cap residual workers, which never write cache.
+    threading.Thread(target=acquire, daemon=True).start()
+    if not done.wait(max(0, end - time.monotonic())):
+        response = context.get('response')
+        if response is not None:
+            transport = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+            if transport is not None:
+                try:
+                    transport.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+        print('  Warning: provider acquisition deadline exceeded', file=sys.stderr)
+        return None
+    error = outcome.get('error')
+    if isinstance(error, ProviderDeadline):
+        print(f'  Warning: {error}', file=sys.stderr)
+        return None
+    if error is not None:
+        raise error
+    return outcome.get('result')
+
+
+def _fetch_url_attempts(url: str, retries: int) -> Any:
     last_exc = None
     for attempt in range(retries + 1):
         try:
+            _remaining()
             reserved = _reserve_request(None, REQUEST_INTERVAL)
             _wait_for_reservation(reserved)
         except RequestBudgetUnavailable as exc:
@@ -341,7 +427,19 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
         )
         try:
             with _dispatch_request(req, attempt) as resp:
-                raw = resp.read(MAX_RESPONSE_BYTES + 1)
+                _ACQUISITION.context['response'] = resp
+                chunks = []
+                size = 0
+                read = getattr(resp, 'read1', resp.read)
+                while size <= MAX_RESPONSE_BYTES:
+                    _remaining()
+                    chunk = read(min(65536, MAX_RESPONSE_BYTES + 1 - size))
+                    _remaining()
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    size += len(chunk)
+                raw = b''.join(chunks)
                 if len(raw) > MAX_RESPONSE_BYTES:
                     print("  Warning: market response exceeds 32 MiB limit", file=sys.stderr)
                     return None
@@ -350,21 +448,26 @@ def _fetch_url(url: str, retries: int = MAX_RETRIES) -> Any:
             print(f'  Warning: shared dispatch budget unavailable: {exc}', file=sys.stderr)
             return None
         except urllib.error.HTTPError as exc:
+            exc.close()
+            delay = RETRY_DELAY * (2 ** attempt)
             if exc.code in (429, 503):
-                delay = max(RETRY_DELAY * (2 ** attempt),
+                delay = max(delay,
                             _parse_retry_after((exc.headers or {}).get("Retry-After")))
             if exc.code in (429, 503) and attempt < retries:
                 print(f"  Retrying {url} in {delay:.0f}s (HTTP {exc.code}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
-                time.sleep(delay)
+                _sleep(delay)
                 last_exc = exc
                 continue
             print(f"  Warning: HTTP {exc.code} fetching {url}: {exc.reason}", file=sys.stderr)
             return None
+        except ProviderDeadline:
+            raise
         except (urllib.error.URLError, json.JSONDecodeError, MarketDataError, UnicodeDecodeError, RecursionError, OSError) as exc:
+            _remaining()
             if attempt < retries:
                 delay = RETRY_DELAY * (2 ** attempt)
                 print(f"  Retrying {url} in {delay:.0f}s ({type(exc).__name__}, attempt {attempt + 1}/{retries + 1})", file=sys.stderr)
-                time.sleep(delay)
+                _sleep(delay)
                 last_exc = exc
                 continue
             print(f"  Warning: failed to fetch {url}: {exc}", file=sys.stderr)
@@ -754,6 +857,20 @@ def _cache_result(name: str, profile: str | None, *, stale: bool,
 def _fetch_result(name: str, profile: str | None, *, path: str,
                   tracker_convert=None, volume_kind: str = "unknown") -> MarketDataResult | None:
     """Acquire one validated endpoint in fresh-cache -> Wiki -> Tracker -> stale order."""
+    previous = getattr(_ACQUISITION, 'end', None)
+    _ACQUISITION.end = min(previous if previous is not None else float('inf'),
+                            time.monotonic() + ACQUISITION_TIMEOUT)
+    try:
+        return _fetch_result_within_deadline(name, profile, path=path,
+                    tracker_convert=tracker_convert, volume_kind=volume_kind)
+    finally:
+        if previous is None:
+            del _ACQUISITION.end
+        else:
+            _ACQUISITION.end = previous
+
+
+def _fetch_result_within_deadline(name, profile, *, path, tracker_convert, volume_kind):
     attempted_at = time.time()
     cached = _cache_result(name, profile, stale=False, now=attempted_at)
     if cached is not None:

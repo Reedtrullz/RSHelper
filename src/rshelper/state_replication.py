@@ -472,8 +472,14 @@ def _merge(root, incoming):
 
 
 def apply_packet(profile, source):
-    root = resolve_config_path('', profile)
-    return _apply_packet(root, profile, source)
+    from rshelper.readiness import record_sync
+    try:
+        result = _apply_packet(resolve_config_path('', profile), profile, source)
+    except (OSError, ValueError):
+        record_sync(profile, {'status': 'failed'})
+        raise
+    record_sync(profile, result)
+    return result
 
 
 def _apply_packet(root, profile, source):

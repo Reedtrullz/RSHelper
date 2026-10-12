@@ -92,7 +92,7 @@ class TestMarketValidation(unittest.TestCase):
 
     def test_oversized_response_rejected_before_decode(self):
         response = mock.MagicMock()
-        response.__enter__.return_value.read.return_value = b'x' * 17
+        response.__enter__.return_value.read1.side_effect = [b'x' * 17, b'']
         with mock.patch.object(api, 'MAX_RESPONSE_BYTES', 16), \
                 mock.patch.object(api.urllib.request, 'urlopen', return_value=response), \
                 mock.patch.object(api.json, 'loads') as decode:
@@ -102,7 +102,7 @@ class TestMarketValidation(unittest.TestCase):
     def test_overflowing_json_and_nonfinite_extensions_fail_closed(self):
         for raw in (b'{"n":' + b'9' * 5000 + b'}', b'{"extension":1e309}'):
             response = mock.MagicMock()
-            response.__enter__.return_value.read.return_value = raw
+            response.__enter__.return_value.read1.side_effect = [raw, b'']
             with mock.patch.object(api.urllib.request, 'urlopen', return_value=response):
                 self.assertIsNone(api._fetch_url('https://fixture.invalid', retries=0))
 
@@ -159,7 +159,7 @@ class TestMarketValidation(unittest.TestCase):
     def test_bad_encoding_and_deep_json_fail_closed(self):
         for raw in (b'\xff\xfe\xff', b'[' * 2000 + b']' * 2000):
             response = mock.MagicMock()
-            response.__enter__.return_value.read.return_value = raw
+            response.__enter__.return_value.read1.side_effect = [raw, b'']
             with mock.patch.object(api.urllib.request, 'urlopen', return_value=response):
                 self.assertIsNone(api._fetch_url('https://fixture.invalid', retries=0))
 

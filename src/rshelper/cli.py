@@ -1745,7 +1745,8 @@ def _main() -> None:
     repair = sys.argv[1:3] == ["profile", "switch"]
     launch_profile = resolve_profile("default" if repair and selected.profile is None else selected.profile)
     # Maintenance validates its own inputs without initializing the target profile.
-    maintenance = remaining[:1] in (["state"], ["backup"]) or remaining[:2] == ["profile", "backup"]
+    maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
+        ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
     if maintenance:
         from rshelper.config import Config
         cfg = Config()
@@ -2005,6 +2006,19 @@ def _main() -> None:
     profile_backup.add_argument("destination", help="New ZIP path outside the state directory")
     profile_backup.add_argument("--evidence", action="store_true", help="Preserve invalid bytes for diagnosis; this is not a validated restore source")
     profile_backup.add_argument("--json", action="store_true", help="Print the private manifest as JSON")
+    profile_export = profile_sub.add_parser('export', help='Export a private validated profile as JSON or CSV')
+    profile_export.add_argument('destination')
+    profile_export.add_argument('--format', choices=('json', 'csv'), default='json')
+    profile_export.add_argument('--json', action='store_true')
+    profile_import = profile_sub.add_parser('import', help='Preview a private profile import; --apply publishes it')
+    profile_import.add_argument('--input', required=True)
+    profile_import.add_argument('--format', choices=('json', 'csv', 'zip'), default='json')
+    profile_import.add_argument('--expected-profile-uuid', required=True)
+    profile_import.add_argument('--expected-source-revision')
+    profile_import.add_argument('--apply', action='store_true')
+    profile_import.add_argument('--operation-id')
+    profile_import.add_argument('--backup', help='New private ZIP path for the pre-apply backup')
+    profile_import.add_argument('--json', action='store_true')
     profile_del = profile_sub.add_parser("delete", help="Delete a profile")
     profile_del.add_argument("name", help="Profile name")
     profile_del.add_argument("--force", action="store_true", help="Delete even if profile has data")
@@ -2093,6 +2107,8 @@ def _main() -> None:
     migration_apply.add_argument('--json', action='store_true')
 
     backup_p = sub.add_parser('backup', help='Inspect and restore private profile backups')
+    readiness_p = sub.add_parser('readiness', help='Read private source, cycle and sync readiness without fetching')
+    readiness_p.add_argument('--json', action='store_true')
     backup_sub = backup_p.add_subparsers(dest='backup_action', required=True)
     inspect_p = backup_sub.add_parser('inspect')
     inspect_p.add_argument('--input', required=True)
@@ -2126,7 +2142,10 @@ def _main() -> None:
     if args.quiet:
         import os
         sys.stderr = open(os.devnull, "w")
-    if args.command == 'backup':
+    if args.command == 'readiness':
+        from rshelper.readiness import status
+        print(json.dumps(status(args.profile), sort_keys=True))
+    elif args.command == 'backup':
         from pathlib import Path
         from rshelper import backup
         if args.backup_action == 'inspect':
@@ -2353,7 +2372,23 @@ def _main() -> None:
         from rshelper.profile import (get_active_profile, set_active_profile,
                                        create_profile, delete_profile, list_profiles,
                                        validate_profile_name)
-        if args.profile_action == "backup":
+        if args.profile_action in ('export', 'import'):
+            from pathlib import Path
+            from rshelper import profile_transfer
+            import zipfile
+            try:
+                if args.profile_action == 'export':
+                    result = profile_transfer.export_profile(args.profile, Path(args.destination), args.format)
+                else:
+                    result = profile_transfer.import_profile(args.profile, Path(args.input), args.format,
+                        expected_profile_uuid=args.expected_profile_uuid,
+                        expected_source_revision=args.expected_source_revision,
+                        apply=args.apply, operation_id=args.operation_id,
+                        backup_path=Path(args.backup) if args.backup else None)
+            except (OSError, zipfile.BadZipFile):
+                raise ValueError('private transfer failed; original profile state preserved') from None
+            print(json.dumps(result, sort_keys=True))
+        elif args.profile_action == "backup":
             from pathlib import Path
             from rshelper.backup import export_profile
             try:
