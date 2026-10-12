@@ -1738,6 +1738,18 @@ def config_edit_cmd(args: argparse.Namespace) -> None:
             result=config_edit.rollback_config(args.profile,args.restore_operation_id,**options)
     print(json.dumps(result,indent=2))
 
+def trade_review_cmd(args: argparse.Namespace) -> None:
+    from rshelper import trade_reviews,backup,persistence
+    from pathlib import Path
+    if args.review_action=='append':
+        try:raw=backup._read_file(Path(args.input),65536)
+        except OSError as error:raise ValueError('Review input unavailable') from error
+        entry=persistence.decode_json(raw)
+        result=trade_reviews.append_review(args.profile,args.lot_uid,entry,expected_revision=args.expected_revision,operation_id=args.operation_id)
+    elif args.review_action=='history':result=trade_reviews.review_detail(args.profile,args.lot_uid)
+    else:result=trade_reviews.review_queue(args.profile,note=args.note,strategy=args.strategy,tag=args.tag,unreviewed=args.unreviewed,limit=args.limit)
+    print(json.dumps(result,indent=2))
+
 def signals_cmd(args: argparse.Namespace) -> None:
     """Fetch data, detect market signals, print results grouped by type."""
     monitor_interval = getattr(args, "monitor", 0) or 0
@@ -1876,7 +1888,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
-    maintenance = maintenance or remaining[:1] == ['trading-mode'] or remaining[:2] in (
+    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews']) or remaining[:2] in (
         ['config','preview'],['config','apply'],['config','rollback'])
     if maintenance:
         from rshelper.config import Config
@@ -2174,6 +2186,7 @@ def _main() -> None:
     profile_export = profile_sub.add_parser('export', help='Export a private validated profile as JSON or CSV')
     profile_export.add_argument('destination')
     profile_export.add_argument('--format', choices=('json', 'csv'), default='json')
+    profile_export.add_argument('--without-reviews',action='store_true',help='Exclude private review text; export remains private')
     profile_export.add_argument('--json', action='store_true')
     profile_import = profile_sub.add_parser('import', help='Preview a private profile import; --apply publishes it')
     profile_import.add_argument('--input', required=True)
@@ -2198,6 +2211,17 @@ def _main() -> None:
     config_sub = config_parser.add_subparsers(dest="config_action")
     config_sub.add_parser("show", help="Print current config as JSON")
     config_sub.add_parser("path", help="Print config file path")
+    review_parser=sub.add_parser('reviews',help='Private stable-lot hypotheses and append-only reviews')
+    review_sub=review_parser.add_subparsers(dest='review_action',required=True)
+    queue=review_sub.add_parser('queue')
+    queue.add_argument('--tag',default='');queue.add_argument('--unreviewed',action='store_true')
+    queue.add_argument('--note',default='');queue.add_argument('--strategy',choices=['','auto','manual'],default='')
+    queue.add_argument('--limit',type=int,default=50)
+    append=review_sub.add_parser('append');append.add_argument('lot_uid')
+    append.add_argument('--input',required=True);append.add_argument('--expected-revision',required=True,type=int)
+    append.add_argument('--operation-id',required=True)
+    detail=review_sub.add_parser('history');detail.add_argument('lot_uid')
+    for command in (queue,append,detail):command.add_argument('--json',action='store_true')
     for action in ('preview','apply','rollback'):
         edit=config_sub.add_parser(action,help='Preview, apply or restore an exact TOML configuration')
         if action!='rollback':edit.add_argument('--input',required=action=='apply',help='Bounded TOML file')
@@ -2574,7 +2598,7 @@ def _main() -> None:
             import zipfile
             try:
                 if args.profile_action == 'export':
-                    result = profile_transfer.export_profile(args.profile, Path(args.destination), args.format)
+                    result = profile_transfer.export_profile(args.profile, Path(args.destination), args.format,include_reviews=not args.without_reviews)
                 else:
                     result = profile_transfer.import_profile(args.profile, Path(args.input), args.format,
                         expected_profile_uuid=args.expected_profile_uuid,
@@ -2636,6 +2660,8 @@ def _main() -> None:
         diff_cmd(args)
     elif args.command == "snapshots":
         snapshot_list(args)
+    elif args.command=='reviews':
+        trade_review_cmd(args)
     elif args.command == "config":
         if args.config_action in ('preview','apply','rollback'):
             config_edit_cmd(args)

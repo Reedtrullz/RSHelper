@@ -66,7 +66,22 @@ def validate_operation(path, body):
     def action(choices):
         if not isinstance(body.get('action'), str) or body['action'] not in choices:
             raise HttpInputError('Unknown action')
-    if path == '/api/settings':
+    if path=='/api/reviews':
+        from rshelper.persistence import canonical_uuid
+        fields={'queue':{'tag','unreviewed','note','strategy','limit'},'append':{'lot_uid','entry','expected_revision','operation_id'}}
+        action(fields)
+        if set(body)!={'action'}|fields[body['action']]:raise HttpInputError('Review action fields differ')
+        if body['action']=='append':
+            from rshelper.trade_reviews import _entry
+            try:canonical_uuid(body['lot_uid']);canonical_uuid(body['operation_id']);_entry(body['entry'])
+            except (ValueError,TypeError) as error:raise HttpInputError('Invalid review fields') from error
+            positive_int(body['expected_revision'],'expected_revision',minimum=0)
+        else:
+            text(body['tag'],'tag',required=False,limit=64);text(body['note'],'note',required=False,limit=4096)
+            if type(body['unreviewed']) is not bool or body['strategy'] not in ('','auto','manual'):raise HttpInputError('Invalid review filter')
+            positive_int(body['limit'],'limit')
+            if body['limit']>200:raise HttpInputError('Review limit exceeds 200')
+    elif path == '/api/settings':
         from rshelper.persistence import canonical_uuid
         fields={'preview':{'candidate'},'apply':{'candidate','expected_revision','operation_id','backup_path'},
                 'rollback':{'restore_operation_id','expected_revision','operation_id','backup_path'}}
@@ -145,6 +160,12 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
+    if route=='/api/reviews':
+        from rshelper.persistence import canonical_uuid
+        if set(values)-{'lot_uid'}:raise HttpInputError('Unknown review query field')
+        if 'lot_uid' in values:
+            try:canonical_uuid(values['lot_uid'][0])
+            except ValueError as error:raise HttpInputError('Invalid review lot identity') from error
     if route == '/api/state/receipt':
         from rshelper.persistence import canonical_uuid
         if set(values) != {'origin'}:

@@ -50,6 +50,7 @@ class Trade:
     revision: int | None = None
     entry_config: dict | None = None
     exit_config: dict | None = None
+    closed_lot_uid: str | None = None
 
 
 @dataclass

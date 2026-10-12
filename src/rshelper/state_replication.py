@@ -128,13 +128,19 @@ def _information(data):
     persistence.canonical_uuid(data['origin_uuid'])
     count = 0
     for relative, value in data['files'].items():
-        if relative != 'tuning_log.json' and not relative.startswith('snapshots/'):
+        if relative not in ('tuning_log.json','trade-reviews.json') and not relative.startswith('snapshots/'):
             raise ValueError('unapproved informational source')
         state_transaction._kind(relative)
         persistence.validate_state(value, 'generic', relative)
         if relative=='tuning_log.json':
             from rshelper.tuning import validate_log
             validate_log(value)
+        if relative=='trade-reviews.json':
+            from rshelper.trade_reviews import validate_store
+            validate_store(value)
+            if value['authority_origin']!=data['origin_uuid']:raise ValueError('review information authority differs')
+            count+=len(value['entries'])
+            continue
         rows = value.get('entries' if relative == 'tuning_log.json' else 'items', [])
         if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
             raise ValueError('invalid informational record collection')
@@ -277,7 +283,10 @@ def capture_packet(profile, destination):
         files['replication-receipts.json'] = _json({'schema_version': 1, 'receipts': state['receipts']})
         selected, _ = _backup_files(root)
         information = {name: _decode(_read_file(path)) for name, path in selected.items()
-                       if name == 'tuning_log.json' or name.startswith('snapshots/')}
+                       if name in ('tuning_log.json','trade-reviews.json') or name.startswith('snapshots/')}
+        if ('trade-reviews.json' in information and
+                information['trade-reviews.json']['authority_origin']!=activation['origin_uuid']):
+            information.pop('trade-reviews.json')
         if information:
             files['information.json'] = _json({'schema_version': 1, 'origin_uuid': activation['origin_uuid'],
                                                'files': information})
@@ -482,6 +491,16 @@ def _merge(root, incoming, source_origin):
             _information(value)
             if value['origin_uuid'] != origin:
                 raise ValueError('peer informational origin mismatch')
+        current_information=peers['origins'].get(information['origin_uuid'],{})
+        prior_reviews=current_information.get('files',{}).get('trade-reviews.json')
+        incoming_reviews=information['files'].get('trade-reviews.json')
+        if incoming_reviews is not None:
+            from rshelper.trade_reviews import authority_origin
+            if incoming_reviews['authority_origin']!=authority_origin(activation):raise ValueError('review financial authority differs')
+        if prior_reviews is not None:
+            from rshelper.trade_reviews import require_successor
+            if incoming_reviews is None:raise ValueError('source omitted acknowledged review history')
+            require_successor(prior_reviews,incoming_reviews)
         peers['origins'][information['origin_uuid']] = information
         result['peer-information.json'] = peers
     for name, kind in CORE.items():

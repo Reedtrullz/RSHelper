@@ -20,6 +20,7 @@ let accessMode='owner',capabilities={mode:'owner',features:[]},ownerToken='',aut
 let accessReady=false,authEpoch=0;
 let viewEpoch=0,renderEpoch=0,refreshFlight=null;
 let settingsState=null,settingsPreviewCandidate=null,pendingSettingsOperation=null;
+let reviewsState=null,reviewLotUid='',pendingReviewOperation=null,reviewTag='',reviewUnreviewed=false;
 function beginViewRequest(){
   const epoch=authEpoch,tab=viewEpoch,name=view,request=++renderEpoch;
   const panels=['listBody','contextPanel'].map(id=>{
@@ -54,7 +55,7 @@ function renderViewbar(bar){
   bar.scrollLeft=scroll;
 }
 const pendingRequests=new Set();
-const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings']);
+const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews']);
 const publicMarketPaths=new Set(['/api/scan','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
 
 function apiFetch(url,options={}){
@@ -126,7 +127,7 @@ function applyAccessGates(){
   const canPrivate=accessMode==='owner'&&authenticated&&hasFeature('private-state');
   const hasMarket=hasFeature('market');
   const views={market:hasMarket,process:hasMarket,paper:canPrivate,signals:canPrivate,watchlist:canPrivate,
-    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate};
+    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate,reviews:canPrivate};
   Object.entries(views).forEach(([name,allowed])=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
@@ -172,6 +173,7 @@ function disconnectOwner(){
   geData=null;bankData=null;alchItems=[];confMap={};viewRows=[];selectedId=null;strategy='';view='market';sseOk=false;
   pendingPaperOps={};geOffset=0;
   settingsState=null;settingsPreviewCandidate=null;pendingSettingsOperation=null;
+  reviewsState=null;reviewLotUid='';pendingReviewOperation=null;reviewTag='';reviewUnreviewed=false;
   ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
@@ -446,13 +448,13 @@ function setView(v){
   if(privateViews.has(v)&&!(accessMode==='owner'&&authenticated&&hasFeature('private-state'))){v='market';}
   if(v!==view){document.getElementById('listBody').innerHTML='';document.getElementById('contextPanel').innerHTML='';}
   view=v;
-  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings'];
+  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
   names.forEach(n=>{
     const btn=document.getElementById('btn'+n.charAt(0).toUpperCase()+n.slice(1));
     if(btn)btn.classList.toggle('active',v===n);
   });
   const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
-                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings'};
+                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews'};
   if(titles[v])document.title='RSHelper — '+titles[v];
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
@@ -464,6 +466,7 @@ function setView(v){
   else if(v==='overview')renderOverview();
   else if(v==='activity')renderActivity();
   else if(v==='settings')renderSettings();
+  else if(v==='reviews')renderReviews();
   if(v==='market'&&selectedId==null)renderContextEmpty();
 }
 function applySearch(){if(view==='market')renderMarket();else if(view==='signals')renderSignals();else if(view==='watchlist')renderWatchlist()}
@@ -825,6 +828,81 @@ function drawDaily(cv,buckets){
 """
 
 SCRIPT_VIEWS = r"""
+function openReview(lot){reviewLotUid=lot;pendingReviewOperation=null;setView('reviews');}
+async function renderReviews(keepEditor=false){
+  const editing=keepEditor&&reviewLotUid&&document.getElementById('reviewHypothesis');
+  const editorRevision=reviewsState?.revision;
+  const current=beginViewRequest();
+  try{
+    const response=await apiFetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'queue',tag:reviewTag,unreviewed:reviewUnreviewed,note:'',strategy,limit:50})});
+    const result=await response.json();
+    if(!current())return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    reviewsState={...result,revision:editing?editorRevision:result.revision};
+    let html='<h2>Private reviews</h2><p>Annotations describe your plan and observations. Recorded quantities, prices, tax and profit stay in the trade journal.</p>'+
+      '<label for="reviewFilterTag">Exact tag</label><input id="reviewFilterTag" value="'+escHtml(reviewTag)+'">'+
+      '<label><input id="reviewFilterUnreviewed" type="checkbox" '+(reviewUnreviewed?'checked':'')+'> Unreviewed only</label><button type="button" onclick="filterReviews()">Apply filters</button>'+
+      '<p>'+format(result.sample_count)+' matching realized children across '+format(result.lot_count)+' known lots; '+format(result.missing_hypothesis_count)+' missing hypotheses. Showing up to 50. Strategy: '+escHtml(strategy||'all')+'. '+escHtml(result.legacy_note_compatibility)+'</p>';
+    html+='<h3>Open lots</h3>'+((result.open_lots||[]).map(lot=>'<button type="button" data-lot="'+escHtml(lot.lot_uid)+'" onclick="openReview(this.dataset.lot)">'+escHtml(lot.name)+' · '+format(lot.qty)+'</button>').join('')||'<p>No open lots.</p>');
+    html+='<p>Showing '+format((result.open_lots||[]).length)+' / '+format(result.open_lot_count||0)+' open lots.</p>';
+    html+='<table><thead><tr><th>Lot</th><th>Recorded profit</th><th>Hypothesis</th><th>Review</th></tr></thead><tbody>';
+    (result.trades||[]).forEach(row=>{
+      html+='<tr><td>'+(row.lot_uid?'<button type="button" data-lot="'+escHtml(row.lot_uid)+'" onclick="openReview(this.dataset.lot)">'+escHtml(row.lot_uid)+'</button>':'Legacy parent unknown')+'</td><td>'+format(row.profit)+' gp</td><td>'+escHtml(row.annotation?.hypothesis||'Missing')+'</td><td>'+escHtml(row.annotation?.review||'Unreviewed')+'</td></tr>';
+    });
+    document.getElementById('listBody').innerHTML=html+'</tbody></table>';
+    current.finish();
+    if(editing)return;
+    if(reviewLotUid)await renderReviewDetail();
+    else document.getElementById('contextPanel').innerHTML='<p>Select a stable lot to write or inspect its private annotation history.</p>';
+  }catch(error){current.fail(error);}
+}
+function filterReviews(){
+  reviewTag=document.getElementById('reviewFilterTag').value;
+  reviewUnreviewed=document.getElementById('reviewFilterUnreviewed').checked;
+  renderReviews(true);
+}
+async function renderReviewDetail(){
+  const epoch=authEpoch,tab=viewEpoch,lot=reviewLotUid;
+  try{
+    const response=await apiFetch('/api/reviews?'+new URLSearchParams({lot_uid:lot}));
+    const result=await response.json();
+    if(epoch!==authEpoch||tab!==viewEpoch||lot!==reviewLotUid)return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    reviewsState={...reviewsState,revision:result.revision,can_write:result.can_write};
+    const entry=result.annotation&&!result.annotation.deleted?result.annotation:{};
+    document.getElementById('contextPanel').innerHTML='<h3>Lot '+escHtml(lot)+'</h3>'+
+      '<label for="reviewHypothesis">Entry hypothesis</label><textarea id="reviewHypothesis" rows="4" style="width:100%">'+escHtml(entry.hypothesis||'')+'</textarea>'+
+      '<label for="reviewPlan">Planned exit</label><textarea id="reviewPlan" rows="3" style="width:100%">'+escHtml(entry.planned_exit||'')+'</textarea>'+
+      '<label for="reviewTags">Tags, one per line</label><textarea id="reviewTags" rows="3" style="width:100%">'+escHtml((entry.tags||[]).join('\n'))+'</textarea>'+
+      '<label for="reviewOutcome">Review and adherence observations</label><textarea id="reviewOutcome" rows="4" style="width:100%">'+escHtml(entry.review||'')+'</textarea>'+
+      '<button type="button" '+(result.can_write?'':'disabled')+' onclick="appendReview(false)">Append correction</button> '+
+      '<button type="button" '+(result.can_write?'':'disabled')+' onclick="appendReview(true)">Remove current annotation</button>'+
+      '<p>'+(result.can_write?'Every correction appends history. Removal retains its receipt.':'Read-only replica. Write annotations on the financial authority.')+'</p>'+
+      '<h3>History</h3><p>'+format(result.history_count)+' receipts; showing the latest 50.</p>'+
+      (result.history||[]).map(row=>'<details><summary>'+escHtml(row.created_at)+' · revision '+format(row.revision)+(row.entry.deleted?' · removed':'')+'</summary><p>Hypothesis: '+escHtml(row.entry.hypothesis)+'</p><p>Plan: '+escHtml(row.entry.planned_exit)+'</p><p>Tags: '+escHtml(row.entry.tags.join(', '))+'</p><p>Review: '+escHtml(row.entry.review)+'</p></details>').join('');
+  }catch(error){if(epoch===authEpoch&&tab===viewEpoch&&error.name!=='AbortError')setStatus(error.message,true);}
+}
+async function appendReview(deleted){
+  if(!authenticated||!reviewsState?.can_write||!reviewLotUid)return;
+  const epoch=authEpoch,tab=viewEpoch;
+  try{
+    const entry=deleted?{hypothesis:'',planned_exit:'',tags:[],review:'',deleted:true}:{
+      hypothesis:document.getElementById('reviewHypothesis').value,planned_exit:document.getElementById('reviewPlan').value,
+      tags:document.getElementById('reviewTags').value.split('\n').map(tag=>tag.trim()).filter(Boolean),
+      review:document.getElementById('reviewOutcome').value,deleted:false};
+    const fields={action:'append',lot_uid:reviewLotUid,entry,expected_revision:reviewsState.revision};
+    const fingerprint=JSON.stringify(fields);
+    if(pendingReviewOperation?.fingerprint!==fingerprint)pendingReviewOperation={fingerprint,operation_id:newCloseOperationId()};
+    const response=await apiFetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...fields,operation_id:pendingReviewOperation.operation_id})});
+    const result=await response.json();
+    if(epoch!==authEpoch||tab!==viewEpoch)return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    pendingReviewOperation=null;reviewsState.revision=result.current_revision;
+    setStatus('Private annotation saved; revision '+result.revision,false);await renderReviewDetail();
+  }catch(error){if(epoch===authEpoch&&tab===viewEpoch&&error.name!=='AbortError')setStatus(error.message,true);}
+}
 async function renderSettings(){
   const current=beginViewRequest();
   try{
@@ -1979,7 +2057,7 @@ async function renderActivity(){
         html+='<tr><td>'+escHtml(String(t.timestamp||'').slice(0,16))+'</td><td class="name">'+escHtml(t.name||'')+'</td>'+
           '<td>'+format(t.qty||0)+'</td><td>'+format(t.buy_price||0)+'</td><td>'+format(t.sell_price||0)+'</td>'+
           '<td class="margin '+(p>0?'pos':p<0?'neg':'neutral')+'">'+format(p)+'</td>'+
-          '<td><button class="act-btn" style="padding:1px 8px;background:#7f1d1d;border-color:#f87171;color:#f87171" onclick="deleteTrade('+t.id+',event)">&#10005;</button></td></tr>';
+          '<td>'+(t.closed_lot_uid?'<button type="button" class="act-btn" data-lot="'+escHtml(t.closed_lot_uid)+'" onclick="openReview(this.dataset.lot)">Review</button>':'')+'<button class="act-btn" style="padding:1px 8px;background:#7f1d1d;border-color:#f87171;color:#f87171" onclick="deleteTrade('+t.id+',event)">&#10005;</button></td></tr>';
       });
       html+='</tbody></table>';
     }

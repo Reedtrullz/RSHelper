@@ -3,6 +3,32 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('private review retries retain operation identity and free text stays out of URLs',async()=>{
+  const calls=[];const {context,elements}=harness(async(url,options={})=>{
+    calls.push({url,body:JSON.parse(options.body)});
+    return new Response(JSON.stringify({error:'Synthetic failure'}),{status:500});
+  });
+  vm.runInContext("authenticated=true;accessReady=true;accessMode='owner';capabilities={features:['private-state']};reviewsState={can_write:true,revision:0};reviewLotUid='11111111-1111-4111-8111-111111111111'",context);
+  for(const [id,value] of Object.entries({reviewHypothesis:'<private>',reviewPlan:'Target',reviewTags:'reversion',reviewOutcome:'Followed plan'}))elements.set(id,{value});
+  await vm.runInContext('appendReview(false)',context);await vm.runInContext('appendReview(false)',context);
+  assert.equal(calls.length,2);assert.equal(calls[0].url,'/api/reviews');
+  assert.equal(calls[0].body.operation_id,calls[1].body.operation_id);
+  assert.equal(calls[0].body.entry.hypothesis,'<private>');
+  vm.runInContext('authenticated=false',context);await vm.runInContext('appendReview(false)',context);
+  assert.equal(calls.length,2);
+});
+
+test('review filtering retains the editor draft and its original optimistic revision',async()=>{
+  const {context,elements}=harness(async()=>new Response(JSON.stringify({can_write:true,revision:8,trades:[],open_lots:[]})));
+  vm.runInContext("authenticated=true;accessReady=true;accessMode='owner';capabilities={features:['private-state']};view='reviews';reviewsState={can_write:true,revision:3};reviewLotUid='11111111-1111-4111-8111-111111111111'",context);
+  elements.set('reviewHypothesis',{value:'Unsubmitted private draft'});
+  context.document.getElementById('contextPanel').innerHTML='Editor stays here';
+  await vm.runInContext('renderReviews(true)',context);
+  assert.equal(context.document.getElementById('reviewHypothesis').value,'Unsubmitted private draft');
+  assert.equal(context.document.getElementById('contextPanel').innerHTML,'Editor stays here');
+  assert.equal(vm.runInContext('reviewsState.revision',context),3);
+});
+
 test('settings preview keeps private TOML local and ambiguous apply retries retain identity',async()=>{
   const calls=[];
   const {context,elements}=harness(async(url,options={})=>{
