@@ -249,6 +249,11 @@ def validate_state(data, kind, path):
                     _fail(path, f'invalid {field}')
             if 'fill_guard' in row and not isinstance(row['fill_guard'], bool):
                 _fail(path, 'invalid fill guard flag')
+            from rshelper.tuning import validate_config_evidence
+            for field in ('entry_config','exit_config'):
+                if field in row:
+                    try:validate_config_evidence(row[field])
+                    except (ValueError,TypeError,AttributeError,KeyError) as exc:_fail(path,str(exc))
         elif kind == 'alerts':
             if not _integer(row.get('id'), 1) or not _finite(row.get('ts')) or row['ts'] < 0:
                 _fail(path, 'invalid alert identity/time')

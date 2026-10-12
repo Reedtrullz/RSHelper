@@ -32,6 +32,9 @@ def test_empty_bank():
     _clean()
     d = build_bank_items()
     assert d.pop("market_data")["latest"]["source"] == "unknown"
+    assert d.pop('mark_coverage')=={'marked_cost_basis':0,'missing_cost_basis':0,'missing_item_ids':[]}
+    assert d.pop('marked_value')==d.pop('marked_unrealized_pnl')==0
+    assert d.pop('equity')['initialized'] is False
     assert d == {"items": [], "total_value": 0, "unrealized_pnl": 0,
                  "cost_basis": 0, "slot_count": 0}
     print("  PASSED test_empty_bank")
@@ -106,10 +109,10 @@ def test_latest_none():
     d = build_bank_items(latest=None)
     it = d["items"][0]
     assert it["current_price"] is None
-    assert it["unrealized_pnl"] == 0
+    assert it["unrealized_pnl"] is None
     assert it["unrealized_pct"] is None
-    assert it["total_value"] == it["cost_basis"] == 1000
-    assert d["unrealized_pnl"] == 0
+    assert it["total_value"] is None and it['cost_basis']==1000
+    assert d["unrealized_pnl"] is None
     print("  PASSED test_latest_none")
 
 
@@ -140,7 +143,7 @@ def test_stale_price_no_mark():
                      "low_volume": 1}}
     it = build_bank_items(latest=stale, now=now)["items"][0]
     assert it["current_price"] is None
-    assert it["unrealized_pnl"] == 0
+    assert it["unrealized_pnl"] is None
     print("  PASSED test_stale_price_no_mark")
 
 

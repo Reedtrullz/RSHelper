@@ -742,15 +742,16 @@ function drawMargin(id){
     draw();
   })();
 }
-function drawCumulative(cv,buckets){
+function drawCumulative(cv,buckets,valueKey='cumulative_profit'){
   if(!cv||!buckets||buckets.length<2)return;
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth;
-  if(!w){requestAnimationFrame(()=>drawCumulative(cv,buckets));return}
+  if(!w){requestAnimationFrame(()=>drawCumulative(cv,buckets,valueKey));return}
   const h=220;
   cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
   const pad={l:64,r:12,t:14,b:24};
-  const vals=buckets.map(b=>b.cumulative_profit||0);
+  const vals=buckets.map(b=>b[valueKey]).filter(Number.isFinite);
+  if(!vals.length)return;
   const lo=Math.min(0,...vals),hi=Math.max(0,...vals),span=Math.max(hi-lo,1);
   const x=i=>pad.l+(w-pad.l-pad.r)*i/(buckets.length-1);
   const y=v=>pad.t+(h-pad.t-pad.b)*(hi-v)/span;
@@ -775,9 +776,12 @@ function drawCumulative(cv,buckets){
     }
   });
   ctx.strokeStyle='#22c55e';ctx.lineWidth=2;ctx.beginPath();
+  let connected=false;
   buckets.forEach((b,i)=>{
-    const px=x(i),py=y(b.cumulative_profit||0);
-    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    if(!Number.isFinite(b[valueKey])){connected=false;return}
+    const px=x(i),py=y(b[valueKey]);
+    connected&&!b.gap_before?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    connected=true;
   });
   ctx.stroke();ctx.lineWidth=1;
   ctx.fillStyle='#e2e8f0';
@@ -1311,25 +1315,27 @@ async function renderBank(){
     bankData=data;
     document.getElementById('badgeBank').textContent=bankData.slot_count||0;
     const items=bankData.items||[];
-    const pnl=bankData.unrealized_pnl||0;
-    const pnlHtml=pnl!==0?'<span class="val '+(pnl>0?'green':'red')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span>':'<span class="val dim">0 gp</span>';
+    const pnl=bankData.unrealized_pnl;
+    const pnlText=pnl==null?'Unknown: missing marks':(pnl>0?'+':'')+format(pnl)+' gp';
+    const valueText=bankData.total_value==null?'Unknown: missing marks':format(bankData.total_value)+' gp';
+    const pnlHtml='<span class="val '+(pnl==null?'dim':pnl>0?'green':pnl<0?'red':'dim')+'">'+pnlText+'</span>';
     let h='<div class="bank-grid">';
     items.forEach(it=>{h+=bankSlotHtml(it)});
     h+='</div>';
     if(!items.length){
       h='<div class="loading">The bank is empty — open positions with <code>trade open &lt;item&gt;</code> or the Trading tab.</div>';
     }
-    h+='<div class="bank-footer"><span>Total holdings: <span class="gold">'+format(bankData.total_value||0)+' gp</span></span>'+
-      '<span>Unrealized P&amp;L: <span class="'+(pnl>0?'pos':pnl<0?'neg':'dim')+'">'+(pnl>0?'+':'')+format(pnl)+' gp</span></span>'+
+    h+='<div class="bank-footer"><span>Total holdings: <span class="gold">'+valueText+'</span></span>'+
+      '<span>Unrealized P&amp;L: <span class="'+(pnl>0?'pos':pnl<0?'neg':'dim')+'">'+pnlText+'</span></span>'+
       '<span>'+format(bankData.slot_count||0)+' item stacks</span></div>';
     body.innerHTML=h;
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Bank of RuneScape</div>'+
       '<div class="metric-grid">'+
-      metric('Total Holdings',format(bankData.total_value||0)+' gp','gold')+
+      metric('Total Holdings',valueText,'gold')+
       metric('Unrealized P&L',pnlHtml,'')+
       metric('Cost Basis',format(bankData.cost_basis||0)+' gp','')+
       metric('Item Stacks',format(bankData.slot_count||0),'')+
-      '</div>';
+      '</div>'+equityMetricsHtml(bankData.equity);
     current.finish();
   }catch(e){
     if(!current()||e.name==='AbortError')return;
@@ -1362,7 +1368,7 @@ function bankSlotClick(itemId){
     metric('Quantity',format(it.total_qty),'')+
     metric('Avg Buy Price',format(it.avg_buy_price)+' gp','')+
     metric('Current Price',it.current_price!=null?format(it.current_price)+' gp':'<span class="dim">-</span>','')+
-    metric('Total Value',format(it.total_value)+' gp','gold')+
+    metric('Total Value',it.total_value==null?'Unknown: missing mark':format(it.total_value)+' gp','gold')+
     metric('Cost Basis',format(it.cost_basis)+' gp','')+
     metric('Unrealized',pnlHtml,'')+
     metric('Unrealized %',pctHtml,pnl!=null&&pnl>0?'green':pnl!=null&&pnl<0?'red':'')+
@@ -1602,7 +1608,7 @@ async function renderPaper(){
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Paper Trading</div>'+
       '<div class="metric-grid">'+
       metric('Total P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
-      metric('ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
+      metric('Turnover ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
       metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
       metric('Trades',format(pnl.trade_count||0),'')+
       metric('Items',format(pnl.items_traded||0),'')+
@@ -1615,7 +1621,7 @@ async function renderPaper(){
       metric('Profit Factor',pnl.profit_factor!=null?format(pnl.profit_factor):'-','gold')+
       metric('Max Drawdown',format(pnl.max_drawdown||0)+' gp',(pnl.max_drawdown||0)>0?'red':'')+
       metric('Open Positions',format((pos.positions||[]).length),'')+
-      metric('Unrealized',format(pos.unrealized||0)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
+      metric('Unrealized',pos.unrealized==null?'Unknown: missing marks':format(pos.unrealized)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
       '</div>';
     let html='';
     const openPos=pos.positions||[];
@@ -1732,11 +1738,34 @@ async function closePosition(positionId,ev){
     fetchData();
   }catch(e){setStatus('Error: '+e.message,true);}
 }
+function equityMetricsHtml(e){
+  if(!e||!e.initialized)return '<p>Marked equity unknown: paper budget is not initialized.</p>';
+  const money=v=>v==null?'Unknown':format(v)+' gp';
+  const source=(e.market_data||{}).latest||{};
+  return '<p>Whole-profile paper equity since explicit budget initialization; independent of trade filters. Mark source: '+escHtml(source.source||'unknown')+(source.stale?' (stale)':'')+'.</p><div class="metric-grid">'+
+    metric('Available cash',money(e.available_cash),'')+metric('Reserved cash',money(e.reserved_cash),'')+
+    metric('Marked equity',money(e.marked_equity),'gold')+
+    metric('Equity return',e.equity_return_pct==null?'Unknown':e.equity_return_pct.toFixed(2)+'%','')+'</div>';
+}
 function historyTablesHtml(h){
   const eras=h.eras||[],items=h.items||[];
-  let html='';
+  let html=equityMetricsHtml(h.current_equity);
+  const curve=h.equity_curve||[];
+  if(curve.length){
+    html+='<h3 class="chart-title">Observed whole-profile equity</h3><p>'+escHtml(h.equity_sampling||'Observed samples only')+'</p><table><thead><tr><th>UTC</th><th>Marked equity</th><th>Book revision</th><th>Coverage</th></tr></thead><tbody>';
+    curve.forEach(point=>{
+      const e=point.equity||{},coverage=e.mark_coverage||{};
+      html+='<tr><td>'+escHtml(point.date)+'</td><td>'+(point.marked_equity==null?'Unknown':format(point.marked_equity)+' gp')+'</td><td>'+escHtml(String(e.book_revision??'Unknown'))+'</td><td>'+format(coverage.missing_cost_basis||0)+' gp missing marks'+(point.gap_before?' · observation gap':'')+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  if((h.strategy_eras||[]).length){
+    html+='<h3 class="chart-title">Entry strategy attribution</h3><table><thead><tr><th>Config ID</th><th>Trades</th><th>Realized profit</th></tr></thead><tbody>';
+    h.strategy_eras.forEach(e=>{html+='<tr><td>'+escHtml(e.config_id||'Unknown legacy entry')+'</td><td>'+format(e.trade_count)+'</td><td>'+format(e.profit)+' gp</td></tr>'});
+    html+='</tbody></table>';
+  }
   if(eras.length){
-    html+='<h3 class="chart-title">Tuning eras</h3><table><thead><tr><th>Start</th><th>End</th><th>Changed</th><th>Trades</th><th>Profit</th><th>Win%</th><th>ROI%</th><th>/day</th></tr></thead><tbody>';
+    html+='<h3 class="chart-title">Configuration at exit</h3><p>Exit-time context; turnover ROI excludes open holdings.</p><table><thead><tr><th>Start UTC</th><th>End UTC</th><th>Changed</th><th>Trades</th><th>Profit</th><th>Win%</th><th>Turnover ROI%</th><th>/day</th></tr></thead><tbody>';
     let prev=null;
     eras.forEach(e=>{
       const c=e.config||{};
@@ -1785,9 +1814,9 @@ async function renderOverview(){
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Overview</div>'+
       '<div class="metric-grid">'+
       metric('Realized P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
-      metric('Unrealized',format(pos.unrealized||0)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
+      metric('Unrealized',pos.unrealized==null?'Unknown: missing marks':format(pos.unrealized)+' gp',(pos.unrealized||0)>0?'green':(pos.unrealized||0)<0?'red':'')+
       metric('Open Exposure',format((pos.positions||[]).reduce((a,p)=>a+(p.buy_price||0)*(p.qty||0),0))+' gp','')+
-      metric('ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
+      metric('Turnover ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
       metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
       metric('Active GP/hr',format(pnl.active_gp_per_hour||0)+' gp','gold')+
       metric('Trades',format(pnl.trade_count||0),'')+
@@ -1865,7 +1894,7 @@ async function renderActivity(){
     context.innerHTML='<div class="item-name" style="margin-bottom:12px">Activity</div>'+
       '<div class="metric-grid">'+
       metric('Total P&L',format(pnl.total_profit||0)+' gp',(pnl.total_profit||0)>0?'green':(pnl.total_profit||0)<0?'red':'')+
-      metric('ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
+      metric('Turnover ROI',(pnl.roi_pct||0).toFixed(2)+'%',(pnl.roi_pct||0)>0?'green':'')+
       metric('Win Rate',(pnl.win_rate||0).toFixed(1)+'%','gold')+
       metric('Trades',format(pnl.trade_count||0),'')+
       metric('Items',format(pnl.items_traded||0),'')+
@@ -1879,6 +1908,8 @@ async function renderActivity(){
       html+='<h3 class="chart-title">Cumulative P&L</h3><canvas id="actCum" height="200"></canvas>';
       html+='<h3 class="chart-title">Daily trades and win rate</h3><canvas id="actDaily" height="200"></canvas>';
     }
+    const equityCurve=h.equity_curve||[];
+    if(equityCurve.length>=2)html+='<h3 class="chart-title">Whole-profile marked equity</h3><canvas id="actEquity" height="200"></canvas>';
     html+='<h3 class="chart-title">Recent trades</h3>';
     if(!trades.length){
       html+='<div class="loading">No trades yet — open one with <code>trade open &lt;item&gt;</code> or <code>trade paper &lt;item&gt;</code>.</div>';
@@ -1897,6 +1928,7 @@ async function renderActivity(){
     html+='<div class="viewbar"><button type="button" class="act-btn" onclick="activityPage(null)">First page</button>'+
       (page.next_cursor?'<button type="button" class="act-btn" data-cursor="'+escHtml(page.next_cursor)+'" onclick="activityPage(this.dataset.cursor)">Older</button>':'')+'</div>';
     body.innerHTML=html;
+    if(equityCurve.length>=2)drawCumulative(document.getElementById('actEquity'),equityCurve,'marked_equity');
     if(buckets.length>=2){
       drawCumulative(document.getElementById('actCum'),buckets);
       drawDaily(document.getElementById('actDaily'),buckets);

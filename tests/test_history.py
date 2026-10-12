@@ -137,8 +137,6 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(len(h["eras"]), 2)
         total = sum(e["trade_count"] for e in h["eras"])
         self.assertEqual(total, 3, "eras must partition trades without overlap")
-        # The earlier same-day entry is degenerate: the later entry owns the
-        # whole day (consistent with config_at's "last entry wins").
         self.assertEqual(h["eras"][0]["trade_count"], 0)
         self.assertEqual(h["eras"][1]["trade_count"], 3)
 

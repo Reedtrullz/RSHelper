@@ -3,6 +3,19 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('equity metrics retain unknown marks and disclose whole-profile scope',()=>{
+  const {context}=harness(async()=>new Response('{}'));
+  const html=vm.runInContext("equityMetricsHtml({initialized:true,available_cash:636,reserved_cash:0,marked_equity:null,equity_return_pct:null})",context);
+  assert.match(html,/Whole-profile/);
+  assert.match(html,/independent of trade filters/);
+  assert.match(html,/Unknown/);
+  assert.match(html,/636 gp/);
+  const table=vm.runInContext("historyTablesHtml({strategy_eras:[{config_id:null,trade_count:1,profit:-22}],equity_curve:[{date:'2026-10-12T10:00:00Z',marked_equity:null,equity:{mark_coverage:{missing_cost_basis:300}}}]})",context);
+  assert.match(table,/Unknown legacy entry/);
+  assert.match(table,/300 gp missing marks/);
+  assert.match(table,/-22 gp/);
+});
+
 test('entry stance is separate from daemon liveness and mutation retries retain identity',async()=>{
   const requests=[];let fail=true;
   const {context}=harness(async(url,options={})=>{

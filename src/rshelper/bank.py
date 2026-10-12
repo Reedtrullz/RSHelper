@@ -7,7 +7,37 @@ from rshelper.market import ge_tax, price_issue, safe_int
 from rshelper.positions import list_positions
 
 
-def build_bank_items(profile=None, latest=None, now=None) -> dict:
+def build_bank_items(profile=None,latest=None,now=None):
+    from rshelper import state_transaction,paper_book,positions
+    root=positions._positions_path(profile).parent
+    now=time.time() if now is None else now
+    with state_transaction.profile_transaction(profile or 'default',root):
+        result=_build_bank_items(profile,latest,now)
+        equity={'initialized':False,'available_cash':None,'reserved_cash':None,
+                'realized_profit':None,'marked_equity':None,'equity_return_pct':None}
+        if (root/'paper-offers.json').exists():
+            state=paper_book.budget_snapshot(profile,now=now)
+            budget=state['budget']
+            complete=result['total_value'] is not None and not any('unreconciled' in reason for reason in budget['unknown'])
+            net_mark=result['cost_basis']+result['marked_unrealized_pnl']
+            total=budget['available_cash']-budget['cash_deficit']+budget['reserved_cash']+net_mark if complete else None
+            baseline=budget['initial_bankroll']
+            equity={'initialized':True,'available_cash':budget['available_cash'],
+                    'reserved_cash':budget['reserved_cash'],'cash_deficit':budget['cash_deficit'],
+                    'realized_profit':budget['realized_profit'],'marked_equity':total,
+                    'equity_return_pct':(round((total-baseline)/baseline*100,2) if total is not None and baseline else None),
+                    'basis':'since-explicit-paper-budget-initialization'}
+            equity['book_revision']=state['revision']
+        from datetime import datetime,timezone
+        from rshelper.market_data import provenance
+        equity.update(observed_at=datetime.fromtimestamp(now,timezone.utc).isoformat(),
+                      scope='whole-profile',market_data={'latest':provenance(latest)},
+                      mark_coverage=result['mark_coverage'])
+        result['equity']=equity
+        return result
+
+
+def _build_bank_items(profile=None, latest=None, now=None) -> dict:
     """Group positions by item_id (weighted avg buy price).
 
     Returns {"items": [...], "total_value", "unrealized_pnl", "cost_basis",
@@ -42,8 +72,8 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
         price = latest.get(str(item_id))
         issue = price_issue(price, now=now) if isinstance(price, dict) else "no data"
         current_price = None
-        total_value = g["cost_basis"]
-        unrealized = 0
+        total_value = None
+        unrealized = None
         unrealized_pct = None
         if issue is None:
             # Mark each lot to its own exit leg: traditional sells at the
@@ -75,12 +105,19 @@ def build_bank_items(profile=None, latest=None, now=None) -> dict:
             "icon_url": resolve_icon_url(g["name"], detail=False),
             "icon_url_detail": resolve_icon_url(g["name"], detail=True),
         })
-    items.sort(key=lambda i: i["total_value"], reverse=True)
+    items.sort(key=lambda i: (i["total_value"] is not None,i["total_value"] or 0), reverse=True)
+    marked=[item for item in items if item['total_value'] is not None]
+    missing=[item for item in items if item['total_value'] is None]
     from rshelper.market_data import provenance
     return {"market_data":{"latest":provenance(latest)},
         "items": items,
-        "total_value": sum(i["total_value"] for i in items),
-        "unrealized_pnl": sum(i["unrealized_pnl"] for i in items),
+        "total_value": None if missing else sum(i["total_value"] for i in marked),
+        "unrealized_pnl": None if missing else sum(i["unrealized_pnl"] for i in marked),
+        "marked_value":sum(i['total_value'] for i in marked),
+        "marked_unrealized_pnl":sum(i['unrealized_pnl'] for i in marked),
+        "mark_coverage":{'marked_cost_basis':sum(i['cost_basis'] for i in marked),
+                         'missing_cost_basis':sum(i['cost_basis'] for i in missing),
+                         'missing_item_ids':sorted(i['item_id'] for i in missing)},
         "cost_basis": sum(i["cost_basis"] for i in items),
         "slot_count": len(items),
     }

@@ -1,6 +1,7 @@
 """Daily history for the dashboard Progression view."""
 import json
 import re
+import math
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -23,16 +24,30 @@ def build_history(profile: str | None = None, paper_only: bool = True,
         daily[_utc(t.timestamp).date().isoformat()].append(t)
 
     snaps_by_day: dict[str, list] = defaultdict(list)
+    equity_points={}
     for path in snapshot.list_snapshots(profile=profile):
-        day = path.stem[-10:]
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+        match=re.fullmatch(r'(?:alch|flip|margin|process|equity)-(\d{4}-\d{2}-\d{2})(?:T\d{6}\.\d{6}Z)?',path.stem)
+        if match is None:
             # Malformed snapshot filename: skip instead of corrupting the
             # daily buckets with a phantom key.
             continue
+        day=match.group(1)
         try:
             data = json.loads(path.read_text())
         except (json.JSONDecodeError, OSError):
             continue
+        if not isinstance(data,dict):continue
+        if data.get('scan_type')=='equity':
+            equity=data.get('equity')
+            try:
+                instant=tuning._instant(data['saved_at'])
+            except (KeyError,ValueError,TypeError,AttributeError):continue
+            if not isinstance(equity,dict) or equity.get('scope')!='whole-profile':continue
+            value=equity.get('marked_equity')
+            if value is not None and (type(value) not in (int,float) or not math.isfinite(value)):
+                continue
+            equity_points[instant]={'date':instant.isoformat(),'marked_equity':value,
+                                    'equity':equity,'config_id':data.get('config_id')}
         vals = [i.get("profit") if i.get("profit") is not None else i.get("avg_margin")
                 for i in data.get("items", [])]
         vals = [v for v in vals if v is not None]
@@ -67,27 +82,24 @@ def build_history(profile: str | None = None, paper_only: bool = True,
     today = datetime.now(timezone.utc).date().isoformat()
     last_day = days[-1] if days else today
     eras = []
-    for i, e in enumerate(entries):
-        start = e["ts"][:10]
-        final_era = i + 1 == len(entries)
-        if final_era:
-            end = last_day
-            # The last era runs through the most recent traded day inclusive;
-            # a strict '<' would silently drop today's trades from all
-            # performance summaries whenever the config did not change today.
-            era_trades = [t for t in trades
-                          if start <= _utc(t.timestamp).date().isoformat() <= last_day]
-        else:
-            end = entries[i + 1]["ts"][:10]
-            if end <= start:
-                # Two entries on the same day: day-level buckets cannot split
-                # the day, so the earlier era is empty. The later entry owns
-                # the whole day, matching the "last entry on or before the
-                # trade day wins" rule used by config_at.
-                era_trades = []
-            else:
-                era_trades = [t for t in trades
-                              if start <= _utc(t.timestamp).date().isoformat() < end]
+    timed=[]
+    for entry in entries:
+        try:timed.append((tuning._instant(entry['ts']),entry))
+        except (ValueError,TypeError,AttributeError):continue
+    timed.sort(key=lambda pair:pair[0])
+    by_instant=defaultdict(list)
+    for instant,entry in timed:by_instant[instant].append(entry)
+    timed=[]
+    for instant,group in sorted(by_instant.items()):
+        unique={tuning.config_id(entry['params']) for entry in group}
+        timed.append((instant,group[0] if len(unique)==1 else
+                      {'params':{},'note':'conflicting configuration evidence','unknown':True}))
+    for i, (instant,e) in enumerate(timed):
+        end_instant=timed[i+1][0] if i+1<len(timed) else None
+        start=instant.isoformat()
+        end=end_instant.isoformat() if end_instant else None
+        era_trades=[trade for trade in trades if instant<=_utc(trade.timestamp)
+                    and (end_instant is None or _utc(trade.timestamp)<end_instant)]
         cost = sum(t.buy_price * t.qty for t in era_trades)
         profit = sum(t.profit for t in era_trades)
         wins = sum(1 for t in era_trades if t.profit > 0)
@@ -99,11 +111,14 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "start": start,
             "end": end,
             "config": e["params"],
+            "config_id":None if e.get('unknown') else tuning.config_id(e['params']),
+            "attribution_basis":"unknown-exit-context" if e.get('unknown') else "exit-time-context",
             "note": e.get("note", "auto"),
             "trade_count": len(era_trades),
             "profit": profit,
             "win_rate": round(wins / len(era_trades) * 100, 1) if era_trades else None,
             "roi_pct": round(profit / cost * 100, 2) if cost else None,
+            "turnover_roi_pct":round(profit / cost * 100, 2) if cost else None,
             "trades_per_day": round(len(era_trades) / active_days, 1) if active_days else 0,
             "profit_factor": (round(gross_profit / gross_loss, 2)
                               if gross_loss > 0 else
@@ -111,11 +126,33 @@ def build_history(profile: str | None = None, paper_only: bool = True,
             "loss_trades": losses,
         })
 
+    strategy_groups={}
+    for trade in trades:
+        evidence=trade.entry_config
+        key=evidence['config_id'] if evidence else 'unknown'
+        group=strategy_groups.setdefault(key,{'config_id':None if key=='unknown' else key,
+                'entry_config':evidence,'trade_count':0,'profit':0,'cost_basis':0,
+                'attribution_basis':'immutable-entry-configuration' if evidence else 'unknown-legacy-entry'})
+        group['trade_count']+=1
+        group['profit']+=trade.profit
+        group['cost_basis']+=trade.qty*trade.buy_price
+    curve=[]
+    previous=None
+    for instant,point in sorted(equity_points.items()):
+        point['gap_before']=previous is not None and (instant-previous).total_seconds()>86400
+        point['config_changed']=any((previous is None or previous<ts) and ts<=instant for ts,_ in timed)
+        curve.append(point)
+        previous=instant
     return {
+        'strategy_eras':list(strategy_groups.values()),
+        'equity_curve':curve,
+        'equity_scope':'whole-profile; independent of trade filters',
+        'equity_sampling':'observed only; gaps over 24 hours are disconnected; missing marks unknown',
         "summary": {
             "total_profit": pnl.total_profit,
             "win_rate": round(pnl.win_rate, 1),
             "roi_pct": round(pnl.roi_pct, 2),
+            "turnover_roi_pct":round(pnl.roi_pct,2),
             "trade_count": pnl.trade_count,
             "items_traded": pnl.items_traded,
             "active_days": len({_utc(t.timestamp).date() for t in trades}),

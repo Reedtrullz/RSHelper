@@ -64,28 +64,46 @@ def compare_manifests(current, previous):
 
 
 def save(scan_type: str, results: list[dict], profile: str | None = None,
-         *, scan_spec=None, market_metadata=None) -> Path:
+         *, scan_spec=None, market_metadata=None,intraday=False,retention=96,equity=None) -> Path:
     """Save a snapshot for today. Returns the file path."""
-    from rshelper.tuning import params
+    from rshelper.tuning import params,config_id
     snap_dir = _snapshot_dir(profile)
     snap_dir.mkdir(parents=True, exist_ok=True)
-    today = date.today().isoformat()
-    path = snap_dir / f"{scan_type}-{today}.json"
+    if scan_type not in ('alch','flip','margin','process','equity'):
+        raise ValueError('unsupported snapshot type')
+    if type(intraday) is not bool or type(retention) is not int or not 1<=retention<=512:
+        raise ValueError('invalid intraday snapshot retention')
+    instant=datetime.now(timezone.utc)
+    today = instant.date().isoformat() if intraday else date.today().isoformat()
+    suffix=instant.strftime('%Y-%m-%dT%H%M%S.%fZ') if intraday else today
+    path = snap_dir / f"{scan_type}-{suffix}.json"
+    values=params(profile)
 
     payload = {
         "scan_type": scan_type,
         "date": today,
-        "saved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "saved_at": instant.isoformat(),
         "count": len(results),
-        "config": params(profile),
+        "config": values,
+        "config_id":config_id(values),
         "items": results,
         'manifest':{'schema_version':1,'scan_spec':scan_spec,
                     'specification_sha256':_specification_hash(scan_spec),
                     'market_metadata':market_metadata},
     }
+    if equity is not None:payload['equity']=equity
 
     # Atomic write
-    atomic_write_json(path, payload)
+    if intraday:
+        from rshelper.persistence import locked_state
+        with locked_state(snap_dir/'.intraday'):
+            atomic_write_json(path,payload)
+            atomic_write_json(snap_dir/f'{scan_type}-{today}.json',payload)
+            candidates=sorted(snap_dir.glob(f'{scan_type}-????-??-??T??????.??????Z.json'))
+            for obsolete in candidates[:-retention]:
+                if obsolete.is_symlink():raise ValueError('intraday snapshot cannot be a symlink')
+                obsolete.unlink()
+    else:atomic_write_json(path, payload)
     return path
 
 
