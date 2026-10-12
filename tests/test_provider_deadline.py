@@ -103,15 +103,20 @@ class DeadlineTest(unittest.TestCase):
     def test_retry_after_does_not_dispatch_past_deadline(self):
         from urllib.error import HTTPError
         from email.message import Message
+        from types import SimpleNamespace
         headers = Message(); headers['Retry-After'] = '60'
+        clock=[100.0]
+        def sleep(delay):clock[0]+=delay
+        virtual=SimpleNamespace(monotonic=lambda:clock[0],time=time.time,sleep=sleep)
         with tempfile.TemporaryDirectory() as folder, \
              mock.patch.object(api, 'CACHE_DIR', Path(folder)), \
-             mock.patch.object(api, 'PROVIDER_TIMEOUT', .15), \
+             mock.patch.object(api,'time',virtual), \
+             mock.patch.object(api,'_ACQUISITION',SimpleNamespace(end=100.15,context={},cache_dir=Path(folder))), \
              mock.patch.object(api.urllib.request, 'urlopen', side_effect=
                  HTTPError('http://localhost', 503, 'fixture', headers, None)) as fetch:
-            started = time.monotonic()
-            self.assertIsNone(api._fetch_url('http://localhost/unused'))
-            self.assertLess(time.monotonic() - started, .5)
+            # Retry policy uses virtual time; slow fsync must not consume its first dispatch.
+            with self.assertRaises(api.ProviderDeadline):api._fetch_url_attempts('http://localhost/unused',3)
+            self.assertAlmostEqual(clock[0],100.15)
             self.assertEqual(fetch.call_count, 1)
             state = __import__('json').loads((Path(folder)/'.throttle').read_text())
             self.assertGreater(state['blocked_until'], time.time()+50)
