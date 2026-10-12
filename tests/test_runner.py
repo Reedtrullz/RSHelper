@@ -34,6 +34,7 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
         self.assertEqual((report["tests"], report["skipped"]), (3, 1))
+        self.assertEqual(report['files'][0]['skip_reasons'][0]['reason'], 'fixture')
 
     def test_offline_suite_no_external_side_effects(self):
         result = self.invoke("import socket\ndef test_network():\n"

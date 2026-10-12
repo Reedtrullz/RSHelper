@@ -110,6 +110,23 @@ actual tests, skips and failures rather than relying on historical counts.
 Live integration checks are separate and explicitly opt in with
 `.venv/bin/python scripts/run-tests.py --provider-check --json`.
 
+The runner also records per-test skip reasons and provider source, delivery,
+timestamps and coverage. Provider mode performs fresh acquisitions in separate
+disposable caches; a failed network acquisition is a failure, not an import-time
+skip. Wiki history may explicitly skip when a proven live Tracker fallback has
+no history capability. Offline files retain a 120s deadline; the complete provider
+file has a 300s ceiling for the application's bounded acquisition attempts.
+
+`tests/test_cli_contracts.py` is the reviewed syntax matrix for all 43 leaf
+commands and their flags, including help and global options. It also executes
+scan JSON/CSV/HTML and snapshot output against owned fixtures. Existing CLI,
+output, profile-transfer, state, restore and daemon tests verify the underlying
+actions; a parse smoke does not certify strategy economics or live sources.
+Run both `node tests/test_browser_auth.mjs` and
+`node tests/test_browser_views.mjs` for owner access, navigation, strategy routing,
+mutation errors, draft retention on error and stable close-operation retries.
+Async refresh/form behavior remains part of #23's separate acceptance.
+
 The 2026-10-04 bootstrap baseline is 386 tests in 25 files, four provider tests
 skipped in offline mode, zero failures/errors on Python 3.14. This is engineering
 test evidence; it does not certify trading returns or production deployment.

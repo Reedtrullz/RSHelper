@@ -9,3 +9,10 @@ Capture validates each supported source file, holds shared locks in canonical or
 Capture now holds the shared profile transaction lease used by every coordinated writer, in addition to per-file locks and byte rechecks. Identified inspection validates lineage, native financial operation proofs and stable record identities. App restore refuses older acknowledged state or receipts and publishes through recoverable transactions. For general JSON/CSV transfer, read-only previews and explicit apply with a pre-apply ZIP, see [the transfer runbook](deadlines-readiness-transfer.md#profile-transfer). A backup still requires an isolated restore drill to certify recoverability.
 
 Use `profile backup ... --evidence --json` only to retain raw bytes for diagnosis. It remains available with invalid config, performs no strategy work, and marks the bundle `unvalidated-evidence` with per-file validation status. Such a bundle preserves corruption evidence but is not a trusted restore source. Normal backups still reject invalid files. Evidence capture does not repair, move or remove source files.
+
+Inspection refuses missing or different app versions until compatibility is
+explicitly verified and supported. Matching `3.0.0` alone is insufficient: all
+file schemas, identities, realization proof and source hashes are also validated.
+The exact compatible image revision must be verified separately. An explicit
+`--expected-source-revision` is enforced for identified and legacy restore before
+any target directory or activation is created. Legacy restore still requires it.

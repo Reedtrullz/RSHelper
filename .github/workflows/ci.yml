@@ -49,7 +49,9 @@ jobs:
           .venv/bin/python scripts/run-tests.py --offline --json
 
       - name: Verify browser access flow (Node built-ins only)
-        run: node tests/test_browser_auth.mjs
+        run: |
+          timeout 30s node tests/test_browser_auth.mjs
+          timeout 30s node tests/test_browser_views.mjs
 
       - name: Verify stdout contract (--json pipes clean)
         shell: bash

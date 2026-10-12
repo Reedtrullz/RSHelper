@@ -90,6 +90,32 @@ class RestoreTest(unittest.TestCase):
             backup.restore_profile('source', target, expected_profile_uuid=ORIGIN, operation_id=OP)
         self.assertEqual(before, (self.root / 'trades.json').read_bytes())
 
+    def test_identified_restore_honors_expected_source_revision_before_activation(self):
+        target = self.base / 'private.zip'
+        backup.export_profile('source', target)
+        with self.assertRaisesRegex(backup.BackupError, 'source revision'):
+            backup.restore_profile('restored', target, expected_profile_uuid=PROFILE,
+                operation_id=OP, expected_source_revision='0' * 64)
+        self.assertFalse(profile.resolve_config_path('', 'restored').exists())
+
+    def test_unknown_backup_app_version_cannot_activate_a_profile(self):
+        target = self.base / 'private.zip'
+        backup.export_profile('source', target)
+        with zipfile.ZipFile(target) as archive:
+            content = {name: archive.read(name) for name in archive.namelist()}
+        manifest = json.loads(content['manifest.json'])
+        for version in (None, '99.0.0', {'unexpected': 'type'}):
+            with self.subTest(version=version):
+                candidate = self.base / 'unknown-version.zip'
+                manifest['app_version'] = version
+                content['manifest.json'] = json.dumps(manifest).encode()
+                with zipfile.ZipFile(candidate, 'w') as archive:
+                    for name, raw in content.items():
+                        archive.writestr(name, raw)
+                with self.assertRaisesRegex(backup.BackupError, 'version'):
+                    backup.restore_profile('restored', candidate, expected_profile_uuid=PROFILE, operation_id=OP)
+                self.assertFalse(profile.resolve_config_path('', 'restored').exists())
+
     def test_backup_manifest_origin_must_match_activation(self):
         (self.root / 'identity-manifest.json').write_text(json.dumps(state_identity.new_manifest(OP)))
         target = self.base / 'wrong-origin.zip'
