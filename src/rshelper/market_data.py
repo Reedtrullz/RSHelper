@@ -30,6 +30,7 @@ class MarketDict(dict):
 
 class MarketList(list):
     """Sequence view that retains acquisition evidence through existing consumers."""
+    candle_coverage: dict
 
 
 def market_payload(result, *, sequence=False):
@@ -47,6 +48,8 @@ def market_payload(result, *, sequence=False):
     else:
         raise ValueError('market data must be a mapping or sequence')
     view.market_data = evidence
+    if isinstance(view,MarketList) and isinstance(data,MarketList) and hasattr(data,'candle_coverage'):
+        view.candle_coverage = data.candle_coverage
     return view
 
 

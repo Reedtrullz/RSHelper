@@ -1012,7 +1012,7 @@ def margin_check(args: argparse.Namespace) -> None:
 
     # Analyze
     margin_scanner = MarginScanner()
-    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction)
+    results = margin_scanner.scan(lookup, ts_data, members_only=args.members_only, direction=direction,timestep='5m')
     print(f"  {len(results)} items analyzed\n", file=sys.stderr)
 
     if args.csv:
@@ -1023,12 +1023,15 @@ def margin_check(args: argparse.Namespace) -> None:
             "avg_margin", "margin_consistency", "margin_volatility", "avg_spread_pct",
             "avg_volume", "spread_score", "volume_score", "volatility_score",
             "datapoints", "window_hours", "margin_trend",
+            "candle_timestep", "candle_samples", "candle_missing_windows", "candle_rejected", "candle_coverage_ratio",
             *("history_" + field for field in _EVIDENCE_FIELDS),
             *_CSV_MARKET_FIELDS,
         ], extrasaction='ignore')
         writer.writeheader()
         for i, a in enumerate(results[:args.top], 1):
             row = asdict(a)
+            row.update({'candle_'+key:a.candle_coverage.get(key) for key in
+                        ('timestep','samples','missing_windows','rejected','coverage_ratio')})
             row.update(_csv_market(a.market_data.get("current", {})))
             history = a.market_data.get("history", {})
             row.update({"history_" + field: history.get(field, provenance(None)[field])
@@ -1053,6 +1056,7 @@ def margin_check(args: argparse.Namespace) -> None:
                 "name": item.name if item else str(a.item_id),
                 "item_id": a.item_id,
                 "market_data": a.market_data,
+                "candle_coverage": a.candle_coverage,
                 "current_profit": a.current_profit,
                 "expected_gp_per_hour": a.expected_gp_per_hour,
                 "confidence": round(a.confidence, 3),
@@ -1198,10 +1202,11 @@ def item_info(args: argparse.Namespace) -> None:
         if (args.timeseries or getattr(args, "predict", False)) and buy_price > 0:
             ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
             out["historical"] = {"market_data":provenance(ts),"available":bool(ts),
+                                 "candle_coverage":getattr(ts,'candle_coverage',{}),
                                  "reason":None if ts else "Wiki-only historical data unavailable; Tracker has no candle history"}
             if ts:
                 from rshelper.analysis import analyze_timeseries
-                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+                analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
                 if analysis:
                     out["timeseries_analysis"] = {
                         "confidence": round(analysis.confidence, 3),
@@ -1213,6 +1218,7 @@ def item_info(args: argparse.Namespace) -> None:
                         "avg_spread_pct": round(analysis.avg_spread_pct, 2),
                         "datapoints": analysis.datapoints,
                         "window_hours": round(analysis.window_hours, 1),
+                        "candle_coverage":analysis.candle_coverage,
                     }
                     if getattr(args, "predict", False):
                         try:
@@ -1292,7 +1298,7 @@ def item_info(args: argparse.Namespace) -> None:
         ts = market_payload(fetch_timeseries_result(item_id, "5m", args.profile if hasattr(args, "profile") else None), sequence=True)
         if ts:
             from rshelper.analysis import analyze_timeseries
-            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price)
+            analysis = analyze_timeseries(item_id, ts, buy_price, sell_price,timestep='5m')
             if analysis:
                 print(f"\n  Historical ({analysis.datapoints} windows, {analysis.window_hours:.0f}h):")
                 print(f"  Confidence: {analysis.confidence:.2f} (reliability: {analysis.reliability:.2f}, profitability: {analysis.profitability_score:.2f})")

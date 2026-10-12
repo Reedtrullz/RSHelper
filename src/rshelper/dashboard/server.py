@@ -607,9 +607,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                        points: int = 96) -> dict:
         from rshelper.api import fetch_timeseries_result
         from rshelper.market import safe_int
+        from rshelper.market_validation import normalize_candles
         ts = market_payload(fetch_timeseries_result(item_id, step, profile), sequence=True)
+        normalized = normalize_candles(ts,step)
         points_out = []
-        for dp in (ts or [])[-points:]:
+        for dp in normalized['data'][-points:]:
             high, low = dp.get("avgHighPrice"), dp.get("avgLowPrice")
             if high is None or low is None:
                 continue
@@ -618,6 +620,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 continue
             points_out.append({"ts": dp.get("timestamp"), "avgHigh": h, "avgLow": l})
         return {"points": points_out, "market_data":provenance(ts),
+                "candle_coverage":getattr(ts,'candle_coverage',normalized['coverage']),
                 "capability": {"available":bool(ts), "reason":None if ts else
                                "Wiki-only historical data unavailable; Tracker has no candle history"}}
 
@@ -904,7 +907,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             ts_data = fetch_timeseries_batch_results(
                 want, timestep="5m", workers=2, profile=profile)
             results = MarginScanner().scan(
-                lookup, ts_data, direction=cfg.flip.direction)
+                lookup, ts_data, direction=cfg.flip.direction,timestep='5m')
             scored = {str(a.item_id) for a in results}
             with conf_lock:
                 for a in results:
@@ -918,6 +921,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "avg_spread_pct": round(a.avg_spread_pct, 4),
                         "datapoints": a.datapoints,
                         "window_hours": round(a.window_hours, 1),
+                        "candle_coverage":a.candle_coverage,
                     }
                 # Cache negative results (no timeseries / too few windows) so
                 # repeated polls don't re-fetch the same items every 10 min.

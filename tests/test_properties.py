@@ -24,7 +24,7 @@ def fake_ts(highs: list[int], lows: list[int], volumes: list[int] | None = None)
         {
             "avgHighPrice": h, "avgLowPrice": l,
             "highPriceVolume": v // 2, "lowPriceVolume": v // 2,
-            "timestamp": i * 300,
+            "timestamp": 1700000000 + i * 300,
         }
         for i, (h, l, v) in enumerate(zip(highs, lows, volumes))
     ]
