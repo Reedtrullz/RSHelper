@@ -1,0 +1,1 @@
+{"schema_version":1,"mode":"public-demo","approved_profiles":["synthetic-demo"],"files":{"trades.json":["item_id","qty","buy_price","sell_price","tax_paid","profit"],"positions.json":["item_id","qty","buy_price","direction"]}}

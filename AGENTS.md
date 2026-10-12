@@ -22,7 +22,8 @@ https://rs.reidar.tech. Current version: `3.0.0`
   ```bash
   for f in tests/test_*.py; do .venv/bin/python "$f"; done
   ```
-  Expected: 344 tests across 24 files, all passing.
+  Use `scripts/run-tests.py --offline --json` for isolated discovery and honest
+  counts. The prior 344-test/24-file baseline is obsolete; run every discovered file.
 - Run the CLI:
   ```bash
   PYTHONPATH=src .venv/bin/python -m rshelper <command>
@@ -108,13 +109,14 @@ https://rs.reidar.tech. Current version: `3.0.0`
   hardcoded guards shared by every price consumer; price sanity is applied
   in `build_items_from_api` and by all raw-price paths (watch-check,
   monitor alerts, item-info, trade paper).
-- `positions.py`: open paper positions are closed FIFO; in-process lock
-  only (cross-process writes are last-writer-wins, single-user tool).
+- `positions.py`: legacy closes remain FIFO. Identified closes use immutable lot
+  UUIDs, a profile lease and durable realization receipts; financial writes are
+  restricted to the authority. Never bypass these through raw file replacement.
 
 ## Workflow Gates
 
 Before committing a round:
-1. Run all 24 test files; zero failures.
+1. Run every discovered test file through the isolated runner; zero failures.
 2. Smoke-test every touched subcommand against the live Wiki API (or the GE
    Tracker fallback when testing from a datacenter IP).
 3. Verify `--json` output pipes through `json.tool` without stderr leakage.
@@ -132,6 +134,9 @@ Before committing a round:
 - The playbook and inventory live in `deploy/`; secrets
   `VPS_SSH_PRIVATE_KEY` / `VPS_SSH_HOST_KEY` are set on the repo.
 - `.github/workflows/monitoring.yml` runs scheduled public uptime checks.
+- The legacy State Sync workflow is retired. `data/state` contains only approved
+  synthetic examples and cannot initialize a real profile. Keep live backups,
+  lineage plans, packets and receipts private; preserve existing Git history.
 - `.github/workflows/probe-sources.yml` is a manual (dispatch-only) diagnostic
   that curls candidate GE data sources from the VPS host; it does not touch
   the deployed app.
@@ -146,14 +151,15 @@ survives crashes:
   at this repo's venv. `KeepAlive: true` — launchd restarts it on ANY exit
   (clean or crash), so a clean stop never leaves the trader down permanently.
 - `~/Library/LaunchAgents/com.reidar.rshelper-state-sync.plist` — runs
-  `~/.config/rshelper/bin/sync-and-push-state.py` every 15 min, committing
-  trading state (`data/state/*.json`, incl. `alerts.json`) to `main` as
-  "state: sync trading history". It commits with `commit.gpgsign=true` (SSH
-  signing via 1Password), so it only pushes while 1Password is unlocked; if
-  sync stalls, unlock 1Password (or check `launchctl list | grep rshelper-state-sync`).
+  the staged `~/.config/rshelper/bin/sync-private-state.py` every 15 min after
+  `scripts/install-trader-launchd.sh install --private-sync`. It sends the Mac
+  authority's identified state over SSH and requires an exact durable receipt;
+  it does not publish Git commits. Inspect its supported `--status --json` and
+  private daemon logs on failure. Automatic transfer is Mac to VPS; return shared
+  VPS edits through the documented explicit reverse packet procedure.
 
 Do not edit `~/.config/rshelper/` trading state by hand — it is written by
-the CLI and synced to the repo by the state-sync agent.
+the CLI and replicated privately by the state-sync agent.
 
 ## Disk Hygiene
 

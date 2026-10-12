@@ -1,8 +1,13 @@
 # Coordinated state release and cutover
 
-This release makes identified state available but does not activate it on the
-owner's profiles. The existing legacy feed continues until the E08 owner
-decision and the separate live transition. Issues 8, 10, 11 and 44 stay open.
+The owner approved the synthetic demo and staged private transition on
+12 October 2026. Both real default profiles are identified: Mac financial
+authority and VPS replica, with separate origins and retained history. The
+initial live forward revision, explicit reverse packet and second forward
+revision have exact applied receipts. The legacy Git workflow is retired;
+`data/state` contains only the approved invented examples. Installation, final
+release identity and continuing scheduled-delivery evidence belong in the
+release handoff; these are separate from the initial transfer receipts.
 
 ## Identity and ownership
 
@@ -86,6 +91,20 @@ metadata leaves the pending packet intact. Logs and receipts contain metadata,
 not rows or credentials. The authenticated owner endpoint is
 `GET /api/state/receipt?origin=UUID`; anonymous requests are denied.
 
+Full-profile validation and recoverable publication have a finite 150-second
+receiver deadline and a 180-second apply RPC deadline; receipt queries retain
+the shorter 60-second client deadline. Byte budgets, exact identity/hash checks
+and helper cleanup remain enforced. The real 22,163-trade transition exceeded
+the original 45-second receiver limit; the same retained packet applied after
+extending that deadline and was acknowledged through the ordinary client.
+
+Automatic scheduled transfer is Mac to VPS. Shared VPS edits return through an
+explicit private reverse packet: capture with the running pinned application,
+download the 0600 ZIP into a private Mac path, apply it with `state apply`, then
+send the next Mac revision with the private sync client. Retain the exact packet
+and receipt for retry; never use raw JSON or Git as the return path. The initial
+live reverse transfer was proved, but an automatic reverse job is not installed.
+
 Only after the first private receipt is proved, install the explicit private
 job with `scripts/install-trader-launchd.sh install --private-sync` (add
 `--with-monitor` only if the monitor was previously installed). Its staged
@@ -108,6 +127,12 @@ original migration or replication receipt before acknowledging or resuming.
 reloads only jobs that were loaded before quiescence. Verify daemon readiness
 separately; a launchctl load receipt is not application readiness.
 
+An approved change from raw Git sync to private sync changes the sync plist.
+After private receipts are verified, archive the original quiescence checkpoint
+and old helper with the private handoff backups, then use the explicit private
+installer and its readiness gate. Do not call `resume` on changed plists or
+reload the old raw job. Keep the original checkpoint for recovery evidence.
+
 A legacy backup can be restored only to an empty inactive target, with an
 explicit expected profile UUID and its exact inspected source revision. This
 proves pre-activation recovery to the original bytes; it does not permit replacing
@@ -119,8 +144,8 @@ operations are not provided by this release.
 
 ## Owner decision package (E08)
 
-Recommended choice: a **synthetic demo**. Publish only invented fixture rows
-through the existing default-deny serializer, with approved fields:
+Approved choice on 12 October 2026: a **synthetic demo**. Publish only invented
+fixture rows through the existing default-deny serializer, with approved fields:
 
 | File | Proposed synthetic public fields |
 | --- | --- |
@@ -133,14 +158,15 @@ separately reviewed real-data field policy or no public demo. Preview and
 serialized output must agree before any publication. Unknown fields/profiles
 fail closed; synthetic output is not a claim of real-data anonymization.
 
-The approved transition will prove private continuity first, retire raw state
-publication, then replace the public working-tree dataset with the approved
-output. Retire the raw Git launchd job and disable the legacy State Sync workflow
-before publishing demo bytes; the identified private volume must not consume
-sanitized demo files as operational state. Existing public Git history remains retained. Historical removal,
-repository visibility changes and receipt/tombstone deletion require separate
-explicit decisions. Earlier execution/continuation messages do not choose a
-public field policy. No live migration or feed switch has occurred.
+Private continuity was proved before retiring the legacy State Sync workflow
+and generating the approved output. The raw Mac job remains quiesced until the
+private installer handoff; the identified private volume must not consume demo
+files as operational state. The exact policy is committed in
+`public-demo-policy.json`. Existing public Git history remains retained.
+Historical removal, repository visibility changes and receipt/tombstone deletion
+require separate explicit decisions. Restoring an empty deployment requires a
+private app backup and explicit identity; the synthetic examples are unusable as
+an operational seed.
 
 ## Rehearsal evidence and release record
 
@@ -150,8 +176,14 @@ lost response, revision ancestry, collisions, common lineage, shared edits,
 closed-lot conservation and restore refusal. Docker Python 3.11 tests exercise
 the native writers, packet merge, migration and restore. Disposable Docker apply
 and Ansible failure exercises preserve unrelated containers and retained proof.
-These rehearsals do not establish live SSH continuity or owner approval.
+The initial real SSH receipts and explicit owner approval are separate evidence
+from those synthetic rehearsals.
 
-Release SHA, PR/run, GHCR digest, physical readback and local installed revision
-will be recorded after those operations succeed. Until then, this is preparation,
-not a deployment or live cutover acceptance statement.
+The compatible batching release is PR75/main
+`d3f405dccd50034c9a72d3fdd62c1ab6f2f63b24`, deployment run38185360517, digest
+`sha256:32364940ed16cc9864629bffabf6b40879b75c6a2f5d9f5692f2479cffeed691`.
+Both hosts' six critical module hashes matched. Both real profiles migrated from
+inspected private app backups; live Mac revision1, VPS reverse revision1 and Mac
+revision2 applied with exact durable receipts. Final publication/client rollout,
+installed-job readiness, later natural-update receipt and compatible current-state
+rollback evidence must be recorded after those operations succeed.

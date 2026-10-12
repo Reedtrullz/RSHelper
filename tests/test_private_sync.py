@@ -50,6 +50,22 @@ class PrivateSyncTest(unittest.TestCase):
     def run_sync(self, module, **kwargs):
         return module.run_sync('a', 'Racknerd-Deploy', '/opt/apps/rshelper', self.outbox, **kwargs)
 
+    def test_apply_has_finite_budget_above_receiver_deadline(self):
+        module = self.api()
+        packet = self.base / 'packet.zip'
+        packet.write_bytes(b'synthetic packet')
+        process = mock.Mock()
+        process.run_command.return_value = mock.Mock(returncode=0, stdout=b'{}')
+        spec = mock.Mock()
+        with mock.patch.object(module.importlib.util, 'spec_from_file_location', return_value=spec), \
+                mock.patch.object(module.importlib.util, 'module_from_spec', return_value=process):
+            module._ssh('Racknerd-Deploy', '/opt/apps/rshelper', 'apply', A, 'a', packet)
+            self.assertEqual(process.run_command.call_args.kwargs['timeout'], 180)
+            self.assertEqual(process.run_command.call_args.kwargs['output_limit'], 65536)
+            self.assertEqual(process.run_command.call_args.kwargs['data'], b'synthetic packet')
+            module._ssh('Racknerd-Deploy', '/opt/apps/rshelper', 'receipt', A, 'a')
+            self.assertEqual(process.run_command.call_args.kwargs['timeout'], 60)
+
     def test_transfer_disconnect_retries_same_packet(self):
         module = self.api()
         def disconnect(*args, **kwargs):

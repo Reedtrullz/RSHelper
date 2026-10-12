@@ -1,32 +1,22 @@
-# RSHelper Deployed State
+# RSHelper synthetic public demo
 
-Before the reviewed private-channel transition, this directory holds the legacy
-copy of local RSHelper trading state used to seed an inactive deployed profile:
+These two JSON files contain invented examples approved on 12 October 2026.
+They contain no live trading records and cannot seed an operational profile.
 
-- `trades.json` — paper trade journal (the live Paper Trading history)
-- `positions.json` — open paper positions (buy-and-hold until closed)
-- `watchlist.json` — watched items and alert thresholds
-- `tuning_log.json` — config-change eras for the Progression view
-- `volume_baseline.json` / `signal_cooldowns.json` — signal state
-- `snapshots/` — daily scan snapshots
+- `trades.json`: item_id, qty, buy_price, sell_price, tax_paid, profit.
+- `positions.json`: item_id, qty, buy_price, direction.
 
-## Flow
+The [approved policy](../../docs/execution/public-demo-policy.json) selects only
+the synthetic-demo profile and these fields. The application serializer produced
+the exact reviewed preview. Names, notes, account labels, timestamps, watches,
+alerts, operational state and identity/receipt proof stay outside this dataset.
 
-1. Trade locally as usual (the journal stays in `~/.config/rshelper/`).
-2. Run `scripts/sync-state.sh` for coherent locked capture and transactional copy here.
-3. Commit `data/state` and push to `main`.
-4. The Ansible deploy task copies this directory into
-   `/opt/apps/rshelper/data/.config/rshelper` on the VPS before the
-   container starts, so `rs.reidar.tech` serves the same history.
+Real state remains private: the Mac is financial authority and the VPS is a
+replica reached through authenticated SSH packets and exact applied receipts.
+The legacy State Sync workflow is retired. Identified profiles reject raw Git
+publication and skip public seed files. Recover a new deployment from an
+inspected private app backup, never from these examples.
 
-The copy is additive: files removed locally are not deleted from the
-deployed volume, so history persists across syncs.
-
-`config.toml` and `active_profile` are intentionally not synced — the VPS
-keeps its own config defaults.
-
-This repository is public. Owner HTTP authentication does not remove published
-copies or existing Git history. Identified profiles refuse raw Git publication
-and skip this seed; they require the authenticated private packet channel and
-exact applied receipt. The owner must approve the public field policy and the
-existing-feed transition first. See [the coordinated state runbook](../../docs/execution/coordinated-state-runbook.md).
+Existing public Git history is retained. Replacing this working-tree dataset
+does not remove previously published versions. See the
+[coordinated state runbook](../../docs/execution/coordinated-state-runbook.md).
