@@ -605,3 +605,22 @@ def read_receipt(profile, origin_uuid):
     root = resolve_config_path('', profile)
     with state_transaction.profile_transaction(profile, root):
         return copy.deepcopy(_metadata(root)['receipts'].get(origin_uuid, {}))
+
+def verify_receipt(profile,verification):
+    if not isinstance(verification,dict) or set(verification)!={'profile_uuid','origin_uuid','applied_revision','applied_hash'}:
+        raise ValueError('invalid receipt verification fields')
+    for key in ('profile_uuid','origin_uuid'):persistence.canonical_uuid(verification[key])
+    if (type(verification['applied_revision']) is not int or verification['applied_revision']<1 or
+            not isinstance(verification['applied_hash'],str) or not re.fullmatch('[0-9a-f]{64}',verification['applied_hash'])):
+        raise ValueError('invalid receipt verification cursor')
+    root=resolve_config_path('',profile)
+    with state_transaction.profile_transaction(profile,root):
+        if _activation(root)['profile_uuid']!=verification['profile_uuid']:raise ValueError('verification profile differs')
+        receipt=copy.deepcopy(_metadata(root)['receipts'].get(verification['origin_uuid'],{}))
+        _validate_receipt(receipt)
+        if (receipt['status'] not in ('applied','no_op') or any(receipt[key]!=value for key,value in verification.items()) or
+                receipt['requested_revision']!=verification['applied_revision'] or receipt['requested_hash']!=verification['applied_hash']):
+            raise ValueError('verification cursor differs from acknowledged receipt')
+        from rshelper.readiness import _record_sync
+        _record_sync(profile,{**receipt,'status':'no_op'})
+        return receipt

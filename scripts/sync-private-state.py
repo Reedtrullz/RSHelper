@@ -15,7 +15,7 @@ from rshelper import persistence, profile as profiles, state_replication, state_
 from rshelper.backup import _read_file
 
 
-def _ssh(host, destination, mode, origin, selected_profile, packet=None):
+def _ssh(host, destination, mode, origin, selected_profile, packet=None,verification=None):
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.@-]*', host):
         raise ValueError('invalid SSH host alias')
     if (not destination.startswith('/') or '..' in Path(destination).parts
@@ -32,7 +32,7 @@ def _ssh(host, destination, mode, origin, selected_profile, packet=None):
     result = module.run_command(['ssh', '-o', 'BatchMode=yes', '-o', 'IdentitiesOnly=yes',
                                 '-o', 'IdentityAgent=none', '-o', 'StrictHostKeyChecking=yes',
                                 host, shlex.join(command)],
-                               data=_read_file(packet) if packet else None,
+                               data=_read_file(packet) if packet else state_replication._json(verification) if verification is not None else None,
                                timeout=180 if mode == 'apply' else 60, output_limit=65536)
     if result.returncode:
         raise OSError('private SSH transfer or pinned apply failed; pending packet retained')
@@ -158,6 +158,9 @@ def run_sync(selected_profile, host, destination, outbox, *, dry_run=False, stat
                 raise ValueError('private destination receipt identity differs')
         if receipt is None or not _match(receipt, manifest):
             receipt = _ssh(host, destination, 'apply', manifest['origin_uuid'], selected_profile, packet)
+        else:
+            receipt=_ssh(host,destination,'verify',manifest['origin_uuid'],selected_profile,
+                verification={key:receipt[key] for key in ('profile_uuid','origin_uuid','applied_revision','applied_hash')})
         if not _match(receipt, manifest):
             raise ValueError('private destination did not acknowledge exact packet')
         state_transaction._durable_write(outbox / 'acknowledged.json', state_replication._json(

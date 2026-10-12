@@ -15,6 +15,11 @@ MAX_PACKET_BYTES = 64 * 1024 * 1024
 REPOSITORY = 'ghcr.io/reedtrullz/rshelper'
 APP_DIR = Path('/opt/apps/rshelper')
 
+def _unique_fields(pairs):
+    value=dict(pairs)
+    if len(value)!=len(pairs):raise ValueError('duplicate receipt verification field')
+    return value
+
 
 def _module(path, name):
     if path.is_symlink() or not path.is_file():
@@ -81,6 +86,19 @@ def perform(root, action, origin, selected_profile, *, source=None, incoming=Non
         try:
             if action == 'receipt':
                 arguments = ['-m', 'rshelper', '--profile', selected_profile, 'state', 'receipt', '--origin', origin, '--json']
+            elif action=='verify':
+                if incoming is None:raise ValueError('receipt verification input required')
+                raw=incoming.read(4097)
+                if not raw or len(raw)>4096:raise ValueError('receipt verification exceeds byte budget')
+                verification=json.loads(raw,object_pairs_hook=_unique_fields)
+                if (not isinstance(verification,dict) or set(verification)!={'profile_uuid','origin_uuid','applied_revision','applied_hash'} or
+                        verification['origin_uuid']!=origin or type(verification['profile_uuid']) is not str or str(UUID(verification['profile_uuid']))!=verification['profile_uuid'] or
+                        type(verification['applied_revision']) is not int or verification['applied_revision']<1 or
+                        type(verification['applied_hash']) is not str or not re.fullmatch('[0-9a-f]{64}',verification['applied_hash'])):
+                    raise ValueError('invalid receipt verification')
+                arguments=['-m','rshelper','--profile',selected_profile,'state','verify','--origin',origin,
+                    '--profile-uuid',verification['profile_uuid'],'--revision',str(verification['applied_revision']),
+                    '--hash',verification['applied_hash'],'--json']
             elif action == 'contract':
                 arguments = ['-m', 'rshelper', '--profile', selected_profile, 'state', 'check', '--json']
             elif action == 'apply':
@@ -123,7 +141,7 @@ def perform(root, action, origin, selected_profile, *, source=None, incoming=Non
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--action', choices=('receipt', 'apply', 'legacy', 'contract'), required=True)
+    parser.add_argument('--action', choices=('receipt', 'verify', 'apply', 'legacy', 'contract'), required=True)
     parser.add_argument('--origin')
     parser.add_argument('--profile', default='default')
     parser.add_argument('--destination', default='/opt/apps/rshelper')
