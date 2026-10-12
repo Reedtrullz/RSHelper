@@ -131,6 +131,20 @@ class HttpInputsTest(unittest.TestCase):
                 self.assert_error(*self.request(path, json.dumps(data).encode()))
                 self.assertEqual(self.calls, [])
 
+    def test_watch_policy_validates_before_calling_mutator(self):
+        policy = {'mode': 'reminder', 'cooldown_sec': 900, 'hysteresis_gp': 10}
+        body = {'action': 'alerts', 'item_id': 561, 'alert_above': 100,
+                'alert_below': None, 'alert_policy': policy}
+        status, _ = self.request('/api/watchlist', json.dumps(body).encode())
+        self.assertEqual(status, 200)
+        self.assertEqual(self.calls, [('alerts', 561, 100, None, policy)])
+        self.calls.clear()
+        for invalid in ({**policy, 'cooldown_sec': True}, {**policy, 'mode': 'bad'},
+                        {**policy, 'hysteresis_gp': -1}, {}):
+            body['alert_policy'] = invalid
+            self.assert_error(*self.request('/api/watchlist', json.dumps(body).encode()), expected=400)
+            self.assertEqual(self.calls, [])
+
     def test_close_operation_id_passes_through(self):
         uuid_value = '22222222-2222-4222-8222-222222222222'
         status, payload = self.request('/api/positions',

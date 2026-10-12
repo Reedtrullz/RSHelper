@@ -398,21 +398,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 else:
                     profit = (sell - buy) - ge_tax(sell)
                 item_id = int(id_str)
-                above = entry.get("alert_margin_above")
-                below = entry.get("alert_margin_below")
-                hit = None
-                if above is not None and profit > above:
-                    hit = f"margin {profit:,} gp above {above:,}"
-                elif below is not None and profit < below:
-                    hit = f"margin {profit:,} gp below {below:,}"
-                # Check-then-set must be atomic per item (this runs inside the
-                # single-flight refresh lock, so no other thread can race it).
-                if hit and not alerts.watch_triggered(item_id, profile):
-                    alert = alerts.push_alert(
-                        "watch", "HIGH", item_id, entry.get("name", str(item_id)),
-                        "Watchlist alert", f"{entry.get('name', '')}: {hit}",
-                        profile=profile)
-                    alerts.set_watch_triggered(item_id, profile)
+                alert = alerts.emit_watch_if_due(profile, item_id, profit,
+                    source_revision=str(provenance(latest).get('last_success_at') or ''))
+                if alert is not None:
                     hub.broadcast("alert", {"alert": _alert_to_dict(alert)})
         except Exception as e:
             print(f"[dashboard] watch alert check failed: {e}", file=sys.stderr)
@@ -558,6 +546,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = refresh()
         latest = cache["latest"] or {}
         rows = []
+        crossings = alerts._load(profile).get('watch_crossings', {})
         for id_str, entry in watchlist.load(profile).get("items", {}).items():
             price = latest.get(id_str)
             issue = price_issue(price) if isinstance(price, dict) else "no data"
@@ -565,6 +554,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                    "added": entry.get("added", ""),
                    "alert_above": entry.get("alert_margin_above"),
                    "alert_below": entry.get("alert_margin_below"),
+                   "alert_policy": alerts._watch_policy(entry.get('alert_policy')),
+                   "notification_status": crossings.get(id_str, {}).get('notification_status', 'not-requested'),
                    "usable": issue is None, "market_data":{"latest":provenance(latest)}}
             if issue is None:
                 row["buy"] = safe_int(price.get("high", 0))
@@ -577,7 +568,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def update_watchlist(action: str, item_id: int,
                          alert_above: int | None = None,
-                         alert_below: int | None = None) -> dict:
+                         alert_below: int | None = None, policy=None) -> dict:
         cache = refresh()
         if action == "add":
             item = next((i for i in cache["items"] if i.id == item_id), None)
@@ -598,7 +589,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             watchlist.remove(item_id, profile=profile)
         elif action == "alerts":
             alerts.update_watch_alerts(item_id, alert_above, alert_below,
-                                       profile)
+                                       profile, policy=policy)
         else:
             raise ValueError(f"unknown watchlist action '{action}'")
         return get_watchlist()
