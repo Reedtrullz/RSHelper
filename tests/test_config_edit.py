@@ -15,6 +15,14 @@ from test_native_writers import DisposableHomeTest
 from rshelper import profile,tuning,state_transaction,paper_book
 
 class ConfigEditTest(DisposableHomeTest):
+    def test_verified_trader_status_retains_the_actual_loaded_configuration(self):
+        from rshelper import trader
+        evidence=tuning.config_evidence(None,now=1000)
+        with mock.patch.object(trader,'_read_state',return_value={'configuration':evidence}), \
+             mock.patch.object(trader,'daemon_status',return_value={'ownership':'verified_lease','running':True,'local':True,'pid':123,'ready':True}):
+            status=trader.trader_status()
+        self.assertEqual(status.get('configuration'),evidence)
+
     def test_configuration_receipt_gaps_fail_at_all_import_boundaries(self):
         from rshelper import config_edit,backup,state_replication
         self.activate()
