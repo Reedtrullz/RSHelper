@@ -1,6 +1,22 @@
 import math
 
 
+def require_capacity(budget, *, item_id, qty, buy_price, members):
+    if any(type(value) is not int or not 0<value<2**63 for value in (item_id,qty,buy_price)):
+        raise ValueError('positive bounded purchase inputs required')
+    if qty*buy_price>=2**63:raise ValueError('paper reservation exceeds monetary bounds')
+    if budget['slot_limit']==3 and members is not False:
+        raise ValueError('free account requires a known free item before purchase')
+    if budget['available_slots'] is None or budget['available_slots']<1:
+        raise ValueError('paper account slot capacity unknown or exhausted')
+    if any('history' in reason or 'unreconciled' in reason for reason in budget['unknown']):
+        raise ValueError('purchase history or financial activity requires reconciliation')
+    if budget['available_cash']<qty*buy_price:raise ValueError('insufficient shared paper cash')
+    window=budget['purchase_windows'].get(str(item_id))
+    available=window['available_qty'] if window is not None else None
+    if available is None or available<qty:raise ValueError('shared paper purchase limit unknown or exhausted')
+
+
 def _budget_summary(positions, offers, purchases, *, bankroll, slot_limit,
                     history_complete_after, now, buy_limits):
     if type(bankroll) is not int or not 0<=bankroll<2**63:

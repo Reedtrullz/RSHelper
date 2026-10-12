@@ -13,6 +13,27 @@ from rshelper.positions import list_positions
 MAX_GE_SLOTS = 8
 
 
+def new_paper_offer(item_id,qty,buy_price,direction,now):
+    instant=datetime.fromtimestamp(now,timezone.utc).isoformat()
+    return {'schema_version':1,'stage':'buying','item_id':item_id,'direction':direction,
+            'qty':qty,'bought_qty':0,'sold_qty':0,'canceled_buy_qty':0,'canceled_sell_qty':0,
+            'buy_price':buy_price,'sell_price':None,'created_at':instant,
+            'stage_started_at':instant,'last_window':None}
+
+
+def paper_profit(offer):
+    return (offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']
+
+
+def cancel_paper_buy(offer,now):
+    if offer['stage']!='buying':raise ValueError('buy cancellation requires an active buying offer')
+    updated=copy.deepcopy(offer)
+    updated['canceled_buy_qty']=updated['qty']-updated['bought_qty']
+    updated['stage']='bought' if updated['bought_qty'] else 'canceled'
+    updated['stage_started_at']=datetime.fromtimestamp(now,timezone.utc).isoformat()
+    return updated
+
+
 class PaperAdvance(TypedDict):
     offer: dict[str,object]
     fill: dict[str,str | int] | None

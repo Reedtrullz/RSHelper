@@ -11,7 +11,7 @@ from typing import TypedDict
 
 from rshelper import persistence, positions, state_identity, state_transaction
 from rshelper.budget import _budget_summary
-from rshelper.ge_offers import advance_paper_offer
+from rshelper.ge_offers import advance_paper_offer, new_paper_offer, cancel_paper_buy, paper_profit
 
 FILENAME='paper-offers.json'
 
@@ -439,28 +439,17 @@ def reserve_budget(profile,*,item_id,name,qty,buy_price,buy_limit,direction,note
     with state_transaction.profile_transaction(profile or 'default',root) as txn:
         book,receipt=_mutation_book(root,expected_revision,operation_id,request)
         if receipt:return _response(root,book,now,receipt,True)
-        if book['slot_limit']==3 and members is not False:
-            raise ValueError('free account requires a known free item before purchase')
         if (root/'trading_mode.json').exists():
             from rshelper.trading_mode import require_entries_running
             require_entries_running(root)
         budget=_summary(root,book,now,{item_id:buy_limit})
-        if budget['available_slots'] is None or budget['available_slots']<1:
-            raise ValueError('paper account slot capacity unknown or exhausted')
-        if any('history' in reason or 'unreconciled' in reason for reason in budget['unknown']):
-            raise ValueError('purchase history or financial activity requires reconciliation')
-        if budget['available_cash']<qty*buy_price:raise ValueError('insufficient shared paper cash')
-        available=budget['purchase_windows'][str(item_id)]['available_qty']
-        if available is None or available<qty:raise ValueError('shared paper purchase limit unknown or exhausted')
-        instant=datetime.fromtimestamp(now,timezone.utc).isoformat()
+        from rshelper.budget import require_capacity
+        require_capacity(budget,item_id=item_id,qty=qty,buy_price=buy_price,members=members)
         if (note=='auto')!=(mode=='auto'):raise ValueError('paper auto policy must preserve auto ownership')
         from rshelper.tuning import config_evidence
         book['offers'][operation_id]={'name':name,'note':note,'lots':[],'fills':[],'mode':mode,'purchase_basis':'paper-fills','sale_reason':None,
             'entry_config':config_evidence(profile,now=now,trader_config=trader_config),'exit_config':None,
-            'offer':{'schema_version':1,'stage':'buying','item_id':item_id,'direction':direction,
-                     'qty':qty,'bought_qty':0,'sold_qty':0,'canceled_buy_qty':0,'canceled_sell_qty':0,
-                     'buy_price':buy_price,'sell_price':None,'created_at':instant,
-                     'stage_started_at':instant,'last_window':None}}
+            'offer':new_paper_offer(item_id,qty,buy_price,direction,now)}
         book['buy_limits'][str(item_id)]=buy_limit
         receipt=_write(txn,book,operation_id,request,operation_id,now)
         return _response(root,book,now,receipt)
@@ -488,10 +477,7 @@ def cancel_buy(profile,offer_id,*,expected_revision,operation_id,now):
         if receipt:return _response(root,book,now,receipt,True)
         record=book['offers'].get(offer_id)
         if record is None or record['offer']['stage']!='buying':raise ValueError('buy cancellation requires an active buying offer')
-        offer=record['offer']
-        offer['canceled_buy_qty']=offer['qty']-offer['bought_qty']
-        offer['stage']='bought' if offer['bought_qty'] else 'canceled'
-        offer['stage_started_at']=datetime.fromtimestamp(now,timezone.utc).isoformat()
+        record['offer']=cancel_paper_buy(record['offer'],now)
         _publish_lot(txn,profile,record,offer_id,now)
         receipt=_write(txn,book,operation_id,request,offer_id,now)
         return _response(root,book,now,receipt)
@@ -651,7 +637,7 @@ def collect_offer(profile,offer_id,*,expected_revision,operation_id,now):
                 metadata={'note':'paper','strategy':'auto' if record['mode']=='auto' else 'manual',
                           'exit_config':record.get('exit_config')})
         if not receipt:
-            profit=(offer['sell_price']-offer['buy_price']-ge_tax(offer['sell_price']))*offer['sold_qty']
+            profit=paper_profit(offer)
             book['collections'][offer_id]={'operation_id':operation_id,'status':'pending','profit':profit,'trade_uuids':[]}
             _write(txn,book,operation_id,request,offer_id,now)
     realization.realize_close_batch(profile,operation_id)
