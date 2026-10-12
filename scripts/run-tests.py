@@ -27,8 +27,12 @@ def execute_file(path):
     if not suite.countTestCases():
         raise ValueError("no tests executed in discovered file")
     result = unittest.TextTestRunner(stream=sys.stderr, verbosity=1).run(suite)
-    return {"tests": result.testsRun, "skipped": len(result.skipped),
-            "failures": len(result.failures), "errors": len(result.errors)}
+    report = {"tests": result.testsRun, "skipped": len(result.skipped),
+              "failures": len(result.failures), "errors": len(result.errors),
+              "skip_reasons": [{"test": str(test), "reason": reason} for test, reason in result.skipped]}
+    if os.environ.get('RSHELPER_PROVIDER_CHECK') == '1':
+        report['provider_evidence'] = getattr(module, 'PROVIDER_EVIDENCE', [])
+    return report
 
 
 def main():
@@ -90,9 +94,10 @@ def main():
                     env['RSHELPER_TEST_EXECUTABLE_'+name.upper().replace('-', '_')] = str(Path(executable).resolve())
             command = [sys.executable, __file__, "--offline" if args.offline else "--provider-check",
                        "--file", str(path.resolve()), "--result", str(result_path)]
+            deadline = 300 if args.provider_check else 120
             try:
                 completed = subprocess.run(command, env=env, cwd=ROOT,
-                                           capture_output=True, text=True, timeout=120)
+                                           capture_output=True, text=True, timeout=deadline)
                 entry = json.loads(result_path.read_text()) if result_path.exists() else {
                     "tests": 0, "skipped": 0, "failures": 0, "errors": 1,
                     "error": "test subprocess produced no report"}
@@ -104,7 +109,7 @@ def main():
                     print(completed.stdout + completed.stderr, file=sys.stderr)
             except subprocess.TimeoutExpired:
                 entry = {"tests": 0, "skipped": 0, "failures": 0,
-                         "errors": 1, "error": "test file exceeded 120 second deadline"}
+                         "errors": 1, "error": f"test file exceeded {deadline} second deadline"}
             entry["file"] = path.name
             report["files"].append(entry)
             for key in ("tests", "skipped", "failures", "errors"):

@@ -213,6 +213,8 @@ def _inspect(source):
             or manifest.get('sensitivity') != 'private' or manifest.get('policy') not in ('backup', 'private')
             or not isinstance(manifest.get('files'), dict) or set(manifest['files']) != set(content)):
         raise BackupError('unsupported, unvalidated or incomplete backup')
+    if manifest.get('app_version') != __version__:
+        raise BackupError('backup app version compatibility is unverified')
     for name, payload in content.items():
         record = manifest['files'][name]
         if (not isinstance(record, dict) or record.get('sensitivity') != 'private'
@@ -330,9 +332,11 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
     if operation_id is not None or not dry_run:
         canonical_uuid(operation_id)
     manifest, content = _inspect(source)
+    if expected_source_revision is not None and expected_source_revision != manifest['source_revision']:
+        raise BackupError('backup source revision does not match explicit restore source')
     legacy = manifest['profile_uuid'] is None
     if legacy:
-        if expected_source_revision != manifest['source_revision']:
+        if expected_source_revision is None:
             raise BackupError('legacy restore requires its explicit inspected source revision')
         if any(name.startswith('identity-') or name in ('realizations.json', 'realization-batches.json',
                 'replication-state.json', 'migration-receipts.json') for name in content):

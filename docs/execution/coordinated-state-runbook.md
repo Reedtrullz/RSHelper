@@ -142,6 +142,25 @@ refuses loss of acknowledged rows, financial proof or replication cursors.
 Downgrade to legacy code and disaster recovery that discards newer acknowledged
 operations are not provided by this release.
 
+### Recovery acceptance revalidation (12 October 2026, #32)
+
+Current code reuses the same app restore and transaction recovery. New regression
+checks reject an explicitly wrong identified source revision and an unverified
+app version before target activation. Existing tests reject corrupt bundles and
+newer acknowledged-state loss, and kill a transaction worker at each publication
+checkpoint before recovery in another process.
+
+`tests/recovery_image_fixture.py` is a bounded synthetic fixture for an owned
+disposable HOME/volume, requiring `RSHELPER_RECOVERY_REHEARSAL=1`. Its phases are
+`start`, `advance`, `kill-restore` (expected exit9), and `verify`. Never mount the
+operational volume for this fixture. Start on a retained compatible image,
+advance and interrupt staging restore on the candidate, then verify with the
+retained compatible image. Verify recovers the original staging generation,
+checks source receipts and exact quantities/profit, retries recovery, and refuses
+an old backup over the later acknowledged source. Image rollback retains current
+state; it does not restore old state over new writes. Remove only the owned
+rehearsal volume after checking that no container references it.
+
 ## Owner decision package (E08)
 
 Approved choice on 12 October 2026: a **synthetic demo**. Publish only invented

@@ -1,30 +1,64 @@
 """Integration test: hits the real OSRS Wiki API, builds items, runs scans."""
 
 import unittest
-import urllib.request
-import urllib.error
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from rshelper.api import fetch_mapping, fetch_latest, fetch_5m
+from rshelper.api import fetch_mapping_result, fetch_latest_result, fetch_5m_result, fetch_timeseries_result
 from rshelper.scanner import build_items_from_api, AlchScanner, FlipScanner
+from rshelper.market_data import MarketDataResult
+
+PROVIDER_EVIDENCE = []
 
 
-def _has_network():
-    try:
-        req = urllib.request.Request(
-            "https://prices.runescape.wiki/api/v1/osrs/latest",
-            headers={"User-Agent": "RSHelper-test/0.1"},
-        )
-        with urllib.request.urlopen(req, timeout=5):
-            return True
-    except Exception:
-        return False
+class TestProviderEvidence(unittest.TestCase):
+    def test_cached_or_unidentified_results_cannot_certify_live_provider(self):
+        for delivery, source, stale in [('fresh-cache', 'wiki', False),
+                                        ('stale-cache', 'wiki', True),
+                                        ('network', 'unknown', False)]:
+            result = MarketDataResult({}, source, delivery, 1, 1, 1, stale,
+                                      'unknown', {})
+            with self.subTest(delivery=delivery, source=source):
+                with self.assertRaises(AssertionError):
+                    require_network_result(result)
+        with self.assertRaises(AssertionError):
+            require_network_result(None)
+
+    def test_network_result_records_source_without_exposing_rows(self):
+        import contextlib
+        import io
+        result = MarketDataResult({'private': 'row'}, 'ge-tracker', 'network',
+                                  1, 1, 1, False, 'standing-orders', {'ge-tracker': 1})
+        evidence_count = len(PROVIDER_EVIDENCE)
+        output = io.StringIO()
+        with contextlib.redirect_stderr(output):
+            self.assertIs(require_network_result(result), result.data)
+        self.assertIn('ge-tracker', output.getvalue())
+        self.assertNotIn('private', output.getvalue())
+        del PROVIDER_EVIDENCE[evidence_count:]
 
 
-HAS_NETWORK = os.environ.get("RSHELPER_PROVIDER_CHECK") == "1" and _has_network()
+def require_network_result(result):
+    assert result is not None, 'provider acquisition failed'
+    assert result.delivery == 'network' and not result.stale, 'cached data is not a live provider check'
+    assert result.source in ('wiki', 'ge-tracker'), 'provider source is unidentified'
+    assert result.fetched_at is not None and result.last_success_at is not None, 'missing source timestamps'
+    print(f'provider source={result.source} delivery={result.delivery} '
+          f'volume={result.volume_kind} coverage={result.coverage}', file=sys.stderr)
+    PROVIDER_EVIDENCE.append({key: getattr(result, key) for key in
+        ('source', 'delivery', 'fetched_at', 'last_attempt_at', 'last_success_at', 'stale', 'volume_kind', 'coverage')})
+    return result.data
+
+
+PROVIDER_CHECK = os.environ.get("RSHELPER_PROVIDER_CHECK") == "1"
+
+
+def fresh_result(fetcher, *args):
+    # Separate owned caches make each test prove acquisition, including fallback.
+    import uuid
+    return fetcher(*args, profile='provider-' + uuid.uuid4().hex[:23])
 
 
 class TestIntegration(unittest.TestCase):
@@ -41,9 +75,9 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(len(items), 1)
         self.assertEqual((items[0].buy_price, items[0].sell_price), (200, 190))
 
-    @unittest.skipUnless(HAS_NETWORK, "no network")
+    @unittest.skipUnless(PROVIDER_CHECK, "provider checks explicitly disabled in offline mode")
     def test_fetch_latest_returns_data(self):
-        data = fetch_latest()
+        data = require_network_result(fresh_result(fetch_latest_result))
         self.assertIsInstance(data, dict)
         self.assertGreater(len(data), 100)
         # Cannonball (id=2) should exist
@@ -55,20 +89,21 @@ class TestIntegration(unittest.TestCase):
         self.assertGreater(cannonball["high"], 0)
         self.assertGreater(cannonball["low"], 0)
 
-    @unittest.skipUnless(HAS_NETWORK, "no network")
+    @unittest.skipUnless(PROVIDER_CHECK, "provider checks explicitly disabled in offline mode")
     def test_fetch_mapping_returns_items(self):
-        mapping = fetch_mapping()
+        mapping = require_network_result(fresh_result(fetch_mapping_result))
         self.assertIsInstance(mapping, list)
         self.assertGreater(len(mapping), 100)
         entry = mapping[0]
         self.assertIn("id", entry)
         self.assertIn("name", entry)
 
-    @unittest.skipUnless(HAS_NETWORK, "no network")
+    @unittest.skipUnless(PROVIDER_CHECK, "provider checks explicitly disabled in offline mode")
     def test_build_items_and_scan(self):
-        mapping = fetch_mapping()
-        latest = fetch_latest()
-        volume_5m = fetch_5m() or {}
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            mapping, latest, volume_5m = [require_network_result(result) for result in
+                pool.map(fresh_result, (fetch_mapping_result, fetch_latest_result, fetch_5m_result))]
         items = build_items_from_api(mapping, latest, volume_5m)
         self.assertGreater(len(items), 50)
 
@@ -86,16 +121,21 @@ class TestIntegration(unittest.TestCase):
         self.assertIsInstance(flips, list)
         self.assertGreater(len(flips), 0)
 
-    @unittest.skipUnless(HAS_NETWORK, "no network")
+    @unittest.skipUnless(PROVIDER_CHECK, "provider checks explicitly disabled in offline mode")
     def test_confidence_bounds_integration(self):
-        from rshelper.api import fetch_timeseries
-        ts = fetch_timeseries(2, "5m")  # Cannonball
-        if ts and len(ts) >= 6:
-            from rshelper.analysis import analyze_timeseries
-            analysis = analyze_timeseries(2, ts, current_buy=200, current_sell=190)
-            if analysis:
-                self.assertGreaterEqual(analysis.confidence, 0.0)
-                self.assertLessEqual(analysis.confidence, 1.0)
+        result = fresh_result(fetch_timeseries_result, 2, '5m')
+        if result is None:
+            latest = fresh_result(fetch_latest_result)
+            require_network_result(latest)
+            if latest.source == 'ge-tracker':
+                self.skipTest('Wiki history unavailable; GE Tracker has no historical candle capability')
+        ts = require_network_result(result)
+        self.assertGreaterEqual(len(ts), 6, 'insufficient live history for confidence check')
+        from rshelper.analysis import analyze_timeseries
+        analysis = analyze_timeseries(2, ts, current_buy=200, current_sell=190)
+        self.assertIsNotNone(analysis)
+        self.assertGreaterEqual(analysis.confidence, 0.0)
+        self.assertLessEqual(analysis.confidence, 1.0)
 
 
 if __name__ == "__main__":

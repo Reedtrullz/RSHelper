@@ -438,7 +438,7 @@ function setDensity(){
 function setStrategy(v){
   strategy=v;
   document.querySelectorAll('[data-strategy]').forEach(b=>b.classList.toggle('active',b.dataset.strategy===strategy));
-  renderPaper();
+  setView(view);
 }
 async function paperTrade(){
   const item=document.getElementById('ptItem').value.trim();
