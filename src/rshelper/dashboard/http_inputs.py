@@ -66,7 +66,9 @@ def validate_operation(path, body):
     def action(choices):
         if not isinstance(body.get('action'), str) or body['action'] not in choices:
             raise HttpInputError('Unknown action')
-    if path=='/api/observed':
+    if path=='/api/scenario':
+        if set(body)!={'holdings','cash','market_revision','specification'}:raise HttpInputError('Frozen scenario fields differ')
+    elif path=='/api/observed':
         from rshelper.persistence import canonical_uuid
         from rshelper.observed_offers import validate_event
         if set(body)!={'offer_uuid','event','operation_id','expected_revision'}:raise HttpInputError('Observed action fields differ')
@@ -167,7 +169,7 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
-    if route=='/api/observed' and values:raise HttpInputError('Observed query fields are not supported')
+    if route in ('/api/observed','/api/scenario') and values:raise HttpInputError('Query fields are not supported')
     if route=='/api/catalog':
         if set(values)-{'q','limit'}:raise HttpInputError('Unknown catalog query field')
         text(values.get('q',[''])[0],'q',required=False,limit=200)

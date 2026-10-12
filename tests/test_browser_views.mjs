@@ -3,6 +3,44 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('scenario calculation preserves frozen revision and unknown totals without private URL data',async()=>{
+  const calls=[];const {context,elements}=harness(async(url,options)=>{
+    calls.push({url,body:JSON.parse(options.body)});
+    return new Response(JSON.stringify({baseline_after_tax:null,modeled_after_tax:null,scenario_equity:null,equity_change_pct:null,
+      missing_item_ids:[2],known_modeled_after_tax:123,concentration:[{item_id:2,baseline_gross:123,share_pct:null}],assumptions:['Synthetic conditional arithmetic'],input:{market_revision:'a'.repeat(64)}}));
+  });
+  vm.runInContext("authenticated=true;view='scenario';scenarioBasis={holdings:[],cash:{available:null,reserved:null},market_revision:'"+'a'.repeat(64)+"',specification:{schema_version:1,lane:'paper'}}",context);
+  for(const [id,value] of Object.entries({scenarioAll:'-10',scenarioItem:'2',scenarioItemShock:'-0.29',scenarioHaircut:'2',scenarioLeg:'low'}))elements.set(id,{value});
+  await vm.runInContext('calculateScenario()',context);
+  assert.equal(calls[0].url,'/api/scenario');assert.equal(calls[0].body.market_revision,'a'.repeat(64));
+  assert.equal(calls[0].body.specification.item_bps['2'],-29);
+  const html=context.document.getElementById('scenarioResult').innerHTML;
+  assert.match(html,/Scenario equity: Unknown/);assert.match(html,/Change: Unknown/);assert.match(html,/Reproducible private scenario report/);
+  vm.runInContext('disconnectOwner()',context);assert.equal(vm.runInContext('scenarioBasis',context),null);
+});
+
+test('scenario result cannot overwrite another view after a pending calculation',async()=>{
+  let resolve;const {context,elements}=harness(()=>new Promise(r=>{resolve=r}));
+  vm.runInContext("authenticated=true;view='scenario';scenarioBasis={specification:{}}",context);
+  for(const [id,value] of Object.entries({scenarioAll:'0',scenarioItem:'',scenarioItemShock:'0',scenarioHaircut:'0',scenarioLeg:'direction'}))elements.set(id,{value});
+  const pending=vm.runInContext('calculateScenario()',context);
+  vm.runInContext("view='market';viewEpoch++;document.getElementById('scenarioResult').innerHTML='Different view'",context);
+  resolve(new Response('{}'));await pending;
+  assert.equal(context.document.getElementById('scenarioResult').innerHTML,'Different view');
+});
+
+test('newer scenario calculation wins when replies arrive out of order',async()=>{
+  const replies=[];const {context,elements}=harness(()=>new Promise(resolve=>replies.push(resolve)));
+  vm.runInContext("authenticated=true;view='scenario';scenarioBasis={specification:{}}",context);
+  for(const [id,value] of Object.entries({scenarioAll:'0',scenarioItem:'',scenarioItemShock:'0',scenarioHaircut:'0',scenarioLeg:'direction'}))elements.set(id,{value});
+  const first=vm.runInContext('calculateScenario()',context);
+  elements.get('scenarioAll').value='-10';const second=vm.runInContext('calculateScenario()',context);
+  const result=value=>new Response(JSON.stringify({baseline_after_tax:100,modeled_after_tax:value,scenario_equity:value,equity_change_pct:0,missing_item_ids:[],known_modeled_after_tax:value,concentration:[],assumptions:[]}));
+  replies[1](result(90));await second;
+  replies[0](result(100));await first;
+  assert.match(context.document.getElementById('scenarioResult').innerHTML,/Modeled after tax: 90 gp/);
+});
+
 test('observed receipt drafts and retry identity stay private and profile scoped',async()=>{
   const calls=[];const {context,elements}=harness(async(url,options={})=>{
     calls.push({url,body:options.body?JSON.parse(options.body):null});return new Response(JSON.stringify({error:'Synthetic failure'}),{status:500});

@@ -835,6 +835,12 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         from rshelper.bank import build_bank_items
         return build_bank_items(profile=profile, latest=cache["latest"])
 
+    def scenario(body=None):
+        from rshelper.bank import build_scenario_input
+        from rshelper.scenarios import evaluate_scenario
+        if body is not None:return evaluate_scenario(**body)
+        return build_scenario_input(profile=profile,latest=refresh()['latest'])
+
     def get_process():
         cache = refresh()
         from rshelper.scanner import ProcessScanner
@@ -1148,7 +1154,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews,observed_fn=observed,
+                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews,observed_fn=observed,scenario_fn=scenario,
                            catalog_fn=get_catalog,item_details_fn=get_item_details)
 
     # Warn on non-loopback bind

@@ -1874,7 +1874,7 @@ def _main() -> None:
     # Maintenance validates its own inputs without initializing the target profile.
     maintenance = remaining[:1] in (["state"], ["backup"], ['readiness']) or remaining[:2] in (
         ['profile', 'backup'], ['profile', 'export'], ['profile', 'import'])
-    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews'],['observed']) or remaining[:2] in (
+    maintenance = maintenance or remaining[:1] in (['trading-mode'],['reviews'],['observed'],['scenario']) or remaining[:2] in (
         ['config','preview'],['config','apply'],['config','rollback'])
     if maintenance:
         from rshelper.config import Config
@@ -2198,6 +2198,8 @@ def _main() -> None:
     config_sub.add_parser("show", help="Print current config as JSON")
     config_sub.add_parser("path", help="Print config file path")
     review_parser=sub.add_parser('reviews',help='Private stable-lot hypotheses and append-only reviews')
+    scenario=sub.add_parser('scenario',help='Read-only conditional arithmetic from frozen explicit inputs')
+    scenario.add_argument('--input',required=True);scenario.add_argument('--json',action='store_true')
     observed=sub.add_parser('observed',help='Private manual GE offer receipts, separate from paper simulation')
     observed_sub=observed.add_subparsers(dest='observed_action',required=True)
     observed_list=observed_sub.add_parser('list');observed_list.add_argument('--slots',type=int,choices=[3,8])
@@ -2670,6 +2672,13 @@ def _main() -> None:
         trade_review_cmd(args)
     elif args.command=='observed':
         observed_cmd(args)
+    elif args.command=='scenario':
+        from pathlib import Path
+        from rshelper import backup,persistence
+        from rshelper.scenarios import evaluate_scenario
+        body=persistence.decode_json(backup._read_file(Path(args.input),65536))
+        if not isinstance(body,dict) or set(body)!={'holdings','cash','market_revision','specification'}:raise ValueError('frozen scenario fields differ')
+        print(json.dumps(evaluate_scenario(**body),indent=2))
     elif args.command == "config":
         if args.config_action in ('preview','apply','rollback'):
             config_edit_cmd(args)

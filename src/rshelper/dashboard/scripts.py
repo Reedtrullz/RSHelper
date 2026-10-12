@@ -17,7 +17,7 @@ let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
 let scanExclusions={};
 let scanPresets=[],loadedPreferenceKey=null;
-const viewNames=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed'];
+const viewNames=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed','scenario'];
 function parseViewUrl(raw){
   const fallback={view:'market',item:null};
   if(typeof raw!=='string'||raw.length>512)return fallback;
@@ -104,6 +104,8 @@ let viewEpoch=0,renderEpoch=0,refreshFlight=null;
 let settingsState=null,settingsPreviewCandidate=null,pendingSettingsOperation=null;
 let reviewsState=null,reviewLotUid='',pendingReviewOperation=null,reviewTag='',reviewUnreviewed=false;
 let observedState=null,observedOfferUuid='',pendingObserved=null;
+let scenarioBasis=null;
+let scenarioGeneration=0;
 function beginViewRequest(){
   const epoch=authEpoch,tab=viewEpoch,name=view,request=++renderEpoch;
   const panels=['listBody','contextPanel'].map(id=>{
@@ -138,7 +140,7 @@ function renderViewbar(bar){
   bar.scrollLeft=scroll;
 }
 const pendingRequests=new Set();
-const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews','observed']);
+const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews','observed','scenario']);
 const publicMarketPaths=new Set(['/api/scan','/api/catalog','/api/item','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
 
 function apiFetch(url,options={}){
@@ -210,7 +212,7 @@ function applyAccessGates(){
   const canPrivate=accessMode==='owner'&&authenticated&&hasFeature('private-state');
   const hasMarket=hasFeature('market');
   const views={market:hasMarket,process:hasMarket,paper:canPrivate,signals:canPrivate,watchlist:canPrivate,
-    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate,reviews:canPrivate,observed:canPrivate};
+    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate,reviews:canPrivate,observed:canPrivate,scenario:canPrivate};
   Object.entries(views).forEach(([name,allowed])=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
@@ -219,7 +221,7 @@ function applyAccessGates(){
   updateTabState();
 }
 function updateTabState(){
-  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed'];
+  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed','scenario'];
   names.forEach(name=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(!button)return;
@@ -275,6 +277,7 @@ function disconnectOwner(){
   settingsState=null;settingsPreviewCandidate=null;pendingSettingsOperation=null;
   reviewsState=null;reviewLotUid='';pendingReviewOperation=null;reviewTag='';reviewUnreviewed=false;
   observedState=null;observedOfferUuid='';pendingObserved=null;
+  scenarioBasis=null;
   ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
@@ -557,7 +560,7 @@ function setView(v,track=true){
   if(track)writeViewUrl();
   updateTabState();
   const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
-                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews',observed:'Observed offers'};
+                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews',observed:'Observed offers',scenario:'Scenarios'};
   if(titles[v])document.title='RSHelper — '+titles[v];
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
@@ -571,6 +574,7 @@ function setView(v,track=true){
   else if(v==='settings')renderSettings();
   else if(v==='reviews')renderReviews();
   else if(v==='observed')renderObserved();
+  else if(v==='scenario')renderScenario();
   if(v==='market'&&selectedId==null)renderContextEmpty();
   else if(v==='market')renderDetail(selectedId);
 }
@@ -964,6 +968,51 @@ function drawDaily(cv,buckets){
 """
 
 SCRIPT_VIEWS = r"""
+async function renderScenario(){
+  const current=beginViewRequest();scenarioBasis=null;
+  try{
+    const response=await apiFetch('/api/scenario');const result=await response.json();
+    if(!current())return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    scenarioBasis=result;
+    document.getElementById('viewbar').innerHTML='<div class="viewbar"><span class="viewbar-title">Conditional scenarios</span><button type="button" onclick="renderScenario()">Freeze current paper holdings</button></div>';
+    document.getElementById('listBody').innerHTML='<h2>Paper inventory scenario</h2><p>Conditional arithmetic from frozen holdings and quotes. Available cash excludes reservations. Unknown quotes stay unknown. This view changes no trading decisions.</p>'+
+      '<form onsubmit="event.preventDefault();calculateScenario()"><label>All items shock (%) <input id="scenarioAll" type="number" min="-100" max="1000" step="0.01" value="0" required></label><br>'+
+      '<label>Item ID (optional) <input id="scenarioItem" type="number" min="1" step="1"></label><br>'+
+      '<label>Additional item shock (%) <input id="scenarioItemShock" type="number" min="-100" max="1000" step="0.01" value="0" required></label><br>'+
+      '<label>Fill haircut (%) <input id="scenarioHaircut" type="number" min="0" max="100" step="0.01" value="0" required></label><br>'+
+      '<label>Price leg <select id="scenarioLeg"><option value="direction">Each lot exit leg</option><option value="low">Low quote for every lot</option><option value="high">High quote for every lot</option></select></label><br>'+
+      '<button type="submit">Calculate scenario</button> <button type="button" onclick="document.getElementById(\'scenarioAll\').value=-10;calculateScenario()">Try all items −10%</button></form><div id="scenarioResult" role="status" aria-live="polite"></div>';
+    document.getElementById('contextPanel').innerHTML='<h2>Frozen basis</h2><p>'+format(result.holdings.length)+' paper lots. Market revision '+escHtml(result.market_revision)+'.</p><p>Group shocks and an explicitly entered observed inventory are available through the scenario CLI. Group membership is a manual assumption. Cash flow from observed receipts is not substituted for account cash.</p>';
+    current.finish();
+  }catch(error){current.fail(error);}
+}
+async function calculateScenario(){
+  if(!authenticated||!scenarioBasis||view!=='scenario')return;
+  const epoch=authEpoch,tab=viewEpoch,generation=renderEpoch,calculation=++scenarioGeneration;
+  try{
+    const bps=(id,min,max)=>{const value=Number(document.getElementById(id).value);if(!Number.isFinite(value)||value<min||value>max||Math.abs(value*100-Math.round(value*100))>1e-6)throw new Error('Enter percentages with at most two decimal places');return Math.round(value*100)};
+    const itemText=document.getElementById('scenarioItem').value;const item=Number(itemText);
+    if(itemText&&(!Number.isSafeInteger(item)||item<=0))throw new Error('Enter a positive whole item ID');
+    const specification={...scenarioBasis.specification,price_leg:document.getElementById('scenarioLeg').value,
+      all_bps:bps('scenarioAll',-100,1000),haircut_bps:bps('scenarioHaircut',0,100),
+      item_bps:itemText?{[String(item)]:bps('scenarioItemShock',-100,1000)}:{},group_bps:{}};
+    const response=await apiFetch('/api/scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...scenarioBasis,specification})});
+    const result=await response.json();
+    if(epoch!==authEpoch||tab!==viewEpoch||generation!==renderEpoch||calculation!==scenarioGeneration||view!=='scenario')return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    const value=number=>number==null?'Unknown':format(number)+' gp';
+    let html='<h2>Conditional result</h2><p>Baseline after tax: '+value(result.baseline_after_tax)+'. Modeled after tax: '+value(result.modeled_after_tax)+'.</p>'+
+      '<p>Scenario equity: '+value(result.scenario_equity)+'. Change: '+(result.equity_change_pct==null?'Unknown':escHtml(String(result.equity_change_pct))+'%')+'.</p>'+
+      '<p>Missing item marks: '+(result.missing_item_ids.length?result.missing_item_ids.join(', '):'None')+'. Known marked subtotal after tax: '+value(result.known_modeled_after_tax)+'.</p>'+
+      '<table><thead><tr><th scope="col">Item</th><th scope="col">Baseline marked exposure</th><th scope="col">Share</th></tr></thead><tbody>';
+    for(const row of result.concentration)html+='<tr><td>'+format(row.item_id)+'</td><td>'+value(row.baseline_gross)+'</td><td>'+(row.share_pct==null?'Unknown':escHtml(String(row.share_pct))+'%')+'</td></tr>';
+    html+='</tbody></table>'+result.assumptions.map(text=>'<p>'+escHtml(text)+'</p>').join('')+
+      '<details><summary>Reproducible private scenario report</summary><label>Frozen inputs and assumptions <textarea readonly rows="12" style="width:100%">'+escHtml(JSON.stringify(result,null,2))+'</textarea></label></details>';
+    document.getElementById('scenarioResult').innerHTML=html;
+    setStatus('Scenario calculated from frozen inputs',false);
+  }catch(error){if(epoch===authEpoch&&tab===viewEpoch&&generation===renderEpoch&&calculation===scenarioGeneration)setStatus(error.message,true);}
+}
 async function renderObserved(){
   const current=beginViewRequest();
   try{
