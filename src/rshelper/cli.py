@@ -286,7 +286,9 @@ def alch_scan(args: argparse.Namespace) -> None:
         print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
-        _save_alch_snapshot(snap_results, args.profile)
+        _save_alch_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'alch',mapping,latest,volume_5m,
+                                nature_rune_cost=nature_cost))
 
 
 def _fetch_nature_rune_cost(mapping: list[dict], latest: dict) -> int:
@@ -372,7 +374,8 @@ def flip_scan(args: argparse.Namespace) -> None:
         print(_format_flip_table(results, args.top, getattr(args, 'capital', 0)))
 
     if getattr(args, 'save_snapshot', False):
-        _save_flip_snapshot(snap_results, args.profile)
+        _save_flip_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'flip',mapping,latest,volume_5m))
 
 
 def process_scan(args: argparse.Namespace) -> None:
@@ -443,7 +446,8 @@ def process_scan(args: argparse.Namespace) -> None:
         print(_market_description(mapping,latest,volume_5m))
 
     if getattr(args, 'save_snapshot', False):
-        _save_process_snapshot(snap_results, args.profile)
+        _save_process_snapshot(snap_results, args.profile,
+            **_snapshot_context(args,'process',mapping,latest,volume_5m))
 
 
 def _format_process_table(results, top: int) -> str:
@@ -465,7 +469,8 @@ def _format_process_table(results, top: int) -> str:
     return "\n".join(lines)
 
 
-def _save_process_snapshot(results, profile: str | None = None) -> None:
+def _save_process_snapshot(results, profile: str | None = None,
+                           *, scan_spec=None, market_metadata=None) -> None:
     """Persist a process scan snapshot for diffing across days."""
     from rshelper import snapshot
     data = [{
@@ -474,7 +479,7 @@ def _save_process_snapshot(results, profile: str | None = None) -> None:
         "profit": r.profit, "gp_per_hour": r.gp_per_hour,
         "volume": r.volume, "buy_limit": r.buy_limit,
     } for r in results]
-    snapshot.save("process", data, profile)
+    snapshot.save("process", data, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     from rshelper import tuning
     tuning.record_if_changed(profile)
 
@@ -1101,7 +1106,8 @@ def margin_check(args: argparse.Namespace) -> None:
         print("History: " + "; ".join(histories))
 
     if getattr(args, 'save_snapshot', False):
-        _save_margin_snapshot(results[:args.top], lookup, args.profile)
+        _save_margin_snapshot(results[:args.top], lookup, args.profile,
+            **_snapshot_context(args,'margin',mapping,latest,volume_5m))
 
 
 def item_info(args: argparse.Namespace) -> None:
@@ -1473,29 +1479,47 @@ def watch_check(args: argparse.Namespace) -> None:
         for a in alerts:
             print(f"  {a['name']}: margin {a['current']:,} gp {a['reason']} threshold {a['threshold']:,}")
     sys.exit(1)
-def _save_alch_snapshot(results, profile: str | None = None):
+def _snapshot_context(args,scan_type,mapping,latest,volume,**effective):
+    spec = {key:getattr(args,key,None) for key in
+            ('members_only','min_volume','min_margin','min_profit','capital','ge_slots','skill','top','check')}
+    spec.update(direction=getattr(args,'flip_direction',scan_type),
+                units='gp-per-item-after-tax',selection='ranked-top',
+                name_filter=args.name if scan_type=='margin' else None,**effective)
+    if scan_type == 'process':
+        from dataclasses import asdict
+        from rshelper.recipes import RECIPES
+        spec.update(units='illustrative-gp-per-output-after-tax',
+                    recipe_model_sha256=snapshot._specification_hash({str(iid):asdict(recipe) for iid,recipe in RECIPES.items()}),
+                    account_sha256=snapshot._specification_hash(asdict(load_config(args.profile)).get('account')))
+    return {'scan_spec':spec,'market_metadata':market_snapshot(mapping,latest,volume)}
+
+
+def _save_alch_snapshot(results, profile: str | None = None,
+                        *, scan_spec=None, market_metadata=None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "alch_value": r.alch_value, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("alch", items, profile)
+    path = snapshot.save("alch", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_flip_snapshot(results, profile: str | None = None):
+def _save_flip_snapshot(results, profile: str | None = None,
+                        *, scan_spec=None, market_metadata=None):
     items = [{"item_id": r.id, "name": r.name, "buy_price": r.buy_price,
               "sell_price": r.sell_price, "profit": r.profit,
               "gp_per_hour": r.gp_per_hour, "volume": r.volume,
               "buy_limit": r.buy_limit}
              for r in results]
-    path = snapshot.save("flip", items, profile)
+    path = snapshot.save("flip", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
 
-def _save_margin_snapshot(results, lookup, profile: str | None = None):
+def _save_margin_snapshot(results, lookup, profile: str | None = None,
+                          *, scan_spec=None, market_metadata=None):
     items = []
     for a in results:
         item = lookup.get(a.item_id)
@@ -1509,7 +1533,7 @@ def _save_margin_snapshot(results, lookup, profile: str | None = None):
             "avg_margin": round(a.avg_margin, 0),
             "margin_volatility": round(a.margin_volatility, 4),
         })
-    path = snapshot.save("margin", items, profile)
+    path = snapshot.save("margin", items, profile,scan_spec=scan_spec,market_metadata=market_metadata)
     tuning.record_if_changed(profile)
     print(f"\nSnapshot saved: {path}", file=sys.stderr)
 
@@ -1535,8 +1559,18 @@ def diff_cmd(args: argparse.Namespace) -> None:
             print(f"Could not compute diff.", file=sys.stderr)
         sys.exit(1)
 
+    if getattr(args, 'json', False):
+        print(json.dumps(result, indent=2))
+        return
+
     print(f"Diff: {scan_type} scan — {result['prev_date']} → {result['today_date']}")
     print(f"  {result['today_count']} items today, {result['prev_count']} previously")
+    comparison = result['comparison']
+    print('  Comparison: '+comparison['status'])
+    for reason in comparison['reasons']:
+        print('    '+reason)
+    if comparison['status'] != 'compatible':
+        print('  Numerical differences are qualified; do not infer a strategy improvement.')
     print()
 
     if result["new"]:
@@ -1992,6 +2026,7 @@ def _main() -> None:
                         help="Scan type to compare (default: flip)")
     diff_p.add_argument("--date", type=str, default=None,
                         help="Previous date to compare against (YYYY-MM-DD, default: most recent)")
+    diff_p.add_argument("--json", action="store_true", help="Output qualified comparison as JSON")
 
     # Snapshots subcommand
     # Profile subcommand
