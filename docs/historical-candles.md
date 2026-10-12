@@ -23,8 +23,9 @@ irregular series stop the dataset with an explicit error; they are not silently
 removed from the tested universe. Reordered input and identical duplicate rows
 produce the same financial result while quality metadata records the duplicates.
 
-Local acceptance on 12 October 2026: 915 tests in 66 files, four explicit offline
-provider skips, browser authentication and 15 view scenarios. Live Wiki CLI and
+Local acceptance on 12 October 2026: 949 tests in 68 files after combined
+alert, stance and container integration, four explicit offline provider skips,
+browser authentication and 17 view scenarios. Live Wiki CLI and
 authenticated HTTP checks returned 365 unique samples for all four intervals;
 the hourly response disclosed one real missing window. Two bounded Sonnet diff
 reviews were triaged against local tests, including a fail-closed replay fix.

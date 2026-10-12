@@ -20,8 +20,8 @@ expected GP/hour. Missing or unusable Wiki history is explicit; Tracker supplies
 no candles. A valid zero confidence is displayed as zero rather than hidden.
 
 Local validation on 12 October 2026: eight targeted concurrency/deadline/config
-cases and the 914-test offline suite passed (66 files, four provider skips).
-Browser authentication and 16 view scenarios passed. Live CLI JSON and four
+cases and the combined975-test offline suite passed (71 files, four provider skips).
+Browser authentication and 19 view scenarios passed. Live CLI JSON and four
 overlapping authenticated HTTP requests agreed on revision 1 with Wiki history.
 That live run reused a fresh history cache; controlled tests prove single dispatch.
 
