@@ -12,7 +12,7 @@ from rshelper.market import (
 from rshelper.models import Item
 from rshelper.analysis import analyze_timeseries, MarginAnalysis
 from rshelper.signals import compute_rs_score_flip, compute_rs_score_alch
-from rshelper.recipes import RECIPES, Recipe
+from rshelper.recipes import RECIPES, Recipe, recipe_breakdown
 
 MAX_CASTS_PER_HOUR = 1200  # 5-tick cast speed
 
@@ -258,16 +258,15 @@ class ProcessScanner:
     The closest analog is AlchScanner — each recipe converts inputs into
     an output. Inputs are bought at their instant-buy price (no tax on
     buys); the output is sold at its instant-sell price with GE tax on
-    that leg only. Throughput is capped by the action rate, the OUTPUT's
-    buy limit / volume (the sell side consumes the output's 4h limit),
-    and the limiting input's 4h buy-limit capacity (the min-ratio problem).
+    that leg only. Input acquisition limits and illustrative sell throughput
+    are separate constraints. Unverified model rates do not claim execution.
     """
 
     recipes: dict[int, Recipe] = field(default_factory=lambda: RECIPES)
 
     def scan(self, items: list[Item], *, members_only: bool = False,
              min_volume: int = 0, min_profit: int = 0,
-             capital: int = 0, skill: str = "") -> list[Item]:
+             capital: int = 0, skill: str = "", account=None) -> list[Item]:
         """Rank recipes by GP/hr. Returns new Items, never mutates input.
         skill filters to one skill ("smithing", "cooking", ...) or all."""
         lookup = {i.id: i for i in items}
@@ -278,63 +277,27 @@ class ProcessScanner:
             output = lookup.get(recipe.output_id)
             if output is None:
                 continue
-            comps = [lookup.get(iid) for iid in recipe.inputs]
-            if any(c is None for c in comps):
-                continue
-            comps = [c for c in comps if c is not None]  # type: ignore[assignment]
-            if members_only and (output.members or any(c.members for c in comps)):
+            if members_only and not (recipe.requirements or {}).get('members',output.members):
                 continue
             if output.volume < min_volume:
                 continue
-            # Price sanity: skip if any component's price is unusable.
-            if any(c.buy_price <= 0 or c.sell_price <= 0 for c in comps):
+            economics = recipe_breakdown(recipe,lookup,account,capital=capital)
+            if not economics['available'] or economics['eligibility']=='ineligible':
                 continue
-            if output.sell_price <= 0 or output.buy_price <= 0:
-                continue
-
-            input_cost = sum(c.buy_price * qty
-                             for c, qty in zip(comps, recipe.inputs.values()))
-            # Batch recipes (e.g. 15 shafts + 15 tips -> 15 arrows): cost is
-            # per RUN; per-output-unit cost divides by outputs_per_run.
-            per_unit_cost = input_cost / recipe.outputs_per_run
-            output_gp = output.sell_price - ge_tax(output.sell_price)
-            profit = int(output_gp - per_unit_cost - recipe.cost_per_unit)
+            profit = economics['model_profit_per_output']
             if profit <= 0 or profit < min_profit:
                 continue
-
-            # Throughput: the output's 4h buy limit / 4 (hourly) caps the
-            # sell side; the market volume*12 caps absorb; the limiting
-            # input's buy-limit capacity caps feed. min-ratio problem.
-            # Batch: each run consumes the per-run input qty and produces
-            # outputs_per_run units, so runs/hr = min(input feed // qty).
-            output_rate = output.buy_limit / 4 if output.buy_limit > 0 else 0
-            volume_rate = output.volume * 12
-            runs_by_input = [
-                (c.buy_limit / 4) // qty
-                for c, qty in zip(comps, recipe.inputs.values())
-                if c.buy_limit > 0
-            ]
-            input_capacity = min(runs_by_input) if runs_by_input else 0
-            runs_per_hour = int(min(
-                recipe.rate_per_hour, output_rate / recipe.outputs_per_run,
-                volume_rate / recipe.outputs_per_run, input_capacity))
-            outputs_per_hour = runs_per_hour * recipe.outputs_per_run
-            if outputs_per_hour <= 0:
+            gp_per_hour = economics['model_gp_per_hour']
+            if gp_per_hour <= 0:
                 continue
-
-            # Capital cap: scale throughput by how many units the budget buys.
-            if capital > 0 and input_cost > 0:
-                by_capital = (capital // input_cost) * recipe.outputs_per_run
-                outputs_per_hour = min(outputs_per_hour, by_capital)
-
-            gp_per_hour = int(profit * outputs_per_hour)
             results.append(Item(
                 id=output.id, name=output.name, members=output.members,
                 buy_limit=output.buy_limit, alch_value=output.alch_value,
                 buy_price=output.buy_price, sell_price=output.sell_price,
                 volume=output.volume, profit=profit, gp_per_hour=gp_per_hour,
                 market_data=output.market_data,
-                input_cost=int(per_unit_cost), output_id=recipe.output_id,
+                input_cost=int(economics['input_cost_per_output']), output_id=recipe.output_id,
+                recipe_economics=economics,
             ))
 
         results.sort(key=lambda i: i.gp_per_hour, reverse=True)

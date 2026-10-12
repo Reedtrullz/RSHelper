@@ -1,6 +1,7 @@
 """Dashboard server — launch a local HTTP server for the RSHelper dashboard."""
 
 import errno
+import hashlib
 import os
 import stat
 import subprocess
@@ -11,6 +12,7 @@ import json
 import queue
 import threading
 from types import MappingProxyType
+from dataclasses import asdict
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
@@ -828,7 +830,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def get_process():
         cache = refresh()
         from rshelper.scanner import ProcessScanner
-        from rshelper.recipes import RECIPES
+        from rshelper.recipes import RECIPES,process_payload
         lookup = {i.id: i for i in cache["items"]}
         # Honor the same filters as the CLI (members/min_volume/min_profit)
         # so the dashboard and CLI agree on what "profitable" means.
@@ -836,7 +838,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
             cache["items"], members_only=cfg.process.members_only,
             min_volume=cfg.process.min_volume,
             min_profit=cfg.process.min_profit,
-            capital=cfg.process.capital)
+            capital=cfg.process.capital,
+            account=cfg.account.recipe_context() if access_mode=='owner' else None)
         out = []
         for r in results:
             recipe = RECIPES.get(r.id)
@@ -849,18 +852,9 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "qty": qty,
                         "buy_price": it.buy_price if it else 0,
                     })
-            out.append({
-                "name": r.name, "item_id": r.id, "market_data":r.market_data,
-                "skill": recipe.skill if recipe else "",
-                "input_cost": r.input_cost, "sell_price": r.sell_price,
-                "profit": r.profit,
-                "roi_pct": round(r.profit / r.input_cost * 100, 1) if r.input_cost else 0,
-                "gp_per_hour": r.gp_per_hour,
-                "volume": r.volume, "buy_limit": r.buy_limit,
-                "inputs": inputs,
-            })
+            out.append({**process_payload(r),'inputs':inputs})
         # Group by skill, then sort each skill's recipes by GP/hr desc.
-        out.sort(key=lambda x: (x["skill"], -x["gp_per_hour"]))
+        out.sort(key=lambda x: (x["skill"], -x["model_gp_per_hour"]))
         return {"recipes": out, "count": len(out)}
 
     def get_alch():
@@ -879,7 +873,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return {"items": [_item_dict(r) for r in results[:cfg.alch.top]],
                 "count": len(results), "nature_rune_cost": nature}
 
-    confidence_cache = {"ts": 0.0, "data": {}}
+    confidence_cache = {"ts": 0.0, "data": {}, 'key':None}
     conf_lock = __import__("threading").Lock()
 
     def get_confidence(item_ids: list[int]) -> dict:
@@ -887,11 +881,14 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         cache = read_market()
         if not item_ids:
             return {}
+        key = (cache['revision'],hashlib.sha256(json.dumps(asdict(cfg),sort_keys=True).encode()).hexdigest())
+        item_ids = list(dict.fromkeys(item_ids))[:30]
         with conf_lock:
             now = time.time()
-            if now - confidence_cache["ts"] > 600 or not confidence_cache["data"]:
+            if now - confidence_cache["ts"] > 600 or confidence_cache['key'] != key:
                 confidence_cache["data"] = {}
                 confidence_cache["ts"] = now
+                confidence_cache['key'] = key
             want = [i for i in item_ids
                     if str(i) not in confidence_cache["data"]][:30]
         if want:
@@ -906,6 +903,8 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                 lookup, ts_data, direction=cfg.flip.direction,timestep='5m')
             scored = {str(a.item_id) for a in results}
             with conf_lock:
+                if confidence_cache['key'] != key or read_market()['revision'] != cache['revision']:
+                    return {}
                 for a in results:
                     confidence_cache["data"][str(a.item_id)] = {
                         "market_data": a.market_data,
@@ -917,14 +916,23 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                         "avg_spread_pct": round(a.avg_spread_pct, 4),
                         "datapoints": a.datapoints,
                         "window_hours": round(a.window_hours, 1),
+                        "market_revision":cache['revision'],
+                        "current_profit":a.current_profit,
+                        "expected_gp_per_hour":a.expected_gp_per_hour,
                         "candle_coverage":a.candle_coverage,
                     }
                 # Cache negative results (no timeseries / too few windows) so
                 # repeated polls don't re-fetch the same items every 10 min.
                 for iid in want:
                     if str(iid) not in scored:
-                        confidence_cache["data"][str(iid)] = None
+                        confidence_cache["data"][str(iid)] = {
+                            'available':False,'market_revision':cache['revision'],
+                            'reason':'Usable Wiki candle history unavailable; Tracker provides no candles.'}
+                while len(confidence_cache['data']) > 512:
+                    del confidence_cache['data'][next(iter(confidence_cache['data']))]
         with conf_lock:
+            if confidence_cache['key'] != key:
+                return {}
             return {k: v for k, v in confidence_cache["data"].items()
                     if k in {str(i) for i in item_ids} and v is not None}
 

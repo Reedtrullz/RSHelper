@@ -191,7 +191,7 @@ def test_process_scan_sorted_by_gp_per_hour():
         _item(2353, "Steel bar", 400, 576, limit=10000),
         _item(440, "Iron ore", 100, 90, limit=10000),
         _item(453, "Coal", 130, 120, limit=10000),
-        _item(2351, "Iron bar", 200, 126, limit=10000),
+        _item(2351, "Iron bar", 500, 400, limit=10000),
     ]
     results = scanner.scan(items)
     assert len(results) == 2

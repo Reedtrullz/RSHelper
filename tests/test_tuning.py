@@ -27,7 +27,8 @@ class TestTuning(unittest.TestCase):
 
     def test_params_shape(self):
         p = tuning.params()
-        self.assertEqual(set(p), {"alch", "flip", "margin", "process", "trader"})
+        self.assertEqual(set(p), {"alch", "flip", "margin", "process", "account", "trader"})
+        self.assertEqual(p['account'],{'membership':'unknown','levels':{},'unlocks':{}})
         self.assertIn("min_volume", p["flip"])
         self.assertIn("direction", p["margin"])
         self.assertIn("capital", p["process"])

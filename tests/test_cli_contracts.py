@@ -39,7 +39,7 @@ CASES = {
     'watch remove': '2',
     'watch list': '',
     'watch check': '--flip-direction traditional --ge-slots 2 -v --verbose --json',
-    'diff': 'flip --date 2026-01-01',
+    'diff': 'flip --date 2026-01-01 --json',
     'profile create': 'fixture',
     'profile switch': 'fixture',
     'profile list': '',

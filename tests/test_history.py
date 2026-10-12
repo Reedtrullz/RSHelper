@@ -80,6 +80,7 @@ class TestHistory(unittest.TestCase):
         snaps = h["buckets"][0]["snapshots"]
         self.assertEqual(snaps[0]["scan_type"], "flip")
         self.assertEqual(snaps[0]["count"], 2)
+        self.assertEqual(snaps[0]['comparison']['status'],'partially-comparable')
         self.assertEqual(snaps[0]["avg_value"], 200)
 
     def test_eras_split_trades(self):
