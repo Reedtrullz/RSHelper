@@ -6,8 +6,8 @@ This matrix records observed acceptance; pending rows are not implementation cla
 
 | Wave | Issues | Implementation / PR | Release evidence | Residual acceptance |
 | --- | --- | --- | --- | --- |
-| A | #31, #32 | Contract and restore guards implemented; release pending | 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; synthetic image rehearsal passed | Exact-head CI/deployment and candidate-image recovery readback |
-| B | #22, #23, #40 | Pending | Pending | Coherent reads, bounded events, form preservation, paged Activity |
+| A | #31, #32 | PR #78 merged as `4c7e08a08b86d3581616436733023c3e73f55381`; issues closed, Project Done | PR CI38197004334 and main38197171322 passed; public/OCI revision matches; 882 offline tests/63 files/4 explicit provider skips; both Node suites;7 provider tests/0 skips; deployed-image recovery passed | Accepted |
+| B | #22, #23, #40 | #22 snapshot/event implementation in progress | Controlled interleaving, failure/isolation,16-client HTTP ceiling/shutdown and memory fixtures pass; release pending | Full regression/review/release; #23/#40 pending |
 | C | #15, #45, #50 | Pending | Pending | Atomic alerts, entry modes, measured container constraints |
 | D | #18, #21, #39, #30 | Pending | Pending | Candle normalization, confidence, scan comparability, verified recipes |
 | E | #16, #17 | Pending | Pending | Paper fill lifecycle and shared resource accounting |
@@ -43,3 +43,41 @@ CI, production identity, private replication, domain facts and human/device tria
   simplified the legacy guard, exercised native crypto and bounded Node CI runs.
   Other suggestions contradicted inspected code or executed evidence and were
   recorded in the private task ledger.
+
+## Wave A deployed acceptance
+
+PR head `c5009009d52e41a8d0201b2d0e8e3ad93b326feb` passed exact-head CI.
+Main checks, GHCR publication, Ansible deployment and public verification passed
+in run38197171322. Public health and OCI revision both equal `4c7e08a0`.
+Declared digest: `sha256:401ecabae47c0608b7cda07d3a7af296f1ac785177e71295bc77629ef4b7cc33`;
+physical image: `sha256:684b9fc9bb0646e4191dc766319922daed3edc82a2cf2bdc1809b98d002ee519`.
+
+Retained c27fd83c -> deployed4c7e08a0 -> retained c27fd83c ran against an
+owned synthetic Docker volume. Interrupted restore exited9; fresh-container
+recovery preserved10 units/180GP, identities and receipts, and refused an old
+backup over later writes. Recovery check:0.135s app/3.002s including Docker/SSH.
+The unreferenced fixture volume was removed; rollback images remain retained.
+
+The installed Mac runtime advanced to4c7e08a0 after a coherent backup and
+quiesce. Owned jobs resumed, trader cycle was healthy, and private sync recovered
+its retained packet idempotently: revision13 acknowledged with no pending packet.
+Subsequent authenticated VPS HTTP readback showed natural advancement to14 with
+equal requested/applied revision and hash. VPS controls remain disabled.
+
+## Wave B1 connection budgets
+
+Each SSE consumer holds at most8 event references; at most16 subscribers are
+accepted. Events above16384 UTF-8 bytes disconnect with a small resync marker.
+Disconnecting handlers retain their admission slot until unsubscribe, so slow
+writes cannot bypass the16-stream ceiling by reconnecting immediately.
+A full queue discards its backlog, emits resync and closes the stream; reconnect
+receives the current revision and reloads authoritative HTTP data. Socket writes
+are bounded by10s. Shutdown detaches subscribers and sends a shutdown marker.
+
+The controlled tracemalloc fixture queued8 distinct approximately16KiB payloads
+for16 consumers (128 references); observed peak235003 bytes. Payload strings
+are shared between queues. The test asserts a512KiB ceiling for this fixture;
+this excludes socket buffers, HTTP threads and the process's other allocations,
+which #50 measures before choosing production container limits. HTTP fixture
+accepted16 subscribers, rejected17th with503 and verified stream closure and
+subscriber release on shutdown. These are measured fixtures, not load guarantees.

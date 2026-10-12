@@ -6,10 +6,15 @@ import stat
 import subprocess
 import sys
 import time
+import copy
+import json
+import queue
+import threading
+from types import MappingProxyType
 from http.server import ThreadingHTTPServer
 
 from rshelper.cli import _fetch_bootstrap
-from rshelper.market_data import market_payload, provenance, market_snapshot
+from rshelper.market_data import MarketList, MarketDict, market_payload, provenance, market_snapshot
 from rshelper.config import load_config
 from rshelper.market import price_issue, safe_int
 from rshelper.scanner import FlipScanner
@@ -23,26 +28,71 @@ class EventHub:
 
     def __init__(self):
         self._subscribers: list = []
-        self._lock = __import__("threading").Lock()
+        self._closing: list = []
+        self._lock = threading.Lock()
+        self.revision = 0
+        self._closed = False
 
-    def subscribe(self, queue) -> None:
+    QUEUE_SIZE = 8
+    MAX_SUBSCRIBERS = 16
+    MAX_EVENT_BYTES = 16384
+
+    def subscribe(self, consumer) -> bool:
         with self._lock:
-            self._subscribers.append(queue)
+            if (self._closed or not consumer.empty() or not 0 < consumer.maxsize <= self.QUEUE_SIZE
+                    or consumer in self._closing
+                    or len(self._subscribers) + len(self._closing) >= self.MAX_SUBSCRIBERS):
+                return False
+            if consumer in self._subscribers:
+                return True
+            self._subscribers.append(consumer)
+            consumer.put_nowait(self._event('refresh', {'revision': self.revision, 'reason': 'connected'}))
+            return True
 
     def unsubscribe(self, queue) -> None:
         with self._lock:
             if queue in self._subscribers:
                 self._subscribers.remove(queue)
+            if queue in self._closing:
+                self._closing.remove(queue)
 
     def broadcast(self, event: str, data: dict | None = None) -> None:
+        data = data or {}
+        payload = self._event(event, data)
         with self._lock:
-            subs = list(self._subscribers)
-        payload = f"event: {event}\ndata: {__import__('json').dumps(data or {})}\n\n"
-        for queue in subs:
+            if self._closed:
+                return
+            if event == 'refresh' and type(data.get('revision')) is int:
+                self.revision = data['revision']
+            oversized = len(payload.encode('utf-8')) > self.MAX_EVENT_BYTES
+            for consumer in list(self._subscribers):
+                try:
+                    if oversized:
+                        raise queue.Full
+                    consumer.put_nowait(payload)
+                except queue.Full:
+                    self._disconnect(consumer, 'resync', 'event-too-large' if oversized else 'slow-consumer')
+
+    @staticmethod
+    def _event(event, data):
+        return f'event: {event}\ndata: {json.dumps(data)}\n\n'
+
+    def _disconnect(self, consumer, event, reason):
+        # Callers hold the hub lock; closing handlers keep their admission slot.
+        self._subscribers.remove(consumer)
+        self._closing.append(consumer)
+        while True:
             try:
-                queue.put_nowait(payload)
-            except Exception:
-                pass
+                consumer.get_nowait()
+            except queue.Empty:
+                break
+        consumer.put_nowait(self._event(event, {'revision': self.revision, 'reason': reason}))
+
+    def close(self):
+        with self._lock:
+            self._closed = True
+            for consumer in list(self._subscribers):
+                self._disconnect(consumer, 'shutdown', 'server-stopping')
 
 
 def _cap_open_qty(qty: int, buy_limit: int, name: str) -> int:
@@ -292,8 +342,17 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return provenance(latest)['source']
 
     # ponytail: closure-based TTL cache, re-fetch every 120s.
-    cache = {"mapping": _mapping, "items": items, "vol": _vol_5m, "latest": _latest,
-             "source": _source(_latest), "last_fetch": time.time()}
+    cache = MappingProxyType(copy.deepcopy({"mapping": _mapping, "items": items,
+             "vol": _vol_5m, "latest": _latest, "source": _source(_latest),
+             "last_fetch": time.time(), 'revision': 1 if _mapping else 0}))
+    publication_lock = threading.Lock()
+    last_attempt = cache['last_fetch']
+    if access_mode == 'owner':
+        hub.broadcast('refresh', {'revision': cache['revision']})
+
+    def read_market():
+        with publication_lock:
+            return cache
 
     def _emit_signal_alerts(signals) -> None:
         """Persist newly-active signals as alerts unless a local monitor
@@ -360,25 +419,33 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     refresh_lock = __import__("threading").Lock()
 
-    def refresh():
+    def refresh(force=False):
+        nonlocal cache, last_attempt
         now = time.time()
-        if (now - cache["last_fetch"]) > 120:
+        if force or (now - last_attempt) > 120:
             # Single-flight: concurrent request threads must not double-fetch
             # or double-broadcast (the watch-alert check-then-set is only safe
             # when one thread performs it per refresh window).
             with refresh_lock:
-                if (time.time() - cache["last_fetch"]) <= 120:
-                    return
+                if not force and (time.time() - last_attempt) <= 120:
+                    return read_market()
                 print("[dashboard] Re-fetching GE data...", file=sys.stderr)
-                old_source = cache["source"]
+                previous = read_market()
+                old_source = previous["source"]
+                published = False
                 try:
                     _m, _l, _v, fresh = _fetch_bootstrap(profile)
-                    cache["mapping"] = _m
-                    cache["items"] = fresh
-                    cache["vol"] = _v
-                    cache["latest"] = _l
-                    cache["source"] = _source(_l)
-                except SystemExit:
+                    if not (isinstance(_m, (list, dict)) and isinstance(_l, dict)
+                            and isinstance(_v, dict) and isinstance(fresh, list)
+                            and all(hasattr(item, 'id') for item in fresh)):
+                        raise ValueError('invalid market snapshot')
+                    candidate = MappingProxyType(copy.deepcopy({'mapping': _m, 'items': fresh,
+                        'vol': _v, 'latest': _l, 'source': _source(_l),
+                        'last_fetch': time.time(), 'revision': previous['revision'] + 1}))
+                    with publication_lock:
+                        cache = candidate
+                    published = True
+                except (SystemExit, ValueError):
                     print("[dashboard] Re-fetch failed; keeping previous data.", file=sys.stderr)
                     if access_mode == "owner":
                         try:
@@ -392,7 +459,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                                 "message": "Re-fetch failed; keeping previous data"}})
                         except Exception:
                             pass
-                cache["last_fetch"] = time.time()
+                last_attempt = time.time()
                 if access_mode == "owner":
                     _check_watch_alerts(cache["latest"] or {})
                     if cache["source"] != old_source:
@@ -400,21 +467,26 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                             "system", "INFO", None, "", "Data source changed",
                             f"Switched from {old_source} to {cache['source']}",
                             profile=profile)
-                    hub.broadcast("refresh")
+                    if published:
+                        hub.broadcast("refresh", {'revision': cache['revision']})
+        return read_market()
 
     def get_items():
-        refresh()
-        return list(cache["items"])
+        current = refresh()
+        items = MarketList(copy.deepcopy(list(current["items"])))
+        items.market_revision = current['revision']
+        items.snapshot_provenance = market_snapshot(current['mapping'], current['latest'], current['vol'])
+        return items
 
     scanner = FlipScanner(direction=cfg.flip.direction)
 
     sig_cache = {"list": [], "flips": 0, "ts": 0.0, "active": set()}
     sig_lock = __import__("threading").Lock()
 
-    def active_signals():
+    def active_signals(cache):
         now = time.time()
         with sig_lock:
-            if now - sig_cache["ts"] > 30:
+            if now - sig_cache["ts"] > 30 or sig_cache.get('revision') != cache['revision']:
                 # Snapshot items+vol together so a refresh mid-scan can't mix
                 # old flips with new volume (spurious/missed signals).
                 items_snap = list(cache["items"])
@@ -427,23 +499,29 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                     profile=profile)
                 sig_cache["flips"] = len(flips)
                 sig_cache["ts"] = now
+                sig_cache['revision'] = cache['revision']
                 new = [s for s in sig_cache["list"]
                        if (s.item_id, s.type) not in sig_cache["active"]]
                 sig_cache["active"] = {(s.item_id, s.type)
                                        for s in sig_cache["list"]}
                 if new:
                     _emit_signal_alerts(new)
-            return list(sig_cache["list"])
+            result = MarketList(sig_cache['list'])
+            result.market_revision = cache['revision']
+            result.flip_count = sig_cache['flips']
+            return result
 
     def get_signals():
-        refresh()
-        return active_signals()
+        cache = refresh()
+        return active_signals(cache)
 
     def get_prices(item_ids: list[int]) -> dict:
-        refresh()
+        cache = refresh()
         from rshelper.market import safe_int
         latest = cache["latest"] or {}
-        out = {}
+        out = MarketDict()
+        out.market_revision = cache['revision']
+        out.snapshot_provenance = {'latest': provenance(latest)}
         for item_id in item_ids:
             price = latest.get(str(item_id))
             issue = price_issue(price) if isinstance(price, dict) else "no data"
@@ -456,15 +534,16 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return out
 
     def get_meta() -> dict:
-        refresh()
-        signals = active_signals()
+        cache = refresh()
+        signals = active_signals(cache)
         from rshelper.journal import list_trades
         watched = watchlist.get_watched_ids(profile)  # single disk read
         return {
             "source": cache["source"],
+            'market_revision': cache['revision'],
             "market_data": market_snapshot(cache["mapping"],cache["latest"],cache["vol"]),
             "items": len(cache["items"]),
-            "flips": sig_cache["flips"],
+            "flips": signals.flip_count,
             "signals": len(signals),
             "trades": len(list_trades(profile=profile)),
             "watchlist": len(watched),
@@ -476,7 +555,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         }
 
     def get_watchlist() -> dict:
-        refresh()
+        cache = refresh()
         latest = cache["latest"] or {}
         rows = []
         for id_str, entry in watchlist.load(profile).get("items", {}).items():
@@ -499,6 +578,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     def update_watchlist(action: str, item_id: int,
                          alert_above: int | None = None,
                          alert_below: int | None = None) -> dict:
+        cache = refresh()
         if action == "add":
             item = next((i for i in cache["items"] if i.id == item_id), None)
             if item is None:
@@ -542,7 +622,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                                "Wiki-only historical data unavailable; Tracker has no candle history"}}
 
     def get_positions() -> dict:
-        refresh()
+        cache = refresh()
         from rshelper.market import ge_tax, safe_int
         from rshelper.positions import list_positions
         latest = cache["latest"] or {}
@@ -580,7 +660,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         Raises ValueError when the position is unknown/auto or the close
         cannot be priced.
         """
-        refresh()
+        cache = refresh()
         identified = identified_position_close(
             profile, position_id, qty, cache["latest"], operation_id)
         if identified is not None:
@@ -629,7 +709,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         Both use the current guarded prices from the TTL cache, so the
         dashboard can trade any mapped item without a CLI round trip.
         """
-        refresh()
+        cache = refresh()
         mapping = cache["mapping"] or []
         q = query.strip().lower()
         entry = next((e for e in mapping
@@ -730,24 +810,24 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return status if status else {"running": False}
 
     def get_ge():
-        refresh()
+        cache = refresh()
         from rshelper.ge_offers import build_ge_slots
         return build_ge_slots(profile=profile, latest=cache["latest"],
                               vol_5m=cache["vol"])
 
     def collect_ge(position_id: int):
-        refresh()  # a collect books P&L — don't use a stale quote
+        cache = refresh()  # a collect books P&L — don't use a stale quote
         from rshelper.ge_offers import collect_offer
         return collect_offer(position_id, profile=profile,
                              latest=cache["latest"])
 
     def get_bank():
-        refresh()
+        cache = refresh()
         from rshelper.bank import build_bank_items
         return build_bank_items(profile=profile, latest=cache["latest"])
 
     def get_process():
-        refresh()
+        cache = refresh()
         from rshelper.scanner import ProcessScanner
         from rshelper.recipes import RECIPES
         lookup = {i.id: i for i in cache["items"]}
@@ -785,7 +865,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         return {"recipes": out, "count": len(out)}
 
     def get_alch():
-        refresh()
+        cache = refresh()
         from rshelper.scanner import AlchScanner
         nature = cfg.alch.nature_rune_cost
         if nature <= 0:
@@ -805,6 +885,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_confidence(item_ids: list[int]) -> dict:
         """Per-item margin confidence scores (MarginScanner), cached 10 min."""
+        cache = read_market()
         if not item_ids:
             return {}
         with conf_lock:
@@ -903,7 +984,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_watch_check() -> dict:
         """Threshold crossings with the current margin, arbitrage convention."""
-        refresh()  # "Check now" must use a fresh quote, not the TTL cache
+        cache = refresh(force=True)
         from rshelper.market import ge_tax
         latest = cache["latest"] or {}
         wl = watchlist.load(profile)
@@ -954,6 +1035,11 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     from rshelper.state_replication import read_receipt
     from rshelper import readiness
+
+    def get_readiness():
+        cache = read_market()
+        return readiness.status(profile, sources={'latest': cache['latest'], '5m': cache['vol']})
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -978,8 +1064,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=lambda: readiness.status(profile,
-                               sources={'latest': cache['latest'], '5m': cache['vol']}))
+                           readiness_fn=get_readiness)
 
     # Warn on non-loopback bind
     if bind not in ("127.0.0.1", "localhost", "::1"):
@@ -1018,6 +1103,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
     except KeyboardInterrupt:
         print("\n[dashboard] Shutting down...", file=sys.stderr)
     finally:
+        hub.close()
         server.server_close()
         print("[dashboard] Stopped", file=sys.stderr)
 

@@ -309,7 +309,7 @@ function subscribeSSE(){
             else if(line.startsWith('data:'))data+=(data?'\n':'')+line.slice(5).trimStart();
           });
           sseLastEvent=Date.now();
-          if(type==='refresh')fetchData();
+          if(type==='refresh'||type==='resync')fetchData();
           if(type==='alert'){
             try{
               const d=JSON.parse(data||'{}');

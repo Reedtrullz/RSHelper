@@ -275,7 +275,8 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 results = scanner.scan(items, **(scan_kwargs or {}))
                 data = {
                     "items": [_item_to_dict(r) for r in results],
-                    "market_data": getattr(items[0],"market_data",{}) if items else market_snapshot(None, None, None),
+                    "market_data": getattr(items, 'snapshot_provenance', None) or (getattr(items[0],"market_data",{}) if items else market_snapshot(None, None, None)),
+                    "market_revision": getattr(items, 'market_revision', None),
                     "count": len(results),
                     "timestamp": time.time(),
                 }
@@ -323,6 +324,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                         for s in signals
                     ],
                     "count": len(signals),
+                    "market_revision": getattr(signals, 'market_revision', None),
                 }
                 self._serve_json(data)
             except Exception as e:
@@ -399,7 +401,10 @@ def make_handler(scanner, scan_items: Callable[[], list],
             raw = qs.get("ids", [""])[0]
             ids = [int(i) for i in raw.split(",") if i.strip().isdigit()]
             try:
-                self._serve_json({"prices": price_lookup(ids)})
+                prices = price_lookup(ids)
+                self._serve_json({"prices": prices,
+                    'market_revision': getattr(prices, 'market_revision', None),
+                    'market_data': getattr(prices, 'snapshot_provenance', {})})
             except Exception as e:
                 print(f"[dashboard] prices error: {e}", file=sys.stderr)
                 self.send_error(500, "Prices failed")
@@ -526,10 +531,15 @@ def make_handler(scanner, scan_items: Callable[[], list],
             broadcast just after a refresh.
             """
             import queue as _queue
-            q: _queue.Queue = _queue.Queue()
+            q: _queue.Queue = _queue.Queue(maxsize=8)
             if event_hub is not None:
-                event_hub.subscribe(q)
+                if event_hub.subscribe(q) is False:
+                    self.send_error(503, 'Event subscriber capacity reached')
+                    return
             try:
+                connection = getattr(self, 'connection', None)
+                if connection is not None:
+                    connection.settimeout(10)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache")
@@ -553,6 +563,9 @@ def make_handler(scanner, scan_items: Callable[[], list],
                                                          if deadline else 15)))
                         self.wfile.write(item.encode("utf-8"))
                         self.wfile.flush()
+                        if item.startswith(('event: resync\n', 'event: shutdown\n')):
+                            self.close_connection = True
+                            return
                     except _queue.Empty:
                         if deadline is not None and time.time() >= deadline:
                             return
