@@ -73,6 +73,33 @@ class ReplicationTest(unittest.TestCase):
         lineage = json.loads((self.root('b') / 'identity-lineage.json').read_text())
         self.assertIn(row.record_uuid, lineage['origins'][A]['native'])
 
+    def test_authority_mode_replica_roundtrip_and_forgery_refusal(self):
+        from rshelper import trading_mode
+        trading_mode.set_mode('a','entries-paused',expected_revision=0,
+                              reason='Synthetic authority',operation_id=B)
+        packet = self.packet()
+        with zipfile.ZipFile(packet) as archive:
+            descriptor = next(row for row in json.loads(archive.read('manifest.json'))['files'] if row['path'] == 'trading_mode.json')
+        self.assertEqual(descriptor['owner'],'financial')
+        self.api().apply_packet('b',packet)
+        self.assertEqual(trading_mode.read_mode('b')['mode'],'entries-paused')
+        with self.assertRaises(ValueError):
+            trading_mode.set_mode('b','running',expected_revision=1,
+                                  reason='Forbidden replica',operation_id=A)
+        self.api().apply_packet('a',self.packet('b'))
+        self.assertEqual(trading_mode.read_mode('a')['mode'],'entries-paused')
+        trading_mode.set_mode('a','draining',expected_revision=1,
+                              reason='Synthetic drain',operation_id=P)
+        self.api().apply_packet('b',self.packet('a','drain'))
+        self.assertIsNone(trading_mode.update_drain('b')['drain_completed_at'])
+        mode_path = self.root('b')/'trading_mode.json'
+        mode = json.loads(mode_path.read_text())
+        mode.update(mode='running',revision=3)
+        mode_path.write_text(json.dumps(mode))
+        receipt = self.api().apply_packet('a',self.packet('b','forged'))
+        self.assertEqual(receipt['status'],'conflict')
+        self.assertEqual(trading_mode.read_mode('a')['mode'],'draining')
+
     def test_growing_native_lineage_converges_over_three_round_trips(self):
         from rshelper import journal
         from uuid import uuid4

@@ -18,6 +18,7 @@ from rshelper.config import Config
 from rshelper.market_data import MarketDataResult
 
 CASES = {
+    'trading-mode': '--mode entries-paused --expected-revision 0 --reason Synthetic --operation-id 11111111-1111-4111-8111-111111111111 --json',
     'alch-scan': '--nature-rune-cost 1 --members-only --no-members-only --min-volume 1 --top 3 --name Synthetic --json --csv --html --save-snapshot',
     'flip-scan': '--members-only --no-members-only --min-volume 1 --min-margin 1 --top 3 --capital 10000 --flip-direction traditional --name Synthetic --json --csv --html --save-snapshot --ge-slots 2',
     'process-scan': '--members-only --no-members-only --skill smithing --min-volume 1 --min-profit 1 --top 3 --capital 10000 --name Synthetic --json --csv --html --save-snapshot',

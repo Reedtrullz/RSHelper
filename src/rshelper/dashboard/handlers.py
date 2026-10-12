@@ -89,7 +89,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                  close_position_fn: Callable[[int, int | None], dict] | None = None,
                  paper_trade_fn: Callable[[str, str, int], dict] | None = None,
                  trader_fn: Callable[[], dict] | None = None,
-                 trader_control_fn: Callable[[str], dict] | None = None,
+                 trader_control_fn: Callable[..., dict] | None = None,
                  monitor_fn: Callable[[], dict] | None = None,
                  monitor_control_fn: Callable[[str], dict] | None = None,
                  ge_fn: Callable[[], dict] | None = None,
@@ -700,7 +700,7 @@ def make_handler(scanner, scan_items: Callable[[], list],
                 self.send_error(404)
                 return
             try:
-                self._serve_json(trader_control_fn(action))
+                self._serve_json(trader_control_fn(action,body) if action == 'mode' else trader_control_fn(action))
             except PermissionError as e:
                 print(f"[dashboard] trader control denied: {e}", file=sys.stderr)
                 self.send_error(403, str(e))

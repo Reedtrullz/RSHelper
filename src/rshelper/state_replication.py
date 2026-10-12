@@ -21,6 +21,7 @@ MAX_ROWS = 100_000
 CORE = {'positions.json': 'positions', 'trades.json': 'trades',
         'alerts.json': 'alerts', 'watchlist.json': 'watchlist'}
 FILES = {**CORE, 'identity-manifest.json': 'identity',
+         'trading_mode.json':'trading_mode',
          'identity-lineage.json': 'lineage', 'realizations.json': 'realizations',
          'realization-batches.json': 'batches', 'replication-receipts.json': 'receipts',
          'information.json': 'information'}
@@ -157,6 +158,9 @@ def _validate_files(files):
             else:
                 identity_merge.merge_rows(data[kind], [], kind)
                 count += len(data[kind])
+        elif name == 'trading_mode.json':
+            persistence.validate_state(data,'trading_mode',name)
+            count += 1
         elif name == 'identity-manifest.json':
             state_identity.validate_manifest(data)
             count += len(data['mappings']) + len(data.get('native', {}))
@@ -263,6 +267,9 @@ def capture_packet(profile, destination):
             files['information.json'] = _json({'schema_version': 1, 'origin_uuid': activation['origin_uuid'],
                                                'files': information})
         parsed = _validate_files(files)
+        if 'trading_mode.json' in parsed:
+            from rshelper.trading_mode import validate_authority
+            validate_authority(parsed['trading_mode.json'],activation)
         if parsed['identity-manifest.json']['origin_uuid'] != activation['origin_uuid']:
             raise ValueError('source identity manifest mismatch')
         declared = {activation['origin_uuid'], *parsed.get('identity-lineage.json', {}).get('origins', {})}
@@ -272,7 +279,7 @@ def capture_packet(profile, destination):
             raise ValueError('packet exceeds transfer budget')
         entries = [{'path': name, 'kind': FILES[name],
                     'owner': 'informational' if name == 'information.json' else
-                             'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared',
+                             'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared',
                     'bytes': len(files[name]), 'sha256': hashlib.sha256(files[name]).hexdigest()}
                    for name in sorted(files)]
         previous = state['outgoing']
@@ -382,7 +389,7 @@ def _read_packet(source):
         if type(name) is not str or name not in files or name in seen:
             raise ValueError('duplicate or unapproved packet path')
         seen.add(name)
-        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json') else 'shared'
+        expected_owner = 'informational' if name == 'information.json' else 'financial' if name in ('positions.json', 'trades.json', 'realizations.json', 'realization-batches.json', 'trading_mode.json') else 'shared'
         if (entry['kind'] != FILES[name] or entry['owner'] != expected_owner
                 or type(entry['bytes']) is not int or entry['bytes'] != len(files[name])
                 or entry['sha256'] != hashlib.sha256(files[name]).hexdigest()):
@@ -417,6 +424,20 @@ def _merge_manifest(left, right):
 
 def _merge(root, incoming):
     result = {}
+    if 'trading_mode.json' in incoming:
+        mode = incoming['trading_mode.json']
+        current = persistence.read_state(root/'trading_mode.json','trading_mode')
+        activation = _activation(root)
+        owner = (activation['origin_uuid'] if activation['financial_authority'] else
+                 current.get('authority_origin') or mode['authority_origin'])
+        if mode['authority_origin'] != owner or owner is None:
+            raise ValueError('trading stance authority differs')
+        if not current or mode['revision'] > current['revision']:
+            if incoming['identity-manifest.json']['origin_uuid'] != owner:
+                raise ValueError('only the authority can advance trading stance')
+            result['trading_mode.json'] = mode
+        elif mode['revision'] == current['revision'] and _json(mode) != _json(current):
+            raise ValueError('trading stance revision conflict')
     if 'information.json' in incoming:
         information = incoming['information.json']
         peers = persistence.read_state(root / 'peer-information.json', 'generic') or {'schema_version': 1, 'origins': {}}

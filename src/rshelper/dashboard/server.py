@@ -773,13 +773,18 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
 
     def get_trader_status() -> dict:
         from rshelper.trader import trader_status
+        from rshelper.trading_mode import read_mode
         status = trader_status(profile)
-        return status if status else {"running": False}
+        return status if status else {"running": False, 'trading_mode':read_mode(profile)}
 
-    def trader_control(action: str) -> dict:
+    def trader_control(action: str, request=None) -> dict:
         """Start or stop the auto-trader daemon. 403-guarded by control flag."""
         if not control:
             raise PermissionError("daemon control is disabled (run dashboard with --control)")
+        if action == 'mode':
+            from rshelper.trading_mode import set_mode
+            return set_mode(profile,request['mode'],expected_revision=request['expected_revision'],
+                            reason=request['reason'],operation_id=request['operation_id'],source='dashboard')
         if action == "start":
             from rshelper.trader import trader_status
             status = trader_status(profile)

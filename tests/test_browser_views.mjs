@@ -3,6 +3,31 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { harness } from './browser_harness.mjs';
 
+test('entry stance is separate from daemon liveness and mutation retries retain identity',async()=>{
+  const requests=[];let fail=true;
+  const {context}=harness(async(url,options={})=>{
+    requests.push({url,body:JSON.parse(options.body)});
+    return new Response(JSON.stringify(fail?{error:'Synthetic failure'}:{mode:'entries-paused'}),{status:fail?500:200});
+  });
+  vm.runInContext("accessMode='owner';authenticated=true;capabilities={features:['daemon-control','private-state']};meta={control:true}",context);
+  context.window.prompt=()=> 'Synthetic reason';
+  context.fetchData=()=>Promise.resolve();
+  const notice=vm.runInContext("traderNoticeHtml({running:true,trading_mode:{mode:'entries-paused',reason:'<Synthetic>'}})",context);
+  assert.match(notice,/New entries paused/);
+  assert.match(notice,/Auto-trader running/);
+  assert.match(notice,/&lt;Synthetic&gt;/);
+  await vm.runInContext("tradingModeControl('entries-paused',0)",context);
+  fail=false;
+  await vm.runInContext("tradingModeControl('entries-paused',0)",context);
+  assert.equal(requests.length,2);
+  assert.equal(requests[0].body.operation_id,requests[1].body.operation_id);
+  assert.equal(requests[0].body.expected_revision,0);
+  assert.equal(requests[0].body.reason,'Synthetic reason');
+  vm.runInContext('authenticated=false',context);
+  await vm.runInContext("tradingModeControl('running',1)",context);
+  assert.equal(requests.length,2);
+});
+
 const calls = [];
 let failed = true;
 const { context, elements } = harness(async (url, options = {}) => {
