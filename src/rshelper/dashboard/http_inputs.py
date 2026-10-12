@@ -160,6 +160,12 @@ def parse_query(path):
     except ValueError as exc: raise HttpInputError('Too many query fields') from exc
     if any(len(rows) != 1 for rows in values.values()): raise HttpInputError('Duplicate query field')
     route = path.partition('?')[0]
+    if route=='/api/catalog':
+        if set(values)-{'q','limit'}:raise HttpInputError('Unknown catalog query field')
+        text(values.get('q',[''])[0],'q',required=False,limit=200)
+        if 'limit' in values and (not values['limit'][0].isascii() or not values['limit'][0].isdecimal() or not 1<=int(values['limit'][0])<=50):
+            raise HttpInputError('Catalog limit must be 1..50')
+    if route=='/api/item' and set(values)!={'id'}:raise HttpInputError('Exactly one item ID required')
     if route=='/api/reviews':
         from rshelper.persistence import canonical_uuid
         if set(values)-{'lot_uid'}:raise HttpInputError('Unknown review query field')

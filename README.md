@@ -30,6 +30,9 @@ Replay and sweep require explicit candle data, public item metadata, account
 slots and configuration selection. They reuse the staged paper decisions and
 never open the owner journal. See [shared runtime/replay](docs/shared-runtime-replay.md)
 for commands, historical parameter selection and candle-model limitations.
+Use [full-catalog discovery](docs/catalog-discovery.md) to inspect or watch mapped
+items even when scan rules exclude them, with source/time and exact reasons.
+
 Use [replay datasets](docs/replay-datasets.md) to pin market-only snapshots,
 freeze chronological parameter selection and reproduce held-out reports.
 

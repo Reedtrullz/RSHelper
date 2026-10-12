@@ -270,6 +270,7 @@ _SHELL = r"""
 <div class="topbar">
   <h1>RSHelper</h1>
   <div class="search"><input type="text" id="search" placeholder="Filter current list..." oninput="applySearch()" aria-label="Filter items"></div>
+  <button type="button" onclick="showCatalogSearch()">Find item</button>
   <div class="stats" id="statsSlot"></div>
 </div>
 """
