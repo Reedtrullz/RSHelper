@@ -18,6 +18,7 @@ from rshelper.profile import resolve_config_path, resolve_profile
 
 MAX_BUNDLE_BYTES = 256 * 1024 * 1024
 FILES = frozenset({'config.toml', 'trades.json', 'positions.json', 'watchlist.json',
+    'observed-offers.json',
     'paper-offers.json',
     'trade-reviews.json',
     'trading_mode.json',
@@ -99,6 +100,9 @@ def _validate_file(name, raw):
             if name=='trade-reviews.json':
                 from rshelper.trade_reviews import validate_store
                 validate_store(data)
+            if name=='observed-offers.json':
+                from rshelper.observed_offers import validate_store
+                validate_store(data)
             if name=='peer-information.json':
                 from rshelper.trade_reviews import validate_peers
                 validate_peers(data)
@@ -161,6 +165,11 @@ def _export_profile(profile: str, destination: Path, policy: str = 'backup', *, 
         if set(current) != set(selected) or any(_read_file(current[key]) != raw for key, raw in content.items()):
             raise BackupError('profile changed during backup; retry capture')
     activation = _decode(content['identity-activation.json']) if 'identity-activation.json' in content else {}
+    if policy!='evidence' and ('observed-offers.json' in content or activation.get('observed_offer_origin') is not None):
+        from rshelper.observed_offers import _read_root
+        _read_root(root)
+    if policy!='evidence' and activation.get('observed_offer_origin') is not None and 'observed-offers.json' not in content:
+        raise BackupError('acknowledged observed ledger missing; recover before backup')
     if policy != 'evidence' and activation.get('paper_budget_origin') is not None and 'paper-offers.json' not in content:
         raise BackupError('acknowledged paper budget missing; recover before backup')
     files = {key: {'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw),
@@ -240,9 +249,13 @@ def _inspect(source):
         raise BackupError('backup source revision mismatch')
     activation = _decode(content['identity-activation.json']) if 'identity-activation.json' in content else {}
     profile_uuid = activation.get('profile_uuid')
+    if activation.get('observed_offer_origin') is not None and 'observed-offers.json' not in content:
+        raise BackupError('backup omits acknowledged observed ledger')
     if activation.get('paper_budget_origin') is not None and 'paper-offers.json' not in content:
         raise BackupError('backup omits acknowledged paper budget')
     from rshelper.trade_reviews import authority_origin
+    if 'observed-offers.json' in content and _decode(content['observed-offers.json'])['authority_origin']!=authority_origin(activation):
+        raise BackupError('backup observed authority differs from financial activation')
     review_sources=[]
     if 'trade-reviews.json' in content:review_sources.append(_decode(content['trade-reviews.json']))
     if 'peer-information.json' in content:
@@ -428,6 +441,12 @@ def restore_profile(profile: str, source: Path, *, expected_profile_uuid: str, o
             current_reviews=read_state(root/'trade-reviews.json','generic')
             if 'trade-reviews.json' not in content:raise BackupError('backup would discard review history')
             require_successor(current_reviews,_decode(content['trade-reviews.json']))
+        if (root/'observed-offers.json').exists():
+            from rshelper.observed_offers import require_successor
+            if 'observed-offers.json' not in content:raise BackupError('backup would discard observed history')
+            require_successor(read_state(root/'observed-offers.json','generic'),_decode(content['observed-offers.json']))
+        if activation.get('observed_offer_origin') is not None and 'observed-offers.json' not in content:
+            raise BackupError('backup would omit the acknowledged observed ledger')
         if (root/'peer-information.json').exists():
             from rshelper.trade_reviews import require_successor
             current_peers=read_state(root/'peer-information.json','generic')

@@ -283,6 +283,7 @@ _NAV = r"""
   <button class="nav-btn" id="btnActivity" role="tab" onclick="setView('activity')">Activity <span class="badge" id="badgeActivity">-</span></button>
   <button class="nav-btn" id="btnSettings" role="tab" onclick="setView('settings')">Settings</button>
   <button class="nav-btn" id="btnReviews" role="tab" onclick="setView('reviews')">Reviews</button>
+  <button class="nav-btn" id="btnObserved" role="tab" onclick="setView('observed')">Observed offers</button>
 </div>
 """
 

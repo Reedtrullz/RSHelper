@@ -18,6 +18,11 @@ from rshelper.config import Config
 from rshelper.market_data import MarketDataResult
 
 CASES = {
+    'observed list': '--slots 8 --json',
+    'observed history': '11111111-1111-4111-8111-111111111111 --offset 1 --json',
+    'observed record': '11111111-1111-4111-8111-111111111111 --input observed.json --expected-revision 0 --operation-id 22222222-2222-4222-8222-222222222222 --json',
+    'observed preview-csv': '--input observed.csv --json',
+    'observed apply-csv': '--input observed.csv --expected-import-hash 1111111111111111111111111111111111111111111111111111111111111111 --backup before.zip --json',
     'trading-mode': '--mode entries-paused --expected-revision 0 --reason Synthetic --operation-id 11111111-1111-4111-8111-111111111111 --json',
     'alch-scan': '--nature-rune-cost 1 --members-only --no-members-only --min-volume 1 --top 3 --name Synthetic --json --csv --html --save-snapshot --intraday-snapshots',
     'flip-scan': '--members-only --no-members-only --min-volume 1 --min-margin 1 --top 3 --capital 10000 --flip-direction traditional --name Synthetic --json --csv --html --save-snapshot --intraday-snapshots --ge-slots 2',

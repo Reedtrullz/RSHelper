@@ -17,7 +17,7 @@ let geData=null,bankData=null,alertsData={alerts:[],unread:0},alchItems=[];
 let confMap={};
 let scanExclusions={};
 let scanPresets=[],loadedPreferenceKey=null;
-const viewNames=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
+const viewNames=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed'];
 function parseViewUrl(raw){
   const fallback={view:'market',item:null};
   if(typeof raw!=='string'||raw.length>512)return fallback;
@@ -103,6 +103,7 @@ let accessReady=false,authEpoch=0;
 let viewEpoch=0,renderEpoch=0,refreshFlight=null;
 let settingsState=null,settingsPreviewCandidate=null,pendingSettingsOperation=null;
 let reviewsState=null,reviewLotUid='',pendingReviewOperation=null,reviewTag='',reviewUnreviewed=false;
+let observedState=null,observedOfferUuid='',pendingObserved=null;
 function beginViewRequest(){
   const epoch=authEpoch,tab=viewEpoch,name=view,request=++renderEpoch;
   const panels=['listBody','contextPanel'].map(id=>{
@@ -137,7 +138,7 @@ function renderViewbar(bar){
   bar.scrollLeft=scroll;
 }
 const pendingRequests=new Set();
-const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews']);
+const privateViews=new Set(['paper','signals','watchlist','ge','bank','overview','activity','settings','reviews','observed']);
 const publicMarketPaths=new Set(['/api/scan','/api/catalog','/api/item','/api/prices','/api/timeseries','/api/process','/api/alch','/api/confidence']);
 
 function apiFetch(url,options={}){
@@ -209,7 +210,7 @@ function applyAccessGates(){
   const canPrivate=accessMode==='owner'&&authenticated&&hasFeature('private-state');
   const hasMarket=hasFeature('market');
   const views={market:hasMarket,process:hasMarket,paper:canPrivate,signals:canPrivate,watchlist:canPrivate,
-    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate,reviews:canPrivate};
+    ge:canPrivate,bank:canPrivate,overview:canPrivate,activity:canPrivate,settings:canPrivate,reviews:canPrivate,observed:canPrivate};
   Object.entries(views).forEach(([name,allowed])=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(button){button.hidden=!allowed;button.style.display=allowed?'':'none';}
@@ -218,7 +219,7 @@ function applyAccessGates(){
   updateTabState();
 }
 function updateTabState(){
-  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews'];
+  const names=['market','paper','signals','watchlist','ge','bank','process','overview','activity','settings','reviews','observed'];
   names.forEach(name=>{
     const button=document.getElementById('btn'+(name==='ge'?'GE':name.charAt(0).toUpperCase()+name.slice(1)));
     if(!button)return;
@@ -273,6 +274,7 @@ function disconnectOwner(){
   pendingPaperOps={};geOffset=0;
   settingsState=null;settingsPreviewCandidate=null;pendingSettingsOperation=null;
   reviewsState=null;reviewLotUid='';pendingReviewOperation=null;reviewTag='';reviewUnreviewed=false;
+  observedState=null;observedOfferUuid='';pendingObserved=null;
   ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
@@ -555,7 +557,7 @@ function setView(v,track=true){
   if(track)writeViewUrl();
   updateTabState();
   const titles={market:'Market',paper:'Trading',signals:'Signals',watchlist:'Watchlist',
-                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews'};
+                ge:'Grand Exchange',bank:'Bank',process:'Materials',overview:'Overview',activity:'Activity',settings:'Settings',reviews:'Reviews',observed:'Observed offers'};
   if(titles[v])document.title='RSHelper — '+titles[v];
   if(v==='market')renderMarket();
   else if(v==='paper')renderPaper();
@@ -568,6 +570,7 @@ function setView(v,track=true){
   else if(v==='activity')renderActivity();
   else if(v==='settings')renderSettings();
   else if(v==='reviews')renderReviews();
+  else if(v==='observed')renderObserved();
   if(v==='market'&&selectedId==null)renderContextEmpty();
   else if(v==='market')renderDetail(selectedId);
 }
@@ -961,6 +964,70 @@ function drawDaily(cv,buckets){
 """
 
 SCRIPT_VIEWS = r"""
+async function renderObserved(){
+  const current=beginViewRequest();
+  try{
+    const response=await apiFetch('/api/observed');const result=await response.json();
+    if(!current())return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    observedState=result;
+    document.getElementById('viewbar').innerHTML='<div class="viewbar"><span class="viewbar-title">Observed GE offers</span>'+
+      (result.can_write?'<button type="button" onclick="editObserved(\'\')">Plan observed offer</button>':'<span>Record observations on your source Mac</span>')+'</div>';
+    let html='<h2>Manual observations</h2><p>These receipts record what you entered from the game. They are separate from paper simulation and do not read or control your game account.</p>'+
+      '<p>Observed reservation: '+format(result.reserved_cash)+' gp · '+format(result.used_slots)+' occupied / '+(result.slot_limit==null?'Unknown':format(result.slot_limit))+' slots. Actual cash flow: '+format(result.actual_cash_flow)+' gp. Available cash and realized profit: Unknown; complete account inventory and matched costs are not established.</p>'+
+      '<p>Showing '+format((result.offers||[]).length)+' / '+format(result.total_offers)+' offers. Revision '+format(result.revision)+'.</p>'+
+      '<table><thead><tr><th scope="col">Offer</th><th scope="col">Phase</th><th scope="col">Fill / order</th><th scope="col">Actual GP / fees</th><th scope="col">Observed UTC / source</th></tr></thead><tbody>';
+    for(const row of result.offers||[]){const event=row.event;
+      html+='<tr><td><button type="button" data-offer="'+escHtml(row.offer_uuid)+'" onclick="editObserved(this.dataset.offer)">'+escHtml(event.side)+' item '+format(event.item_id)+'</button></td><td>'+escHtml(event.state)+'</td><td>'+format(event.filled_qty)+' / '+format(event.qty)+'</td><td>'+format(event.actual_gp)+' / '+format(event.fees)+'</td><td>'+escHtml(event.observed_at)+' / '+escHtml(event.source)+'</td></tr>';
+    }
+    document.getElementById('listBody').innerHTML=html+'</tbody></table>';current.finish();
+    document.getElementById('contextPanel').innerHTML='<p>Select an observed offer to inspect its latest receipt. Corrections append to its history. CSV imports require a preview and private pre-apply backup through the observed CLI.</p>';
+  }catch(error){current.fail(error);}
+}
+function editObserved(uuid){
+  if(!observedState)return;
+  const row=(observedState.offers||[]).find(row=>row.offer_uuid===uuid);
+  if(uuid&&!row)return;
+  observedOfferUuid=uuid||crypto.randomUUID();pendingObserved=null;
+  const event=row?row.event:{state:'planned',item_id:'',side:'buy',qty:'',limit_price:'',filled_qty:0,collected_qty:0,actual_gp:0,fees:0,evidence:''};
+  let html='<h2>Observed receipt</h2><p>Offer '+escHtml(observedOfferUuid)+'. Cumulative quantities and actual GP, not paper estimates. Original item, side, quantity and limit stay fixed.</p>';
+  if(!observedState.can_write){document.getElementById('contextPanel').innerHTML=html+'<pre>'+escHtml(JSON.stringify(event,null,2))+'</pre>';return;}
+  html+='<form onsubmit="event.preventDefault();appendObserved()">';
+  for(const [id,label,key] of [['obsItem','Item ID','item_id'],['obsQty','Order quantity','qty'],['obsPrice','Offer price per item','limit_price'],['obsFilled','Cumulative filled quantity','filled_qty'],['obsCollected','Collected quantity','collected_qty'],['obsGp','Cumulative actual GP','actual_gp'],['obsFees','Cumulative actual fees','fees']]){
+    html+='<label for="'+id+'">'+label+'</label><input id="'+id+'" type="number" min="0" step="1" required value="'+escHtml(event[key])+'" '+(row&&['item_id','qty','limit_price'].includes(key)?'readonly':'')+'>';
+  }
+  html+='<label for="obsSide">Side</label><select id="obsSide" '+(row?'disabled':'')+'>'+['buy','sell'].map(side=>'<option '+(side===event.side?'selected':'')+'>'+side+'</option>').join('')+'</select>'+
+    '<label for="obsState">Observed phase</label><select id="obsState">'+['planned','placed','partial','canceled','collected'].map(phase=>'<option '+(phase===event.state?'selected':'')+'>'+phase+'</option>').join('')+'</select>'+
+    '<label for="obsTime">Observed time (UTC)</label><input id="obsTime" required value="'+escHtml(new Date().toISOString().replace('Z','000+00:00'))+'">'+
+    '<label for="obsEvidence">Receipt evidence</label><textarea id="obsEvidence" required maxlength="4096">'+escHtml(event.evidence)+'</textarea>'+
+    (row?'<label><input type="checkbox" id="obsCorrect">Correct latest receipt in the same phase</label>':'<input id="obsCorrect" type="checkbox" hidden>')+
+    '<button type="submit">Record observation</button><p id="obsStatus" role="status" aria-live="polite"></p></form>';
+  document.getElementById('contextPanel').innerHTML=html;document.getElementById('contextPanel').focus();
+}
+async function appendObserved(){
+  if(!authenticated||!observedState?.can_write||!observedOfferUuid)return;
+  const epoch=authEpoch,tab=viewEpoch;
+  const status=document.getElementById('obsStatus');
+  try{
+    const event={};
+    for(const [id,key] of [['obsItem','item_id'],['obsQty','qty'],['obsPrice','limit_price'],['obsFilled','filled_qty'],['obsCollected','collected_qty'],['obsGp','actual_gp'],['obsFees','fees']]){
+      const raw=document.getElementById(id).value;
+      if(!/^\d+$/.test(raw)||!Number.isSafeInteger(Number(raw)))throw new Error('Use bounded nonnegative whole amounts');
+      event[key]=Number(raw);
+    }
+    const previous=(observedState.offers||[]).find(row=>row.offer_uuid===observedOfferUuid);
+    Object.assign(event,{state:document.getElementById('obsState').value,side:document.getElementById('obsSide').value,
+      observed_at:document.getElementById('obsTime').value,source:'manual',evidence:document.getElementById('obsEvidence').value,
+      corrects:document.getElementById('obsCorrect').checked?previous?.operation_id||null:null});
+    const fields={offer_uuid:observedOfferUuid,event,expected_revision:observedState.revision};const fingerprint=JSON.stringify(fields);
+    if(!pendingObserved||pendingObserved.fingerprint!==fingerprint)pendingObserved={fingerprint,operation_id:crypto.randomUUID()};
+    const response=await apiFetch('/api/observed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...fields,operation_id:pendingObserved.operation_id})});
+    const result=await response.json();if(epoch!==authEpoch||tab!==viewEpoch)return;
+    if(!response.ok)throw new Error(apiErrorMessage(result,response.status));
+    pendingObserved=null;await renderObserved();editObserved(fields.offer_uuid);
+    document.getElementById('obsStatus').textContent='Observation recorded at revision '+result.current_revision;
+  }catch(error){if(epoch===authEpoch&&tab===viewEpoch)status.textContent=error.message;}
+}
 function openReview(lot){reviewLotUid=lot;pendingReviewOperation=null;setView('reviews');}
 async function renderReviews(keepEditor=false){
   const editing=keepEditor&&reviewLotUid&&document.getElementById('reviewHypothesis');

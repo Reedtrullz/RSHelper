@@ -19,6 +19,7 @@ from rshelper.persistence import locked_state
 
 SCHEMA_VERSION = 1
 STATE_FILES = {
+    'observed-offers.json':'generic',
     'paper-offers.json': 'paper-book',
     'trading_mode.json': 'trading_mode',
     'positions.json': 'positions',
@@ -137,6 +138,9 @@ def _validate_bytes(filename, raw):
             validate_log(persistence.decode_json(raw))
         if filename=='trade-reviews.json':
             from rshelper.trade_reviews import validate_store
+            validate_store(persistence.decode_json(raw))
+        if filename=='observed-offers.json':
+            from rshelper.observed_offers import validate_store
             validate_store(persistence.decode_json(raw))
     if len(raw) > MAX_PROFILE_BYTES:
         raise ValueError('profile state file exceeds byte budget')

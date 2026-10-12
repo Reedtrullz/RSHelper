@@ -1111,6 +1111,19 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
         result.update(can_write=can_write,open_lots=lots[:20],open_lot_count=len(lots))
         return result
 
+    def observed(body=None):
+        from rshelper import observed_offers
+        root=resolve_config_path('',profile)
+        can_write=(state_identity.activation_manifest(root/'identity-activation.json') or {}).get('financial_authority') is True
+        if body is not None:
+            if not can_write:raise PermissionError('Record observed offers on the financial authority')
+            return observed_offers.record_observation(profile,body['offer_uuid'],body['event'],operation_id=body['operation_id'],expected_revision=body['expected_revision'])
+        if (root/'paper-offers.json').exists():
+            from rshelper.paper_book import budget_snapshot
+            result=budget_snapshot(profile,now=time.time())['observed_budget']
+        else:result=observed_offers.summary(observed_offers.read_store(profile))
+        return {**result,'can_write':can_write}
+
     handler = make_handler(scanner, get_items, signal_detector=get_signals,
                            scan_kwargs=scan_kwargs, price_lookup=get_prices,
                            meta_fn=get_meta, watchlist_fn=get_watchlist,
@@ -1135,7 +1148,7 @@ def run(bind: str = "127.0.0.1", port: int = 5555, control: bool = False,
                            allowed_hosts=allowed_hosts, mode=access_mode,
                            owner_token=owner_token, control=control,
                            state_receipt_fn=lambda origin: read_receipt(profile, origin),
-                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews,
+                           readiness_fn=get_readiness, activity_fn=get_activity,settings_fn=settings,reviews_fn=reviews,observed_fn=observed,
                            catalog_fn=get_catalog,item_details_fn=get_item_details)
 
     # Warn on non-loopback bind

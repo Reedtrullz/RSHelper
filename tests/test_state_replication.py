@@ -48,6 +48,24 @@ class ReplicationTest(unittest.TestCase):
         from rshelper import state_replication
         return state_replication
 
+    def test_observed_receipts_replicate_separately_and_reverse_cannot_advance_authority(self):
+        from rshelper import observed_offers
+        from uuid import uuid4
+        event={'state':'planned','item_id':2,'side':'buy','qty':10,'limit_price':100,
+               'filled_qty':0,'collected_qty':0,'actual_gp':0,'fees':0,'observed_at':'2026-10-12T10:00:00+00:00',
+               'source':'manual','evidence':'Synthetic receipt','corrects':None}
+        offer=str(uuid4());observed_offers.record_observation('a',offer,event,operation_id=str(uuid4()),expected_revision=0)
+        observed_offers.record_observation('a',offer,{**event,'state':'placed'},operation_id=str(uuid4()),expected_revision=1)
+        packet=self.base/'observed.zip';self.api().capture_packet('a',packet)
+        self.assertEqual(self.api().apply_packet('b',packet)['status'],'applied')
+        self.assertEqual(observed_offers.summary(observed_offers.read_store('b'))['reserved_cash'],1000)
+        self.assertFalse((self.root('b')/'paper-offers.json').exists())
+        reverse=self.base/'observed-reverse.zip';self.api().capture_packet('b',reverse)
+        self.assertEqual(self.api().apply_packet('a',reverse)['status'],'applied')
+        with self.assertRaises(ValueError):observed_offers.record_observation('b',offer,{**event,'state':'partial','filled_qty':1,'actual_gp':90},operation_id=str(uuid4()),expected_revision=2)
+        (self.root('a')/observed_offers.FILENAME).unlink()
+        with self.assertRaises(ValueError):self.api().capture_packet('a',self.base/'missing-observed.zip')
+
     def test_review_prefix_tombstone_and_redacted_replica_exports(self):
         from rshelper import positions,trade_reviews,profile_transfer
         from uuid import uuid4

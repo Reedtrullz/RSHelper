@@ -25,6 +25,7 @@ IMMUTABLE_FIELDS = {
 MAX_MAPPINGS = 100_000
 
 REPLICATION_OWNERSHIP = {
+    'observed-offers.json':'financial',
     # financial: Mac authority only; replicated as owned financial data.
     'positions.json': 'financial', 'trades.json': 'financial', 'paper-offers.json':'financial',
     'alerts.json': 'shared',

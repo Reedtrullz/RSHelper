@@ -59,6 +59,11 @@ def _run_image(verifier, image_id, root, stage, arguments):
                '--entrypoint', 'python']
     if stage is not None:
         command += ['--mount', 'type=bind,src=' + str(stage) + ',dst=/state-stage,readonly']
+    if arguments[0] == '/state-contract.py':
+        contract = root / 'state-contract.py'
+        if contract.is_symlink() or not contract.is_file():
+            raise ValueError('installed state contract must be a regular file')
+        command += ['--mount', 'type=bind,src=' + str(contract) + ',dst=/state-contract.py,readonly']
     try:
         return json.loads(verifier.bounded_command(
             ['docker', *command, image_id, *arguments], timeout=150))
@@ -100,7 +105,7 @@ def perform(root, action, origin, selected_profile, *, source=None, incoming=Non
                     '--profile-uuid',verification['profile_uuid'],'--revision',str(verification['applied_revision']),
                     '--hash',verification['applied_hash'],'--json']
             elif action == 'contract':
-                arguments = ['-m', 'rshelper', '--profile', selected_profile, 'state', 'check', '--json']
+                arguments = ['/state-contract.py', '--profile', selected_profile]
             elif action == 'apply':
                 if incoming is None:
                     raise ValueError('private packet input is required')
