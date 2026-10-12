@@ -64,6 +64,7 @@ CASES = {
     'state capture': '--output packet.zip --json',
     'state apply': '--input packet.zip --json',
     'state receipt': '--origin 11111111-1111-4111-8111-111111111111 --json',
+    'state verify': '--origin 11111111-1111-4111-8111-111111111111 --profile-uuid 33333333-3333-4333-8333-333333333333 --revision 1 --hash 1111111111111111111111111111111111111111111111111111111111111111 --json',
     'state check': '--json',
     'state migration-plan': '--origin 11111111-1111-4111-8111-111111111111 --profile-uuid 22222222-2222-4222-8222-222222222222 --lineage lineage.json --json',
     'state migrate': '--plan plan.json --operation-id 11111111-1111-4111-8111-111111111111 --json',

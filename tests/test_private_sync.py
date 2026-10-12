@@ -1,4 +1,6 @@
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -41,14 +43,86 @@ class PrivateSyncTest(unittest.TestCase):
         spec.loader.exec_module(module)
         return module
 
-    def transport(self, host, destination, mode, origin, selected_profile, packet=None):
+    def transport(self, host, destination, mode, origin, selected_profile, packet=None,verification=None):
         if mode == 'receipt':
             return state_replication.read_receipt('b', origin)
+        if mode=='verify':return state_replication.verify_receipt('b',verification)
         self.applies += 1
         return state_replication.apply_packet('b', packet)
 
     def run_sync(self, module, **kwargs):
         return module.run_sync('a', 'Racknerd-Deploy', '/opt/apps/rshelper', self.outbox, **kwargs)
+
+    def test_unchanged_sync_verifies_exact_cursor_without_another_packet_apply(self):
+        from rshelper import persistence
+        module=self.api()
+        with mock.patch.object(module,'_ssh',side_effect=self.transport):first=self.run_sync(module)
+        root=profile.resolve_config_path('','b')
+        before={path.name:path.read_bytes() for path in root.glob('*.json') if path.name!='sync-status.json'}
+        profile.atomic_write_json(root/'sync-status.json',{'schema_version':1,'status':'applied','last_success_at':1})
+        with mock.patch.object(module,'_ssh',side_effect=self.transport) as ssh:second=self.run_sync(module)
+        self.assertEqual(self.applies,1)
+        self.assertIn('verify',[call.args[2] for call in ssh.call_args_list])
+        self.assertEqual((first['applied_revision'],first['applied_hash']),(second['applied_revision'],second['applied_hash']))
+        self.assertGreater(persistence.read_state(root/'sync-status.json','generic')['last_success_at'],1)
+        self.assertEqual(before,{path.name:path.read_bytes() for path in root.glob('*.json') if path.name!='sync-status.json'})
+
+    def test_wrong_verification_and_lost_verification_response_keep_freshness_and_packet_safe(self):
+        module=self.api()
+        with mock.patch.object(module,'_ssh',side_effect=self.transport):receipt=self.run_sync(module)
+        request={key:receipt[key] for key in ('profile_uuid','origin_uuid','applied_revision','applied_hash')}
+        root=profile.resolve_config_path('','b');before=(root/'sync-status.json').read_bytes()
+        self.assertFalse((self.outbox/'pending.json').exists())
+        for change in ({'applied_hash':'f'*64},{'applied_revision':receipt['applied_revision']+1},{'profile_uuid':A},{'origin_uuid':B}):
+            with self.assertRaises(ValueError):state_replication.verify_receipt('b',{**request,**change})
+            self.assertEqual((root/'sync-status.json').read_bytes(),before)
+        def lost(*args,**kwargs):
+            result=self.transport(*args,**kwargs)
+            if args[2]=='verify':raise OSError('lost verification response')
+            return result
+        with mock.patch.object(module,'_ssh',side_effect=lost):
+            with self.assertRaises(OSError):self.run_sync(module)
+        self.assertTrue((self.outbox/'pending.json').exists())
+        pending=json.loads((self.outbox/'pending.json').read_bytes())
+        self.assertEqual(pending['manifest']['packet_hash'],receipt['applied_hash'])
+        with mock.patch.object(module,'_ssh',side_effect=self.transport):retried=self.run_sync(module)
+        self.assertEqual(retried['applied_hash'],receipt['applied_hash']);self.assertEqual(self.applies,1)
+        self.assertFalse((self.outbox/'pending.json').exists())
+
+    def test_verification_cannot_refresh_a_non_exact_stored_acknowledgement(self):
+        module=self.api()
+        with mock.patch.object(module,'_ssh',side_effect=self.transport):receipt=self.run_sync(module)
+        root=profile.resolve_config_path('','b');before=(root/'sync-status.json').read_bytes()
+        metadata=json.loads((root/'replication-state.json').read_bytes())
+        metadata['receipts'][A]['requested_hash']='f'*64
+        (root/'replication-state.json').write_text(json.dumps(metadata))
+        with self.assertRaises(ValueError):
+            state_replication.verify_receipt('b',{key:receipt[key] for key in ('profile_uuid','origin_uuid','applied_revision','applied_hash')})
+        self.assertEqual((root/'sync-status.json').read_bytes(),before)
+
+    def test_receiver_helper_bounds_and_validates_verification_before_invocation(self):
+        spec=importlib.util.spec_from_file_location('verification_receiver',ROOT/'deploy/private_state.py')
+        self.assertIsNotNone(spec);self.assertIsNotNone(spec.loader)
+        helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
+        root=self.base/'receiver';root.mkdir()
+        request={'profile_uuid':P,'origin_uuid':A,'applied_revision':1,'applied_hash':'a'*64}
+        raw=json.dumps(request).encode()
+        with mock.patch.object(helper,'APP_DIR',root),mock.patch.object(helper,'_module',return_value=object()), \
+             mock.patch.object(helper,'_running',return_value={'image_id':'synthetic'}),mock.patch.object(helper,'_run_image',return_value={}) as run:
+            helper.perform(root,'verify',A,'a',incoming=io.BytesIO(raw))
+            self.assertIn('verify',run.call_args.args[-1]);run.reset_mock()
+            for invalid in (b'x'*4097,json.dumps({**request,'extra':1}).encode(),raw[:-1]+b',"applied_revision":2}',json.dumps({**request,'applied_revision':True}).encode()):
+                with self.assertRaises(ValueError):helper.perform(root,'verify',A,'a',incoming=io.BytesIO(invalid))
+                run.assert_not_called()
+
+    def test_cli_verification_emits_only_json_and_keeps_packet_identity(self):
+        from rshelper import cli
+        module=self.api()
+        with mock.patch.object(module,'_ssh',side_effect=self.transport):receipt=self.run_sync(module)
+        out=io.StringIO()
+        with mock.patch.object(sys,'argv',['rshelper','--profile','b','state','verify','--origin',A,'--profile-uuid',P,
+                '--revision',str(receipt['applied_revision']),'--hash',receipt['applied_hash'],'--json']),contextlib.redirect_stdout(out):cli.main()
+        self.assertEqual(json.loads(out.getvalue()),receipt)
 
     def test_apply_has_finite_budget_above_receiver_deadline(self):
         module = self.api()

@@ -2294,6 +2294,12 @@ def _main() -> None:
         command.add_argument(flag, required=True)
         command.add_argument('--json', action='store_true')
     state_sub.add_parser('check').add_argument('--json', action='store_true')
+    verification=state_sub.add_parser('verify',help='Verify an exact acknowledged cursor and record sync freshness')
+    verification.add_argument('--origin',required=True)
+    verification.add_argument('--profile-uuid',required=True)
+    verification.add_argument('--revision',required=True,type=int)
+    verification.add_argument('--hash',required=True)
+    verification.add_argument('--json',action='store_true')
     migration_plan = state_sub.add_parser('migration-plan')
     migration_plan.add_argument('--origin', required=True)
     migration_plan.add_argument('--profile-uuid', required=True)
@@ -2382,6 +2388,9 @@ def _main() -> None:
             result = state_replication.apply_packet(args.profile, Path(args.input))
         elif args.state_action == 'check':
             result = state_replication.validate_profile(args.profile)
+        elif args.state_action=='verify':
+            result=state_replication.verify_receipt(args.profile,{'origin_uuid':args.origin,'profile_uuid':args.profile_uuid,
+                'applied_revision':args.revision,'applied_hash':args.hash})
         elif args.state_action in ('migration-plan', 'migrate'):
             from rshelper import persistence, state_migration
             from rshelper.backup import _read_file
