@@ -62,6 +62,16 @@ def candle_observations(items,metadata):
             return market_payload(MarketDataResult(data,'wiki','historical-model',now,now,now,False,kind,{'wiki':len(data)}))
         yield {'now':now,'latest':wrap(latest,'unknown'),'5m':wrap(volume,'executed-trades'),'items':candidates}
 
+def validate_metadata(metadata):
+    if not isinstance(metadata,dict):raise ValueError('explicit item metadata mapping required')
+    for key,value in metadata.items():
+        if not isinstance(key,str) or not key.isdecimal() or str(int(key))!=key or int(key)<=0 or not isinstance(value,dict):
+            raise ValueError('mapping requires canonical positive item IDs and metadata objects')
+        if value.get('members') is not None and type(value['members']) is not bool:raise ValueError('invalid item membership')
+        if value.get('limit') is not None and (type(value['limit']) is not int or not 0<value['limit']<2**63):raise ValueError('invalid item buy limit')
+        if 'name' in value and (type(value['name']) is not str or not value['name'] or len(value['name'])>1000):raise ValueError('invalid item name')
+
+
 def simulate(timeseries,cfg,capital=None,max_positions=None,*,metadata=None,slot_limit=None,observations=None,trace_limit=1000):
     cfg=ReplayConfig.from_trader_config(cfg)
     cfg=replace(cfg,capital=cfg.capital if capital is None else capital,
@@ -80,13 +90,7 @@ def simulate(timeseries,cfg,capital=None,max_positions=None,*,metadata=None,slot
         items[int(iid)]=normalized['data']
     if not items:raise ValueError('explicit usable timeseries required')
     metadata={} if metadata is None else metadata
-    if not isinstance(metadata,dict):raise ValueError('explicit item metadata mapping required')
-    for key,value in metadata.items():
-        if not isinstance(key,str) or not key.isdecimal() or str(int(key))!=key or int(key)<=0 or not isinstance(value,dict):
-            raise ValueError('mapping requires canonical positive item IDs and metadata objects')
-        if value.get('members') is not None and type(value['members']) is not bool:raise ValueError('invalid item membership')
-        if value.get('limit') is not None and (type(value['limit']) is not int or not 0<value['limit']<2**63):raise ValueError('invalid item buy limit')
-        if 'name' in value and (type(value['name']) is not str or not value['name'] or len(value['name'])>1000):raise ValueError('invalid item name')
+    validate_metadata(metadata)
     limits={}
     records,holdings,purchases,allocations,recent_exits={},{},[],{},{}
     trades,trace=[],[]
