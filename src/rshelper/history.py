@@ -3,6 +3,7 @@ import json
 import re
 import math
 from collections import defaultdict
+from bisect import bisect_right
 from datetime import datetime, timezone
 
 from rshelper import snapshot, tuning, trade_reviews
@@ -94,12 +95,18 @@ def build_history(profile: str | None = None, paper_only: bool = True,
         unique={tuning.config_id(entry['params']) for entry in group}
         timed.append((instant,group[0] if len(unique)==1 else
                       {'params':{},'note':'conflicting configuration evidence','unknown':True}))
+    era_starts = [instant for instant, _ in timed]
+    trades_by_era = [[] for _ in timed]
+    if timed:
+        for trade in trades:
+            index = bisect_right(era_starts, _utc(trade.timestamp)) - 1
+            if index >= 0:
+                trades_by_era[index].append(trade)
     for i, (instant,e) in enumerate(timed):
         end_instant=timed[i+1][0] if i+1<len(timed) else None
         start=instant.isoformat()
         end=end_instant.isoformat() if end_instant else None
-        era_trades=[trade for trade in trades if instant<=_utc(trade.timestamp)
-                    and (end_instant is None or _utc(trade.timestamp)<end_instant)]
+        era_trades = trades_by_era[i]
         cost = sum(t.buy_price * t.qty for t in era_trades)
         profit = sum(t.profit for t in era_trades)
         wins = sum(1 for t in era_trades if t.profit > 0)
