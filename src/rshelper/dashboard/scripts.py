@@ -278,7 +278,7 @@ function disconnectOwner(){
   reviewsState=null;reviewLotUid='';pendingReviewOperation=null;reviewTag='';reviewUnreviewed=false;
   observedState=null;observedOfferUuid='';pendingObserved=null;
   scenarioBasis=null;
-  ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node){node.innerHTML='';node.remove?.()}});
+  ['listBody','contextPanel','alertDropdown'].forEach(id=>{const node=document.getElementById(id);if(node)node.innerHTML='';});
   renderAccessUI();applyAccessGates();
   document.body.replaceChildren(document.getElementById('accessBar'));
   window.location.reload();
