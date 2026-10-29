@@ -43,6 +43,33 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(h["eras"], [])
         self.assertEqual(h["summary"]["trade_count"], 0)
 
+    def test_era_selection_normalizes_per_trade_and_preserves_boundaries(self):
+        from unittest import mock
+        stamps = ['2026-10-12T07:59:59Z', '2026-10-12T08:00:00Z',
+                  '2026-10-12T09:59:59Z', '2026-10-12T10:00:00Z',
+                  '2026-10-12T12:00:00+02:00', '2026-10-12T10:00:00',
+                  '2026-10-12T12:00:00Z', '2026-10-12T13:00:00Z',
+                  '2026-10-12T14:00:00Z']
+        rows = [jmod.Trade(i + 1, i % 2 + 1, 'Authored', 1, 100, 120, 2, 18,
+                           stamp, note='paper', strategy='manual')
+                for i, stamp in enumerate(reversed(stamps))]
+        self._write_entries([
+            {'ts': '2026-10-12T12:00:00Z', 'params': {'v': 3}},
+            {'ts': '2026-10-12T10:00:00Z', 'params': {'v': 2}},
+            {'ts': '2026-10-12T08:00:00Z', 'params': {'v': 1}},
+            {'ts': '2026-10-12T12:00:00+02:00', 'params': {'v': 4}}])
+        original_order = list(rows)
+        with mock.patch.object(history, '_utc', wraps=history._utc) as normalize:
+            result = history.build_history(trades=rows)
+        self.assertEqual([era['trade_count'] for era in result['eras']], [2, 3, 3])
+        self.assertEqual([era['profit'] for era in result['eras']], [36, 54, 54])
+        self.assertIsNone(result['eras'][1]['config_id'])
+        self.assertEqual(result['eras'][1]['attribution_basis'], 'unknown-exit-context')
+        self.assertEqual(result['summary']['total_profit'], 162)
+        self.assertEqual(sum(item['cost_basis'] for item in result['items']), 900)
+        self.assertEqual(rows, original_order)
+        self.assertLessEqual(normalize.call_count, 4 * len(rows))
+
     def test_cumulative_buckets_and_paper_filter(self):
         jmod.log_trade(1, "A", 1, 100, 200, "paper")
         jmod.log_trade(2, "B", 1, 100, 200, "")
